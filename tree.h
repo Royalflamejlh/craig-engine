@@ -29,6 +29,7 @@ int pruneNode(struct Node* it, struct Node* nextIt);
 void pruneNodeExceptFor(struct Node* node, struct Node* exceptNode);
 void pruneAbove(struct Node* current);
 int64_t getBestCurChild(void);
+void buildTreeMoves();
 
 #ifdef DEBUG
 void printNode(struct Node* node, int level);

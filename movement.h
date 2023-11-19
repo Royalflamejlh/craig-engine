@@ -1,0 +1,1 @@
+void buildLegalMoves(struct Node *node);

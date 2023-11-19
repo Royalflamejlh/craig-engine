@@ -94,8 +94,13 @@ void processMoves(char* str){
 
     updateNodeStatus(it, 2);
 
-    printf("Tree updated with new nodes\r\n");
+    printf("\nTree updated with new nodes\r\n");
     printTree();
+
+    printf("\nFinding legal moves:\r\n");
+    buildTreeMoves();
+    printTree();
+
     fflush(stdout);
 
 }

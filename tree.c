@@ -2,13 +2,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
+#include <string.h>
 #include "board.h"
+#include "movement.h"
 
 static struct Node* root;
 static struct Node* cur;
 
 //Initialize the move tree at the start of the game
-void inititializeTree(void){
+void initializeTree(void){
     root = malloc(sizeof(struct Node));
     root->move = 0;
     root->status = STATUS_ROOT;
@@ -49,7 +51,9 @@ struct Node* addTreeNode(struct Node* parent, int64_t move, char status, int rat
     newNode->children = NULL;
     newNode->childrenCount = 0;
 
-    
+    memcpy(&newNode->board[0][0], &parent->board[0][0], 8*8*sizeof(newNode->board[0][0]));
+    receiveMove(newNode->board, move);
+
     if (parent->color == 'W') {
         newNode->color = 'B';
     } else {
@@ -114,8 +118,6 @@ static void freeTree(struct Node* node) {
     for (int i = 0; i < node->childrenCount; i++) {
         freeTree(node->children[i]);
     }
-    
-    freeBoard(node->board);
 
     free(node->children);
     free(node);
@@ -178,6 +180,13 @@ struct Node* getBestChild(struct Node* node){
         }
     }
     return best;
+}
+
+
+void buildTreeMoves(){
+    if(cur != NULL){
+        buildLegalMoves(cur);
+    }
 }
 
 

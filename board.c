@@ -53,13 +53,3 @@ void receiveMove(char board[8][8], int64_t move) {
 }
 
 
-
-void freeBoard(char board[][8]) {
-    if (board != NULL) {
-        for (int i = 0; i < 8; i++) {
-            free(board[i]);
-        }
-        free(board);
-    }
-}
-
