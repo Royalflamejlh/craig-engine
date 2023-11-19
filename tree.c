@@ -1,17 +1,19 @@
 #include "tree.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
+#include "board.h"
 
 static struct Node* root;
 static struct Node* cur;
 
 //Initialize the move tree at the start of the game
-void inititializeTree(){
+void inititializeTree(void){
     root = malloc(sizeof(struct Node));
     root->move = 0;
     root->status = STATUS_ROOT;
     root->color = 'B';
-    root->board = initializeBoard();
+    initializeBoard(root->board);
     root->rating = 0;
     root->parent = NULL;
     root->children = NULL;
@@ -23,7 +25,7 @@ void inititializeTree(){
 /*
 * Get the root node of a tree
 */
-struct Node* getTreeRoot(){
+struct Node* getTreeRoot(void){
     return root;
 }
 
@@ -64,7 +66,7 @@ struct Node* addTreeNode(struct Node* parent, int64_t move, char status, int rat
 
     if(status == STATUS_CURRENT){
         pruneAbove(newNode);
-        cur = node;
+        cur = newNode;
     }
 
     return newNode;
@@ -160,12 +162,12 @@ void pruneAbove(struct Node* current) {
     }
 }
 
-int64_t getBestCurChild(){
-    if(cur == NULL){
-        return -1;
+struct Node* getBestChild(struct Node* node){
+    if(node == NULL){
+        return NULL;
     }
-    if(cur->childrenCount == 0){
-        return -2;
+    if(node->childrenCount == 0){
+        return NULL;
     }
     struct Node *best = NULL;
     int max = INT_MIN;
@@ -175,6 +177,7 @@ int64_t getBestCurChild(){
             max = node->children[i]->rating;
         }
     }
+    return best;
 }
 
 
@@ -196,7 +199,7 @@ void printNode(struct Node* node, int level) {
     }
 }
 
-void printTree() {
+void printTree(void) {
     printf("Tree Structure:\n");
     printNode(root, 0);
 }

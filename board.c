@@ -1,5 +1,9 @@
-
+#include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+#include <stdio.h>
+#include "board.h"
+
 //BOARD[y][x]
 // 0,0 = A1
 // 1,0 = A2
@@ -7,24 +11,22 @@
 //UPPERCASE CHARACTERS ARE WHITE
 //lowercase characters are black
 
-char** initializeBoard() {
-
-    char** board = malloc(8 * sizeof(char*));
+void initializeBoard(char board[8][8]) {
     for (int i = 0; i < 8; i++) {
-        board[i] = malloc(8 * sizeof(char));
-        memset(board[i], ' ', 8 * sizeof(char));
+        for (int j = 0; j < 8; j++) {
+            board[i][j] = ' ';
+        }
     }
 
     char initialPieces[8] = {'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'};
     for (int i = 0; i < 8; i++) {
-        board[0][i] = initialPieces[i]; 
-        board[7][i] = tolower(initialPieces[i]); 
-        board[1][i] = 'P'; 
+        board[0][i] = initialPieces[i];
+        board[7][i] = tolower(initialPieces[i]);
+        board[1][i] = 'P';
         board[6][i] = 'p';
     }
-
-    return board;
 }
+
 
 void printBoard(char board[8][8]){
     for (int i = 7; i >= 0; i--) {
@@ -52,7 +54,7 @@ void receiveMove(char board[8][8], int64_t move) {
 
 
 
-void freeBoard(char** board) {
+void freeBoard(char board[][8]) {
     if (board != NULL) {
         for (int i = 0; i < 8; i++) {
             free(board[i]);

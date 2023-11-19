@@ -1,10 +1,12 @@
-
+#ifndef GAY
+#include "tree.h"
 
 
 /*
 * Takes in a node and generates all legal moves for that node
 */
 void getLegalMoves(struct Node *node){
+    char board[8][8] = node->board;
     *moveCount = 0;
     int64_t* moves;
 
@@ -71,3 +73,4 @@ void getLegalPawnMoves(char board[8][8], char x, char y, int64_t* moves, int* mo
         }
     }
 }
+#endif

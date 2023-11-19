@@ -20,20 +20,19 @@ struct Node {
     int childrenCount; // children count
 };
 
-void initializeTree();
-struct Node* getTreeRoot();
+void initializeTree(void);
+struct Node* getTreeRoot(void);
 struct Node* addTreeNode(struct Node* parent, int64_t move, char status, int rating);
 void updateNodeStatus(struct Node* node, char status);
 struct Node* iterateTree(struct Node* cur, int64_t move);
 int pruneNode(struct Node* it, struct Node* nextIt);
-void freeTree(struct Node* node);
 void pruneNodeExceptFor(struct Node* node, struct Node* exceptNode);
 void pruneAbove(struct Node* current);
-int64_t getBestCurChild();
+int64_t getBestCurChild(void);
 
 #ifdef DEBUG
 void printNode(struct Node* node, int level);
-void printTree();
+void printTree(void);
 void moveIntToChar(int64_t move, char* result);
 #endif
 

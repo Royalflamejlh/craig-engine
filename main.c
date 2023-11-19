@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "tree.h"
-//#include "board.h"
+#include "board.h"
 
 static void processUCI(void);
 static void processIsReady(void);
@@ -11,11 +11,11 @@ static int processInput(char* input);
 static void processMoves(char* str);
 static int64_t moveCharToInt(char* prev);
 
-int main() {
+int main(void) {
     char input[1024];
     input[1023] = '\0';
 
-    inititializeTree();
+    initializeTree();
 
     while (true) {
         if (fgets(input, sizeof(input), stdin) == NULL) {
@@ -45,9 +45,7 @@ static int processInput(char* input){
             if (strncmp(input, "moves", 5) == 0) {
                 input += 6;
                 processMoves(input);
-                printf("info string moves found:");
-                printf(input);
-                printf("\r\n");
+                printf("info string moves found: %s \r\n", input);
                 fflush(stdout);
                 return 0;
             }
@@ -141,7 +139,9 @@ static void processIsReady(void) {
     fflush(stdout);
 }
 
-static void processBestMove(char * move){
-    printf("bestmove %s\r\n", move);
-    fflush(stdout);
-}
+/*
+ static void processBestMove(char * move){
+     printf("bestmove %s\r\n", move);
+     fflush(stdout);
+ }
+ */
