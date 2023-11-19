@@ -4,14 +4,20 @@
 #include <limits.h>
 #include <string.h>
 #include "board.h"
+#include "util.h"
 #include "movement.h"
 
 static struct Node* root;
 static struct Node* cur;
 
+static void buildTreeMovesHelper(struct Node* node, int depth);
+
 //Initialize the move tree at the start of the game
 void initializeTree(void){
     root = malloc(sizeof(struct Node));
+    printf("Allocated root : %p\n\r", root);
+    fflush(stdout);
+
     root->move = 0;
     root->status = STATUS_ROOT;
     root->color = 'B';
@@ -46,25 +52,38 @@ struct Node* addTreeNode(struct Node* parent, int64_t move, char status, int rat
     
     newNode->move = move;
     newNode->status = status;
-    newNode->rating = 0;
+    newNode->rating = rating;
     newNode->parent = parent;
     newNode->children = NULL;
     newNode->childrenCount = 0;
 
-    memcpy(&newNode->board[0][0], &parent->board[0][0], 8*8*sizeof(newNode->board[0][0]));
+ 
+
+    memcpy(&newNode->board[0][0], &parent->board[0][0], 8*8*sizeof(char));
     receiveMove(newNode->board, move);
 
+    newNode->color = 'W';
     if (parent->color == 'W') {
         newNode->color = 'B';
-    } else {
-        newNode->color = 'W';
     }
 
-    parent->children = realloc(parent->children, sizeof(struct Node*) * (parent->childrenCount + 1));
+    
+
     if (parent->children == NULL) {
+        parent->children = malloc(sizeof(struct Node*) * (parent->childrenCount + 1));
+    } else {
+        parent->children = realloc(parent->children, sizeof(struct Node*) * (parent->childrenCount + 1));
+    }
+
+
+    //Error check the malloc
+    if (parent->children == NULL) {
+        printf("Error malloc freeing newnode %p\n\r", newNode);
+        fflush(stdout);
         free(newNode);
         return NULL;
     }
+
     parent->children[parent->childrenCount] = newNode;
     parent->childrenCount++;
 
@@ -93,14 +112,14 @@ void updateNodeStatus(struct Node* node, char status) {
 /*
 * Iterate through a tree by putting in a move, 
 */
-struct Node* iterateTree(struct Node* cur, int64_t move) {
-    if (cur == NULL) {
+struct Node* iterateTree(struct Node* it, int64_t move) {
+    if (it == NULL) {
         return NULL;
     }
 
-    for (int i = 0; i < cur->childrenCount; i++) {
-        if (cur->children[i]->move == move) {
-            return cur->children[i];
+    for (int i = 0; i < it->childrenCount; i++) {
+        if (it->children[i]->move == move) {
+            return it->children[i];
         }
     }
 
@@ -119,15 +138,18 @@ static void freeTree(struct Node* node) {
         freeTree(node->children[i]);
     }
 
+    printf("Freeing node->children = %p\n\r", node->children);
+    fflush(stdout);
     free(node->children);
+
+    printf("Freeing node = %p\n\r", node);
+    fflush(stdout);
     free(node);
 }
 
 
 void pruneNodeExceptFor(struct Node* node, struct Node* exceptNode) {
-    if (node == NULL || node->childrenCount == 0) {
-        return;
-    }
+    if (node == NULL) return;
 
     for (int i = 0; i < node->childrenCount; ++i) {
         if (node->children[i] != exceptNode) {
@@ -138,17 +160,18 @@ void pruneNodeExceptFor(struct Node* node, struct Node* exceptNode) {
     if (exceptNode != NULL) {
         node->children[0] = exceptNode;
         node->childrenCount = 1;
+
+        struct Node** temp = realloc(node->children, sizeof(struct Node*));
+        if (temp != NULL) {
+            node->children = temp;
+        } else {
+            node->children = NULL;
+            node->childrenCount = 0;
+        }
     } else {
         free(node->children);
         node->children = NULL;
         node->childrenCount = 0;
-    }
-
-    if (exceptNode != NULL) {
-        node->children = realloc(node->children, sizeof(struct Node*));
-        if (node->children == NULL) {
-            //TODO: exception?
-        }
     }
 }
 
@@ -156,7 +179,7 @@ void pruneAbove(struct Node* current) {
     struct Node* child = current;
     struct Node* parent = current->parent;
 
-    while (parent != NULL && parent->status != STATUS_ROOT) {
+    while (parent != NULL) {
         pruneNodeExceptFor(parent, child);
 
         child = parent;
@@ -182,10 +205,25 @@ struct Node* getBestChild(struct Node* node){
     return best;
 }
 
+struct Node* getBestCurChild(){
+    return getBestChild(cur);
+}
 
-void buildTreeMoves(){
-    if(cur != NULL){
-        buildLegalMoves(cur);
+
+void buildTreeMoves(int depth){
+    if(cur == NULL){
+        return;
+    }
+    buildTreeMovesHelper(cur, depth);
+}
+
+static void buildTreeMovesHelper(struct Node* node, int depth){
+    if(depth <= 0){
+        return;
+    }
+    buildLegalMoves(node);
+    for (int i = 0; i < node->childrenCount; i++) {
+        buildTreeMovesHelper(node->children[i], depth - 1);
     }
 }
 
@@ -200,9 +238,10 @@ void printNode(struct Node* node, int level) {
     }
     char moveStr[10]; 
     moveIntToChar(node->move, moveStr);
-
-    printf("Move: %s, Status: %d, Rating: %d\r\n", moveStr, node->status, node->rating);
-
+    printf("%p: stat:%d col:%c rat:%d par:%p chil[%d]@%p mov:%s\r\n",
+    node, node->status, node->color, node->rating, node->parent,
+    node->childrenCount, node->children, moveStr);
+    printBoard(node->board);
     for (int i = 0; i < node->childrenCount; ++i) {
         printNode(node->children[i], level + 1);
     }
@@ -213,10 +252,4 @@ void printTree(void) {
     printNode(root, 0);
 }
 
-void moveIntToChar(int64_t move, char* result) {
-    for (int i = 7; i >= 0; --i) {
-        result[7 - i] = (char)((move >> (i * 8)) & 0xFF);
-    }
-    result[8] = '\0'; // Null-terminate the string
-}
 #endif

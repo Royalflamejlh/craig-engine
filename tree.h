@@ -28,13 +28,12 @@ struct Node* iterateTree(struct Node* cur, int64_t move);
 int pruneNode(struct Node* it, struct Node* nextIt);
 void pruneNodeExceptFor(struct Node* node, struct Node* exceptNode);
 void pruneAbove(struct Node* current);
-int64_t getBestCurChild(void);
-void buildTreeMoves();
+struct Node* getBestCurChild();
+void buildTreeMoves(int depth);
 
 #ifdef DEBUG
 void printNode(struct Node* node, int level);
 void printTree(void);
-void moveIntToChar(int64_t move, char* result);
 #endif
 
 #endif // TREE_H

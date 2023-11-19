@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdint.h>
+#include "util.h"
 #include "tree.h"
 #include "board.h"
 
@@ -9,7 +10,7 @@ static void processUCI(void);
 static void processIsReady(void);
 static int processInput(char* input);
 static void processMoves(char* str);
-static int64_t moveCharToInt(char* prev);
+static void sendBestMove();
 
 int main(void) {
     char input[1024];
@@ -77,8 +78,9 @@ void processMoves(char* str){
 
     char* pch = strtok(str, " ");
     while (pch != NULL) {
-        printf("info string move: %s\n", pch);
-        int64_t moveInt = moveCharToInt(pch); 
+        char* moveChar = trimWhitespace(pch);
+        printf("info string move: %s\n", moveChar);
+        int64_t moveInt = moveCharToInt(moveChar); 
 
         struct Node* nextIt = iterateTree(it, moveInt);
         if (nextIt == NULL) {
@@ -98,36 +100,13 @@ void processMoves(char* str){
     printTree();
 
     printf("\nFinding legal moves:\r\n");
-    buildTreeMoves();
+    buildTreeMoves(5);
     printTree();
 
     fflush(stdout);
 
-}
+    sendBestMove();
 
-
-static int64_t moveCharToInt(char* prev) {
-    if (prev == NULL || strlen(prev) < 4) {
-        return 0;
-    }
-
-    int64_t result = 0;
-    char from_x = prev[0] - 'a';
-    char from_y = prev[1] - '1';
-    char to_x   = prev[2] - 'a';
-    char to_y   = prev[3] - '1';
-
-    result = from_x;
-    result = (result << 8) | from_y;
-    result = (result << 8) | to_x;
-    result = (result << 8) | to_y;
-
-    if (strlen(prev) > 4) {
-        char promotion = prev[4];
-        result = (result << 8) | promotion;
-    }
-
-    return result;
 }
 
 
@@ -144,9 +123,12 @@ static void processIsReady(void) {
     fflush(stdout);
 }
 
-/*
- static void processBestMove(char * move){
-     printf("bestmove %s\r\n", move);
-     fflush(stdout);
+
+ static void sendBestMove(){
+    struct Node* node = getBestCurChild();
+    char move[6];
+    moveIntToChar(node->move, move);
+    printf("bestmove %s\r\n", move);
+    fflush(stdout);
  }
- */
+ 

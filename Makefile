@@ -6,7 +6,7 @@ CFLAGS = -Wall -Wextra -g
 TARGET = chess
 
 
-SRCS = main.c board.c tree.c movement.c
+SRCS = main.c board.c tree.c movement.c util.c
 
 OBJS = $(SRCS:.c=.o)
 
@@ -23,3 +23,4 @@ clean:
 board.o: board.h
 tree.o: tree.h
 movement.o: movement.h
+util.o: util.h
