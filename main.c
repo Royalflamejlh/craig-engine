@@ -46,8 +46,6 @@ static int processInput(char* input){
             if (strncmp(input, "moves", 5) == 0) {
                 input += 6;
                 processMoves(input);
-                printf("info string moves found: %s \r\n", input);
-                fflush(stdout);
                 return 0;
             }
         }
@@ -70,8 +68,6 @@ static int processInput(char* input){
 * except for the children of the last node
 */
 void processMoves(char* str){
-    printf("processing moves: %s\r\n", str);
-    fflush(stdout);
 
     struct Node* it = getTreeRoot();
     struct Node* prevIt = it;
@@ -79,7 +75,6 @@ void processMoves(char* str){
     char* pch = strtok(str, " ");
     while (pch != NULL) {
         char* moveChar = trimWhitespace(pch);
-        printf("info string move: %s\n", moveChar);
         int64_t moveInt = moveCharToInt(moveChar); 
 
         struct Node* nextIt = iterateTree(it, moveInt);
@@ -95,15 +90,9 @@ void processMoves(char* str){
     }
 
     updateNodeStatus(it, 2);
-
-    printf("\nTree updated with new nodes\r\n");
-    printTree();
-
-    printf("\nFinding legal moves:\r\n");
+    //printTree();
     buildTreeMoves(5);
-    printTree();
-
-    fflush(stdout);
+    //printTree();
 
     sendBestMove();
 
@@ -119,7 +108,6 @@ static void processUCI(void) {
 
 static void processIsReady(void) {
     printf("readyok\r\n");
-    printf("info string I loaded\r\n");
     fflush(stdout);
 }
 

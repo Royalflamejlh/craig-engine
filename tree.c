@@ -5,24 +5,23 @@
 #include <string.h>
 #include "board.h"
 #include "util.h"
+#include "evaluator.h"
 #include "movement.h"
 
 static struct Node* root;
 static struct Node* cur;
 
+static void propagateRating(struct Node* node);
 static void buildTreeMovesHelper(struct Node* node, int depth);
 
 //Initialize the move tree at the start of the game
 void initializeTree(void){
     root = malloc(sizeof(struct Node));
-    printf("Allocated root : %p\n\r", root);
-    fflush(stdout);
-
     root->move = 0;
     root->status = STATUS_ROOT;
     root->color = 'B';
     initializeBoard(root->board);
-    root->rating = 0;
+    root->rating = INT_MAX;
     root->parent = NULL;
     root->children = NULL;
     root->childrenCount = 0;
@@ -52,22 +51,19 @@ struct Node* addTreeNode(struct Node* parent, int64_t move, char status, int rat
     
     newNode->move = move;
     newNode->status = status;
-    newNode->rating = rating;
     newNode->parent = parent;
     newNode->children = NULL;
     newNode->childrenCount = 0;
 
- 
-
     memcpy(&newNode->board[0][0], &parent->board[0][0], 8*8*sizeof(char));
     receiveMove(newNode->board, move);
+
+    newNode->rating = getRating(newNode->board);
 
     newNode->color = 'W';
     if (parent->color == 'W') {
         newNode->color = 'B';
     }
-
-    
 
     if (parent->children == NULL) {
         parent->children = malloc(sizeof(struct Node*) * (parent->childrenCount + 1));
@@ -78,7 +74,7 @@ struct Node* addTreeNode(struct Node* parent, int64_t move, char status, int rat
 
     //Error check the malloc
     if (parent->children == NULL) {
-        printf("Error malloc freeing newnode %p\n\r", newNode);
+        printf("info string Error malloc freeing newnode %p\n\r", newNode);
         fflush(stdout);
         free(newNode);
         return NULL;
@@ -91,6 +87,7 @@ struct Node* addTreeNode(struct Node* parent, int64_t move, char status, int rat
         pruneAbove(newNode);
         cur = newNode;
     }
+    propagateRating(newNode);
 
     return newNode;
 }
@@ -138,12 +135,7 @@ static void freeTree(struct Node* node) {
         freeTree(node->children[i]);
     }
 
-    printf("Freeing node->children = %p\n\r", node->children);
-    fflush(stdout);
     free(node->children);
-
-    printf("Freeing node = %p\n\r", node);
-    fflush(stdout);
     free(node);
 }
 
@@ -188,22 +180,26 @@ void pruneAbove(struct Node* current) {
 }
 
 struct Node* getBestChild(struct Node* node){
-    if(node == NULL){
+    if (node == NULL || node->childrenCount == 0) {
         return NULL;
     }
-    if(node->childrenCount == 0){
-        return NULL;
-    }
-    struct Node *best = NULL;
-    int max = INT_MIN;
-    for (int i = 0; i < node->childrenCount; ++i) {
-        if (node->children[i]->rating > max) {
+
+    struct Node *best = node->children[0];
+    int bestRating = node->children[0]->rating;
+
+    for (int i = 1; i < node->childrenCount; ++i) {
+        int childRating = node->children[i]->rating;
+
+        if (((node->color == 'W') && childRating > bestRating) ||
+            (!(node->color == 'W') && childRating < bestRating)) {
             best = node->children[i];
-            max = node->children[i]->rating;
+            bestRating = childRating;
         }
     }
+
     return best;
 }
+
 
 struct Node* getBestCurChild(){
     return getBestChild(cur);
@@ -221,11 +217,28 @@ static void buildTreeMovesHelper(struct Node* node, int depth){
     if(depth <= 0){
         return;
     }
-    buildLegalMoves(node);
+    if(node->childrenCount == 0){
+        buildLegalMoves(node);
+    }
     for (int i = 0; i < node->childrenCount; i++) {
         buildTreeMovesHelper(node->children[i], depth - 1);
     }
 }
+
+static void propagateRating(struct Node* node) {
+    if (node == NULL || node->parent == NULL) {
+        return;
+    }
+
+    struct Node* parent = node->parent;
+
+    if (((node->color == 'W') && parent->rating < node->rating) ||
+        (!(node->color == 'W') && parent->rating > node->rating)) {
+        parent->rating = node->rating;
+        propagateRating(parent);
+    }
+}
+
 
 
 #ifdef DEBUG
@@ -241,7 +254,7 @@ void printNode(struct Node* node, int level) {
     printf("%p: stat:%d col:%c rat:%d par:%p chil[%d]@%p mov:%s\r\n",
     node, node->status, node->color, node->rating, node->parent,
     node->childrenCount, node->children, moveStr);
-    printBoard(node->board);
+    //printBoard(node->board);
     for (int i = 0; i < node->childrenCount; ++i) {
         printNode(node->children[i], level + 1);
     }

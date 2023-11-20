@@ -25,8 +25,6 @@ int64_t moveCharToInt(char* prev) {
         result = (result << 8) | promotion;
     }
 
-    printf("\nTurning move %s to the int %lld\r\n", prev, result);
-
     return result;
 }
 
@@ -47,7 +45,6 @@ void moveIntToChar(int64_t move, char* result) {
     } else {
         result[4] = '\0';
     }
-    printf("\nTurning int %lld into char %s\r\n", move, result);
 }
 
 
