@@ -52,7 +52,8 @@ static int processInput(char* input){
         else if (strncmp(input, "fen", 3) == 0) {
             printf("info string Loading FEN not supported\r\n");
             fflush(stdout);
-            return -1;
+            sendBestMove();
+            return 0;
         }
     }
     else if (strncmp(input, "quit", 4) == 0) {
