@@ -52,7 +52,7 @@ static int processInput(char* input){
         else if (strncmp(input, "fen", 3) == 0) {
             printf("info string Loading FEN not supported\r\n");
             fflush(stdout);
-            sendBestMove();
+            //sendBestMove();
             return 0;
         }
     }
@@ -91,8 +91,8 @@ void processMoves(char* str){
     }
 
     updateNodeStatus(it, 2);
-    //printTree();
     buildTreeMoves(5);
+    printCurNode();
     //printTree();
 
     sendBestMove();
@@ -118,6 +118,7 @@ static void processIsReady(void) {
     char move[6];
     moveIntToChar(node->move, move);
     printf("bestmove %s\r\n", move);
+    printf("Move %s found for %c with a board score of %d\n\r", move, node->color, node->rating);
     fflush(stdout);
  }
  

@@ -12,12 +12,12 @@
 struct Node {
     int64_t move; // the move played
     char status; // 0 means already played, 2 means the last played move, 4 means a predicted, 8 means root
-    char color;
-    char board[8][8];
-    int rating; // the rating of the move
-    struct Node *parent; // parent node
-    struct Node **children; // children
-    int childrenCount; // children count
+    char color; //Who played the Move
+    char board[8][8]; //The board state after the move
+    int rating; //The rating of the move
+    struct Node *parent; // Parent node
+    struct Node **children; // Children nodes
+    int childrenCount; //Children count
 };
 
 void initializeTree(void);
@@ -32,8 +32,9 @@ struct Node* getBestCurChild();
 void buildTreeMoves(int depth);
 
 #ifdef DEBUG
-void printNode(struct Node* node, int level);
+void printNode(struct Node* node, int level, int depth);
 void printTree(void);
+void printCurNode(void);
 #endif
 
 #endif // TREE_H

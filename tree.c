@@ -7,6 +7,7 @@
 #include "util.h"
 #include "evaluator.h"
 #include "movement.h"
+#include "tree.h"
 
 static struct Node* root;
 static struct Node* cur;
@@ -190,8 +191,9 @@ struct Node* getBestChild(struct Node* node){
     for (int i = 1; i < node->childrenCount; ++i) {
         int childRating = node->children[i]->rating;
 
-        if (((node->color == 'W') && childRating > bestRating) ||
-            (!(node->color == 'W') && childRating < bestRating)) {
+        //Note if node->color='B' you are looking for the best move for 'W'
+        if (((node->color == 'W') && childRating < bestRating) ||
+            ((node->color == 'B') && childRating > bestRating)) {
             best = node->children[i];
             bestRating = childRating;
         }
@@ -233,7 +235,7 @@ static void propagateRating(struct Node* node) {
     struct Node* parent = node->parent;
 
     if (((node->color == 'W') && parent->rating < node->rating) ||
-        (!(node->color == 'W') && parent->rating > node->rating)) {
+        ((node->color == 'B') && parent->rating > node->rating)) {
         parent->rating = node->rating;
         propagateRating(parent);
     }
@@ -242,8 +244,11 @@ static void propagateRating(struct Node* node) {
 
 
 #ifdef DEBUG
-void printNode(struct Node* node, int level) {
+void printNode(struct Node* node, int level, int depth) {
     if (node == NULL) {
+        return;
+    }
+    if(depth == 0){
         return;
     }
     for (int i = 0; i < level; ++i) {
@@ -254,15 +259,19 @@ void printNode(struct Node* node, int level) {
     printf("%p: stat:%d col:%c rat:%d par:%p chil[%d]@%p mov:%s\r\n",
     node, node->status, node->color, node->rating, node->parent,
     node->childrenCount, node->children, moveStr);
-    //printBoard(node->board);
+    printBoard(node->board);
     for (int i = 0; i < node->childrenCount; ++i) {
-        printNode(node->children[i], level + 1);
+        printNode(node->children[i], level + 1, depth - 1);
     }
 }
 
 void printTree(void) {
     printf("Tree Structure:\n");
-    printNode(root, 0);
+    printNode(root, 0, 100);
+}
+
+void printCurNode(void){
+    printNode(cur, 0, 1);
 }
 
 #endif
