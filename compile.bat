@@ -9,7 +9,7 @@ if exist main.exe (
 
 REM Compile the program
 echo Compiling the program...
-cl main.c tree.c
+cl main.c tree.c util.c evaluator.c board.c
 
 REM Check if the compilation was successful
 if exist main.exe (
