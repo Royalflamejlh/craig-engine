@@ -7,6 +7,7 @@
 #include "board.h"
 
 #define DEPTH_SCAN 4
+#define DEPTH_DEEP_START 2
 #define DEPTH_DEEP 10
 
 static void processUCI(void);
@@ -71,12 +72,13 @@ static int processInput(char* input){
 * also will prune the branches of all already played moves
 * except for the children of the last node
 */
-void processMoves(char* str){
-
+void processMoves(char* str) {
     struct Node* it = getTreeRoot();
     struct Node* prevIt = it;
 
-    char* pch = strtok(str, " ");
+    char* pch;
+    char* rest = str; 
+    pch = strtok_r(str, " ", &rest);
     while (pch != NULL) {
         char* moveChar = trimWhitespace(pch);
         int64_t moveInt = moveCharToInt(moveChar); 
@@ -90,20 +92,18 @@ void processMoves(char* str){
             prevIt = it;
             it = nextIt;
         }
-        pch = strtok(NULL, " ");
+        pch = strtok_r(NULL, " ", &rest);
     }
 
     updateNodeStatus(it, 2);
     buildTreeMoves(DEPTH_SCAN);
 
-    printCurNode();
-
-    deepSearchTree(DEPTH_SCAN-2, DEPTH_DEEP);
-    
+    //printCurNode();
+    deepSearchTree(DEPTH_DEEP_START, DEPTH_DEEP);
 
     sendBestMove();
-
 }
+
 
 
 static void processUCI(void) {
@@ -124,7 +124,7 @@ static void processIsReady(void) {
     char move[6];
     moveIntToChar(node->move, move);
     printf("bestmove %s\r\n", move);
-    printf("Move %s found for %c with a board score of %d\n\r", move, node->color, node->rating);
+    printf("info string Move %s found for %c with a board score of %d\n\r", move, node->color, node->rating);
     fflush(stdout);
  }
  
