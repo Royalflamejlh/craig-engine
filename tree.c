@@ -9,11 +9,15 @@
 #include "movement.h"
 #include "tree.h"
 
+
+
 static struct Node* root;
 static struct Node* cur;
 
+
 static void propagateRating(struct Node* node);
 static void buildTreeMovesHelper(struct Node* node, int depth);
+static void deepSearchHelper(struct Node* node, int depth);
 
 //Initialize the move tree at the start of the game
 void initializeTree(void){
@@ -22,7 +26,7 @@ void initializeTree(void){
     root->status = STATUS_ROOT;
     root->color = 'B';
     initializeBoard(root->board);
-    root->rating = INT_MAX;
+    root->rating = INT_MIN;
     root->parent = NULL;
     root->children = NULL;
     root->childrenCount = 0;
@@ -40,7 +44,7 @@ struct Node* getTreeRoot(void){
 /*
 * Add a node to the tree
 */
-struct Node* addTreeNode(struct Node* parent, int64_t move, char status, int rating) {
+struct Node* addTreeNode(struct Node* parent, int64_t move, char status) {
     if (parent == NULL) {
         return NULL;
     }
@@ -59,11 +63,11 @@ struct Node* addTreeNode(struct Node* parent, int64_t move, char status, int rat
     memcpy(&newNode->board[0][0], &parent->board[0][0], 8*8*sizeof(char));
     receiveMove(newNode->board, move);
 
-    newNode->rating = getRating(newNode->board);
-
     newNode->color = 'W';
+    newNode->rating = INT_MAX;
     if (parent->color == 'W') {
         newNode->color = 'B';
+        newNode->rating = INT_MIN;
     }
 
     if (parent->children == NULL) {
@@ -88,7 +92,6 @@ struct Node* addTreeNode(struct Node* parent, int64_t move, char status, int rat
         pruneAbove(newNode);
         cur = newNode;
     }
-    propagateRating(newNode);
 
     return newNode;
 }
@@ -217,6 +220,8 @@ void buildTreeMoves(int depth){
 
 static void buildTreeMovesHelper(struct Node* node, int depth){
     if(depth <= 0){
+        node->rating = getRating(node->board);
+        propagateRating(node);
         return;
     }
     if(node->childrenCount == 0){
@@ -240,6 +245,70 @@ static void propagateRating(struct Node* node) {
         propagateRating(parent);
     }
 }
+
+/*
+* Below here is the ever so feared DEEP SEARCH logic...
+*/
+void deepSearchTree(int starting_depth, int depth){
+    struct Node* node = cur;
+    struct Node* prev = cur;
+    for(int i = 0; i < starting_depth; i++){
+        node = getBestChild(node);
+        if(node == NULL){
+            node = prev;
+            break;
+        }
+        prev = node;
+    }
+    deepSearchHelper(node, depth);
+}
+
+static void deepSearchHelper(struct Node* node, int depth){
+    if(depth <= 0){
+        return;
+    }
+    if(node->children == 0){
+        buildTreeMovesHelper(node, 1);
+        for (int i = 0; i < node->childrenCount; i++) {
+            if(depth == 0) {
+                node->children[i]->rating = getRating(node->children[i]->board);
+            }
+            else {
+                node->children[i]->rating = getRatingFast(node->children[i]->board);
+            }
+            propagateRating(node->children[i]);
+        }
+    }
+
+    struct Node *best[DEEP_SEARCH_WIDTH];
+
+    int maxWidth = MIN(DEEP_SEARCH_WIDTH, node->childrenCount);
+
+    for(int i = 0; i < maxWidth; i++){
+        best[i] = node->children[0];
+    }
+
+
+    for (int i = 1; i < node->childrenCount; ++i) {
+        int childRating = node->children[i]->rating;
+        for(int j = 0; j < maxWidth; j++){
+            if ((((node->color == 'W') && childRating < best[j]->rating) ||
+                ((node->color == 'B') && childRating > best[j]->rating))){
+                best[j] = node->children[i];
+                break;
+            }
+        }
+    }
+
+
+
+    for(int i = 0; i < maxWidth; i++){
+        if(best[i] != NULL) deepSearchHelper(best[i], depth-1);
+    }
+}
+
+
+
 
 
 

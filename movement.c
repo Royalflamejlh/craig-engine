@@ -1,23 +1,21 @@
-#include "tree.h"
 #include "movement.h"
 #include "board.h"
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
 
-static void getLegalPawnMoves(struct Node *node, char x, char y);
-static void getLegalBishopMoves(struct Node *node, char x, char y);
-static void getLegalKnightMoves(struct Node *node, char x, char y);
-static void getLegalRookMoves(struct Node *node, char x, char y);
-static void getLegalKingMoves(struct Node *node, char x, char y);
-static char inCheck(char board[8][8], char color);
+static void getLegalPawnMoves(struct Node *node, unsigned char x, unsigned char y);
+static void getLegalBishopMoves(struct Node *node, unsigned char x, unsigned char y);
+static void getLegalKnightMoves(struct Node *node, unsigned char x, unsigned char y);
+static void getLegalRookMoves(struct Node *node, unsigned char x, unsigned char y);
+static void getLegalKingMoves(struct Node *node, unsigned char x, unsigned char y);
 
 /*
 * Takes in a node and generates all legal moves for that node
 */
 void buildLegalMoves(struct Node *node){
-    for (char y = 0; y < 8; y++) {
-        for (char x = 0; x < 8; x++) {
+    for (unsigned char y = 0; y < 8; y++) {
+        for (unsigned char x = 0; x < 8; x++) {
             char piece = node->board[y][x];
             if (piece == ' ' || (node->color == 'B' && islower(piece)) || (node->color == 'W' && isupper(piece))) {
                 continue;
@@ -55,7 +53,7 @@ void buildLegalMoves(struct Node *node){
     }
 }
 
-static int64_t makeMove(char from_x, char from_y, char to_x, char to_y, char promotion){
+static int64_t makeMove(unsigned char from_x,unsigned char from_y,unsigned char to_x, unsigned char to_y, char promotion){
     int64_t result = 0;
     result = from_x;
     result = (result << 8) | from_y;
@@ -68,7 +66,7 @@ static int64_t makeMove(char from_x, char from_y, char to_x, char to_y, char pro
 }
 
 
-static void addMoveIfValid(struct Node *node, char from_x, char from_y, char to_x, char to_y, char promotion) {
+static void addMoveIfValid(struct Node *node, unsigned char from_x, unsigned char from_y, unsigned char to_x, unsigned char to_y, char promotion) {
     //Make sure move in on the board
     if( (from_x >= 8 || from_x < 0) ||
         (from_y >= 8 || from_y < 0) ||
@@ -86,7 +84,7 @@ static void addMoveIfValid(struct Node *node, char from_x, char from_y, char to_
     }
 
     //Create a child node
-    addTreeNode(node, move, STATUS_PREDICTED, 0);
+    addTreeNode(node, move, STATUS_PREDICTED);
 }
 
 /**
@@ -95,8 +93,8 @@ static void addMoveIfValid(struct Node *node, char from_x, char from_y, char to_
 * 0,0 = A1
 * 1,0 = A2
 */
-static char inCheck(char board[8][8], char color){
-    int kingRow, kingCol, found;
+char inCheck(char board[8][8], char color){
+    int kingRow, kingCol, found = 0;
 
     for (int row = 0; row < 8; row++) {
         for (int col = 0; col < 8; col++) {
@@ -279,20 +277,21 @@ checkKing:
             }
         }
     }
+    return 0;
 }
 
 
 
-static void getLegalPawnMoves(struct Node *node, char x, char y) {
+static void getLegalPawnMoves(struct Node *node, unsigned char x, unsigned char y) {
     char piece = node->board[y][x];
-    char direction = isupper(piece) ? 1 : -1;
+    int direction = isupper(piece) ? 1 : -1;
 
-    char forward_y = y + direction;
+    int forward_y = y + direction;
     if (node->board[forward_y][x] == ' ') {
         addMoveIfValid(node, x, y, x, forward_y, ' ');
 
         if ((isupper(piece) && y == 1) || (islower(piece) && y == 6)) {
-            char twoForward_y = y + 2 * direction;
+            int twoForward_y = y + 2 * direction;
             if (node->board[twoForward_y][x] == ' ') {
                 addMoveIfValid(node, x, y, x, twoForward_y, ' ');
             }
@@ -300,11 +299,11 @@ static void getLegalPawnMoves(struct Node *node, char x, char y) {
     }
 
     for (int dx = -1; dx <= 1; dx += 2) { 
-        char capture_x = x + dx;
-        char capture_y = y + direction;
+        int capture_x = x + dx;
+        int capture_y = y + direction;
 
         if (capture_x >= 0 && capture_x < 8 && capture_y >= 0 && capture_y < 8) {
-            char target = node->board[capture_y][capture_x];
+            int target = node->board[capture_y][capture_x];
             if ((isupper(piece) && islower(target)) || (islower(piece) && isupper(target))) {
                 addMoveIfValid(node, x, y, capture_x, capture_y, ' ');
             }
@@ -312,17 +311,17 @@ static void getLegalPawnMoves(struct Node *node, char x, char y) {
     }
 }
 
-static void getLegalRookMoves(struct Node *node, char x, char y) {
+static void getLegalRookMoves(struct Node *node, unsigned char x, unsigned char y) {
     char piece = node->board[y][x];
 
     int directions[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}; 
 
     for (int i = 0; i < 4; i++) {
-        char dx = directions[i][1];
-        char dy = directions[i][0];
+        int dx = directions[i][1];
+        int dy = directions[i][0];
 
-        char new_x = x + dx;
-        char new_y = y + dy;
+        int new_x = x + dx;
+        int new_y = y + dy;
 
         while (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
             char target = node->board[new_y][new_x];
@@ -344,17 +343,17 @@ static void getLegalRookMoves(struct Node *node, char x, char y) {
 }
 
 
-static void getLegalBishopMoves(struct Node *node, char x, char y) {
+static void getLegalBishopMoves(struct Node *node, unsigned char x, unsigned char y) {
     char piece = node->board[y][x];
 
     int directions[4][2] = {{-1, 1}, {-1, -1}, {1, 1}, {1, -1}}; 
 
     for (int i = 0; i < 4; i++) {
-        char dx = directions[i][1];
-        char dy = directions[i][0];
+        int dx = directions[i][1];
+        int dy = directions[i][0];
 
-        char new_x = x + dx;
-        char new_y = y + dy;
+        int new_x = x + dx;
+        int new_y = y + dy;
 
         while (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
             char target = node->board[new_y][new_x];
@@ -376,13 +375,13 @@ static void getLegalBishopMoves(struct Node *node, char x, char y) {
 }
 
 
-static void getLegalKnightMoves(struct Node *node, char x, char y) {
+static void getLegalKnightMoves(struct Node *node, unsigned char x, unsigned char y) {
     char piece = node->board[y][x];
     int moves[8][2] = {{-2, 1}, {-1, 2}, {1, 2}, {2, 1}, {2, -1}, {1, -2}, {-1, -2}, {-2, -1}};
 
     for (int i = 0; i < 8; i++) {
-        char new_x = x + moves[i][1];
-        char new_y = y + moves[i][0];
+        int new_x = x + moves[i][1];
+        int new_y = y + moves[i][0];
 
         if (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
             char target = node->board[new_y][new_x];
@@ -397,15 +396,15 @@ static void getLegalKnightMoves(struct Node *node, char x, char y) {
 }
 
 
-static void getLegalKingMoves(struct Node *node, char x, char y) {
+static void getLegalKingMoves(struct Node *node, unsigned char x, unsigned char y) {
     char piece = node->board[y][x];
 
     int moves[8][2] = {{-1, 0}, {-1, 1}, {0, 1}, {1, 1},
                        {1, 0}, {1, -1}, {0, -1}, {-1, -1}};
 
     for (int i = 0; i < 8; i++) {
-        char new_x = x + moves[i][1];
-        char new_y = y + moves[i][0];
+        int new_x = x + moves[i][1];
+        int new_y = y + moves[i][0];
 
         if (new_x >= 0 && new_x < 8 && new_y >= 0 && new_y < 8) {
             char target = node->board[new_y][new_x];

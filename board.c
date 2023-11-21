@@ -38,10 +38,10 @@ void printBoard(char board[8][8]){
 }
 
 void receiveMove(char board[8][8], int64_t move) {
-    char to_x   = (move >> 8) & 0xFF;
-    char to_y   = move & 0xFF;
-    char from_x = (move >> 24) & 0xFF;
-    char from_y = (move >> 16) & 0xFF;
+    unsigned char to_x   = (move >> 8) & 0xFF;
+    unsigned char to_y   = move & 0xFF;
+    unsigned char from_x = (move >> 24) & 0xFF;
+    unsigned char from_y = (move >> 16) & 0xFF;
     char promotion = (move >> 32) & 0xFF; 
 
     board[to_y][to_x] = board[from_y][from_x];

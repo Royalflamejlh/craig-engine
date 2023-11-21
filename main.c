@@ -6,6 +6,9 @@
 #include "tree.h"
 #include "board.h"
 
+#define DEPTH_SCAN 4
+#define DEPTH_DEEP 10
+
 static void processUCI(void);
 static void processIsReady(void);
 static int processInput(char* input);
@@ -81,7 +84,7 @@ void processMoves(char* str){
         struct Node* nextIt = iterateTree(it, moveInt);
         if (nextIt == NULL) {
             prevIt = it;
-            it = addTreeNode(prevIt, moveInt, 0, 0);
+            it = addTreeNode(prevIt, moveInt, 0);
         } else {
             updateNodeStatus(it, 0);
             prevIt = it;
@@ -91,9 +94,12 @@ void processMoves(char* str){
     }
 
     updateNodeStatus(it, 2);
-    buildTreeMoves(5);
+    buildTreeMoves(DEPTH_SCAN);
+
     printCurNode();
-    //printTree();
+
+    deepSearchTree(DEPTH_SCAN-2, DEPTH_DEEP);
+    
 
     sendBestMove();
 
