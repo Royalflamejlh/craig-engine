@@ -53,18 +53,6 @@ void buildLegalMoves(struct Node *node){
     }
 }
 
-static int64_t makeMove(unsigned char from_x,unsigned char from_y,unsigned char to_x, unsigned char to_y, char promotion){
-    int64_t result = 0;
-    result = from_x;
-    result = (result << 8) | from_y;
-    result = (result << 8) | to_x;
-    result = (result << 8) | to_y;
-    if (promotion != ' ') {
-        result = (result << 8) | promotion;
-    }
-    return result;
-}
-
 
 static void addMoveIfValid(struct Node *node, unsigned char from_x, unsigned char from_y, unsigned char to_x, unsigned char to_y, char promotion) {
     //Make sure move in on the board
@@ -74,12 +62,12 @@ static void addMoveIfValid(struct Node *node, unsigned char from_x, unsigned cha
           (to_y >= 8 || to_y < 0))  return;
     
     
-    int64_t move = makeMove(from_x, from_y, to_x, to_y, promotion);
+    struct Move move = {from_x, from_y, to_x, to_y, promotion};
 
     char board[8][8];
     memcpy(&board[0][0], &node->board[0][0], 8*8*sizeof(char));
     receiveMove(board, move);
-    if(inCheck(board, node->color)){
+    if(inCheck(board, getColor(board[to_x][to_y]))){
         return;
     }
 
@@ -288,7 +276,15 @@ static void getLegalPawnMoves(struct Node *node, unsigned char x, unsigned char 
 
     int forward_y = y + direction;
     if (node->board[forward_y][x] == ' ') {
-        addMoveIfValid(node, x, y, x, forward_y, ' ');
+        if(forward_y == 7 || forward_y == 0){
+            addMoveIfValid(node, x, y, x, forward_y, 'q');
+            addMoveIfValid(node, x, y, x, forward_y, 'n');
+            addMoveIfValid(node, x, y, x, forward_y, 'b');
+            addMoveIfValid(node, x, y, x, forward_y, 'r');
+        }
+        else{
+            addMoveIfValid(node, x, y, x, forward_y, ' ');
+        }
 
         if ((isupper(piece) && y == 1) || (islower(piece) && y == 6)) {
             int twoForward_y = y + 2 * direction;
@@ -305,10 +301,30 @@ static void getLegalPawnMoves(struct Node *node, unsigned char x, unsigned char 
         if (capture_x >= 0 && capture_x < 8 && capture_y >= 0 && capture_y < 8) {
             int target = node->board[capture_y][capture_x];
             if ((isupper(piece) && islower(target)) || (islower(piece) && isupper(target))) {
-                addMoveIfValid(node, x, y, capture_x, capture_y, ' ');
+                if(capture_y == 7 || capture_y == 0){
+                    addMoveIfValid(node, x, y, capture_x, capture_y, 'q');
+                    addMoveIfValid(node, x, y, capture_x, capture_y, 'n');
+                    addMoveIfValid(node, x, y, capture_x, capture_y, 'b');
+                    addMoveIfValid(node, x, y, capture_x, capture_y, 'r');
+                }
+                else{
+                    addMoveIfValid(node, x, y, capture_x, capture_y, ' ');
+                }
             }
         }
     }
+
+    // En-Passant
+    struct Move lastMove = node->move;
+    char pieceMoved = node->board[lastMove.to_y][lastMove.to_x];
+
+    if (tolower(pieceMoved) == 'p' && abs(lastMove.to_y - lastMove.from_y) == 2) {
+        if (y == lastMove.to_y && (x == lastMove.to_x - 1 || x == lastMove.to_x + 1)) {
+            int capture_y = (piece == 'P') ? lastMove.to_y - 1 : lastMove.to_y + 1;
+            addMoveIfValid(node, x, y, lastMove.to_x, capture_y, ' ');
+        }
+    }
+
 }
 
 static void getLegalRookMoves(struct Node *node, unsigned char x, unsigned char y) {
@@ -414,4 +430,54 @@ static void getLegalKingMoves(struct Node *node, unsigned char x, unsigned char 
             }
         }
     }
+
+    if(inCheck(node->board, getColor(piece))){
+        return;
+    }
+
+    if ((node->castle & WHITE_CASTLE_SHORT) && piece == 'K') {
+        if (node->board[y][5] == ' ' && node->board[y][6] == ' ') {
+            node->board[y][5] = piece;
+            node->board[x][y] = ' ';
+            if(inCheck(node->board, getColor(piece)) == 0){
+                node->board[y][5] = ' ';
+                node->board[x][y] = piece;
+                addMoveIfValid(node, x, y, 6, y, ' ');
+            }
+        }
+    }
+    if ((node->castle & WHITE_CASTLE_LONG) && piece == 'K') {
+        if (node->board[y][1] == ' ' && node->board[y][2] == ' ' && node->board[y][3] == ' ') {
+            node->board[y][3] = piece;
+            node->board[x][y] = ' ';
+            if(inCheck(node->board, getColor(piece)) == 0){
+                node->board[y][3] = ' ';
+                node->board[x][y] = piece;
+                addMoveIfValid(node, x, y, 2, y, ' ');
+            }
+        }
+    }
+    if ((node->castle & BLACK_CASTLE_SHORT) && piece == 'k') {
+        if (node->board[y][5] == ' ' && node->board[y][6] == ' ') {
+            node->board[y][5] = piece;
+            node->board[x][y] = ' ';
+            if(inCheck(node->board, getColor(piece)) == 0){
+                node->board[y][5] = ' ';
+                node->board[x][y] = piece;
+                addMoveIfValid(node, x, y, 6, y, ' ');
+            }
+        }
+    }
+    if ((node->castle & BLACK_CASTLE_LONG) && piece == 'k') {
+        if (node->board[y][1] == ' ' && node->board[y][2] == ' ' && node->board[y][3] == ' ') {
+            node->board[y][3] = piece;
+            node->board[x][y] = ' ';
+            if(inCheck(node->board, getColor(piece)) == 0){
+                node->board[y][3] = ' ';
+                node->board[x][y] = piece;
+                addMoveIfValid(node, x, y, 2, y, ' ');
+            }
+        }
+    }
+    
 }

@@ -4,47 +4,27 @@
 #include <ctype.h>
 #include "util.h"
 
-int64_t moveCharToInt(char* prev) {
+void moveStrToStruct(char* prev, struct Move* move) {
     if (prev == NULL || strlen(prev) < 4) {
-        return 0;
+        return;
     }
+    move->from_x = prev[0] - 'a';
+    move->from_y = prev[1] - '1';
+    move->to_x   = prev[2] - 'a';
+    move->to_y   = prev[3] - '1';
+    move->promotion = prev[4];
 
-    int64_t result = 0;
-    char from_x = prev[0] - 'a';
-    char from_y = prev[1] - '1';
-    char to_x   = prev[2] - 'a';
-    char to_y   = prev[3] - '1';
-
-    result = from_x;
-    result = (result << 8) | from_y;
-    result = (result << 8) | to_x;
-    result = (result << 8) | to_y;
-
-    if (strlen(prev) > 4) {
-        char promotion = prev[4];
-        result = (result << 8) | promotion;
-    }
-
-    return result;
+    return;
 }
 
-void moveIntToChar(int64_t move, char* result) {
-    for (int i = 0; i < 4; ++i) {
-        char c = (char)((move >> (8 * (3 - i))) & 0xFF);
-        if (i % 2 == 0) {
-            result[i] = c + 'a';
-        } else {          
-            result[i] = c + '1';
-        }
-    }
-
-    char promotion = (char)((move >> (8 * 4)) & 0xFF);
-    if (promotion != 0) { 
-        result[4] = promotion;
-        result[5] = '\0'; 
-    } else {
-        result[4] = '\0';
-    }
+void moveStructToStr(struct Move* move, char* result) {
+    result[0] = move->from_x + 'a';
+    result[1] = move->from_y + '1';
+    result[2] = move->to_x + 'a';
+    result[3] = move->to_y + '1';
+    result[4] = move->promotion;
+    result[5] = '\0';
+    return;
 }
 
 
@@ -62,4 +42,24 @@ char* trimWhitespace(char* str) {
 
     end[1] = '\0';
     return str;
+}
+
+
+char updateCastling(char castle, struct Move move){
+    if(move.from_y == 0){
+        if(move.from_x == 4)      castle &= !(WHITE_CASTLE_LONG | WHITE_CASTLE_SHORT);
+        else if(move.from_x == 0) castle &= !WHITE_CASTLE_LONG;
+        else if(move.from_x == 7) castle &= !WHITE_CASTLE_SHORT;
+    }
+    else if(move.from_y == 7){
+        if(move.from_x == 4)      castle &= !(BLACK_CASTLE_LONG | BLACK_CASTLE_SHORT);
+        else if(move.from_x == 0) castle &= !BLACK_CASTLE_LONG;
+        else if(move.from_x == 7) castle &= !BLACK_CASTLE_SHORT;
+    }
+    return castle;
+}
+
+char getColor(char piece){
+    if(isupper(piece)) return 'W';
+    return 'B';
 }

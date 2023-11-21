@@ -8,6 +8,7 @@
 #include "evaluator.h"
 #include "movement.h"
 #include "tree.h"
+#include <ctype.h>
 
 
 
@@ -18,12 +19,18 @@ static struct Node* cur;
 static void propagateRating(struct Node* node);
 static void buildTreeMovesHelper(struct Node* node, int depth);
 static void deepSearchHelper(struct Node* node, int depth);
+static void parseBoardFromFEN(const char* boardFEN, char board[8][8]);
+static void parseCastlingFromFEN(const char* castlingFEN, char* castle);
+static void freeTree(struct Node* node);
 
 //Initialize the move tree at the start of the game
 void initializeTree(void){
+    freeTree(root);
     root = malloc(sizeof(struct Node));
-    root->move = 0;
+    struct Move emptyMove = {0, 0, 0, 0, 0};
+    root->move = emptyMove;
     root->status = STATUS_ROOT;
+    root->castle = 0xF0;
     root->color = 'B';
     initializeBoard(root->board);
     root->rating = INT_MIN;
@@ -33,6 +40,62 @@ void initializeTree(void){
     cur = root;
 }
 
+void initializeTreeFEN(char* FEN) {
+    freeTree(root);
+    root = malloc(sizeof(struct Node));
+    if (root == NULL) {
+        return;
+    }
+
+    struct Move emptyMove = {0, 0, 0, 0, 0};
+    root->move = emptyMove;
+    root->status = STATUS_ROOT;
+    root->castle = 0;
+    root->rating = INT_MIN;
+    root->parent = NULL;
+    root->children = NULL;
+    root->childrenCount = 0;
+    cur = root;
+
+    char* token;
+    char* rest = FEN;
+
+    token = strtok_r(rest, " ", &rest);
+    parseBoardFromFEN(token, root->board);
+
+    token = strtok_r(NULL, " ", &rest);
+    root->color = (token[0] == 'w') ? 'W' : 'B';
+
+    token = strtok_r(NULL, " ", &rest);
+    parseCastlingFromFEN(token, &(root->castle));
+}
+
+static void parseBoardFromFEN(const char* boardFEN, char board[8][8]) {
+    int rank = 7, file = 0;
+
+    for (int i = 0; boardFEN[i] != '\0'; ++i) {
+        if (isdigit(boardFEN[i])) {
+            file += boardFEN[i] - '0';
+        } else if (boardFEN[i] == '/') {
+            rank--;
+            file = 0;
+        } else {
+            board[rank][file] = boardFEN[i];
+            file++;
+        }
+    }
+}
+
+static void parseCastlingFromFEN(const char* castlingFEN, char* castle) {
+    for (int i = 0; castlingFEN[i] != '\0'; ++i) {
+        switch (castlingFEN[i]) {
+            case 'K': *castle |= WHITE_CASTLE_SHORT; break;
+            case 'Q': *castle |= WHITE_CASTLE_LONG; break;
+            case 'k': *castle |= BLACK_CASTLE_SHORT; break;
+            case 'q': *castle |= BLACK_CASTLE_LONG; break;
+        }
+    }
+}
 
 /*
 * Get the root node of a tree
@@ -44,7 +107,7 @@ struct Node* getTreeRoot(void){
 /*
 * Add a node to the tree
 */
-struct Node* addTreeNode(struct Node* parent, int64_t move, char status) {
+struct Node* addTreeNode(struct Node* parent, struct Move move, char status) {
     if (parent == NULL) {
         return NULL;
     }
@@ -62,6 +125,8 @@ struct Node* addTreeNode(struct Node* parent, int64_t move, char status) {
 
     memcpy(&newNode->board[0][0], &parent->board[0][0], 8*8*sizeof(char));
     receiveMove(newNode->board, move);
+
+    newNode->castle = updateCastling(parent->castle, move);
 
     newNode->color = 'W';
     newNode->rating = INT_MAX;
@@ -113,13 +178,18 @@ void updateNodeStatus(struct Node* node, char status) {
 /*
 * Iterate through a tree by putting in a move, 
 */
-struct Node* iterateTree(struct Node* it, int64_t move) {
+struct Node* iterateTree(struct Node* it, struct Move move) {
     if (it == NULL) {
         return NULL;
     }
 
     for (int i = 0; i < it->childrenCount; i++) {
-        if (it->children[i]->move == move) {
+        if (it->children[i]->move.from_x == move.from_x &&
+            it->children[i]->move.from_y == move.from_y &&
+            it->children[i]->move.to_x == move.to_x &&
+            it->children[i]->move.to_y == move.to_y &&
+            it->children[i]->move.promotion == move.promotion
+        ) {
             return it->children[i];
         }
     }
@@ -207,6 +277,8 @@ struct Node* getBestChild(struct Node* node){
 
 
 struct Node* getBestCurChild(){
+    struct Node* child = getBestChild(cur);
+    if(child == NULL) buildTreeMoves(1);
     return getBestChild(cur);
 }
 
@@ -323,10 +395,10 @@ void printNode(struct Node* node, int level, int depth) {
     for (int i = 0; i < level; ++i) {
         printf("    ");
     }
-    char moveStr[10]; 
-    moveIntToChar(node->move, moveStr);
-    printf("%p: stat:%d col:%c rat:%d par:%p chil[%d]@%p mov:%s\r\n",
-    node, node->status, node->color, node->rating, node->parent,
+    char moveStr[6]; 
+    moveStructToStr(&(node->move), moveStr);
+    printf("%p: stat:%d col:%c cast:%x rat:%d par:%p chil[%d]@%p mov:%s\r\n",
+    node, node->status, node->color, node->castle, node->rating, node->parent,
     node->childrenCount, node->children, moveStr);
     printBoard(node->board);
     for (int i = 0; i < node->childrenCount; ++i) {

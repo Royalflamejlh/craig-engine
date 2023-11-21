@@ -6,9 +6,9 @@
 #include "tree.h"
 #include "board.h"
 
-#define DEPTH_SCAN 4
-#define DEPTH_DEEP_START 2
-#define DEPTH_DEEP 10
+#define DEPTH_SCAN 3
+#define DEPTH_DEEP_START 1
+#define DEPTH_DEEP 4
 
 static void processUCI(void);
 static void processIsReady(void);
@@ -54,9 +54,8 @@ static int processInput(char* input){
             }
         }
         else if (strncmp(input, "fen", 3) == 0) {
-            printf("info string Loading FEN not supported\r\n");
-            fflush(stdout);
-            //sendBestMove();
+            input += 4;
+            initializeTreeFEN(input);
             return 0;
         }
     }
@@ -81,12 +80,13 @@ void processMoves(char* str) {
     pch = strtok_r(str, " ", &rest);
     while (pch != NULL) {
         char* moveChar = trimWhitespace(pch);
-        int64_t moveInt = moveCharToInt(moveChar); 
+        struct Move move;
+        moveStrToStruct(moveChar, &move); 
 
-        struct Node* nextIt = iterateTree(it, moveInt);
+        struct Node* nextIt = iterateTree(it, move);
         if (nextIt == NULL) {
             prevIt = it;
-            it = addTreeNode(prevIt, moveInt, 0);
+            it = addTreeNode(prevIt, move, 0);
         } else {
             updateNodeStatus(it, 0);
             prevIt = it;
@@ -98,7 +98,7 @@ void processMoves(char* str) {
     updateNodeStatus(it, 2);
     buildTreeMoves(DEPTH_SCAN);
 
-    //printCurNode();
+    printCurNode();
     deepSearchTree(DEPTH_DEEP_START, DEPTH_DEEP);
 
     sendBestMove();
@@ -121,8 +121,12 @@ static void processIsReady(void) {
 
  static void sendBestMove(){
     struct Node* node = getBestCurChild();
+    if(node == NULL){
+        printf("info string Warning failed to build nodes, this probably means you lost\r\n");
+        return;
+    }
     char move[6];
-    moveIntToChar(node->move, move);
+    moveStructToStr(&(node->move), move);
     printf("bestmove %s\r\n", move);
     printf("info string Move %s found for %c with a board score of %d\n\r", move, node->color, node->rating);
     fflush(stdout);

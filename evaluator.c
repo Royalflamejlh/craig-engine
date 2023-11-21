@@ -253,8 +253,8 @@ static char isRookOpen(char board[8][8], int x, int y){
 */
 static char isProtected(char board[8][8], int x, int y){
     char result;
-    int kingRow;
-    int kingCol;
+    int kingRow = -1;
+    int kingCol = -1;
     char tempPiece = board[x][y];
     char color = 'B'; // Color of us
     if(isupper(board[x][y])) color = 'W';
@@ -267,6 +267,9 @@ static char isProtected(char board[8][8], int x, int y){
                 kingCol = col;
             }
         }
+    }
+    if(kingRow == -1 || kingCol == -1){
+        return 0;
     }
 
     //Set it to our color pawn
@@ -282,7 +285,7 @@ static char isProtected(char board[8][8], int x, int y){
         result = inCheck(board, 'B');
     }
     else{
-        result =inCheck(board, 'W');
+        result = inCheck(board, 'W');
     }
 
     board[x][y] = tempPiece;

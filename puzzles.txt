@@ -1,0 +1,5 @@
+
+position startpos moves e2e3 b8c6 g1f3 d7d6 f1b5 a8b8 e3e4    #dont give up king
+
+
+position startpos moves d2d4 b8c6 d4d5     #crashes
