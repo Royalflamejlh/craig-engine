@@ -21,4 +21,5 @@ void moveStrToStruct(char* prev, struct Move* move);
 void moveStructToStr(struct Move* move, char* result);
 char updateCastling(char castle, struct Move move);
 char getColor(char piece);
+char opposite(char color);
 #endif

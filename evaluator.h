@@ -1,5 +1,10 @@
 #ifndef EVAL_H
 #define EVAL_H
-int getRating(char board[8][8]);
-int getRatingFast(char board[8][8]);
+#include "util.h"
+#include "tree.h"
+void updateRating(struct Node* node);
+void updateRatingFast(struct Node* node);
+int getBoardRating(char board[8][8]);
+int getBoardRatingFast(char board[8][8]);
+
 #endif

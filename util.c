@@ -44,22 +44,26 @@ char* trimWhitespace(char* str) {
     return str;
 }
 
-
 char updateCastling(char castle, struct Move move){
     if(move.from_y == 0){
-        if(move.from_x == 4)      castle &= !(WHITE_CASTLE_LONG | WHITE_CASTLE_SHORT);
-        else if(move.from_x == 0) castle &= !WHITE_CASTLE_LONG;
-        else if(move.from_x == 7) castle &= !WHITE_CASTLE_SHORT;
+        if(move.from_x == 4)      castle &= ~(WHITE_CASTLE_LONG | WHITE_CASTLE_SHORT);
+        else if(move.from_x == 0) castle &= ~WHITE_CASTLE_LONG;
+        else if(move.from_x == 7) castle &= ~WHITE_CASTLE_SHORT;
     }
     else if(move.from_y == 7){
-        if(move.from_x == 4)      castle &= !(BLACK_CASTLE_LONG | BLACK_CASTLE_SHORT);
-        else if(move.from_x == 0) castle &= !BLACK_CASTLE_LONG;
-        else if(move.from_x == 7) castle &= !BLACK_CASTLE_SHORT;
+        if(move.from_x == 4)      castle &= ~(BLACK_CASTLE_LONG | BLACK_CASTLE_SHORT);
+        else if(move.from_x == 0) castle &= ~BLACK_CASTLE_LONG;
+        else if(move.from_x == 7) castle &= ~BLACK_CASTLE_SHORT;
     }
     return castle;
 }
 
 char getColor(char piece){
     if(isupper(piece)) return 'W';
+    return 'B';
+}
+
+char opposite(char color){
+    if(color == 'B') return 'W';
     return 'B';
 }

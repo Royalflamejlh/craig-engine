@@ -2,11 +2,12 @@
 #include "evaluator.h"
 #include "movement.h"
 #include <ctype.h>
+#include <string.h>
 #include <stdlib.h>
 
 
 #define PAWN_VALUE 1000
-#define PAWN_POSITION_MULT 1
+#define PAWN_POSITION_MULT 10
 #define PAWN_PROTECT_BONUS 5
 #define PAWN_CENTER_BONUS_GOOD 100
 #define PAWN_CENTER_BONUS_GREAT 150
@@ -32,8 +33,14 @@
 #define QUEEN_PROTECT_BONUS 1000
 
 #define KING_VALUE 1000000
+#define KING_HIDE_BONUS 100
+
+#define CASTLE_BONUS 15000
 
 
+
+static char isDrawn(struct Node* node);
+static char isDrawnFast(struct Node* node);
 
 static char isChained(char board[8][8], int i, int j);
 static char isBishopOpen(char board[8][8], int x, int y);
@@ -41,11 +48,31 @@ static char isRookOpen(char board[8][8], int x, int y);
 static char isProtected(char board[8][8], int x, int y);
 static char canKnightMove(char board[8][8], int x, int y);
 static char canQueenMove(char board[8][8], int x, int y);
+static char isCastleMove(struct Node* node);
 
 // 0,0 = A1
 // 1,0 = A2
+void updateRating(struct Node* node){
+    if(isDrawn(node)){
+        node->rating = 0;
+        return;
+    }
+    if(isCastleMove(node)){
+        if(node->color == 'W') node->rating += CASTLE_BONUS;
+        else node->rating -= CASTLE_BONUS;
+    }
+    node->rating = getBoardRating(node->board);
+}
 
-int getRating(char board[8][8]){
+void updateRatingFast(struct Node* node){
+    node->rating = getBoardRatingFast(node->board);
+    if(isDrawnFast(node)){
+        node->rating /= 2;
+    }
+}
+
+
+int getBoardRating(char board[8][8]){
     int score = 0;
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
@@ -64,7 +91,7 @@ int getRating(char board[8][8]){
                     score -= PAWN_VALUE;
                     if(isChained(board, i, j)) score -= PAWN_CHAIN_BONUS;
                     if(isProtected(board, i, j)) score -= PAWN_PROTECT_BONUS;
-                    if(i >= 2 && i <= 5 && i >= 2 && i <= 5) score -= PAWN_CENTER_BONUS_GOOD;
+                    if(i >= 2 && i <= 5 && j >= 2 && j <= 5) score -= PAWN_CENTER_BONUS_GOOD;
                     if(i >= 3 && i <= 4 && j >= 3 && j <= 4) score += PAWN_CENTER_BONUS_GREAT;
                     break;
 
@@ -78,7 +105,7 @@ int getRating(char board[8][8]){
                     score -= BISHOP_VALUE;
                     if(isProtected(board, i, j)) score -= BISHOP_PROTECT_BONUS;
                     if(isBishopOpen(board, i, j)) score -= BISHOP_OPEN_BONUS;
-                    if(i == 8 && (j == 2 || j == 5)) score += BISHOP_UNDEVELOP_PUNISH;
+                    if(i == 7 && (j == 2 || j == 5)) score += BISHOP_UNDEVELOP_PUNISH;
                     break;
 
                 case 'N':
@@ -124,9 +151,11 @@ int getRating(char board[8][8]){
 
                 case 'K': 
                     score += KING_VALUE;
+                    if(i == 0 && (j < 2 || j > 5)) score += KING_HIDE_BONUS;
                     break;
                 case 'k':
                     score -= KING_VALUE;
+                    if(i == 7 && (j < 2 || j > 5)) score -= KING_HIDE_BONUS;
                     break;
 
                 default:
@@ -137,7 +166,7 @@ int getRating(char board[8][8]){
     return score;
 }
 
-int getRatingFast(char board[8][8]){
+int getBoardRatingFast(char board[8][8]){
     int score = 0;
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 8; j++) {
@@ -247,6 +276,7 @@ static char isRookOpen(char board[8][8], int x, int y){
     return 0;
 }
 
+
 /*
 * See if a piece is protected, replace it with a king of the opposite color, replace the opposite colors king
 * with a pawn of the current color, see if the newly placed king is in check, if so it is protected.
@@ -272,26 +302,22 @@ static char isProtected(char board[8][8], int x, int y){
         return 0;
     }
 
-    //Set it to our color pawn
-    board[kingRow][kingCol] = 'P';
-    if(color == 'B') board[kingRow][kingCol] =  'p';
-
     //Set their king to checking piece
-    board[x][y] = 'k';
-    if(color == 'B') board[x][y] =  'K';
-
-
-    if(color == 'W'){
-        result = inCheck(board, 'B');
-    }
-    else{
+    
+    if(color == 'B'){
+        board[kingRow][kingCol] =  'p';
+        board[x][y] =  'K'; 
         result = inCheck(board, 'W');
+        board[x][y] = tempPiece;
+        board[kingRow][kingCol] = 'K';
+    } 
+    else {
+        board[kingRow][kingCol] = 'P';
+        board[x][y] = 'k';
+        result = inCheck(board, 'B');
+        board[x][y] = tempPiece;
+        board[kingRow][kingCol] = 'k';
     }
-
-    board[x][y] = tempPiece;
-    board[kingRow][kingCol] = 'k';
-    if(color == 'B') board[kingRow][kingCol] = 'K';
-
     
     return result;
 }
@@ -310,4 +336,66 @@ static char canKnightMove(char board[8][8], int x, int y){
 
 static char canQueenMove(char board[8][8], int x, int y){
     return (isRookOpen(board, x, y) || isBishopOpen(board, x, y));
+}
+
+static char isStalemate(struct Node* node) {
+    buildLegalMoves(node);
+    return (node->childrenCount == 0 && !inCheck(node->board, opposite(node->color)));
+}
+
+static char isRepetitionDraw(struct Node* node){
+    int repetitionCount = 1;
+    char currentBoard[8][8];
+    memcpy(currentBoard, node->board, sizeof(currentBoard));
+
+    while (node->parent != NULL) {
+        node = node->parent;
+        if (memcmp(currentBoard, node->board, sizeof(currentBoard)) == 0) {
+            repetitionCount++;
+            if (repetitionCount >= 3) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+
+/*
+* Returns 1 if the position is a draw
+*/
+static char isDrawn(struct Node* node){
+    if(isRepetitionDraw(node)){
+        return 1;
+    }
+    if(isStalemate(node)){
+        return 1;
+    }
+    return 0;
+}
+
+/*
+* Returns 1 if the position is a draw
+*/
+static char isDrawnFast(struct Node* node){
+    if(node->parent == NULL || node->parent->parent == NULL){
+        return 0;
+    }
+    struct Move curMove = node->move;
+    struct Move oldMove = node->parent->parent->move;
+    if(curMove.to_x == oldMove.from_x && curMove.to_y == oldMove.from_y) return 1;
+    return 0;
+}
+
+
+
+static char isCastleMove(struct Node* node){
+    unsigned char to_x   = node->move.to_x;
+    unsigned char from_y = node->move.from_y;
+    unsigned char from_x = node->move.from_x;
+
+    if((node->parent->board[from_y][from_x] == 'K' || 
+        node->parent->board[from_y][from_x] == 'k') && 
+        (abs(from_x - to_x) == 2)) return 1;
+    return 0;
 }

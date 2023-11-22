@@ -2,19 +2,28 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "util.h"
 #include "tree.h"
 #include "board.h"
 
 #define DEPTH_SCAN 3
 #define DEPTH_DEEP_START 1
-#define DEPTH_DEEP 4
+#define DEPTH_DEEP 6
+
+#define PLAY_SELF
+
+#ifdef PLAY_SELF
+static void playSelf();
+#endif
+
 
 static void processUCI(void);
 static void processIsReady(void);
 static int processInput(char* input);
 static void processMoves(char* str);
 static void sendBestMove();
+static char isNullMove(char* move);
 
 int main(void) {
     char input[1024];
@@ -80,9 +89,11 @@ void processMoves(char* str) {
     pch = strtok_r(str, " ", &rest);
     while (pch != NULL) {
         char* moveChar = trimWhitespace(pch);
+        if(isNullMove(moveChar)){
+            goto get_next_token;
+        }
         struct Move move;
         moveStrToStruct(moveChar, &move); 
-
         struct Node* nextIt = iterateTree(it, move);
         if (nextIt == NULL) {
             prevIt = it;
@@ -92,6 +103,7 @@ void processMoves(char* str) {
             prevIt = it;
             it = nextIt;
         }
+get_next_token:
         pch = strtok_r(NULL, " ", &rest);
     }
 
@@ -102,8 +114,20 @@ void processMoves(char* str) {
     deepSearchTree(DEPTH_DEEP_START, DEPTH_DEEP);
 
     sendBestMove();
+
+    #ifdef PLAY_SELF
+    playSelf();
+    #endif
+
 }
 
+static char isNullMove(char* move){
+    if(move == NULL || strlen(move) < 4) return 0;
+    for(int i = 0; i < 4; i++){
+        if(move[i] != '0') return 0;
+    }
+    return 1;
+}
 
 
 static void processUCI(void) {
@@ -131,4 +155,22 @@ static void processIsReady(void) {
     printf("info string Move %s found for %c with a board score of %d\n\r", move, node->color, node->rating);
     fflush(stdout);
  }
+
+#ifdef PLAY_SELF
+
+static void playSelf() {
+    struct Node* new = getBestCurChild();
+    if(new == NULL){
+        printf("Checkmate athiests!\r\n");
+        return;
+    }
+    updateNodeStatus(new->parent, 0);
+    updateNodeStatus(new, 2);
+    buildTreeMoves(DEPTH_SCAN);
+    deepSearchTree(DEPTH_DEEP_START, DEPTH_DEEP);
+    printCurNode();
+    playSelf();
+}
+#endif
+
  

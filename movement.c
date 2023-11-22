@@ -63,11 +63,17 @@ static void addMoveIfValid(struct Node *node, unsigned char from_x, unsigned cha
     
     
     struct Move move = {from_x, from_y, to_x, to_y, promotion};
-
     char board[8][8];
     memcpy(&board[0][0], &node->board[0][0], 8*8*sizeof(char));
+    char piece = board[move.from_y][move.from_x];
+
+
     receiveMove(board, move);
-    if(inCheck(board, getColor(board[to_x][to_y]))){
+    if(inCheck(board, getColor(piece))){
+        return;
+    }
+    if(piece == ' '){
+        printf("info string Warning tried to move empty piece");
         return;
     }
 
@@ -100,7 +106,6 @@ checkKing:
         return -1;
     }
 
-    //Iterate N
     for(int i = kingRow; i < 8; i++){
         char piece = board[i][kingCol];
 
@@ -119,7 +124,7 @@ checkKing:
         if(piece == 'r' && color == 'W') return 1;
 
     }
-    //Iterate W
+
     for(int i = kingCol; i < 8; i++){
         char piece = board[kingRow][i];
 
@@ -138,7 +143,7 @@ checkKing:
         if(piece == 'r' && color == 'W') return 1;
 
     }
-    //Iterate S
+
     for(int i = kingRow; i >= 0; i--){
         char piece = board[i][kingCol];
 
@@ -157,7 +162,7 @@ checkKing:
         if(piece == 'r' && color == 'W') return 1;
 
     }
-    //Iterate E
+
     for(int i = kingCol; i >= 0; i--){
         char piece = board[kingRow][i];
 
@@ -178,7 +183,6 @@ checkKing:
     }
 
 
-    // Iterate NW
     for(int i = 1; (kingRow - i >= 0) && (kingCol - i >= 0); i++){
         char piece = board[kingRow - i][kingCol - i];
 
@@ -196,7 +200,6 @@ checkKing:
         if(piece == 'b' && color == 'W') return 1;
     }
 
-    // Iterate SW
     for(int i = 1; (kingRow + i < 8) && (kingCol - i >= 0); i++){
         char piece = board[kingRow + i][kingCol - i];
 
@@ -214,7 +217,6 @@ checkKing:
         if(piece == 'b' && color == 'W') return 1;
     }
 
-    // Iterate SE
     for(int i = 1; (kingRow + i < 8) && (kingCol + i < 8); i++){
         char piece = board[kingRow + i][kingCol + i];
 
@@ -232,7 +234,6 @@ checkKing:
         if(piece == 'b' && color == 'W') return 1;
     }
 
-    // Iterate NE
     for(int i = 1; (kingRow - i >= 0) && (kingCol + i < 8); i++){
         char piece = board[kingRow - i][kingCol + i];
 
@@ -251,8 +252,6 @@ checkKing:
     }
 
 
-
-    //Check for Knights
     int knightMoves[8][2] = {{-2, -1}, {-2, 1}, {-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {2, -1}, {2, 1}};
     for (int i = 0; i < 8; i++) {
         int newRow = kingRow + knightMoves[i][0];
@@ -265,6 +264,13 @@ checkKing:
             }
         }
     }
+
+    if((color == 'B') &&
+       (board[kingRow-1][kingCol+1] == 'P' || board[kingRow-1][kingCol-1] == 'P'))return 1;
+
+    if((color == 'W') &&
+       (board[kingRow+1][kingCol+1] == 'p' || board[kingRow+1][kingCol-1] == 'p'))return 1;
+
     return 0;
 }
 
@@ -438,10 +444,10 @@ static void getLegalKingMoves(struct Node *node, unsigned char x, unsigned char 
     if ((node->castle & WHITE_CASTLE_SHORT) && piece == 'K') {
         if (node->board[y][5] == ' ' && node->board[y][6] == ' ') {
             node->board[y][5] = piece;
-            node->board[x][y] = ' ';
+            node->board[y][x] = ' ';
             if(inCheck(node->board, getColor(piece)) == 0){
                 node->board[y][5] = ' ';
-                node->board[x][y] = piece;
+                node->board[y][x] = piece;
                 addMoveIfValid(node, x, y, 6, y, ' ');
             }
         }
@@ -449,10 +455,10 @@ static void getLegalKingMoves(struct Node *node, unsigned char x, unsigned char 
     if ((node->castle & WHITE_CASTLE_LONG) && piece == 'K') {
         if (node->board[y][1] == ' ' && node->board[y][2] == ' ' && node->board[y][3] == ' ') {
             node->board[y][3] = piece;
-            node->board[x][y] = ' ';
+            node->board[y][x] = ' ';
             if(inCheck(node->board, getColor(piece)) == 0){
                 node->board[y][3] = ' ';
-                node->board[x][y] = piece;
+                node->board[y][x] = piece;
                 addMoveIfValid(node, x, y, 2, y, ' ');
             }
         }
@@ -460,10 +466,10 @@ static void getLegalKingMoves(struct Node *node, unsigned char x, unsigned char 
     if ((node->castle & BLACK_CASTLE_SHORT) && piece == 'k') {
         if (node->board[y][5] == ' ' && node->board[y][6] == ' ') {
             node->board[y][5] = piece;
-            node->board[x][y] = ' ';
+            node->board[y][x] = ' ';
             if(inCheck(node->board, getColor(piece)) == 0){
                 node->board[y][5] = ' ';
-                node->board[x][y] = piece;
+                node->board[y][x] = piece;
                 addMoveIfValid(node, x, y, 6, y, ' ');
             }
         }
@@ -471,10 +477,10 @@ static void getLegalKingMoves(struct Node *node, unsigned char x, unsigned char 
     if ((node->castle & BLACK_CASTLE_LONG) && piece == 'k') {
         if (node->board[y][1] == ' ' && node->board[y][2] == ' ' && node->board[y][3] == ' ') {
             node->board[y][3] = piece;
-            node->board[x][y] = ' ';
+            node->board[y][x] = ' ';
             if(inCheck(node->board, getColor(piece)) == 0){
                 node->board[y][3] = ' ';
-                node->board[x][y] = piece;
+                node->board[y][x] = piece;
                 addMoveIfValid(node, x, y, 2, y, ' ');
             }
         }

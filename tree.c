@@ -20,7 +20,7 @@ static void propagateRating(struct Node* node);
 static void buildTreeMovesHelper(struct Node* node, int depth);
 static void deepSearchHelper(struct Node* node, int depth);
 static void parseBoardFromFEN(const char* boardFEN, char board[8][8]);
-static void parseCastlingFromFEN(const char* castlingFEN, char* castle);
+static void parseCastlingFromFEN(const char* castlingFEN, unsigned char* castle);
 static void freeTree(struct Node* node);
 
 //Initialize the move tree at the start of the game
@@ -86,7 +86,7 @@ static void parseBoardFromFEN(const char* boardFEN, char board[8][8]) {
     }
 }
 
-static void parseCastlingFromFEN(const char* castlingFEN, char* castle) {
+static void parseCastlingFromFEN(const char* castlingFEN, unsigned char* castle) {
     for (int i = 0; castlingFEN[i] != '\0'; ++i) {
         switch (castlingFEN[i]) {
             case 'K': *castle |= WHITE_CASTLE_SHORT; break;
@@ -292,7 +292,7 @@ void buildTreeMoves(int depth){
 
 static void buildTreeMovesHelper(struct Node* node, int depth){
     if(depth <= 0){
-        node->rating = getRating(node->board);
+        updateRating(node);
         propagateRating(node);
         return;
     }
@@ -343,12 +343,12 @@ static void deepSearchHelper(struct Node* node, int depth){
         buildTreeMovesHelper(node, 1);
         for (int i = 0; i < node->childrenCount; i++) {
             if(depth == 0) {
-                node->children[i]->rating = getRating(node->children[i]->board);
+                updateRating(node->children[i]);  
+                propagateRating(node->children[i]);
             }
             else {
-                node->children[i]->rating = getRatingFast(node->children[i]->board);
+                updateRatingFast(node->children[i]);
             }
-            propagateRating(node->children[i]);
         }
     }
 
@@ -371,7 +371,6 @@ static void deepSearchHelper(struct Node* node, int depth){
             }
         }
     }
-
 
 
     for(int i = 0; i < maxWidth; i++){
