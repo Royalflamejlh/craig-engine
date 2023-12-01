@@ -1,6 +1,10 @@
 #ifndef UTIL
 #define UTIL
 
+#if defined(_WIN32) || defined(_WIN64)
+# define strtok_r strtok_s
+#endif
+
 #define ALL_CASTLE 0xF0
 #define WHITE_CASTLE_LONG 0x80
 #define WHITE_CASTLE_SHORT 0x40

@@ -10,7 +10,7 @@
 #define STATUS_PREDICTED 4
 #define STATUS_ROOT 8
 
-#define DEEP_SEARCH_WIDTH 2
+#define DEEP_SEARCH_WIDTH 7
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))

@@ -7,10 +7,9 @@
 #include "tree.h"
 #include "board.h"
 
-#define DEPTH_SCAN 3
+#define DEPTH_SCAN 1
 #define DEPTH_DEEP_START 1
-#define DEPTH_DEEP 6
-
+#define DEPTH_DEEP 3
 #define PLAY_SELF
 
 #ifdef PLAY_SELF
@@ -61,12 +60,17 @@ static int processInput(char* input){
                 processMoves(input);
                 return 0;
             }
+            else{
+                printf("bestmove e2e4\r\n");
+                return 0;
+            }
         }
         else if (strncmp(input, "fen", 3) == 0) {
             input += 4;
             initializeTreeFEN(input);
             return 0;
         }
+        
     }
     else if (strncmp(input, "quit", 4) == 0) {
         return -1; 
