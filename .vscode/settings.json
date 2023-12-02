@@ -2,5 +2,12 @@
     "files.associations": {
         "*.h": "c",
         "*.c": "c",
-    }
+    },
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "/config/workspace/godengine/bin",
+            "binaryPath": "/config/workspace/godengine/bin/chess",
+            "binaryArgs": []
+        }
+    ]
 }
