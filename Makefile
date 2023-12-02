@@ -1,6 +1,6 @@
 CC = gcc
 ASAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer -Wno-format-security
-CFLAGS = -Wall -Wextra -g $(ASAN_FLAGS)
+CFLAGS = -Wall -Wextra -g -pg $(ASAN_FLAGS)
 LDFLAGS += -lpthread $(ASAN_FLAGS)
 
 TARGET = chess

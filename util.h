@@ -7,14 +7,11 @@
 #define BLACK_CASTLE_LONG 0x20
 #define BLACK_CASTLE_SHORT 0x10
 
-struct Move {
-    unsigned char from_x;
-    unsigned char from_y;
-    unsigned char to_x;
-    unsigned char to_y;
-    char promotion;
-};
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
+
+#include "types.h"
 
 char* trimWhitespace(char* str);
 void moveStrToStruct(char* prev, struct Move* move);

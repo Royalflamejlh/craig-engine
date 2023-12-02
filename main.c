@@ -4,17 +4,20 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "util.h"
+#include "mempool.h"
 #include "tree.h"
 #include "board.h"
+#include "tests/bbtests.h"
+#include "bitboard/bitboard.h"
 
-#define DEPTH_SCAN 3
-#define DEPTH_DEEP_START 1
+#define DEPTH_SCAN 4
+#define DEPTH_DEEP_START 2
 #define DEPTH_DEEP 6
 
 #define PLAY_SELF
 
 #ifdef PLAY_SELF
-static void playSelf();
+static void playSelf(void);
 #endif
 
 
@@ -22,13 +25,17 @@ static void processUCI(void);
 static void processIsReady(void);
 static int processInput(char* input);
 static void processMoves(char* str);
-static void sendBestMove();
+static void sendBestMove(void);
 static char isNullMove(char* move);
 
 int main(void) {
+    generateMasks();
+    testBB();
+    
     char input[1024];
     input[1023] = '\0';
-
+    
+    initializeNodePool();
     initializeTree();
 
     while (true) {
@@ -42,6 +49,7 @@ int main(void) {
 
     return 0;
 }
+
 
 static int processInput(char* input){
     if (strncmp(input, "uci", 3) == 0) {
@@ -81,8 +89,7 @@ static int processInput(char* input){
 * except for the children of the last node
 */
 void processMoves(char* str) {
-    struct Node* it = getTreeRoot();
-    struct Node* prevIt = it;
+    size_t it = getTreeRoot();
 
     char* pch;
     char* rest = str; 
@@ -94,13 +101,11 @@ void processMoves(char* str) {
         }
         struct Move move;
         moveStrToStruct(moveChar, &move); 
-        struct Node* nextIt = iterateTree(it, move);
-        if (nextIt == NULL) {
-            prevIt = it;
-            it = addTreeNode(prevIt, move, 0);
+        size_t nextIt = iterateTree(it, move);
+        if (nextIt == NULL_NODE) {
+            it = addTreeNode(it, move, 0);
         } else {
             updateNodeStatus(it, 0);
-            prevIt = it;
             it = nextIt;
         }
 get_next_token:
@@ -143,28 +148,28 @@ static void processIsReady(void) {
 }
 
 
- static void sendBestMove(){
-    struct Node* node = getBestCurChild();
-    if(node == NULL){
+ static void sendBestMove(void){
+    size_t node = getBestCurChild();
+    if(node == NULL_NODE){
         printf("info string Warning failed to build nodes, this probably means you lost\r\n");
         return;
     }
     char move[6];
-    moveStructToStr(&(node->move), move);
+    moveStructToStr(&(getNode(node)->move), move);
     printf("bestmove %s\r\n", move);
-    printf("info string Move %s found for %c with a board score of %d\n\r", move, node->color, node->rating);
+    printf("info string Move %s found for %c with a board score of %d\n\r", move, getNode(node)->color, getNode(node)->rating);
     fflush(stdout);
  }
 
 #ifdef PLAY_SELF
 
-static void playSelf() {
-    struct Node* new = getBestCurChild();
-    if(new == NULL){
+static void playSelf(void) {
+    size_t new = getBestCurChild();
+    if(new == NULL_NODE){
         printf("Checkmate athiests!\r\n");
         return;
     }
-    updateNodeStatus(new->parent, 0);
+    updateNodeStatus(getNode(new)->parent, 0);
     updateNodeStatus(new, 2);
     buildTreeMoves(DEPTH_SCAN);
     deepSearchTree(DEPTH_DEEP_START, DEPTH_DEEP);

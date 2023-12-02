@@ -1,9 +1,13 @@
-uint64_t zobristTable[64][12];
+#include <ctype.h>
+#include <stdint.h>
 
-void initZobrist() {
+uint64_t zobristTable[64][12];
+static int convertPieceToIndex(char piece);
+
+void initZobrist(void) {
     for (int square = 0; square < 64; square++) {
         for (int piece = 0; piece < 12; piece++) {
-            zobristTable[square][piece] = random64bitNumber();
+            zobristTable[square][piece] = 100;//random64bitNumber();
         }
     }
 }
@@ -22,7 +26,7 @@ uint64_t hashBoard(char board[8][8]) {
     return hash;
 }
 
-int convertPieceToIndex(char piece) {
+static int convertPieceToIndex(char piece) {
     switch (piece) {
         case 'P': return 0;  // White Pawn
         case 'N': return 1;  // White Knight

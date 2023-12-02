@@ -1,50 +1,51 @@
 #include "movement.h"
 #include "board.h"
+#include "mempool.h"
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
 
-static void getLegalPawnMoves(struct Node *node, unsigned char x, unsigned char y);
-static void getLegalBishopMoves(struct Node *node, unsigned char x, unsigned char y);
-static void getLegalKnightMoves(struct Node *node, unsigned char x, unsigned char y);
-static void getLegalRookMoves(struct Node *node, unsigned char x, unsigned char y);
-static void getLegalKingMoves(struct Node *node, unsigned char x, unsigned char y);
+static void getLegalPawnMoves(size_t node_idx, unsigned char x, unsigned char y);
+static void getLegalBishopMoves(size_t node_idx, unsigned char x, unsigned char y);
+static void getLegalKnightMoves(size_t node_idx, unsigned char x, unsigned char y);
+static void getLegalRookMoves(size_t node_idx, unsigned char x, unsigned char y);
+static void getLegalKingMoves(size_t node_idx, unsigned char x, unsigned char y);
 
 /*
 * Takes in a node and generates all legal moves for that node
 */
-void buildLegalMoves(struct Node *node){
+void buildLegalMoves(size_t node_idx){
     for (unsigned char y = 0; y < 8; y++) {
         for (unsigned char x = 0; x < 8; x++) {
-            char piece = node->board[y][x];
-            if (piece == ' ' || (node->color == 'B' && islower(piece)) || (node->color == 'W' && isupper(piece))) {
+            char piece = getNode(node_idx)->board[y][x];
+            if (piece == ' ' || (getNode(node_idx)->color == 'B' && islower(piece)) || (getNode(node_idx)->color == 'W' && isupper(piece))) {
                 continue;
             }
             switch (piece) {
                 case 'P':
                 case 'p':
-                    getLegalPawnMoves(node, x, y);
+                    getLegalPawnMoves(node_idx, x, y);
                     break;
                 case 'B': 
                 case 'b':
-                    getLegalBishopMoves(node, x, y);
+                    getLegalBishopMoves(node_idx, x, y);
                     break;
                 case 'N': 
                 case 'n':
-                    getLegalKnightMoves(node, x, y);
+                    getLegalKnightMoves(node_idx, x, y);
                     break;
                 case 'R': 
                 case 'r':
-                    getLegalRookMoves(node, x, y);
+                    getLegalRookMoves(node_idx, x, y);
                     break;
                 case 'Q': 
                 case 'q':
-                    getLegalBishopMoves(node, x, y);
-                    getLegalRookMoves(node, x, y);
+                    getLegalBishopMoves(node_idx, x, y);
+                    getLegalRookMoves(node_idx, x, y);
                     break;
                 case 'K': 
                 case 'k':
-                    getLegalKingMoves(node, x, y);
+                    getLegalKingMoves(node_idx, x, y);
                     break;
                 default:
                     break;
@@ -54,7 +55,7 @@ void buildLegalMoves(struct Node *node){
 }
 
 
-static void addMoveIfValid(struct Node *node, unsigned char from_x, unsigned char from_y, unsigned char to_x, unsigned char to_y, char promotion) {
+static void addMoveIfValid(size_t node_idx, unsigned char from_x, unsigned char from_y, unsigned char to_x, unsigned char to_y, char promotion) {
     //Make sure move in on the board
     if( (from_x >= 8 || from_x < 0) ||
         (from_y >= 8 || from_y < 0) ||
@@ -64,7 +65,7 @@ static void addMoveIfValid(struct Node *node, unsigned char from_x, unsigned cha
     
     struct Move move = {from_x, from_y, to_x, to_y, promotion};
     char board[8][8];
-    memcpy(&board[0][0], &node->board[0][0], 8*8*sizeof(char));
+    memcpy(&board[0][0], &getNode(node_idx)->board[0][0], 8*8*sizeof(char));
     char piece = board[move.from_y][move.from_x];
 
 
@@ -78,7 +79,7 @@ static void addMoveIfValid(struct Node *node, unsigned char from_x, unsigned cha
     }
 
     //Create a child node
-    addTreeNode(node, move, STATUS_PREDICTED);
+    addTreeNode(node_idx, move, STATUS_PREDICTED);
 }
 
 /**
@@ -88,7 +89,9 @@ static void addMoveIfValid(struct Node *node, unsigned char from_x, unsigned cha
 * 1,0 = A2
 */
 char inCheck(char board[8][8], char color){
-    int kingRow, kingCol, found = 0;
+    int kingRow = 0;
+    int kingCol = 0;
+    int found = 0;
 
     for (int row = 0; row < 8; row++) {
         for (int col = 0; col < 8; col++) {
@@ -265,37 +268,49 @@ checkKing:
         }
     }
 
-    if((color == 'B') &&
-       (board[kingRow-1][kingCol+1] == 'P' || board[kingRow-1][kingCol-1] == 'P'))return 1;
+    if(color == 'B' && (kingRow-1) >= 0){
+        if((kingCol+1) < 8  && board[kingRow-1][kingCol+1] == 'P'){
+            return 1;
+        }
+        if((kingCol-1) >= 0 && board[kingRow-1][kingCol-1] == 'P'){
+            return 1;
+        }
+    }
 
-    if((color == 'W') &&
-       (board[kingRow+1][kingCol+1] == 'p' || board[kingRow+1][kingCol-1] == 'p'))return 1;
+    if((color == 'W') && (kingRow+1) < 8){
+       if((kingCol+1) < 8  && board[kingRow+1][kingCol+1] == 'p'){
+            return 1;
+       }
+       if((kingCol-1) >= 0 && board[kingRow+1][kingCol-1] == 'p'){
+            return 1;
+       }
+    }
 
     return 0;
 }
 
 
 
-static void getLegalPawnMoves(struct Node *node, unsigned char x, unsigned char y) {
-    char piece = node->board[y][x];
+static void getLegalPawnMoves(size_t node_idx, unsigned char x, unsigned char y) {
+    char piece = getNode(node_idx)->board[y][x];
     int direction = isupper(piece) ? 1 : -1;
 
     int forward_y = y + direction;
-    if (node->board[forward_y][x] == ' ') {
+    if (getNode(node_idx)->board[forward_y][x] == ' ') {
         if(forward_y == 7 || forward_y == 0){
-            addMoveIfValid(node, x, y, x, forward_y, 'q');
-            addMoveIfValid(node, x, y, x, forward_y, 'n');
-            addMoveIfValid(node, x, y, x, forward_y, 'b');
-            addMoveIfValid(node, x, y, x, forward_y, 'r');
+            addMoveIfValid(node_idx, x, y, x, forward_y, 'q');
+            addMoveIfValid(node_idx, x, y, x, forward_y, 'n');
+            addMoveIfValid(node_idx, x, y, x, forward_y, 'b');
+            addMoveIfValid(node_idx, x, y, x, forward_y, 'r');
         }
         else{
-            addMoveIfValid(node, x, y, x, forward_y, ' ');
+            addMoveIfValid(node_idx, x, y, x, forward_y, ' ');
         }
 
         if ((isupper(piece) && y == 1) || (islower(piece) && y == 6)) {
             int twoForward_y = y + 2 * direction;
-            if (node->board[twoForward_y][x] == ' ') {
-                addMoveIfValid(node, x, y, x, twoForward_y, ' ');
+            if (getNode(node_idx)->board[twoForward_y][x] == ' ') {
+                addMoveIfValid(node_idx, x, y, x, twoForward_y, ' ');
             }
         }
     }
@@ -305,35 +320,37 @@ static void getLegalPawnMoves(struct Node *node, unsigned char x, unsigned char 
         int capture_y = y + direction;
 
         if (capture_x >= 0 && capture_x < 8 && capture_y >= 0 && capture_y < 8) {
-            int target = node->board[capture_y][capture_x];
+            int target = getNode(node_idx)->board[capture_y][capture_x];
             if ((isupper(piece) && islower(target)) || (islower(piece) && isupper(target))) {
                 if(capture_y == 7 || capture_y == 0){
-                    addMoveIfValid(node, x, y, capture_x, capture_y, 'q');
-                    addMoveIfValid(node, x, y, capture_x, capture_y, 'n');
-                    addMoveIfValid(node, x, y, capture_x, capture_y, 'b');
-                    addMoveIfValid(node, x, y, capture_x, capture_y, 'r');
+                    addMoveIfValid(node_idx, x, y, capture_x, capture_y, 'q');
+                    addMoveIfValid(node_idx, x, y, capture_x, capture_y, 'n');
+                    addMoveIfValid(node_idx, x, y, capture_x, capture_y, 'b');
+                    addMoveIfValid(node_idx, x, y, capture_x, capture_y, 'r');
                 }
                 else{
-                    addMoveIfValid(node, x, y, capture_x, capture_y, ' ');
+                    addMoveIfValid(node_idx, x, y, capture_x, capture_y, ' ');
                 }
             }
         }
     }
 
     // En-Passant
-    struct Move lastMove = node->move;
-    char pieceMoved = node->board[lastMove.to_y][lastMove.to_x];
+    struct Move lastMove = getNode(node_idx)->move;
+    char pieceMoved = getNode(node_idx)->board[lastMove.to_y][lastMove.to_x];
 
     if (tolower(pieceMoved) == 'p' && abs(lastMove.to_y - lastMove.from_y) == 2) {
         if (y == lastMove.to_y && (x == lastMove.to_x - 1 || x == lastMove.to_x + 1)) {
             int capture_y = (piece == 'P') ? lastMove.to_y - 1 : lastMove.to_y + 1;
-            addMoveIfValid(node, x, y, lastMove.to_x, capture_y, ' ');
+            addMoveIfValid(node_idx, x, y, lastMove.to_x, capture_y, ' ');
         }
     }
 
 }
 
-static void getLegalRookMoves(struct Node *node, unsigned char x, unsigned char y) {
+static void getLegalRookMoves(size_t node_idx, unsigned char x, unsigned char y) {
+    struct Node* node = getNode(node_idx);
+    if(node == NULL) return;
     char piece = node->board[y][x];
 
     int directions[4][2] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}}; 
@@ -352,7 +369,9 @@ static void getLegalRookMoves(struct Node *node, unsigned char x, unsigned char 
                 break;
             }
 
-            addMoveIfValid(node, x, y, new_x, new_y, ' ');
+            addMoveIfValid(node_idx, x, y, new_x, new_y, ' ');
+            node = getNode(node_idx);
+            if(node == NULL) return;
 
             if ((isupper(piece) && islower(target)) || (islower(piece) && isupper(target))) {
                 break;
@@ -365,7 +384,9 @@ static void getLegalRookMoves(struct Node *node, unsigned char x, unsigned char 
 }
 
 
-static void getLegalBishopMoves(struct Node *node, unsigned char x, unsigned char y) {
+static void getLegalBishopMoves(size_t node_idx, unsigned char x, unsigned char y) {
+    struct Node* node = getNode(node_idx);
+    if(node == NULL) return;
     char piece = node->board[y][x];
 
     int directions[4][2] = {{-1, 1}, {-1, -1}, {1, 1}, {1, -1}}; 
@@ -384,7 +405,9 @@ static void getLegalBishopMoves(struct Node *node, unsigned char x, unsigned cha
                 break;
             }
 
-            addMoveIfValid(node, x, y, new_x, new_y, ' ');
+            addMoveIfValid(node_idx, x, y, new_x, new_y, ' ');
+            node = getNode(node_idx);
+            if(node == NULL) return;
 
             if ((isupper(piece) && islower(target)) || (islower(piece) && isupper(target))) {
                 break;
@@ -397,7 +420,8 @@ static void getLegalBishopMoves(struct Node *node, unsigned char x, unsigned cha
 }
 
 
-static void getLegalKnightMoves(struct Node *node, unsigned char x, unsigned char y) {
+static void getLegalKnightMoves(size_t node_idx, unsigned char x, unsigned char y) {
+    struct Node* node = getNode(node_idx);
     char piece = node->board[y][x];
     int moves[8][2] = {{-2, 1}, {-1, 2}, {1, 2}, {2, 1}, {2, -1}, {1, -2}, {-1, -2}, {-2, -1}};
 
@@ -412,13 +436,16 @@ static void getLegalKnightMoves(struct Node *node, unsigned char x, unsigned cha
                 continue;
             }
 
-            addMoveIfValid(node, x, y, new_x, new_y, ' ');
+            addMoveIfValid(node_idx, x, y, new_x, new_y, ' ');
+            node = getNode(node_idx);
+            if(node == NULL) return;
         }
     }
 }
 
 
-static void getLegalKingMoves(struct Node *node, unsigned char x, unsigned char y) {
+static void getLegalKingMoves(size_t node_idx, unsigned char x, unsigned char y) {
+    struct Node* node = getNode(node_idx);
     char piece = node->board[y][x];
 
     int moves[8][2] = {{-1, 0}, {-1, 1}, {0, 1}, {1, 1},
@@ -432,7 +459,9 @@ static void getLegalKingMoves(struct Node *node, unsigned char x, unsigned char 
             char target = node->board[new_y][new_x];
 
             if (!((isupper(piece) && isupper(target)) || (islower(piece) && islower(target)))) {
-                addMoveIfValid(node, x, y, new_x, new_y, ' ');
+                addMoveIfValid(node_idx, x, y, new_x, new_y, ' ');
+                node = getNode(node_idx);
+                if(node == NULL) return;
             }
         }
     }
@@ -448,7 +477,10 @@ static void getLegalKingMoves(struct Node *node, unsigned char x, unsigned char 
             if(inCheck(node->board, getColor(piece)) == 0){
                 node->board[y][5] = ' ';
                 node->board[y][x] = piece;
-                addMoveIfValid(node, x, y, 6, y, ' ');
+                
+                addMoveIfValid(node_idx, x, y, 6, y, ' ');
+                node = getNode(node_idx);
+                if(node == NULL) return;
             }
         }
     }
@@ -459,7 +491,10 @@ static void getLegalKingMoves(struct Node *node, unsigned char x, unsigned char 
             if(inCheck(node->board, getColor(piece)) == 0){
                 node->board[y][3] = ' ';
                 node->board[y][x] = piece;
-                addMoveIfValid(node, x, y, 2, y, ' ');
+                
+                addMoveIfValid(node_idx, x, y, 2, y, ' ');
+                node = getNode(node_idx);
+                if(node == NULL) return;
             }
         }
     }
@@ -470,7 +505,10 @@ static void getLegalKingMoves(struct Node *node, unsigned char x, unsigned char 
             if(inCheck(node->board, getColor(piece)) == 0){
                 node->board[y][5] = ' ';
                 node->board[y][x] = piece;
-                addMoveIfValid(node, x, y, 6, y, ' ');
+                
+                addMoveIfValid(node_idx, x, y, 6, y, ' ');
+                node = getNode(node_idx);
+                if(node == NULL) return;
             }
         }
     }
@@ -481,7 +519,10 @@ static void getLegalKingMoves(struct Node *node, unsigned char x, unsigned char 
             if(inCheck(node->board, getColor(piece)) == 0){
                 node->board[y][3] = ' ';
                 node->board[y][x] = piece;
-                addMoveIfValid(node, x, y, 2, y, ' ');
+                
+                addMoveIfValid(node_idx, x, y, 2, y, ' ');
+                node = getNode(node_idx);
+                if(node == NULL) return;
             }
         }
     }

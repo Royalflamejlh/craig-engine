@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include "mempool.h"
 
 #define PAWN_VALUE 1000
 #define PAWN_POSITION_MULT 10
@@ -39,8 +39,8 @@
 
 
 
-static char isDrawn(struct Node* node);
-static char isDrawnFast(struct Node* node);
+static char isDrawn(size_t node);
+static char isDrawnFast(size_t node);
 
 static char isChained(char board[8][8], int i, int j);
 static char isBishopOpen(char board[8][8], int x, int y);
@@ -48,25 +48,34 @@ static char isRookOpen(char board[8][8], int x, int y);
 static char isProtected(char board[8][8], int x, int y);
 static char canKnightMove(char board[8][8], int x, int y);
 static char canQueenMove(char board[8][8], int x, int y);
-static char isCastleMove(struct Node* node);
+static char isCastleMove(size_t node);
 
 // 0,0 = A1
 // 1,0 = A2
-void updateRating(struct Node* node){
-    if(isDrawn(node)){
+void updateRating(size_t node_idx){
+    if(node_idx == NULL_NODE) return;
+    struct Node* node = getNode(node_idx);
+    if(node == NULL) return;
+    
+    if(isDrawn(node_idx)){
         node->rating = 0;
         return;
     }
-    if(isCastleMove(node)){
+    
+    getNode(node_idx)->rating = getBoardRating(getNode(node_idx)->board);
+    
+    if(isCastleMove(node_idx)){
         if(node->color == 'W') node->rating += CASTLE_BONUS;
         else node->rating -= CASTLE_BONUS;
     }
-    node->rating = getBoardRating(node->board);
 }
 
-void updateRatingFast(struct Node* node){
+void updateRatingFast(size_t node_idx){
+    struct Node* node = getNode(node_idx);
+    
     node->rating = getBoardRatingFast(node->board);
-    if(isDrawnFast(node)){
+    
+    if(isDrawnFast(node_idx)){
         node->rating /= 2;
     }
 }
@@ -338,18 +347,20 @@ static char canQueenMove(char board[8][8], int x, int y){
     return (isRookOpen(board, x, y) || isBishopOpen(board, x, y));
 }
 
-static char isStalemate(struct Node* node) {
-    buildLegalMoves(node);
+static char isStalemate(size_t node_idx) {
+    buildLegalMoves(node_idx);
+    struct Node* node = getNode(node_idx);
     return (node->childrenCount == 0 && !inCheck(node->board, opposite(node->color)));
 }
 
-static char isRepetitionDraw(struct Node* node){
+static char isRepetitionDraw(size_t node_idx){
+    struct Node* node = getNode(node_idx);
     int repetitionCount = 1;
     char currentBoard[8][8];
     memcpy(currentBoard, node->board, sizeof(currentBoard));
 
-    while (node->parent != NULL) {
-        node = node->parent;
+    while (node->parent != NULL_NODE) {
+        node = getNode(node->parent);
         if (memcmp(currentBoard, node->board, sizeof(currentBoard)) == 0) {
             repetitionCount++;
             if (repetitionCount >= 3) {
@@ -364,11 +375,11 @@ static char isRepetitionDraw(struct Node* node){
 /*
 * Returns 1 if the position is a draw
 */
-static char isDrawn(struct Node* node){
-    if(isRepetitionDraw(node)){
+static char isDrawn(size_t node_idx){
+    if(isRepetitionDraw(node_idx)){
         return 1;
     }
-    if(isStalemate(node)){
+    if(isStalemate(node_idx)){
         return 1;
     }
     return 0;
@@ -377,25 +388,27 @@ static char isDrawn(struct Node* node){
 /*
 * Returns 1 if the position is a draw
 */
-static char isDrawnFast(struct Node* node){
-    if(node->parent == NULL || node->parent->parent == NULL){
+static char isDrawnFast(size_t node_idx){
+    struct Node* node = getNode(node_idx);
+    if(node->parent == NULL_NODE || getNode(node->parent)->parent == NULL_NODE){
         return 0;
     }
     struct Move curMove = node->move;
-    struct Move oldMove = node->parent->parent->move;
+    struct Move oldMove = getNode(getNode(node->parent)->parent)->move;
     if(curMove.to_x == oldMove.from_x && curMove.to_y == oldMove.from_y) return 1;
     return 0;
 }
 
 
 
-static char isCastleMove(struct Node* node){
+static char isCastleMove(size_t node_idx){
+    struct Node* node = getNode(node_idx);
     unsigned char to_x   = node->move.to_x;
     unsigned char from_y = node->move.from_y;
     unsigned char from_x = node->move.from_x;
 
-    if((node->parent->board[from_y][from_x] == 'K' || 
-        node->parent->board[from_y][from_x] == 'k') && 
+    if((getNode(node->parent)->board[from_y][from_x] == 'K' ||
+        getNode(node->parent)->board[from_y][from_x] == 'k') &&
         (abs(from_x - to_x) == 2)) return 1;
     return 0;
 }
