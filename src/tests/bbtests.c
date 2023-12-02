@@ -8,7 +8,7 @@
 #include "bbtests.h"
 
 void testBB(void) {
-    positionBB initialBB = getInitialBB();
+    position initialBB = getInitialBB();
     
     // Test with an empty board
     uint64_t emptyBoard = 0;

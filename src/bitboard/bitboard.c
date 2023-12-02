@@ -21,7 +21,7 @@
 static void generateKingMoveMasks(void);
 static void generateKnightMoveMasks(void);
 
-positionBB initialBB = {
+position initialBB = {
     0x00FF00000000FF00ULL,
     0x2400000000000024ULL,
     0x4200000000000042ULL,
@@ -90,7 +90,7 @@ static void generatePawnMoveMasks(void){
     
 }
 
-positionBB getInitialBB(void){
+position getInitialBB(void){
     return initialBB;
 }
 
@@ -140,6 +140,6 @@ uint64_t getKingMoves(uint64_t kings, uint64_t ownPieces) {
 
 
 
-positionBB getAttackBB(positionBB position, char color){
+position getAttackBB(position position, char color){
     return initialBB;
 }

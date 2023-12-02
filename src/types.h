@@ -8,6 +8,7 @@
 #ifndef types_h
 #define types_h
 #include <stdint.h>
+#include <stddef.h>
 
 struct Move {
     unsigned char from_x;

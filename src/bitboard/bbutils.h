@@ -9,6 +9,7 @@
 #define bbutils_h
 
 #include <stdio.h>
+#include <stdint.h>
 void printBB(uint64_t BB);
 #endif /* bbutils_h */
 

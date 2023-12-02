@@ -15,7 +15,6 @@
 
 #elif defined(__APPLE__)
 
-// Mac OS X / Darwin features
 #include <libkern/OSByteOrder.h>
 #define bswap_32(x) OSSwapInt32(x)
 #define bswap_64(x) OSSwapInt64(x)
@@ -42,6 +41,13 @@
 
 #include <sys/types.h>
 #include <machine/bswap.h>
+
+#elif defined(_WIN32) || defined(_WIN64)
+
+#include <stdlib.h>
+#define bswap_32(x) _byteswap_ulong(x)
+#define bswap_64(x) _byteswap_uint64(x)
+
 #if defined(__BSWAP_RENAME) && !defined(__bswap_32)
 #define bswap_32(x) bswap32(x)
 #define bswap_64(x) bswap64(x)
