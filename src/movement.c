@@ -57,10 +57,10 @@ void buildLegalMoves(size_t node_idx){
 
 static void addMoveIfValid(size_t node_idx, unsigned char from_x, unsigned char from_y, unsigned char to_x, unsigned char to_y, char promotion) {
     //Make sure move in on the board
-    if( (from_x >= 8 || from_x < 0) ||
-        (from_y >= 8 || from_y < 0) ||
-          (to_x >= 8 || to_x < 0)   ||
-          (to_y >= 8 || to_y < 0))  return;
+    if( (from_x >= 8) ||
+        (from_y >= 8) ||
+          (to_x >= 8) ||
+          (to_y >= 8))  return;
     
     
     struct Move move = {from_x, from_y, to_x, to_y, promotion};

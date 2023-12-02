@@ -87,7 +87,7 @@ static void generateKnightMoveMasks(void) {
 }
 
 static void generatePawnMoveMasks(void){
-    
+    return;
 }
 
 position getInitialBB(void){
@@ -107,17 +107,24 @@ uint64_t getKnightMoves(uint64_t knights, uint64_t ownPieces) {
     return moves;
 }
 
+//TODO IMPLEMENT
 uint64_t getBishopMoves(uint64_t bishops, uint64_t ownPieces, uint64_t oppPieces) {
-    return 0;
+    int temp = bishops + ownPieces + oppPieces;
+    return temp;
 }
 
+//TODO IMPLEMENT
 uint64_t getRookMoves(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces) {
-    return 0;
+    int temp = rooks + ownPieces + oppPieces;
+    return temp;
 }
 
-uint64_t getPawnMoves(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces) {
-    return 0;
+//TODO IMPLEMENT
+uint64_t getPawnMoves(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces) {
+    int temp = pawns + ownPieces + oppPieces;
+    return temp;
 }
+
 
 uint64_t getQueenMoves(uint64_t queens, uint64_t ownPieces, uint64_t oppPieces) {
     uint64_t rookMoves = getRookMoves(queens, ownPieces, oppPieces);
@@ -139,7 +146,8 @@ uint64_t getKingMoves(uint64_t kings, uint64_t ownPieces) {
 }
 
 
-
+//TODO: IMPLEMENT
 position getAttackBB(position position, char color){
+    getPawnMoves(position.pawn, 0, 0);
     return initialBB;
 }

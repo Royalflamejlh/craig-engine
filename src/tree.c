@@ -1,14 +1,17 @@
 #include "tree.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
 #include <string.h>
+#include <ctype.h>
+#include <stddef.h>
+
 #include "board.h"
 #include "util.h"
 #include "evaluator.h"
 #include "movement.h"
 #include "tree.h"
-#include <ctype.h>
 #include "mempool.h"
 
 
@@ -413,7 +416,7 @@ void printNode(size_t node_idx, int level, int depth) {
     }
     char moveStr[6]; 
     moveStructToStr((&node->move), moveStr);
-    printf("%lu: stat:%d col:%c cast:%x rat:%d par:%lu chil[%d]@%p mov:%s\r\n",
+    printf("%zu: stat:%d col:%c cast:%x rat:%d par:%zu chil[%d]@%p mov:%s\r\n",
     node_idx, node->status, node->color, node->castle, node->rating, node->parent,
     node->childrenCount, node->children, moveStr);
     printBoard(node->board);
