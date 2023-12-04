@@ -161,7 +161,7 @@ static int initAttackTable() {
             uint64_t index = transform(blocker_bits, mRookTbl[sq].magic, RBits[sq]);
             attack_table[attack_table_offsets[sq] + index] = ratt(sq, blocker_bits);
 
-            if(sq == 0 && blockers <= 5) {
+            if(attack_table_offsets[sq] + index == 0) {
                 printf("Rook Square %d, Config %d, Index %llu: Blocker Bits = 0x%" PRIx64 "\n",
                         sq, blockers, (unsigned long long)index, blocker_bits);
             }
@@ -169,6 +169,7 @@ static int initAttackTable() {
     }
 
     // Bishops
+    /*
     for (int sq = 0; sq < 64; ++sq) {
         attack_table_offsets[sq + 64] = offset;
         uint64_t mask = bmask(sq);
@@ -178,6 +179,7 @@ static int initAttackTable() {
             attack_table[offset++] = batt(sq, blocker_bits);
         }
     }
+    */
 
 
     return 0;
