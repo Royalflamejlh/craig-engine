@@ -60,9 +60,9 @@ void testBB(void) {
     #endif
 
     #ifdef MOVE_GEN_TEST
-    FEN = "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 1 2";
+    FEN = "rn1qkbnr/pp1bppp1/2p5/3p2Pp/3P4/3BPN2/PPP2P1P/RNBQK2R w KQkq h6 0 7";
     pos = fenToPosition(FEN);
-    printf("List of whites's move for white after Pawn moves for black after E4 C5 NF3\n");
+    printf("Testing a position with en-passant and castling\n");
     printPosition(pos);
     printf("Visual bishop moves \n");
     printBB(getBishopMoves(pos.w_bishop, pos.white, pos.black));

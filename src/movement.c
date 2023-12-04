@@ -33,6 +33,7 @@ static uint64_t generateWhiteMoves(Position position, Move* moveList, int* size)
     attack_mask |= getKnightMovesAppend(position.w_knight, position.white, moveList, size);
     attack_mask |= getKingMovesAppend(position.w_king, position.white, moveList, size);
     attack_mask |= getPawnMovesAppend(position.w_pawn, position.white, position.black, position.en_passant, position.flags, moveList, size);
+    getCastleMovesWhiteAppend(position.white, position.flags, moveList, size);
     return attack_mask;
 }
 

@@ -28,4 +28,6 @@ uint64_t getPawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t oppPiec
 
 uint64_t getKingMoves(uint64_t kings, uint64_t ownPieces);
 uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, Move* moveList, int* idx);
+
+void getCastleMovesWhiteAppend(uint64_t white, char flags, Move* moveList, int* idx);
 #endif /* bitboard_h */

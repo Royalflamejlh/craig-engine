@@ -14,11 +14,13 @@
 // 6 0 0 0 0 0 0 0 0
 // 7 0 0 0 0 0 0 0 0
 // 8 0 0 0 0 0 0 0 0
-
-
 #include "bitboard.h"
 #include "magic.h"
 #include "../util.h"
+
+#define W_SHORT_CASTLE_MASK 0x0000000000000060ULL
+#define W_LONG_CASTLE_MASK  0x000000000000000EULL
+
 static void generateKingMoveMasks(void);
 static void generateKnightMoveMasks(void);
 static void generatePawnMoveMasks(void);
@@ -217,27 +219,43 @@ uint64_t getWhitePawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t op
         uint64_t moves = 0ULL;
         int square = __builtin_ctzll(pawns);
         int rank = square / 8;
+        char promotion = (rank == 6) ? 1 : 0;
 
+        //Single Step
         occ = (oppPieces | ownPieces) & pawnMoves[square][0];
         if(!occ) moves |= pawnMoves[square][0];
-
+        
+        //Double Step
         if(occ == 0 && rank == 1){
             occ = (oppPieces | ownPieces) & pawnMoves[square][1];
             if(!occ) moves |= pawnMoves[square][1];
         }
 
+        //Capture Left
         occ = (oppPieces | enPassant) & pawnMoves[square][2];
         if(occ) moves |= pawnMoves[square][2];
 
+        //Capture Right
         occ = (oppPieces | enPassant) & pawnMoves[square][3];
         if(occ) moves |= pawnMoves[square][3];
 
         all_moves |= moves;
         while(moves){
             int move_sq = __builtin_ctzll(moves);
-            //TODO: Set en passant flag
-            moveList[*idx] = SET_MOVE(square, move_sq);
-            (*idx)++;
+            if (promotion) {
+                Move baseMove = SET_MOVE(square, move_sq);
+                moveList[*idx] = SET_MOVE_PROMOTION(baseMove, PROMOTE_QUEEN);
+                (*idx)++;
+                moveList[*idx] = SET_MOVE_PROMOTION(baseMove, PROMOTE_ROOK);
+                (*idx)++;
+                moveList[*idx] = SET_MOVE_PROMOTION(baseMove, PROMOTE_BISHOP);
+                (*idx)++;
+                moveList[*idx] = SET_MOVE_PROMOTION(baseMove, PROMOTE_KNIGHT);
+                (*idx)++;
+            } else {
+                moveList[*idx] = SET_MOVE(square, move_sq);
+                (*idx)++;
+            }
             moves &= moves - 1;
         }
 
@@ -312,4 +330,24 @@ uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, Move* moveList, 
         moves &= moves - 1;
     }
     return all_moves;
+}
+
+void getCastleMovesWhiteAppend(uint64_t white, char flags, Move* moveList, int* idx){
+    if ((flags & W_SHORT_CASTLE) && !(white & W_SHORT_CASTLE_MASK)) {
+        Move move = SET_MOVE(4, 6);
+        move = SET_MOVE_FLAGS(move, 1, 0);
+        moveList[*idx] = move;
+        (*idx)++;
+    }
+
+    if ((flags & W_LONG_CASTLE) && !(white & W_LONG_CASTLE_MASK)) {
+        Move move = SET_MOVE(4, 2);
+        move = SET_MOVE_FLAGS(move, 1, 0);
+        moveList[*idx] = move;
+        (*idx)++;
+    }
+}
+
+void getCastleMovesBlackAppend(uint64_t black, char flags, Move* moveList, int* idx){
+    return;
 }
