@@ -17,17 +17,20 @@
 
 
 #include "bitboard.h"
+#include "magic.h"
 #include "../util.h"
 static void generateKingMoveMasks(void);
 static void generateKnightMoveMasks(void);
+static void generatePawnMoveMasks(void);
 
 static uint64_t kingMoves[64];
 static uint64_t knightMoves[64];
-
+static uint64_t pawnMoves[64][4];
 
 void generateMasks(void){
     generateKingMoveMasks();
     generateKnightMoveMasks();
+    generatePawnMoveMasks();
 }
 
 
@@ -75,34 +78,133 @@ static void generateKnightMoveMasks(void) {
     }
 }
 
-static void generatePawnMoveMasks(void){
-    return;
+void generatePawnMoveMasks(void){
+    for (int square = 0; square < 64; square++) {
+        int rank = square / 8;
+        int file = square % 8;
+
+        uint64_t singleMove = 0ULL, doubleMove = 0ULL, leftCapture = 0ULL, rightCapture = 0ULL;
+        uint64_t position = setBit(0ULL, square);
+
+        // Single square forward
+        if (rank < 7) {
+            singleMove = northOne(position);
+        }
+        pawnMoves[square][0] = singleMove;
+
+        // Double square forward
+        if (rank == 1) {
+            doubleMove = northTwo(position);
+        }
+        pawnMoves[square][1] = doubleMove;
+
+        // Capture left
+        if (file > 0 && rank < 7) {
+            leftCapture = noWeOne(position);
+        }
+        pawnMoves[square][2] = leftCapture;
+
+        // Capture right
+        if (file < 7 && rank < 7) {
+            rightCapture = noEaOne(position);
+        }
+        pawnMoves[square][3] = rightCapture;
+    }
 }
 
-//TODO IMPLEMENT
+//Bishop
 uint64_t getBishopMoves(uint64_t bishops, uint64_t ownPieces, uint64_t oppPieces) {
-    int temp = bishops + ownPieces + oppPieces;
-    return temp;
+    uint64_t moves = 0ULL;
+    while (bishops) {
+        int square = __builtin_ctzll(bishops);
+        moves |= bishopAttacks(ownPieces | oppPieces, square);
+        bishops &= bishops - 1;
+    }
+    return moves;
 }
 
-//TODO IMPLEMENT
+uint64_t getBishopMovesAppend(uint64_t bishops, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* idx) {
+    uint64_t moves = 0ULL;
+    while (bishops) {
+        int square = __builtin_ctzll(bishops);
+        moves |= bishopAttacks(ownPieces | oppPieces, square);
+        while(moves){
+            int move_sq = __builtin_ctzll(moves);
+            moveList[*idx] = SET_MOVE(square, move_sq);
+            (*idx)++;
+            moves &= moves - 1;
+        }
+        bishops &= bishops - 1;
+    }
+    return moves;
+}
+
+//Rook
+uint64_t getAllRookMoves(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces) {
+    uint64_t moves = 0ULL;
+    while (rooks) {
+        int square = __builtin_ctzll(rooks);
+        moves |= rookAttacks(ownPieces | oppPieces, square);
+        rooks &= rooks - 1;
+    }
+    return moves;
+}
 uint64_t getRookMoves(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces) {
-    int temp = rooks + ownPieces + oppPieces;
-    return temp;
+    uint64_t moves = 0ULL;
+    int square = __builtin_ctzll(rooks);
+    moves |= rookAttacks(ownPieces | oppPieces, square);
+    return moves;
 }
 
-//TODO IMPLEMENT
-uint64_t getPawnMoves(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces) {
-    int temp = pawns + ownPieces + oppPieces;
-    return temp;
+
+//Pawn
+uint64_t getWhitePawnMoves(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant) {
+    uint64_t moves = 0ULL;
+    uint64_t occ =  0ULL;
+
+    while (pawns) {
+        int square = __builtin_ctzll(pawns);
+        int rank = square / 8;
+
+        occ = (oppPieces | ownPieces) & pawnMoves[square][0];
+        if(!occ) moves |= pawnMoves[square][0];
+
+        if(occ == 0 && rank == 1){
+            occ = (oppPieces | ownPieces) & pawnMoves[square][1];
+            if(!occ) moves |= pawnMoves[square][1];
+        }
+
+        occ = (oppPieces | enPassant) & pawnMoves[square][2];
+        if(occ) moves |= pawnMoves[square][2];
+
+        occ = (oppPieces | enPassant) & pawnMoves[square][3];
+        if(occ) moves |= pawnMoves[square][3];
+
+        pawns &= pawns - 1;
+    }
+
+    return moves;
 }
 
+uint64_t getPawnMoves(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant, char flags){
+    if(flags & WHITE_TURN) return getWhitePawnMoves(pawns, ownPieces, oppPieces, enPassant);
+    return flipVertical(
+        getWhitePawnMoves(
+            flipVertical(pawns), 
+            flipVertical(ownPieces), 
+            flipVertical(oppPieces), 
+            flipVertical(enPassant))
+        );
+}
+
+//Queen
 uint64_t getQueenMoves(uint64_t queens, uint64_t ownPieces, uint64_t oppPieces) {
     uint64_t rookMoves = getRookMoves(queens, ownPieces, oppPieces);
     uint64_t bishopMoves = getBishopMoves(queens, ownPieces, oppPieces);
     return rookMoves | bishopMoves;
 }
 
+//Knight
 uint64_t getKnightMoves(uint64_t knights, uint64_t ownPieces) {
     uint64_t moves = 0ULL;
 
@@ -115,6 +217,7 @@ uint64_t getKnightMoves(uint64_t knights, uint64_t ownPieces) {
     return moves;
 }
 
+//King
 uint64_t getKingMoves(uint64_t kings, uint64_t ownPieces) {
     int square = __builtin_ctzll(kings);
     return kingMoves[square] & ~ownPieces;

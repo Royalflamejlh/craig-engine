@@ -8,14 +8,22 @@
 #include "bbtests.h"
 #include "../bitboard/bitboard.h"
 #include "../bitboard/magic.h"
+#include "../movement.h"
+#include "../util.h"
+
+#define MOVE_GEN_TEST
 
 void testBB(void) {
     generateMasks();
     generateMagics();
+    char* FEN;
+    uint64_t moves;
+    Position pos;
     
+    #ifdef FENTEST
     printf("Testing Starting Board Position\n");
-    char* FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    Position pos = fenToPosition(FEN);
+    FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    pos = fenToPosition(FEN);
     printPosition(pos);
 
     printf("After E4\n");
@@ -32,16 +40,42 @@ void testBB(void) {
     FEN = "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2";
     pos = fenToPosition(FEN);
     printPosition(pos);
+    #endif
+
+    #ifdef MOVE_MASK_TEST
+    FEN = "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2";
+    pos = fenToPosition(FEN);
 
     printf("Knight moves for white after E4 C5 NF3\n");
-    uint64_t moves = getKnightMoves(pos.w_knight, pos.white);
+    moves = getKnightMoves(pos.w_knight, pos.white);
     printBB(moves);
 
-    printf("Rook attacks from A1\n");
-    printBB(rookAttacks(0, 1));
+    printf("Pawn moves for white after E4 C5 NF3 \n");
+    moves = getPawnMoves(pos.w_pawn, pos.white, pos.black,  pos.en_passant, WHITE_TURN);
+    printBB(moves);
+
+    printf("Pawn moves for black after E4 C5 NF3 \n");
+    moves = getPawnMoves(pos.b_pawn, pos.black, pos.white, pos.en_passant, 0);
+    printBB(moves);
+    #endif
+
+    #ifdef MOVE_GEN_TEST
+    FEN = "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 1 2";
+    pos = fenToPosition(FEN);
+    printf("List of whites's move for white after Pawn moves for black after E4 C5 NF3\n");
+    printPosition(pos);
+    Move moveList[256];
+    int size;
+    generateMoves(pos, moveList, &size);
+    for(int i = 0; i < size; i++){
+        printMove(moveList[i]);
+    }
+    #endif
+
+
     
-    printf("Bishop attacks from A1\n");
-    printBB(bishopAttacks(0, 1));
+
+    
     
     return;
     

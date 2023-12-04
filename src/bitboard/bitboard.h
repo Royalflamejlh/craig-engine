@@ -16,5 +16,7 @@ void testBB(void);
 void printBB(uint64_t BB);
 Position getInitialBB(void);
 uint64_t getKnightMoves(uint64_t knights, uint64_t ownPieces);
+uint64_t getPawnMoves(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant, char flags);
 
+uint64_t getBishopMovesAppend(uint64_t bishops, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* idx);
 #endif /* bitboard_h */

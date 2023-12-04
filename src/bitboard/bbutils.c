@@ -6,7 +6,6 @@
 //
 
 #include "bbutils.h"
-#include <ctype.h>
 
 #ifdef _MSC_VER
 
@@ -60,10 +59,9 @@
 
 #endif
 
-static void setBit(uint64_t* bitboard, int square) {
+static void updateBit(uint64_t* bitboard, int square) {
     *bitboard |= (1ULL << square);
 }
-
 
 Position fenToPosition(char* FEN) {
     Position pos = {0};
@@ -75,21 +73,21 @@ Position fenToPosition(char* FEN) {
         } else if (*FEN >= '1' && *FEN <= '8') {
             square += *FEN - '0'; // Skip empty squares
         } else {
-            if(isupper(*FEN)) setBit(&pos.white, square);
-            else setBit(&pos.black, square);
+            if(isupper(*FEN)) updateBit(&pos.white, square);
+            else updateBit(&pos.black, square);
             switch (*FEN) {
-                case 'P': setBit(&pos.w_pawn, square); break;
-                case 'N': setBit(&pos.w_knight, square); break;
-                case 'B': setBit(&pos.w_bishop, square); break;
-                case 'R': setBit(&pos.w_rook, square); break;
-                case 'Q': setBit(&pos.w_queen, square); break;
-                case 'K': setBit(&pos.w_king, square); break;
-                case 'p': setBit(&pos.b_pawn, square); break;
-                case 'n': setBit(&pos.b_knight, square); break;
-                case 'b': setBit(&pos.b_bishop, square); break;
-                case 'r': setBit(&pos.b_rook, square); break;
-                case 'q': setBit(&pos.b_queen, square); break;
-                case 'k': setBit(&pos.b_king, square); break;
+                case 'P': updateBit(&pos.w_pawn, square); break;
+                case 'N': updateBit(&pos.w_knight, square); break;
+                case 'B': updateBit(&pos.w_bishop, square); break;
+                case 'R': updateBit(&pos.w_rook, square); break;
+                case 'Q': updateBit(&pos.w_queen, square); break;
+                case 'K': updateBit(&pos.w_king, square); break;
+                case 'p': updateBit(&pos.b_pawn, square); break;
+                case 'n': updateBit(&pos.b_knight, square); break;
+                case 'b': updateBit(&pos.b_bishop, square); break;
+                case 'r': updateBit(&pos.b_rook, square); break;
+                case 'q': updateBit(&pos.b_queen, square); break;
+                case 'k': updateBit(&pos.b_king, square); break;
             }
             square++;
         }
@@ -124,7 +122,7 @@ Position fenToPosition(char* FEN) {
         int file = *FEN - 'a'; // Convert file character to 0-7
         int rank = *(FEN + 1) - '1'; // Convert rank character to 0-7
         int en_passant_square = rank * 8 + file;
-        setBit(&pos.en_passant, en_passant_square);
+        updateBit(&pos.en_passant, en_passant_square);
     }
 
     while (*FEN && *FEN != ' ') FEN++;
@@ -202,6 +200,16 @@ void printBB(uint64_t BB) {
         }
         printf("\n");
     }
+}
+
+uint64_t northOne(uint64_t bb) { return bb << 8;  }
+uint64_t northTwo(uint64_t bb) { return bb << 16; }
+uint64_t noEaOne (uint64_t bb) { return (bb & ~0x8080808080808080ULL) << 9; }
+uint64_t noWeOne (uint64_t bb) { return (bb & ~0x0101010101010101ULL) << 7; }
+
+
+uint64_t setBit(uint64_t bb, int square) {
+    return bb | (1ULL << square);
 }
 
 /**

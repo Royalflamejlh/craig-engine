@@ -22,7 +22,7 @@ static uint64_t debug_bishopAttacks(uint64_t occ, int sq);
 static uint64_t debug_rookAttacks(uint64_t occ, int sq);
 #endif
 
-static uint64_t attack_table[300000];
+static uint64_t attack_table[108000];
 static int attack_table_offsets[128];
 
 typedef struct {

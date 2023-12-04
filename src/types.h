@@ -16,13 +16,28 @@
 #define B_SHORT_CASTLE 0x02 
 #define B_LONG_CASTLE 0x01 
 
-typedef struct {
-    unsigned char from_x;
-    unsigned char from_y;
-    unsigned char to_x;
-    unsigned char to_y;
-    char promotion;
-} Move;
+#define MOVE_FROM_MASK        0x003F  // 000000 000000 11 1111
+#define MOVE_TO_MASK          0x0FC0  // 000000 111111 00 0000
+#define MOVE_PROMOTION_MASK   0x3000  // 0011 00 000000 000000
+#define MOVE_ENPASSANT_MASK   0x4000  // 0100 00 000000 000000
+#define MOVE_CASTLE_MASK      0x8000  // 1000 00 000000 000000
+
+#define PROMOTE_QUEEN    0
+#define PROMOTE_BISHOP   (1 << 12)
+#define PROMOTE_KNIGHT   (2 << 12)
+#define PROMOTE_ROOK     (3 << 12)
+
+typedef uint16_t Move;
+// 6-From | 6-To | 2-PromotionPiece | 1-Castle | 1-EnPassant
+#define SET_MOVE(from, to) \
+    (((from) & MOVE_FROM_MASK) | (((to) << 6) & MOVE_TO_MASK))
+
+#define SET_MOVE_PROMOTION(move, promotion) \
+    ((move) | ((promotion) & MOVE_PROMOTION_MASK))
+
+#define SET_MOVE_FLAGS(move, isCastle, isEnPassant) \
+    ((move) | ((isCastle) ? MOVE_CASTLE_MASK : 0) | ((isEnPassant) ? MOVE_ENPASSANT_MASK : 0))
+
 
 typedef struct {
     uint64_t w_pawn;
