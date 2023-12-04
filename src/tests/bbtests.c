@@ -64,6 +64,8 @@ void testBB(void) {
     pos = fenToPosition(FEN);
     printf("List of whites's move for white after Pawn moves for black after E4 C5 NF3\n");
     printPosition(pos);
+    printf("Visual bishop moves \n");
+    printBB(getBishopMoves(pos.w_bishop, pos.white, pos.black));
     Move moveList[256];
     int size;
     generateMoves(pos, moveList, &size);

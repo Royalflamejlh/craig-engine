@@ -9,6 +9,6 @@
 #define bbtests_h
 
 #include <stdio.h>
-
+void testBB(void);
 
 #endif /* bbtests_h */

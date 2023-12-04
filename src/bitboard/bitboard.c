@@ -120,14 +120,15 @@ uint64_t getBishopMoves(uint64_t bishops, uint64_t ownPieces, uint64_t oppPieces
         moves |= bishopAttacks(ownPieces | oppPieces, square);
         bishops &= bishops - 1;
     }
-    return moves;
+    return moves & ~ownPieces;
 }
 
 uint64_t getBishopMovesAppend(uint64_t bishops, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* idx) {
-    uint64_t moves = 0ULL;
+    uint64_t all_moves = 0ULL;
     while (bishops) {
         int square = __builtin_ctzll(bishops);
-        moves |= bishopAttacks(ownPieces | oppPieces, square);
+        uint64_t moves = bishopAttacks(ownPieces | oppPieces, square) & ~ownPieces;
+        all_moves |= moves;
         while(moves){
             int move_sq = __builtin_ctzll(moves);
             moveList[*idx] = SET_MOVE(square, move_sq);
@@ -136,24 +137,35 @@ uint64_t getBishopMovesAppend(uint64_t bishops, uint64_t ownPieces, uint64_t opp
         }
         bishops &= bishops - 1;
     }
-    return moves;
+    return all_moves;
 }
 
 //Rook
-uint64_t getAllRookMoves(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces) {
+uint64_t getRookMoves(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces) {
     uint64_t moves = 0ULL;
     while (rooks) {
         int square = __builtin_ctzll(rooks);
         moves |= rookAttacks(ownPieces | oppPieces, square);
         rooks &= rooks - 1;
     }
-    return moves;
+    return moves & ~ownPieces;
 }
-uint64_t getRookMoves(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces) {
-    uint64_t moves = 0ULL;
-    int square = __builtin_ctzll(rooks);
-    moves |= rookAttacks(ownPieces | oppPieces, square);
-    return moves;
+
+uint64_t getRookMovesAppend(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* idx) {
+    uint64_t all_moves = 0ULL;
+    while (rooks) {
+        int square = __builtin_ctzll(rooks);
+        uint64_t moves = rookAttacks(ownPieces | oppPieces, square) & ~ownPieces;
+        all_moves |= moves;
+        while(moves){
+            int move_sq = __builtin_ctzll(moves);
+            moveList[*idx] = SET_MOVE(square, move_sq);
+            (*idx)++;
+            moves &= moves - 1;
+        }
+        rooks &= rooks - 1;
+    }
+    return all_moves;
 }
 
 
@@ -186,7 +198,7 @@ uint64_t getWhitePawnMoves(uint64_t pawns, uint64_t ownPieces, uint64_t oppPiece
     return moves;
 }
 
-uint64_t getPawnMoves(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant, char flags){
+uint64_t getPawnMove(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant, char flags){
     if(flags & WHITE_TURN) return getWhitePawnMoves(pawns, ownPieces, oppPieces, enPassant);
     return flipVertical(
         getWhitePawnMoves(
@@ -197,12 +209,57 @@ uint64_t getPawnMoves(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  u
         );
 }
 
-//Queen
-uint64_t getQueenMoves(uint64_t queens, uint64_t ownPieces, uint64_t oppPieces) {
-    uint64_t rookMoves = getRookMoves(queens, ownPieces, oppPieces);
-    uint64_t bishopMoves = getBishopMoves(queens, ownPieces, oppPieces);
-    return rookMoves | bishopMoves;
+uint64_t getWhitePawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant, Move* moveList, int* idx) {
+    uint64_t all_moves = 0ULL;
+    uint64_t occ =  0ULL;
+
+    while (pawns) {
+        uint64_t moves = 0ULL;
+        int square = __builtin_ctzll(pawns);
+        int rank = square / 8;
+
+        occ = (oppPieces | ownPieces) & pawnMoves[square][0];
+        if(!occ) moves |= pawnMoves[square][0];
+
+        if(occ == 0 && rank == 1){
+            occ = (oppPieces | ownPieces) & pawnMoves[square][1];
+            if(!occ) moves |= pawnMoves[square][1];
+        }
+
+        occ = (oppPieces | enPassant) & pawnMoves[square][2];
+        if(occ) moves |= pawnMoves[square][2];
+
+        occ = (oppPieces | enPassant) & pawnMoves[square][3];
+        if(occ) moves |= pawnMoves[square][3];
+
+        all_moves |= moves;
+        while(moves){
+            int move_sq = __builtin_ctzll(moves);
+            //TODO: Set en passant flag
+            moveList[*idx] = SET_MOVE(square, move_sq);
+            (*idx)++;
+            moves &= moves - 1;
+        }
+
+        pawns &= pawns - 1;
+    }
+
+    return all_moves;
 }
+
+uint64_t getPawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant, char flags, Move* moveList, int* idx){
+    if(flags & WHITE_TURN) return getWhitePawnMovesAppend(pawns, ownPieces, oppPieces, enPassant, moveList, idx);
+    return flipVertical(
+        getWhitePawnMovesAppend(
+            flipVertical(pawns), 
+            flipVertical(ownPieces), 
+            flipVertical(oppPieces), 
+            flipVertical(enPassant), 
+            moveList, 
+            idx)
+        );
+}
+
 
 //Knight
 uint64_t getKnightMoves(uint64_t knights, uint64_t ownPieces) {
@@ -210,11 +267,30 @@ uint64_t getKnightMoves(uint64_t knights, uint64_t ownPieces) {
 
     while (knights) {
         int square = __builtin_ctzll(knights);
-        moves |= knightMoves[square] & ~ownPieces;
+        moves |= knightMoves[square];
         knights &= knights - 1;
     }
 
-    return moves;
+    return moves & ~ownPieces;
+}
+
+uint64_t getKnightMovesAppend(uint64_t knights, uint64_t ownPieces, Move* moveList, int* idx) {
+    uint64_t all_moves = 0ULL;
+
+    while (knights) {
+        int square = __builtin_ctzll(knights);
+        uint64_t moves = knightMoves[square] & ~ownPieces;
+        all_moves |= moves;
+        while(moves){
+            int move_sq = __builtin_ctzll(moves);
+            moveList[*idx] = SET_MOVE(square, move_sq);
+            (*idx)++;
+            moves &= moves - 1;
+        }
+        knights &= knights - 1;
+    }
+
+    return all_moves;
 }
 
 //King
@@ -223,6 +299,17 @@ uint64_t getKingMoves(uint64_t kings, uint64_t ownPieces) {
     return kingMoves[square] & ~ownPieces;
 }
 
+uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, Move* moveList, int* idx) {
+    uint64_t all_moves = 0ULL;
 
-
-
+    int square = __builtin_ctzll(kings);
+    uint64_t moves = kingMoves[square] & ~ownPieces;
+    all_moves |= moves;
+    while(moves){
+        int move_sq = __builtin_ctzll(moves);
+        moveList[*idx] = SET_MOVE(square, move_sq);
+        (*idx)++;
+        moves &= moves - 1;
+    }
+    return all_moves;
+}
