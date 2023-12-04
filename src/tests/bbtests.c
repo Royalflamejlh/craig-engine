@@ -12,7 +12,7 @@
 void testBB(void) {
     generateMasks();
     generateMagics();
-    /**
+    
     printf("Testing Starting Board Position\n");
     char* FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     Position pos = fenToPosition(FEN);
@@ -42,7 +42,7 @@ void testBB(void) {
     
     printf("Bishop attacks from A1\n");
     printBB(bishopAttacks(0, 1));
-    */
+    
     return;
     
 }

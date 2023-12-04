@@ -14,10 +14,13 @@ static uint64_t index_to_uint64(int index, int bits, uint64_t m);
 static int count_1s(uint64_t b);
 static int verifyMagic(int square, int isBishop);
 static int initAttackTable(void);
-static uint64_t debug_bishopAttacks(uint64_t occ, int sq);
-static uint64_t debug_rookAttacks(uint64_t occ, int sq);
 static void calculateAttackTableOffsets();
 static int transform(uint64_t b, uint64_t magic, int bits);
+
+#ifdef DEBUG
+static uint64_t debug_bishopAttacks(uint64_t occ, int sq);
+static uint64_t debug_rookAttacks(uint64_t occ, int sq);
+#endif
 
 static uint64_t attack_table[300000];
 static int attack_table_offsets[128];
@@ -75,7 +78,7 @@ int generateMagics(void) {
         mRookTbl[square].shift = 64 - RBits[square];
         mRookTbl[square].ptr = &attack_table[attack_table_offsets[square]];
         
-
+        #ifdef DEBUG
         printf("Rook Square %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, AttackTableIdx = %d, Ptr = %p\n",
             square,
             mRookTbl[square].magic,
@@ -83,6 +86,7 @@ int generateMagics(void) {
             mRookTbl[square].shift,
             attack_table_offsets[square],
             (void*)mRookTbl[square].ptr);
+        #endif
     }
 
     printf("Finished generating rook magics, generating bishop magics.\n");
@@ -93,6 +97,7 @@ int generateMagics(void) {
         mBishopTbl[square].shift = 64 - BBits[square];
         mBishopTbl[square].ptr   = &attack_table[attack_table_offsets[square + 64]];
         
+        #ifdef DEBUG
         printf("Bishop Square %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, AttackTableIdx = %d, Ptr = %p\n",
             square,
             mBishopTbl[square].magic,
@@ -100,6 +105,7 @@ int generateMagics(void) {
             mBishopTbl[square].shift,
             attack_table_offsets[square + 64],
             (void*)mBishopTbl[square].ptr);
+        #endif
     }
 
     
@@ -134,7 +140,11 @@ static int verifyMagic(int square, int isBishop) {
     for (int blockers = 0; blockers < num_blocker_configs; ++blockers) {
         uint64_t blocker_bits = index_to_uint64(blockers, count_1s(mask), mask);
         uint64_t expected_attack = isBishop ? batt(square, blocker_bits) : ratt(square, blocker_bits);
+        #ifdef DEBUG
         uint64_t actual_attack = isBishop ? debug_bishopAttacks(blocker_bits, square) : debug_rookAttacks(blocker_bits, square);
+        #else
+        uint64_t actual_attack = isBishop ? bishopAttacks(blocker_bits, square) : rookAttacks(blocker_bits, square);
+        #endif
 
         if (actual_attack != expected_attack) {
             printf("Failed with expected attack: 0x%llx, actual attack was: 0x%llx\n",
@@ -150,7 +160,6 @@ static int verifyMagic(int square, int isBishop) {
 
 static int initAttackTable() {
     printf("Initializing the attack table!\n");
-    int offset = 0;
 
     // Rooks
     for (int sq = 0; sq < 64; ++sq) {
@@ -160,26 +169,19 @@ static int initAttackTable() {
             uint64_t blocker_bits = index_to_uint64(blockers, count_1s(mask), mask);
             uint64_t index = transform(blocker_bits, mRookTbl[sq].magic, RBits[sq]);
             attack_table[attack_table_offsets[sq] + index] = ratt(sq, blocker_bits);
-
-            if(attack_table_offsets[sq] + index == 0) {
-                printf("Rook Square %d, Config %d, Index %llu: Blocker Bits = 0x%" PRIx64 "\n",
-                        sq, blockers, (unsigned long long)index, blocker_bits);
-            }
         }
     }
 
     // Bishops
-    /*
     for (int sq = 0; sq < 64; ++sq) {
-        attack_table_offsets[sq + 64] = offset;
         uint64_t mask = bmask(sq);
         int num_blocker_configs = 1 << count_1s(mask);
         for (int blockers = 0; blockers < num_blocker_configs; ++blockers) {
             uint64_t blocker_bits = index_to_uint64(blockers, count_1s(mask), mask);
-            attack_table[offset++] = batt(sq, blocker_bits);
+            uint64_t index = transform(blocker_bits, mBishopTbl[sq].magic, BBits[sq]);
+            attack_table[attack_table_offsets[sq + 64] + index] = batt(sq, blocker_bits);
         }
     }
-    */
 
 
     return 0;
@@ -199,6 +201,7 @@ static void calculateAttackTableOffsets() {
         attack_table_offsets[sq + 64] = offset;
         offset += num_blocker_configs;
     }
+    printf("final offset is: %d", offset);
 }
 
 
@@ -218,6 +221,7 @@ uint64_t rookAttacks(uint64_t occ, int sq) {
    return aptr[occ];
 }
 
+#ifdef DEBUG
 static uint64_t debug_bishopAttacks(uint64_t occ, int sq) {
     uint64_t* aptr = mBishopTbl[sq].ptr;
     uint64_t original_occ = occ;
@@ -263,6 +267,7 @@ static uint64_t debug_rookAttacks(uint64_t occ, int sq) {
             index);
     return aptr[index];
 }
+#endif
 
 uint64_t random_uint64() {
   uint64_t u1, u2, u3, u4;
