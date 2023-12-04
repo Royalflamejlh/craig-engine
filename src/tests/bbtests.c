@@ -6,43 +6,43 @@
 //
 
 #include "bbtests.h"
+#include "../bitboard/bitboard.h"
+#include "../bitboard/magic.h"
 
 void testBB(void) {
-    position initialBB = getInitialBB();
-    
-    // Test with an empty board
-    uint64_t emptyBoard = 0;
-    printf("Empty Board:\n");
-    printBB(emptyBoard);
-    printf("\n");
+    generateMasks();
+    generateMagics();
+    /**
+    printf("Testing Starting Board Position\n");
+    char* FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    Position pos = fenToPosition(FEN);
+    printPosition(pos);
 
-    // Test with a single piece at A1 (bit 0)
-    uint64_t a1Board = 1ULL; // Bit 0 set
-    printf("Board with piece at A1:\n");
-    printBB(a1Board);
-    printf("\n");
+    printf("After E4\n");
+    FEN = "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1";
+    pos = fenToPosition(FEN);
+    printPosition(pos);
 
-    // Test with a single piece at H8 (bit 63)
-    uint64_t h8Board = 1ULL << 63; // Bit 63 set
-    printf("Board with piece at H8:\n");
-    printBB(h8Board);
-    printf("\n");
+    printf("After E4 C5\n");
+    FEN = "rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2";
+    pos = fenToPosition(FEN);
+    printPosition(pos);
 
-    // Test with pieces on A1, B2, C3... (diagonal)
-    uint64_t diagonalBoard = 0;
-    for (int i = 0; i < 8; i++) {
-        diagonalBoard |= 1ULL << (i * 8 + i);
-    }
-    printf("Board with pieces on diagonal A1, B2, C3, ... H8:\n");
-    printBB(diagonalBoard);
-    printf("\n");
+    printf("After E4 C5 NF3\n");
+    FEN = "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2";
+    pos = fenToPosition(FEN);
+    printPosition(pos);
+
+    printf("Knight moves for white after E4 C5 NF3\n");
+    uint64_t moves = getKnightMoves(pos.w_knight, pos.white);
+    printBB(moves);
+
+    printf("Rook attacks from A1\n");
+    printBB(rookAttacks(0, 1));
     
-    //Test getting knight moves
-    printf("Board with knight moves for white\r\n");
-    uint64_t knightBoard = getKnightMoves(initialBB.knight, initialBB.white);
-    printBB(knightBoard);
-    
-    //Test getting pawn moves
-    printf("Gettings pawn moves for white\r\n");
+    printf("Bishop attacks from A1\n");
+    printBB(bishopAttacks(0, 1));
+    */
+    return;
     
 }

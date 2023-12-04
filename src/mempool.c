@@ -7,7 +7,7 @@ void initializeNodePool(void) {
     nodePool.size = INITIAL_POOL_SIZE;
     nodePool.usedCount = 0;
     nodePool.nextAvailable = 0;
-    nodePool.nodes = (struct Node*)malloc(nodePool.size * sizeof(struct Node));
+    nodePool.nodes = (Node*)malloc(nodePool.size * sizeof(Node));
     nodePool.used = (int*)malloc(nodePool.size * sizeof(int));
     
     for (size_t i = 0; i < nodePool.size; i++) {
@@ -18,7 +18,7 @@ void initializeNodePool(void) {
 
 static void resizeNodePool(void) {
     size_t newSize = nodePool.size * 2;
-    nodePool.nodes = (struct Node*)realloc(nodePool.nodes, newSize * sizeof(struct Node));
+    nodePool.nodes = (Node*)realloc(nodePool.nodes, newSize * sizeof(Node));
     nodePool.used = (int*)realloc(nodePool.used, newSize * sizeof(int));
 
     for (size_t i = nodePool.size; i < newSize; i++) {
@@ -58,7 +58,7 @@ void freeNode(size_t index) {
     }
 }
 
-struct Node* getNode(size_t index) {
+Node* getNode(size_t index) {
     if (index < nodePool.size && nodePool.used[index]) {
         return &nodePool.nodes[index];
     }

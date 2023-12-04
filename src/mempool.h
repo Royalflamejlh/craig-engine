@@ -8,7 +8,7 @@
 #define NULL_NODE (size_t)(-1)
 
 struct DynamicNodePool {
-    struct Node* nodes;
+    Node* nodes;
     int* used;
     size_t size;
     size_t usedCount;
@@ -17,7 +17,7 @@ struct DynamicNodePool {
 size_t allocateNode(void);
 void freeNode(size_t index);
 void initializeNodePool(void);
-struct Node* getNode(size_t index);
+Node* getNode(size_t index);
 
 
 #endif /* mempool_h */

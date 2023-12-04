@@ -14,7 +14,7 @@
 void generateMasks(void);
 void testBB(void);
 void printBB(uint64_t BB);
-position getInitialBB(void);
+Position getInitialBB(void);
 uint64_t getKnightMoves(uint64_t knights, uint64_t ownPieces);
 
 #endif /* bitboard_h */

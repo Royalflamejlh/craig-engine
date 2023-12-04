@@ -9,6 +9,6 @@
 #define bbtests_h
 
 #include <stdio.h>
-#include "../bitboard/bitboard.h"
+
 
 #endif /* bbtests_h */

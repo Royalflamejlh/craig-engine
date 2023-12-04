@@ -10,7 +10,11 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include "../types.h"
 void printBB(uint64_t BB);
+Position fenToPosition(char* FEN);
+void printPosition(Position position);
+
 #endif /* bbutils_h */
 
 
