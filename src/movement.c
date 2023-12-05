@@ -5,20 +5,18 @@ static uint64_t generateWhiteMoves(Position position, Move* moveList, int* size)
 static uint64_t generateBlackMoves(Position position, Move* moveList, int* size);
 
 
-void generateMoves(Position position,  Move* moveList, int* size){
-    printf("Generating moves\n");
+uint16_t generateLegalMoves(Position position,  Move* moveList, int* size){
     *size = 0;
-
     if(position.flags & WHITE_TURN){
-        printf("Generating moves for white\n");
-        printBB(generateWhiteMoves(position, moveList, size));
+        generateWhiteMoves(position, moveList, size);
+        return *size;
     }
     else{
-        printf("Generating moves for black\n");
         generateBlackMoves(position, moveList, size);
+        return *size;
     }
-
 }
+
 
 static uint64_t generateWhiteMoves(Position position, Move* moveList, int* size){
     //Check for hashed moves
@@ -51,4 +49,68 @@ static uint64_t generateBlackMoves(Position position, Move* moveList, int* size)
     attack_mask |= getKingMovesAppend(position.b_king, position.black, moveList, size);
     attack_mask |= getPawnMovesAppend(position.b_pawn, position.black, position.white, position.en_passant, position.flags, moveList, size);
     return attack_mask;
+}
+
+static void updatePosition(Position *position, uint64_t fromMask, uint64_t toMask, uint64_t *pieceSet) {
+    position->charBoard[0] = 'A';//TODO: Stuff
+    *pieceSet &= ~fromMask;
+    *pieceSet |= toMask;
+}
+
+
+void makeMove(Position *position, Move move){
+    if(move & MOVE_CASTLE_MASK){
+        //Castle Logic;
+    }
+    if(move & MOVE_PROMOTION_MASK){
+        //Promotion logic
+    }
+    
+    uint64_t from = 0x1ULL << GET_FROM(move);
+    uint64_t to = 0x1ULL << GET_TO(move);
+
+    char from_piece = position->charBoard[GET_FROM(move)];
+
+    switch(from_piece){
+        case 'Q':
+            updatePosition(position, from, to, &position->w_queen);
+            updatePosition(position, from, to, &position->white);
+            break;
+        case 'K':
+            position->w_king   |= to;
+            position->white    |= to;
+            break;
+        case 'N':
+            position->w_knight |= to;
+            position->white    |= to;
+            break;
+        case 'B':
+            position->w_bishop |= to;
+            position->white    |= to;
+            break;
+        case 'R':
+            position->w_rook   |= to;
+            position->white    |= to;
+            break;
+        case 'P':
+            position->w_pawn   |= to;
+            position->white    |= to;
+            break;
+    }
+}
+
+static inline void clearBlackSquare(Position *position, uint64_t to){
+    position->black    &= ~to; 
+    position->b_pawn   &= ~to;
+    position->b_queen  &= ~to;
+    position->b_bishop &= ~to;
+    position->b_knight &= ~to;
+    position->b_rook   &= ~to;
+}
+
+
+void unmakeMove(Position *position, Move move){
+    char from_piece = position->charBoard[GET_FROM(move)];
+    switch(from_piece){
+    }
 }

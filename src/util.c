@@ -1,4 +1,5 @@
 #include "util.h"
+#include "movement.h"
 #include <stdio.h>
 
 void printMove(Move move){
@@ -37,4 +38,29 @@ void printMove(Move move){
     }
 
     printf("\n");
+}
+
+
+
+
+uint64_t perft(int depth, Position pos){
+  Move move_list[256];
+  int n_moves, i;
+  uint64_t nodes = 0;
+
+  if (depth == 0) 
+    return 1ULL;
+
+  
+  generateLegalMoves(pos, move_list, &n_moves);
+  for (i = 0; i < n_moves; i++) {
+    //MakeMove(move_list[i]);
+    nodes += perft(depth - 1, pos);
+    //UndoMove(move_list[i]);
+  }
+  return nodes;
+}
+
+char getPiece(Position pos, int square){
+    return pos.charBoard[square];
 }

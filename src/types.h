@@ -38,6 +38,8 @@ typedef uint16_t Move;
 #define SET_MOVE_FLAGS(move, isCastle, isEnPassant) \
     ((move) | ((isCastle) ? MOVE_CASTLE_MASK : 0) | ((isEnPassant) ? MOVE_ENPASSANT_MASK : 0))
 
+#define GET_FROM(move) ((move) & MOVE_FROM_MASK)
+#define GET_TO(move) (((move) & MOVE_TO_MASK) >> 6)
 
 typedef struct {
     uint64_t w_pawn;
@@ -61,9 +63,12 @@ typedef struct {
     char flags;  //Castle aval as bit flags, in order : w_long_castle | w_short_castle | b_long_castle | b_short_castle | turn
     //1 means avaliable / white's turn
 
+    char charBoard[64]; //Character Board
+
     int halfmove_clock;
     int fullmove_number;
 } Position;
+
 
 typedef struct {
     uint16_t move;

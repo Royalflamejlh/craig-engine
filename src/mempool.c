@@ -1,7 +1,7 @@
 #include "mempool.h"
 #include <stdlib.h>
 
-static struct DynamicNodePool nodePool = {NULL, NULL, 0, 0};
+static struct DynamicNodePool nodePool = {NULL, NULL, 0, 0, 0};
 
 void initializeNodePool(void) {
     nodePool.size = INITIAL_POOL_SIZE;

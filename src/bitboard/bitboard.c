@@ -20,6 +20,8 @@
 
 #define W_SHORT_CASTLE_MASK 0x0000000000000060ULL
 #define W_LONG_CASTLE_MASK  0x000000000000000EULL
+#define B_SHORT_CASTLE_MASK 0x6000000000000000ULL 
+#define B_LONG_CASTLE_MASK  0x0E00000000000000ULL
 
 static void generateKingMoveMasks(void);
 static void generateKnightMoveMasks(void);
@@ -349,5 +351,17 @@ void getCastleMovesWhiteAppend(uint64_t white, char flags, Move* moveList, int* 
 }
 
 void getCastleMovesBlackAppend(uint64_t black, char flags, Move* moveList, int* idx){
-    return;
+    if ((flags & B_SHORT_CASTLE) && !(black & B_SHORT_CASTLE_MASK)) {
+        Move move = SET_MOVE(60, 62);
+        move = SET_MOVE_FLAGS(move, 1, 0);
+        moveList[*idx] = move;
+        (*idx)++;
+    }
+
+    if ((flags & B_LONG_CASTLE) && !(black & B_LONG_CASTLE_MASK)) {
+        Move move = SET_MOVE(60, 58);
+        move = SET_MOVE_FLAGS(move, 1, 0);
+        moveList[*idx] = move;
+        (*idx)++;
+    }
 }

@@ -2,4 +2,4 @@
 #define MOVEMENT_H
 #endif
 
-void generateMoves(Position position,  Move* moveList, int* size);
+uint16_t generateLegalMoves(Position position,  Move* moveList, int* size);

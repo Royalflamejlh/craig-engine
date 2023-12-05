@@ -17,7 +17,6 @@ void testBB(void) {
     generateMasks();
     generateMagics();
     char* FEN;
-    uint64_t moves;
     Position pos;
     
     #ifdef FENTEST
@@ -43,6 +42,7 @@ void testBB(void) {
     #endif
 
     #ifdef MOVE_MASK_TEST
+    uint64_t moves;
     FEN = "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2";
     pos = fenToPosition(FEN);
 
@@ -68,11 +68,19 @@ void testBB(void) {
     printBB(getBishopMoves(pos.w_bishop, pos.white, pos.black));
     Move moveList[256];
     int size;
-    generateMoves(pos, moveList, &size);
+    generateLegalMoves(pos, moveList, &size);
     for(int i = 0; i < size; i++){
         printMove(moveList[i]);
     }
     #endif
+
+    FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    pos = fenToPosition(FEN);
+    for(int depth = 1; depth < 5; depth++){
+        uint64_t num_moves = perft(depth, pos);
+        printf("Perft output is %lld for depth %d\n", (long long unsigned)num_moves, depth);
+    }
+    
 
 
     
