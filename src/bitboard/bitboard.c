@@ -17,6 +17,7 @@
 #include "bitboard.h"
 #include "magic.h"
 #include "../util.h"
+#include "../types.h"
 
 #define W_SHORT_CASTLE_MASK 0x0000000000000060ULL
 #define W_LONG_CASTLE_MASK  0x000000000000000EULL
@@ -131,14 +132,26 @@ uint64_t getBishopMovesAppend(uint64_t bishops, uint64_t ownPieces, uint64_t opp
     uint64_t all_moves = 0ULL;
     while (bishops) {
         int square = __builtin_ctzll(bishops);
-        uint64_t moves = bishopAttacks(ownPieces | oppPieces, square) & ~ownPieces;
-        all_moves |= moves;
-        while(moves){
-            int move_sq = __builtin_ctzll(moves);
-            moveList[*idx] = SET_MOVE(square, move_sq);
+        uint64_t nocap_moves = bishopAttacks(ownPieces | oppPieces, square) & ~ownPieces;
+        
+        all_moves |= nocap_moves;
+        uint64_t cap_moves = nocap_moves & oppPieces;
+        nocap_moves &= ~cap_moves;
+
+        while(nocap_moves){
+            int move_sq = __builtin_ctzll(nocap_moves);
+            moveList[*idx] = MAKE_MOVE(square, move_sq, QUIET);
             (*idx)++;
-            moves &= moves - 1;
+            nocap_moves &= nocap_moves - 1;
         }
+
+        while(cap_moves){
+            int move_sq = __builtin_ctzll(cap_moves);
+            moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+            (*idx)++;
+            cap_moves &= cap_moves - 1;
+        }
+
         bishops &= bishops - 1;
     }
     return all_moves;
@@ -159,14 +172,26 @@ uint64_t getRookMovesAppend(uint64_t rooks, uint64_t ownPieces, uint64_t oppPiec
     uint64_t all_moves = 0ULL;
     while (rooks) {
         int square = __builtin_ctzll(rooks);
-        uint64_t moves = rookAttacks(ownPieces | oppPieces, square) & ~ownPieces;
-        all_moves |= moves;
-        while(moves){
-            int move_sq = __builtin_ctzll(moves);
-            moveList[*idx] = SET_MOVE(square, move_sq);
+        uint64_t nocap_moves = rookAttacks(ownPieces | oppPieces, square) & ~ownPieces;
+        
+        all_moves |= nocap_moves;
+        uint64_t cap_moves = nocap_moves & oppPieces;
+        nocap_moves &= ~cap_moves;
+
+        while(nocap_moves){
+            int move_sq = __builtin_ctzll(nocap_moves);
+            moveList[*idx] = MAKE_MOVE(square, move_sq, QUIET);
             (*idx)++;
-            moves &= moves - 1;
+            nocap_moves &= nocap_moves - 1;
         }
+
+        while(cap_moves){
+            int move_sq = __builtin_ctzll(cap_moves);
+            moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+            (*idx)++;
+            cap_moves &= cap_moves - 1;
+        }
+
         rooks &= rooks - 1;
     }
     return all_moves;
@@ -245,17 +270,17 @@ uint64_t getWhitePawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t op
         while(moves){
             int move_sq = __builtin_ctzll(moves);
             if (promotion) {
-                Move baseMove = SET_MOVE(square, move_sq);
-                moveList[*idx] = SET_MOVE_PROMOTION(baseMove, PROMOTE_QUEEN);
+                Move baseMove = MAKE_MOVE(square, move_sq, QUIET);
+                moveList[*idx] = SET_QUEEN_PROMOTION(baseMove);
                 (*idx)++;
-                moveList[*idx] = SET_MOVE_PROMOTION(baseMove, PROMOTE_ROOK);
+                moveList[*idx] = SET_ROOK_PROMOTION(baseMove);
                 (*idx)++;
-                moveList[*idx] = SET_MOVE_PROMOTION(baseMove, PROMOTE_BISHOP);
+                moveList[*idx] = SET_BISHOP_PROMOTION(baseMove);
                 (*idx)++;
-                moveList[*idx] = SET_MOVE_PROMOTION(baseMove, PROMOTE_KNIGHT);
+                moveList[*idx] = SET_KNIGHT_PROMOTION(baseMove);
                 (*idx)++;
             } else {
-                moveList[*idx] = SET_MOVE(square, move_sq);
+                moveList[*idx] = MAKE_MOVE(square, move_sq, QUIET);
                 (*idx)++;
             }
             moves &= moves - 1;
@@ -294,19 +319,31 @@ uint64_t getKnightMoves(uint64_t knights, uint64_t ownPieces) {
     return moves & ~ownPieces;
 }
 
-uint64_t getKnightMovesAppend(uint64_t knights, uint64_t ownPieces, Move* moveList, int* idx) {
+uint64_t getKnightMovesAppend(uint64_t knights, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* idx) {
     uint64_t all_moves = 0ULL;
 
     while (knights) {
         int square = __builtin_ctzll(knights);
-        uint64_t moves = knightMoves[square] & ~ownPieces;
-        all_moves |= moves;
-        while(moves){
-            int move_sq = __builtin_ctzll(moves);
-            moveList[*idx] = SET_MOVE(square, move_sq);
+
+        uint64_t nocap_moves = knightMoves[square] & ~ownPieces;
+
+        all_moves |= nocap_moves;
+        uint64_t cap_moves = nocap_moves & oppPieces;
+        nocap_moves &= ~cap_moves;
+
+        while(nocap_moves){
+            int move_sq = __builtin_ctzll(nocap_moves);
+            moveList[*idx] = MAKE_MOVE(square, move_sq, QUIET);
             (*idx)++;
-            moves &= moves - 1;
+            nocap_moves &= nocap_moves - 1;
         }
+        while(cap_moves){
+            int move_sq = __builtin_ctzll(cap_moves);
+            moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+            (*idx)++;
+            cap_moves &= cap_moves - 1;
+        }
+        
         knights &= knights - 1;
     }
 
@@ -319,32 +356,40 @@ uint64_t getKingMoves(uint64_t kings, uint64_t ownPieces) {
     return kingMoves[square] & ~ownPieces;
 }
 
-uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, Move* moveList, int* idx) {
+uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* idx) {
     uint64_t all_moves = 0ULL;
 
     int square = __builtin_ctzll(kings);
-    uint64_t moves = kingMoves[square] & ~ownPieces;
-    all_moves |= moves;
-    while(moves){
-        int move_sq = __builtin_ctzll(moves);
-        moveList[*idx] = SET_MOVE(square, move_sq);
+    uint64_t nocap_moves = kingMoves[square] & ~ownPieces;
+    all_moves |= nocap_moves;
+
+    uint64_t cap_moves = nocap_moves & oppPieces;
+    nocap_moves &= ~cap_moves;
+
+    while(nocap_moves){
+        int move_sq = __builtin_ctzll(nocap_moves);
+        moveList[*idx] = MAKE_MOVE(square, move_sq, QUIET);
         (*idx)++;
-        moves &= moves - 1;
+        nocap_moves &= nocap_moves - 1;
+    }
+    while(cap_moves){
+        int move_sq = __builtin_ctzll(cap_moves);
+        moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+        (*idx)++;
+        cap_moves &= cap_moves - 1;
     }
     return all_moves;
 }
 
 void getCastleMovesWhiteAppend(uint64_t white, char flags, Move* moveList, int* idx){
     if ((flags & W_SHORT_CASTLE) && !(white & W_SHORT_CASTLE_MASK)) {
-        Move move = SET_MOVE(4, 6);
-        move = SET_MOVE_FLAGS(move, 1, 0);
+        Move move = MAKE_MOVE(4, 6, KING_CASTLE);
         moveList[*idx] = move;
         (*idx)++;
     }
 
     if ((flags & W_LONG_CASTLE) && !(white & W_LONG_CASTLE_MASK)) {
-        Move move = SET_MOVE(4, 2);
-        move = SET_MOVE_FLAGS(move, 1, 0);
+        Move move = MAKE_MOVE(4, 2, QUEEN_CASTLE);
         moveList[*idx] = move;
         (*idx)++;
     }
@@ -352,15 +397,13 @@ void getCastleMovesWhiteAppend(uint64_t white, char flags, Move* moveList, int* 
 
 void getCastleMovesBlackAppend(uint64_t black, char flags, Move* moveList, int* idx){
     if ((flags & B_SHORT_CASTLE) && !(black & B_SHORT_CASTLE_MASK)) {
-        Move move = SET_MOVE(60, 62);
-        move = SET_MOVE_FLAGS(move, 1, 0);
+        Move move = MAKE_MOVE(60, 62, KING_CASTLE);
         moveList[*idx] = move;
         (*idx)++;
     }
 
     if ((flags & B_LONG_CASTLE) && !(black & B_LONG_CASTLE_MASK)) {
-        Move move = SET_MOVE(60, 58);
-        move = SET_MOVE_FLAGS(move, 1, 0);
+        Move move = MAKE_MOVE(60, 58, QUEEN_CASTLE);
         moveList[*idx] = move;
         (*idx)++;
     }

@@ -25,12 +25,12 @@ static uint64_t generateWhiteMoves(Position position, Move* moveList, int* size)
     //Check rest of moves
     uint64_t attack_mask = 0ULL;
     attack_mask |= getBishopMovesAppend(position.w_bishop, position.white, position.black, moveList, size);
-    attack_mask |= getRookMovesAppend(position.w_rook, position.white, position.black, moveList, size);
-    attack_mask |= getBishopMovesAppend(position.w_queen, position.white, position.black, moveList, size);
-    attack_mask |= getRookMovesAppend(position.w_queen, position.white, position.black, moveList, size);
-    attack_mask |= getKnightMovesAppend(position.w_knight, position.white, moveList, size);
-    attack_mask |= getKingMovesAppend(position.w_king, position.white, moveList, size);
-    attack_mask |= getPawnMovesAppend(position.w_pawn, position.white, position.black, position.en_passant, position.flags, moveList, size);
+    attack_mask |= getRookMovesAppend(  position.w_rook,   position.white, position.black, moveList, size);
+    attack_mask |= getBishopMovesAppend(position.w_queen,  position.white, position.black, moveList, size);
+    attack_mask |= getRookMovesAppend(  position.w_queen,  position.white, position.black, moveList, size);
+    attack_mask |= getKnightMovesAppend(position.w_knight, position.white, position.black, moveList, size);
+    attack_mask |= getKingMovesAppend(  position.w_king,   position.white, position.black, moveList, size);
+    attack_mask |= getPawnMovesAppend(  position.w_pawn,   position.white, position.black, position.en_passant, position.flags, moveList, size);
     getCastleMovesWhiteAppend(position.white, position.flags, moveList, size);
     return attack_mask;
 }
@@ -42,59 +42,62 @@ static uint64_t generateBlackMoves(Position position, Move* moveList, int* size)
     //Check rest of moves
     uint64_t attack_mask = 0ULL;
     attack_mask |= getBishopMovesAppend(position.b_bishop, position.black, position.white, moveList, size);
-    attack_mask |= getRookMovesAppend(position.b_rook, position.black, position.white, moveList, size);
-    attack_mask |= getBishopMovesAppend(position.b_queen, position.black, position.white, moveList, size);
-    attack_mask |= getRookMovesAppend(position.b_queen, position.black, position.white, moveList, size);
-    attack_mask |= getKnightMovesAppend(position.b_knight, position.black, moveList, size);
-    attack_mask |= getKingMovesAppend(position.b_king, position.black, moveList, size);
-    attack_mask |= getPawnMovesAppend(position.b_pawn, position.black, position.white, position.en_passant, position.flags, moveList, size);
+    attack_mask |= getRookMovesAppend(  position.b_rook,   position.black, position.white, moveList, size);
+    attack_mask |= getBishopMovesAppend(position.b_queen,  position.black, position.white, moveList, size);
+    attack_mask |= getRookMovesAppend(  position.b_queen,  position.black, position.white, moveList, size);
+    attack_mask |= getKnightMovesAppend(position.b_knight, position.black, position.white, moveList, size);
+    attack_mask |= getKingMovesAppend(  position.b_king,   position.black, position.white, moveList, size);
+    attack_mask |= getPawnMovesAppend(  position.b_pawn,   position.black, position.white, position.en_passant, position.flags, moveList, size);
     return attack_mask;
 }
 
-static void updatePosition(Position *position, uint64_t fromMask, uint64_t toMask, uint64_t *pieceSet) {
-    position->charBoard[0] = 'A';//TODO: Stuff
-    *pieceSet &= ~fromMask;
-    *pieceSet |= toMask;
+static void updateMask(uint64_t fromMask, uint64_t toMask, uint64_t *pieceSet, uint64_t *pieceColorSet) {
+    *pieceSet       &= ~fromMask;
+    *pieceSet       |= toMask;
+    *pieceColorSet  &= ~fromMask;
+    *pieceColorSet  |= toMask;
 }
 
 
 void makeMove(Position *position, Move move){
-    if(move & MOVE_CASTLE_MASK){
-        //Castle Logic;
+    switch(GET_FLAGS(move)){
+        case QUEEN_PROMO_CAPTURE:
+        case ROOK_PROMO_CAPTURE:
+        case BISHOP_PROMO_CAPTURE:
+        case KNIGHT_PROMO_CAPTURE:
+        case QUEEN_PROMOTION:
+        case ROOK_PROMOTION:
+        case BISHOP_PROMOTION:
+        case KNIGHT_PROMOTION:
+        case EP_CAPTURE:
+        case CAPTURE:
+        case QUEEN_CASTLE:
+        case KING_CASTLE:
+        case DOUBLE_PAWN_PUSH:
+        case QUIET:
+        default:
+            break;
     }
-    if(move & MOVE_PROMOTION_MASK){
-        //Promotion logic
-    }
-    
-    uint64_t from = 0x1ULL << GET_FROM(move);
-    uint64_t to = 0x1ULL << GET_TO(move);
+
+    char from = GET_FROM(move);
+    char to   = GET_TO(move);
 
     char from_piece = position->charBoard[GET_FROM(move)];
+    char to_piece   = position->charBoard[GET_TO(move)];
 
     switch(from_piece){
         case 'Q':
-            updatePosition(position, from, to, &position->w_queen);
-            updatePosition(position, from, to, &position->white);
+            //movePiece(from, to, from_piece, to_piece, &position->w_queen, &position->white);
             break;
         case 'K':
-            position->w_king   |= to;
-            position->white    |= to;
             break;
         case 'N':
-            position->w_knight |= to;
-            position->white    |= to;
             break;
         case 'B':
-            position->w_bishop |= to;
-            position->white    |= to;
             break;
         case 'R':
-            position->w_rook   |= to;
-            position->white    |= to;
             break;
         case 'P':
-            position->w_pawn   |= to;
-            position->white    |= to;
             break;
     }
 }

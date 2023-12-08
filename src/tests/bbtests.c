@@ -19,7 +19,12 @@ void testBB(void) {
     char* FEN;
     Position pos;
     
+
+
+
     #ifdef FENTEST
+    printf("\n----------------------------------\n");
+
     printf("Testing Starting Board Position\n");
     FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     pos = fenToPosition(FEN);
@@ -41,38 +46,42 @@ void testBB(void) {
     printPosition(pos);
     #endif
 
+
+
+
     #ifdef MOVE_MASK_TEST
+    printf("\n----------------------------------\n");
+
     uint64_t moves;
-    FEN = "rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2";
-    pos = fenToPosition(FEN);
-
-    printf("Knight moves for white after E4 C5 NF3\n");
-    moves = getKnightMoves(pos.w_knight, pos.white);
-    printBB(moves);
-
-    printf("Pawn moves for white after E4 C5 NF3 \n");
-    moves = getPawnMoves(pos.w_pawn, pos.white, pos.black,  pos.en_passant, WHITE_TURN);
-    printBB(moves);
-
-    printf("Pawn moves for black after E4 C5 NF3 \n");
-    moves = getPawnMoves(pos.b_pawn, pos.black, pos.white, pos.en_passant, 0);
-    printBB(moves);
-    #endif
-
-    #ifdef MOVE_GEN_TEST
     FEN = "rn1qkbnr/pp1bppp1/2p5/3p2Pp/3P4/3BPN2/PPP2P1P/RNBQK2R w KQkq h6 0 7";
     pos = fenToPosition(FEN);
-    printf("Testing a position with en-passant and castling\n");
+    //TODO: Add checks for moves
+    #endif
+
+
+
+
+    #ifdef MOVE_GEN_TEST
+    printf("\n----------------------------------\n");
+
+    FEN = "r3kb1r/pP1n2p1/b1pqp2p/3p1pP1/3P3n/N1P1PN1B/p1Q2P1P/1RB1K2R w Kkq f6 0 26";
+    pos = fenToPosition(FEN);
+    printf("Testing a position with a lil bit of everything\n");
     printPosition(pos);
-    printf("Visual bishop moves \n");
-    printBB(getBishopMoves(pos.w_bishop, pos.white, pos.black));
     Move moveList[256];
     int size;
     generateLegalMoves(pos, moveList, &size);
     for(int i = 0; i < size; i++){
         printMove(moveList[i]);
     }
+    printf("Found %d legal moves\n", size);
     #endif
+
+
+
+
+    #ifdef PERF_TEST
+    printf("\n----------------------------------\n");
 
     FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     pos = fenToPosition(FEN);
@@ -80,6 +89,7 @@ void testBB(void) {
         uint64_t num_moves = perft(depth, pos);
         printf("Perft output is %lld for depth %d\n", (long long unsigned)num_moves, depth);
     }
+    #endif
     
 
 

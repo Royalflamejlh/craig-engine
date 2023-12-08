@@ -171,18 +171,9 @@ void printPosition(Position position){
     printf("White Short: %s, ", (position.flags & W_SHORT_CASTLE) ? "Yes" : "No");
     printf("Black Long: %s, ", (position.flags & B_LONG_CASTLE) ? "Yes" : "No");
     printf("Black Short: %s\n", (position.flags & B_SHORT_CASTLE) ? "Yes" : "No");
-
     printf("Current Turn: %s\n", (position.flags & WHITE_TURN) ? "White" : "Black");
-
     printf("Halfmove Clock: %d\n", position.halfmove_clock);
-
     printf("Fullmove Number: %d\n", position.fullmove_number);
-
-    printf("White Pieces\n");
-    printBB(position.white);
-
-    printf("Black Pieces\n");
-    printBB(position.black);
 }
 
 
