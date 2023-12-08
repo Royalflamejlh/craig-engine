@@ -17,6 +17,29 @@ uint16_t generateLegalMoves(Position position,  Move* moveList, int* size){
     }
 }
 
+uint64_t generateWhiteAttacks(Position position){
+    uint64_t attack_mask = 0ULL;
+    attack_mask |= getBishopAttacks(position.w_bishop, position.white, position.black);
+    attack_mask |= getRookAttacks(  position.w_rook,   position.white, position.black);
+    attack_mask |= getBishopAttacks(position.w_queen,  position.white, position.black);
+    attack_mask |= getRookAttacks(  position.w_queen,  position.white, position.black);
+    attack_mask |= getKnightAttacks(position.w_knight, position.white);
+    attack_mask |= getKingAttacks(  position.w_king,   position.white);
+    attack_mask |= getPawnAttacks(  position.w_pawn,   position.white, position.black, position.en_passant, position.flags);
+    return attack_mask;
+}
+
+uint64_t generateBlackAttacks(Position position){
+    uint64_t attack_mask = 0ULL;
+    attack_mask |= getBishopAttacks(position.b_bishop, position.black, position.white);
+    attack_mask |= getRookAttacks(  position.b_rook,   position.black, position.white);
+    attack_mask |= getBishopAttacks(position.b_queen,  position.black, position.white);
+    attack_mask |= getRookAttacks(  position.b_queen,  position.black, position.white);
+    attack_mask |= getKnightAttacks(position.b_knight, position.black);
+    attack_mask |= getKingAttacks(  position.b_king,   position.black);
+    attack_mask |= getPawnAttacks(  position.b_pawn,   position.black, position.white, position.en_passant, position.flags);
+    return attack_mask;
+}
 
 static uint64_t generateWhiteMoves(Position position, Move* moveList, int* size){
     

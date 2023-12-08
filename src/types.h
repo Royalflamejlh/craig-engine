@@ -133,6 +133,9 @@ typedef struct {
 
     uint64_t abs_pinned; //Absolutely pinned pieces
 
+    uint64_t w_attack_mask; //Pieces white is attacking
+    uint64_t b_attack_mask; //Pieces black is attacking
+
     int halfmove_clock;
     int fullmove_number;
 } Position;

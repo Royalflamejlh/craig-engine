@@ -6,6 +6,8 @@
 //
 
 #include "bbutils.h"
+#include "../movement.h"
+#include <string.h>
 
 #ifdef _MSC_VER
 
@@ -63,8 +65,11 @@ static void updateBit(uint64_t* bitboard, int square) {
     *bitboard |= (1ULL << square);
 }
 
+static void generateAttackMasks(Position *pos);
+
 Position fenToPosition(char* FEN) {
     Position pos = {0};
+    memset(pos.charBoard, 0, sizeof(pos.charBoard));
     int square = 56; // Start at A8
 
     while (*FEN && *FEN != ' ') {
@@ -73,6 +78,7 @@ Position fenToPosition(char* FEN) {
         } else if (*FEN >= '1' && *FEN <= '8') {
             square += *FEN - '0'; // Skip empty squares
         } else {
+            pos.charBoard[square] = *FEN;
             if(isupper(*FEN)) updateBit(&pos.white, square);
             else updateBit(&pos.black, square);
             switch (*FEN) {
@@ -135,7 +141,12 @@ Position fenToPosition(char* FEN) {
 
     sscanf(FEN, "%d", &pos.fullmove_number);
 
-    
+    generateAttackMasks(&pos);
+
+    if(pos.b_attack_mask & pos.w_king) pos.flags |= IN_CHECK;
+    if(pos.w_attack_mask & pos.b_king) pos.flags |= IN_CHECK;
+
+    //pos.abs_pinned = getAbsPinnedBB(&pos);
 
     return pos;
 }
@@ -184,7 +195,72 @@ void printPosition(Position position){
         }
     }
     printf("  A B C D E F G H\n");
-    printf("-------------------------------------------------------------------------\n");
+    printf("------------------------------------------------------------------------------------------------------------\n");
+    printf("  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |\n");
+    printf("  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |\n");
+    for (int rank = 7; rank >= 0; rank--) {
+        //Color BB
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.white & mask) printf("W ");
+            else if (position.black & mask) printf("b ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
+        //White Attack
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.w_attack_mask & mask) printf("A ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
+        //Black Attack
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.b_attack_mask & mask) printf("a ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
+        //Pinned Pieces
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.abs_pinned & mask) printf("P ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
+        //Char Board
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+
+            if (position.charBoard[square]) printf("%c ",position.charBoard[square]);
+            else printf(". ");
+            
+            if (file == 7) printf(" |\n");
+        }
+    }
+    printf("  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |\n");
+    printf("------------------------------------------------------------------------------------------------------------\n");
 }
 
 
@@ -212,6 +288,12 @@ uint64_t noWeOne (uint64_t bb) { return (bb & ~0x0101010101010101ULL) << 7; }
 
 uint64_t setBit(uint64_t bb, int square) {
     return bb | (1ULL << square);
+}
+
+
+static void generateAttackMasks(Position *pos){
+    pos->w_attack_mask = generateWhiteAttacks(*pos);
+    pos->b_attack_mask = generateBlackAttacks(*pos);
 }
 
 /**

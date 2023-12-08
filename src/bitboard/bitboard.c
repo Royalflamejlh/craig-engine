@@ -118,7 +118,7 @@ void generatePawnMoveMasks(void){
 }
 
 //Bishop
-uint64_t getBishopMoves(uint64_t bishops, uint64_t ownPieces, uint64_t oppPieces) {
+uint64_t getBishopAttacks(uint64_t bishops, uint64_t ownPieces, uint64_t oppPieces) {
     uint64_t moves = 0ULL;
     while (bishops) {
         int square = __builtin_ctzll(bishops);
@@ -158,7 +158,7 @@ uint64_t getBishopMovesAppend(uint64_t bishops, uint64_t ownPieces, uint64_t opp
 }
 
 //Rook
-uint64_t getRookMoves(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces) {
+uint64_t getRookAttacks(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces) {
     uint64_t moves = 0ULL;
     while (rooks) {
         int square = __builtin_ctzll(rooks);
@@ -199,21 +199,12 @@ uint64_t getRookMovesAppend(uint64_t rooks, uint64_t ownPieces, uint64_t oppPiec
 
 
 //Pawn
-uint64_t getWhitePawnMoves(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant) {
+uint64_t getWhitePawnAttacks(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant) {
     uint64_t moves = 0ULL;
     uint64_t occ =  0ULL;
 
     while (pawns) {
         int square = __builtin_ctzll(pawns);
-        int rank = square / 8;
-
-        occ = (oppPieces | ownPieces) & pawnMoves[square][0];
-        if(!occ) moves |= pawnMoves[square][0];
-
-        if(occ == 0 && rank == 1){
-            occ = (oppPieces | ownPieces) & pawnMoves[square][1];
-            if(!occ) moves |= pawnMoves[square][1];
-        }
 
         occ = (oppPieces | enPassant) & pawnMoves[square][2];
         if(occ) moves |= pawnMoves[square][2];
@@ -224,13 +215,13 @@ uint64_t getWhitePawnMoves(uint64_t pawns, uint64_t ownPieces, uint64_t oppPiece
         pawns &= pawns - 1;
     }
 
-    return moves;
+    return (moves & ~ownPieces);
 }
 
-uint64_t getPawnMove(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant, char flags){
-    if(flags & WHITE_TURN) return getWhitePawnMoves(pawns, ownPieces, oppPieces, enPassant);
+uint64_t getPawnAttacks(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant, char flags){
+    if(flags & WHITE_TURN) return getWhitePawnAttacks(pawns, ownPieces, oppPieces, enPassant);
     return flipVertical(
-        getWhitePawnMoves(
+        getWhitePawnAttacks(
             flipVertical(pawns), 
             flipVertical(ownPieces), 
             flipVertical(oppPieces), 
@@ -337,7 +328,7 @@ uint64_t getPawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t oppPiec
 
 
 //Knight
-uint64_t getKnightMoves(uint64_t knights, uint64_t ownPieces) {
+uint64_t getKnightAttacks(uint64_t knights, uint64_t ownPieces) {
     uint64_t moves = 0ULL;
 
     while (knights) {
@@ -381,7 +372,7 @@ uint64_t getKnightMovesAppend(uint64_t knights, uint64_t ownPieces, uint64_t opp
 }
 
 //King
-uint64_t getKingMoves(uint64_t kings, uint64_t ownPieces) {
+uint64_t getKingAttacks(uint64_t kings, uint64_t ownPieces) {
     int square = __builtin_ctzll(kings);
     return kingMoves[square] & ~ownPieces;
 }

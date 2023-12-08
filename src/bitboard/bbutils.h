@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <ctype.h>
 #include "../types.h"
+
 void printBB(uint64_t BB);
 Position fenToPosition(char* FEN);
 uint64_t flipVertical(uint64_t board);
