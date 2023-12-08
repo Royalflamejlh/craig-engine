@@ -10,12 +10,6 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define WHITE_TURN 0x10
-#define W_SHORT_CASTLE 0x08
-#define W_LONG_CASTLE 0x04
-#define B_SHORT_CASTLE 0x02 
-#define B_LONG_CASTLE 0x01 
-
 #define MOVE_FROM_MASK        0x003F  // 0000 0000 0011 1111
 #define MOVE_TO_MASK          0x0FC0  // 0000 1111 1100 0000
 #define MOVE_FLAG_MASK        0xF000  // 1111 0000 0000 0000
@@ -105,6 +99,14 @@ static inline Move MAKE_MOVE(int from, int to, int flags) {
     return move;
 }
 
+
+#define IN_CHECK       0x20
+#define WHITE_TURN     0x10
+#define W_SHORT_CASTLE 0x08
+#define W_LONG_CASTLE  0x04
+#define B_SHORT_CASTLE 0x02 
+#define B_LONG_CASTLE  0x01 
+
 typedef struct {
     uint64_t w_pawn;
     uint64_t w_bishop;
@@ -124,10 +126,12 @@ typedef struct {
     uint64_t black;  //Black piece positions
 
     uint64_t en_passant;  //En Passant squares
-    char flags;  //Castle aval as bit flags, in order : w_long_castle | w_short_castle | b_long_castle | b_short_castle | turn
+    char flags;  //Castle aval as bit flags, in order : w_long_castle | w_short_castle | b_long_castle | b_short_castle | turn | in_check
     //1 means avaliable / white's turn
 
-    char charBoard[64]; //Character Board
+    char charBoard[64];  //Character Board
+
+    uint64_t abs_pinned; //Absolutely pinned pieces
 
     int halfmove_clock;
     int fullmove_number;

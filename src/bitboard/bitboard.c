@@ -243,32 +243,36 @@ uint64_t getWhitePawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t op
     uint64_t occ =  0ULL;
 
     while (pawns) {
-        uint64_t moves = 0ULL;
+        uint64_t q_moves = 0ULL;         //Quiet
+        uint64_t dp_moves = 0ULL;        //Double Pawn
+        uint64_t cap_moves = 0ULL;   //Captures
+
         int square = __builtin_ctzll(pawns);
         int rank = square / 8;
         char promotion = (rank == 6) ? 1 : 0;
 
         //Single Step
         occ = (oppPieces | ownPieces) & pawnMoves[square][0];
-        if(!occ) moves |= pawnMoves[square][0];
+        if(!occ) q_moves |= pawnMoves[square][0];
         
         //Double Step
         if(occ == 0 && rank == 1){
             occ = (oppPieces | ownPieces) & pawnMoves[square][1];
-            if(!occ) moves |= pawnMoves[square][1];
+            if(!occ) dp_moves |= pawnMoves[square][1];
         }
 
         //Capture Left
         occ = (oppPieces | enPassant) & pawnMoves[square][2];
-        if(occ) moves |= pawnMoves[square][2];
+        if(occ) cap_moves |= pawnMoves[square][2];
 
         //Capture Right
         occ = (oppPieces | enPassant) & pawnMoves[square][3];
-        if(occ) moves |= pawnMoves[square][3];
+        if(occ) cap_moves |= pawnMoves[square][3];
 
-        all_moves |= moves;
-        while(moves){
-            int move_sq = __builtin_ctzll(moves);
+        all_moves |= q_moves | dp_moves | cap_moves;
+
+        while(q_moves){
+            int move_sq = __builtin_ctzll(q_moves);
             if (promotion) {
                 Move baseMove = MAKE_MOVE(square, move_sq, QUIET);
                 moveList[*idx] = SET_QUEEN_PROMOTION(baseMove);
@@ -283,7 +287,33 @@ uint64_t getWhitePawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t op
                 moveList[*idx] = MAKE_MOVE(square, move_sq, QUIET);
                 (*idx)++;
             }
-            moves &= moves - 1;
+            q_moves &= q_moves - 1;
+        }
+
+        while(cap_moves){
+            int move_sq = __builtin_ctzll(cap_moves);
+            if (promotion) {
+                Move baseMove = MAKE_MOVE(square, move_sq, CAPTURE);
+                moveList[*idx] = SET_QUEEN_PROMO_CAPTURE(baseMove);
+                (*idx)++;
+                moveList[*idx] = SET_ROOK_PROMO_CAPTURE(baseMove);
+                (*idx)++;
+                moveList[*idx] = SET_BISHOP_PROMO_CAPTURE(baseMove);
+                (*idx)++;
+                moveList[*idx] = SET_KNIGHT_PROMO_CAPTURE(baseMove);
+                (*idx)++;
+            } else {
+                moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+                (*idx)++;
+            }
+            cap_moves &= cap_moves - 1;
+        }
+
+        while(dp_moves){
+            int move_sq = __builtin_ctzll(dp_moves);
+            moveList[*idx] = MAKE_MOVE(square, move_sq, DOUBLE_PAWN_PUSH);
+            (*idx)++;
+            dp_moves &= dp_moves - 1;
         }
 
         pawns &= pawns - 1;

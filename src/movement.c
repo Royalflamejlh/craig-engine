@@ -19,10 +19,9 @@ uint16_t generateLegalMoves(Position position,  Move* moveList, int* size){
 
 
 static uint64_t generateWhiteMoves(Position position, Move* moveList, int* size){
+    
     //Check for hashed moves
-    //Check for capturing moves
-    //Check for killer moves
-    //Check rest of moves
+    //If in check, call check move generator
     uint64_t attack_mask = 0ULL;
     attack_mask |= getBishopMovesAppend(position.w_bishop, position.white, position.black, moveList, size);
     attack_mask |= getRookMovesAppend(  position.w_rook,   position.white, position.black, moveList, size);
@@ -87,7 +86,10 @@ void makeMove(Position *position, Move move){
 
     switch(from_piece){
         case 'Q':
-            //movePiece(from, to, from_piece, to_piece, &position->w_queen, &position->white);
+            //movePiece(from, to, from_piece, to_piece, &position->w_queen, &position->white, position);
+            //Needs to update the states on all the bitboards
+            //Use the attack mask to see if the move puts the opponent in check and set flags accordinly
+            //If moving along a king ray, it needs to update the pinned pieces
             break;
         case 'K':
             break;

@@ -135,12 +135,15 @@ Position fenToPosition(char* FEN) {
 
     sscanf(FEN, "%d", &pos.fullmove_number);
 
+    
+
     return pos;
 }
 
 
 
 void printPosition(Position position){
+    printf("-------------------------------------------------------------------------\n");
     printf("  A B C D E F G H\n");
     for (int rank = 7; rank >= 0; rank--) {
         printf("%d ", rank + 1);
@@ -163,17 +166,25 @@ void printPosition(Position position){
             else if (position.en_passant & mask) printf("E ");
             else printf(". ");
 
-            if (file == 7) printf("\n");
+            
+            if (file == 7){
+                printf("%d   |  ", rank + 1);
+                if(rank == 7) printf("Current Turn: %s", (position.flags & WHITE_TURN) ? "White" : "Black");
+                if(rank == 5) printf("Halfmove Clock: %d -- Fullmove Number: %d", position.halfmove_clock, position.fullmove_number);
+                if(rank == 3) printf("In Check: %s", (position.flags & IN_CHECK) ? "Yes" : "No");
+                if(rank == 1) printf("Castling Availability: ");
+                if(rank == 0){
+                    printf("W-Long: %s, ", (position.flags & W_LONG_CASTLE)   ? "Yes" : "No");
+                    printf("W-Short: %s, ", (position.flags & W_SHORT_CASTLE) ? "Yes" : "No");
+                    printf("B-Long: %s, ", (position.flags & B_LONG_CASTLE)   ? "Yes" : "No");
+                    printf("B-Short: %s", (position.flags & B_SHORT_CASTLE)   ? "Yes" : "No");
+                }
+                printf("\n");
+            }
         }
     }
-    printf("Castling Availability: ");
-    printf("White Long: %s, ", (position.flags & W_LONG_CASTLE) ? "Yes" : "No");
-    printf("White Short: %s, ", (position.flags & W_SHORT_CASTLE) ? "Yes" : "No");
-    printf("Black Long: %s, ", (position.flags & B_LONG_CASTLE) ? "Yes" : "No");
-    printf("Black Short: %s\n", (position.flags & B_SHORT_CASTLE) ? "Yes" : "No");
-    printf("Current Turn: %s\n", (position.flags & WHITE_TURN) ? "White" : "Black");
-    printf("Halfmove Clock: %d\n", position.halfmove_clock);
-    printf("Fullmove Number: %d\n", position.fullmove_number);
+    printf("  A B C D E F G H\n");
+    printf("-------------------------------------------------------------------------\n");
 }
 
 
