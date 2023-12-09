@@ -102,6 +102,9 @@ void testBB(void) {
 
 
     #ifdef MOVE_GEN_TEST
+    Move moveList[256];
+    int size;
+    
     printf("\n----------------------------------\n");
 
     pos = fenToPosition(POSITION1);
@@ -112,7 +115,7 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return -1;
+        return;
     }
 
     pos = fenToPosition(POSITION2);
@@ -123,7 +126,7 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return -1;
+        return;
     }
 
     pos = fenToPosition(POSITION3);
@@ -134,7 +137,7 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return -1;
+        return;
     }
 
     pos = fenToPosition(POSITION4);
@@ -145,7 +148,7 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return -1;
+        return;
     }
 
     pos = fenToPosition(POSITION41);
@@ -156,7 +159,7 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return -1;
+        return;
     }
 
     pos = fenToPosition(POSITION5);
@@ -167,7 +170,7 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return -1;
+        return;
     }
 
 
