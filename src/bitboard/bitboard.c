@@ -480,6 +480,52 @@ uint64_t getBlackAttackers(Position pos, int square){
 
 
 
-void getCheckWMovesAppend(position, moveList, size){
+void getCheckMovesWhiteAppend(Position pos, Move* moveList, int* idx){
+    int king_sq = __builtin_ctzll(pos.w_king);
+    uint64_t checker_mask = getBlackAttackers(pos, king_sq);
+    int checker_sq = __builtin_ctzll(checker_mask);
+    uint64_t between_squares = betweenMask[king_sq][checker_sq];
 
+
+    if(pos.en_passant){
+        printf("ADD IN THE EN PASSANT CHECK LOGIC STUFF \n");
+    }
+    else{
+        getWhitePawnMovesAppend(pos.w_pawn, ~(between_squares | checker_mask), checker_mask, 0, moveList, idx);
+        
+        //Handle the case of double forward moves
+        uint64_t pawns = pos.w_pawn;
+        while (pawns) {
+            uint64_t dp_moves = 0ULL;
+            int square = __builtin_ctzll(pawns);
+            int rank = square / 8;
+
+            uint64_t occ = (pos.white | pos.black) & pawnMoves[square][0];
+            
+            //Double Step
+            if(occ == 0 && rank == 1){
+                occ = (pos.white | pos.black) & pawnMoves[square][1];
+                if(!occ) dp_moves |= pawnMoves[square][1] & (between_squares); //Allow double move to between square
+            }
+            while(dp_moves){
+                int move_sq = __builtin_ctzll(dp_moves);
+                moveList[*idx] = MAKE_MOVE(square, move_sq, DOUBLE_PAWN_PUSH);
+                (*idx)++;
+                dp_moves &= dp_moves - 1;
+            }
+        }
+
+    }
+
+    //The king can move normally
+    getKingMovesAppend(pos.w_king, pos.white,  pos.black, pos.b_attack_mask, moveList, idx);
+
+    getRookMovesAppend(pos.w_queen, ~(between_squares | checker_mask), checker_mask, moveList, idx);
+    getBishopMovesAppend(pos.w_queen, ~(between_squares | checker_mask), checker_mask, moveList, idx);
+
+    getRookMovesAppend(pos.w_rook, ~(between_squares | checker_mask), checker_mask, moveList, idx);
+
+    getBishopMovesAppend(pos.w_bishop, ~(between_squares | checker_mask), checker_mask, moveList, idx);
+
+    getKnightMovesAppend(pos.w_knight, ~(between_squares | checker_mask), checker_mask, moveList, idx);
 }

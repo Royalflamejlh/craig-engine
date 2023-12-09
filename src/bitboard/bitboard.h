@@ -27,12 +27,12 @@ uint64_t getPawnAttacks(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces, 
 uint64_t getPawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant, char flags, Move* moveList, int* idx);
 
 uint64_t getKingAttacks(uint64_t kings, uint64_t ownPieces);
-uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* idx);
+uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, uint64_t oppPieces, uint64_t oppAttackMask, Move* moveList, int* idx);
 
 void getCastleMovesWhiteAppend(uint64_t white, char flags, Move* moveList, int* idx);
 
-void getDoubleCheckWMovesAppend(position, moveList, size);
-void getCheckWMovesAppend(position, moveList, size);
+
+void getCheckMovesWhiteAppend(Position position, Move* moveList, int* idx);
 
 uint64_t getWhiteAttackers(Position pos, int square);
 uint64_t getBlackAttackers(Position pos, int square);

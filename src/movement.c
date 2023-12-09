@@ -3,8 +3,8 @@
 #include "./bitboard/bitboard.h"
 #include "./bitboard/bbutils.h"
 
-static uint64_t generateWhiteMoves(Position position, Move* moveList, int* size);
-static uint64_t generateBlackMoves(Position position, Move* moveList, int* size);
+static void generateWhiteMoves(Position position, Move* moveList, int* size);
+static void generateBlackMoves(Position position, Move* moveList, int* size);
 
 
 uint16_t generateLegalMoves(Position position,  Move* moveList, int* size){
@@ -64,9 +64,7 @@ static void generateWhiteMoves(Position position, Move* moveList, int* size){
         getRookMovesAppend(  position.w_rook,   position.white, position.black, moveList, size);
         getBishopMovesAppend(position.w_bishop, position.white, position.black, moveList, size);
         getKnightMovesAppend(position.w_knight, position.white, position.black, moveList, size);
-
         getKingMovesAppend(  position.w_king,   position.white, position.black, position.b_attack_mask, moveList, size);
-
         getPawnMovesAppend(  position.w_pawn,   position.white, position.black, position.en_passant, position.flags, moveList, size);
     }
 
@@ -77,20 +75,13 @@ static void generateBlackMoves(Position position, Move* moveList, int* size){
     //Check for capturing moves
     //Check for killer moves
     //Check rest of movesgetBishopMovesAppend(position.b_bishop, position.black, position.white, moveList, size);
-    getRookMovesAppend(  position.b_rook,   position.black, position.white, moveList, size);
-    getBishopMovesAppend(position.b_queen,  position.black, position.white, moveList, size);
-    getRookMovesAppend(  position.b_queen,  position.black, position.white, moveList, size);
-    getKnightMovesAppend(position.b_knight, position.black, position.white, moveList, size);
-    getKingMovesAppend(  position.b_king,   position.black, position.white, moveList, size);
-    getPawnMovesAppend(  position.b_pawn,   position.black, position.white, position.en_passant, position.flags, moveList, size);
+    //getRookMovesAppend(  position.b_rook,   position.black, position.white, moveList, size);
+    //getBishopMovesAppend(position.b_queen,  position.black, position.white, moveList, size);
+    //getRookMovesAppend(  position.b_queen,  position.black, position.white, moveList, size);
+    //getKnightMovesAppend(position.b_knight, position.black, position.white, moveList, size);
+    //getKingMovesAppend(  position.b_king,   position.black, position.white, moveList, size);
+    //getPawnMovesAppend(  position.b_pawn,   position.black, position.white, position.en_passant, position.flags, moveList, size);
 
-}
-
-static void updateMask(uint64_t fromMask, uint64_t toMask, uint64_t *pieceSet, uint64_t *pieceColorSet) {
-    *pieceSet       &= ~fromMask;
-    *pieceSet       |= toMask;
-    *pieceColorSet  &= ~fromMask;
-    *pieceColorSet  |= toMask;
 }
 
 
@@ -114,11 +105,11 @@ void makeMove(Position *position, Move move){
             break;
     }
 
-    char from = GET_FROM(move);
-    char to   = GET_TO(move);
+    int from = GET_FROM(move);
+    //int to   = GET_TO(move);
 
-    char from_piece = position->charBoard[GET_FROM(move)];
-    char to_piece   = position->charBoard[GET_TO(move)];
+    char from_piece = position->charBoard[from];
+    //char to_piece   = position->charBoard[to];
 
     switch(from_piece){
         case 'Q':
