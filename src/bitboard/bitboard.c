@@ -480,25 +480,18 @@ void getCheckMovesWhiteAppend(Position pos, Move* moveList, int* idx){
     uint64_t checker_mask = getBlackAttackers(pos, king_sq);
     int checker_sq = __builtin_ctzll(checker_mask);
     uint64_t between_squares = betweenMask[king_sq][checker_sq];
-
-
     if(pos.en_passant){
         printf("ADD IN THE EN PASSANT CHECK LOGIC STUFF \n");
     }
     else{
-        getWhitePawnMovesAppend(pos.w_pawn, ~(between_squares | checker_mask), checker_mask, 0, moveList, idx);
-        
-        //Handle the case of double forward moves
+        getWhitePawnMovesAppend(pos.w_pawn, ~(between_squares | checker_mask), checker_mask, 0, moveList, idx); //Handle the case of double forward moves
         uint64_t pawns = pos.w_pawn;
         while (pawns) {
             uint64_t dp_moves = 0ULL;
             int square = __builtin_ctzll(pawns);
             int rank = square / 8;
-
             uint64_t occ = (pos.white | pos.black) & pawnMoves[square][0];
-
-            //Double Step
-            if(occ == 0 && rank == 1){
+            if(occ == 0 && rank == 1){ //Double Step
                 occ = (pos.white | pos.black) & pawnMoves[square][1];
                 if(!occ) dp_moves |= pawnMoves[square][1] & (between_squares); //Allow double move to between square
             }
@@ -508,18 +501,14 @@ void getCheckMovesWhiteAppend(Position pos, Move* moveList, int* idx){
                 (*idx)++;
                 dp_moves &= dp_moves - 1;
             }
+            pawns &= pawns - 1;
         }
-
     }
     getKingMovesAppend(pos.w_king, pos.white,  pos.black, pos.b_attack_mask, moveList, idx);
-
     getRookMovesAppend(pos.w_queen, ~(between_squares | checker_mask), checker_mask, moveList, idx);
     getBishopMovesAppend(pos.w_queen, ~(between_squares | checker_mask), checker_mask, moveList, idx);
-
     getRookMovesAppend(pos.w_rook, ~(between_squares | checker_mask), checker_mask, moveList, idx);
-
     getBishopMovesAppend(pos.w_bishop, ~(between_squares | checker_mask), checker_mask, moveList, idx);
-
     getKnightMovesAppend(pos.w_knight, ~(between_squares | checker_mask), checker_mask, moveList, idx);
 }
 
@@ -531,91 +520,74 @@ void getPinnedMovesWhiteAppend(Position pos, Move* moveList, int* size){
 
     //King does his thang
     getKingMovesAppend(pos.w_king, pos.white,  pos.black, pos.b_attack_mask, moveList, size);
+    getCastleMovesWhiteAppend(pos.white, pos.flags, moveList, size);
 
     //Pinned Knights Cannot Move
     uint64_t pinned_knights = pos.w_knight & pinned;
     getKnightMovesAppend(pos.w_knight & ~pinned_knights, pos.white, pos.black, moveList, size);
     
-
     //Proccess Pinned Queens
     uint64_t pinned_queens = pos.w_queen & pinned;
+    getBishopMovesAppend(pos.w_queen & ~pinned_queens, pos.white, pos.black, moveList, size);
+    getRookMovesAppend(  pos.w_queen & ~pinned_queens, pos.white, pos.black, moveList, size);
     while(pinned_queens){ //Process Each Pinned Queen Individually
         int queen_sq = __builtin_ctzll(pinned_queens);
         int queen_rank = queen_sq / 8;
         int queen_file = queen_sq % 8;
-        // Same Rank / Horizontal Pin
-        if(queen_rank == king_rank){
-            getRookMovesAppend(1ULL << queen_sq, pos.white | rankMask[queen_sq], pos.black, moveList, size);
-        }
-        // Same File / Vertical Pin
-        else if(queen_file == king_file){
-            getRookMovesAppend(1ULL << queen_sq, pos.white | fileMask[queen_sq], pos.black, moveList, size);
-        }
-        // Northeast / Southwest Diagonal Pin
-        else if(queen_rank - queen_file == king_rank - king_file){
-            getBishopMovesAppend(1ULL << queen_sq, pos.white | NESWMask[queen_sq], pos.black, moveList, size);
-        }
-        // Northwest / Southeast Diagonal Pin
-        else if(queen_rank + queen_file == king_rank + king_file){
-            getBishopMovesAppend(1ULL << queen_sq, pos.white | NWSEMask[queen_sq], pos.black, moveList, size);
-        }
+        if(queen_rank == king_rank)                                getRookMovesAppend(1ULL << queen_sq, pos.white | rankMask[queen_sq], pos.black, moveList, size);
+        else if(queen_file == king_file)                           getRookMovesAppend(1ULL << queen_sq, pos.white | fileMask[queen_sq], pos.black, moveList, size);
+        else if(queen_rank - queen_file == king_rank - king_file)  getBishopMovesAppend(1ULL << queen_sq, pos.white | NWSEMask[queen_sq], pos.black, moveList, size);
+        else if(queen_rank + queen_file == king_rank + king_file)  getBishopMovesAppend(1ULL << queen_sq, pos.white | NESWMask[queen_sq], pos.black, moveList, size);
         pinned_queens &= pinned_queens - 1;
     }
-    getBishopMovesAppend(pos.w_queen & ~pinned_queens, pos.white, pos.black, moveList, size);
-    getRookMovesAppend(  pos.w_queen & ~pinned_queens, pos.white, pos.black, moveList, size);
     
-
-    //Proccess Pinned Rooks
     uint64_t pinned_rooks = pos.w_rook & pinned;
+    getRookMovesAppend(pos.w_rook & ~pinned_rooks, pos.white, pos.black, moveList, size);
     while(pinned_rooks){ //Process Each Pinned rook Individually
         int rook_sq = __builtin_ctzll(pinned_rooks);
         int rook_rank = rook_sq / 8;
         int rook_file = rook_sq % 8;
-        // Same Rank / Horizontal Pin
-        if(rook_rank == king_rank){
-            getRookMovesAppend(1ULL << rook_sq, pos.white | rankMask[rook_sq], pos.black, moveList, size);
-        }
-        // Same File / Vertical Pin
-        else if(rook_file == king_file){
-            getRookMovesAppend(1ULL << rook_sq, pos.white | fileMask[rook_sq], pos.black, moveList, size);
-        }
+        if(rook_rank == king_rank)      getRookMovesAppend(1ULL << rook_sq, pos.white | rankMask[rook_sq], pos.black, moveList, size);
+        else if(rook_file == king_file) getRookMovesAppend(1ULL << rook_sq, pos.white | fileMask[rook_sq], pos.black, moveList, size);
         pinned_rooks &= pinned_rooks - 1;
     }
-    getBishopMovesAppend(pos.w_rook & ~pinned_rooks, pos.white, pos.black, moveList, size);
-    getRookMovesAppend(  pos.w_rook & ~pinned_rooks, pos.white, pos.black, moveList, size);
-
 
     //Proccess Pinned Bishops
     uint64_t pinned_bishops = pos.w_bishop & pinned;
+    getBishopMovesAppend(pos.w_bishop & ~pinned_bishops, pos.white, pos.black, moveList, size);
     while(pinned_bishops){ //Process Each Pinned bishop Individually
         int bishop_sq = __builtin_ctzll(pinned_bishops);
         int bishop_rank = bishop_sq / 8;
         int bishop_file = bishop_sq % 8;
         // Northeast / Southwest Diagonal Pin
         if(bishop_rank - bishop_file == king_rank - king_file){
-            getBishopMovesAppend(1ULL << bishop_sq, pos.white | NESWMask[bishop_sq], pos.black, moveList, size);
+            getBishopMovesAppend(1ULL << bishop_sq, pos.white | NWSEMask[bishop_sq], pos.black, moveList, size);
         }
         // Northwest / Southeast Diagonal Pin
         else if(bishop_rank + bishop_file == king_rank + king_file){
-            getBishopMovesAppend(1ULL << bishop_sq, pos.white | NWSEMask[bishop_sq], pos.black, moveList, size);
+            getBishopMovesAppend(1ULL << bishop_sq, pos.white | NESWMask[bishop_sq], pos.black, moveList, size);
         }
         pinned_bishops &= pinned_bishops - 1;
     }
-    getBishopMovesAppend(pos.w_bishop & ~pinned_bishops, pos.white, pos.black, moveList, size);
-    getRookMovesAppend(  pos.w_bishop & ~pinned_bishops, pos.white, pos.black, moveList, size);
 
 
-    //Process Pinned Pawns
-    if(pos.w_pawn & pinned){
-        uint64_t pinned_pawns = pos.w_pawn & pinned;
-        while(pinned_pawns){
-            int sq = __builtin_ctzll(pinned_pawns);
-            //if(sq/8 == king_rank) continue; //Same file cant get unpinned
-            pinned_pawns &= pinned_pawns - 1;
+    //Proccess Pinned Pawns
+    uint64_t pinned_pawns = pos.w_pawn & pinned;
+    getPawnMovesAppend(pos.w_pawn & ~pinned_pawns, pos.white, pos.black, pos.en_passant, WHITE_TURN, moveList, size);
+    while(pinned_pawns){ //Process Each Pinned pawns Individually
+        int pawn_sq = __builtin_ctzll(pinned_pawns);
+        int pawn_rank = pawn_sq / 8;
+        int pawn_file = pawn_sq % 8;
+        if(pawn_file == king_file) getPawnMovesAppend(1ULL << pawn_sq, pos.white, (pos.black & ~pawnMoves[pawn_sq][2] & ~pawnMoves[pawn_sq][3]), 0ULL, WHITE_TURN, moveList, size); //Hide black pieces that could be captured and no en-passant
+        else if(pawn_rank - pawn_file == king_rank - king_file){
+            uint64_t occ = (pos.black) & pawnMoves[pawn_sq][3];
+            getPawnMovesAppend(1ULL << pawn_sq, (pos.white | ~occ), occ, 0ULL, WHITE_TURN, moveList, size); //Hacky logic, pawn only sees the piece up to the right and everything else is white
         }
-        pinned &= ~(pos.w_pawn & pinned);
+        else if(pawn_rank + pawn_file == king_rank + king_file){
+            uint64_t occ = (pos.black) & pawnMoves[pawn_sq][2];
+            getPawnMovesAppend(1ULL << pawn_sq, (pos.white | ~occ), occ, 0ULL, WHITE_TURN, moveList, size);
+        }
+        pinned_pawns &= pinned_pawns - 1;
     }
-    else{
-        getPawnMovesAppend(pos.w_pawn, pos.white, pos.black, pos.en_passant, pos.flags, moveList, size);
-    }
+
 }

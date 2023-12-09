@@ -115,7 +115,6 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return;
     }
 
     pos = fenToPosition(POSITION2);
@@ -126,7 +125,6 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return;
     }
 
     pos = fenToPosition(POSITION3);
@@ -137,7 +135,6 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return;
     }
 
     pos = fenToPosition(POSITION4);
@@ -148,7 +145,6 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return;
     }
 
     pos = fenToPosition(POSITION41);
@@ -159,7 +155,6 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return;
     }
 
     pos = fenToPosition(POSITION5);
@@ -170,7 +165,6 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return;
     }
 
     pos = fenToPosition(POSITION6);
@@ -181,7 +175,6 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return;
     }
 
     pos = fenToPosition(POSITION7);
@@ -192,7 +185,6 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return;
     }
 
     pos = fenToPosition(POSITION8);
@@ -203,7 +195,6 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return;
     }
 
     pos = fenToPosition(POSITION9);
@@ -214,7 +205,6 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return;
     }
 
     pos = fenToPosition(POSITION10);
@@ -225,7 +215,6 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return;
     }
 
     pos = fenToPosition(POSITION11);
@@ -236,7 +225,6 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return;
     }
 
     pos = fenToPosition(POSITION12);
@@ -247,10 +235,9 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
-        return;
     }
 
-    printf("All position checks correct for depth 1 \n");
+    printf("Finished Depth 1 Position Check \n");
 
     #endif
 
