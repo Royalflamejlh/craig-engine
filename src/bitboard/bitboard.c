@@ -474,8 +474,9 @@ void getCheckMovesAppend(Position pos, Move* moveList, int* idx){
             uint64_t dp_moves = 0ULL;
             int square = __builtin_ctzll(pawns);
             int rank = square / 8;
+            char can_double = turn ? (rank == 1) : (rank == 6);
             uint64_t occ = (ownPieces | oppPieces) & pawnMoves[square][pawn_mask_idx + 0];
-            if(occ == 0 && rank == 1){ //Double Step
+            if(occ == 0 && can_double){ //Double Step
                 occ = (ownPieces | oppPieces) & pawnMoves[square][pawn_mask_idx + 1];
                 if(!occ) dp_moves |= pawnMoves[square][pawn_mask_idx + 1] & (between_squares); //Allow double move to between square
             }
@@ -488,7 +489,7 @@ void getCheckMovesAppend(Position pos, Move* moveList, int* idx){
             pawns &= pawns - 1;
         }
     }
-    getKingMovesAppend(  turn ? pos.w_king   : pos.b_king, ownPieces,  oppPieces, pos.b_attack_mask, moveList, idx);
+    getKingMovesAppend(  turn ? pos.w_king   : pos.b_king, ownPieces,  oppPieces, turn ? pos.b_attack_mask : pos.w_attack_mask, moveList, idx);
     getRookMovesAppend(  turn ? pos.w_queen  : pos.b_queen,  ~(between_squares | checker_mask), checker_mask, moveList, idx);
     getBishopMovesAppend(turn ? pos.w_queen  : pos.b_queen,  ~(between_squares | checker_mask), checker_mask, moveList, idx);
     getRookMovesAppend(  turn ? pos.w_rook   : pos.b_rook,   ~(between_squares | checker_mask), checker_mask, moveList, idx);

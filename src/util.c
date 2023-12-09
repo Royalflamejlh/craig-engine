@@ -81,8 +81,8 @@ uint64_t perft(int depth, Position pos){
   if (depth == 0) 
     return 1ULL;
 
-  
-  generateLegalMoves(pos, move_list, &n_moves);
+
+  n_moves = generateLegalMoves(pos, move_list);
   for (i = 0; i < n_moves; i++) {
     //MakeMove(move_list[i]);
     nodes += perft(depth - 1, pos);

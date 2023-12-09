@@ -106,7 +106,7 @@ void testBB(void) {
     int size;
     
     printf("\n----------------------------------\n");
-    /*
+    
     pos = fenToPosition(POSITION1);
     size = generateLegalMoves(pos, moveList);
     if(size != P1_MOVES_D1){
@@ -146,7 +146,7 @@ void testBB(void) {
             printMove(moveList[i]);
         }
     }
-    */
+    
 
     pos = fenToPosition(POSITION41);
     size = generateLegalMoves(pos, moveList);
@@ -157,7 +157,7 @@ void testBB(void) {
             printMove(moveList[i]);
         }
     }
-    /*
+    
     pos = fenToPosition(POSITION5);
     size = generateLegalMoves(pos, moveList);
     if(size != P5_MOVES_D1){
@@ -167,7 +167,7 @@ void testBB(void) {
             printMove(moveList[i]);
         }
     }
-
+    /*
     pos = fenToPosition(POSITION6);
     size = generateLegalMoves(pos, moveList);
     if(size != P6_MOVES_D1){
