@@ -56,6 +56,9 @@ static void generateWhiteMoves(Position position, Move* moveList, int* size){
             getCheckMovesWhiteAppend(position, moveList, size);
         }
     }
+    else if(position.pinned){
+        getPinnedMovesWhiteAppend(position, moveList, size);
+    }
     else{
         getCastleMovesWhiteAppend(position.white, position.flags, moveList, size);
 

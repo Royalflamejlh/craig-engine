@@ -131,7 +131,7 @@ typedef struct {
 
     char charBoard[64];  //Character Board
 
-    uint64_t abs_pinned; //Absolutely pinned pieces
+    uint64_t pinned; //Absolutely pinned pieces
 
     uint64_t w_attack_mask; //Pieces white is attacking
     uint64_t b_attack_mask; //Pieces black is attacking

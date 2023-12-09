@@ -165,7 +165,7 @@ Position fenToPosition(char* FEN) {
        if(attackers) pos.flags |= IN_D_CHECK;
     }
 
-    pos.abs_pinned = generatePinnedPieces(pos);
+    pos.pinned = generatePinnedPieces(pos);
 
     return pos;
 }
@@ -298,7 +298,7 @@ void printPosition(Position position){
             int square = rank * 8 + file;
             uint64_t mask = 1ULL << square;
 
-            if (position.abs_pinned & mask) printf("P ");
+            if (position.pinned & mask) printf("P ");
             else printf(". ");
 
             if (file == 7) printf(" |  ");

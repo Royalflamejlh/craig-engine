@@ -508,8 +508,6 @@ void getCheckMovesWhiteAppend(Position pos, Move* moveList, int* idx){
         }
 
     }
-
-    //The king can move normally
     getKingMovesAppend(pos.w_king, pos.white,  pos.black, pos.b_attack_mask, moveList, idx);
 
     getRookMovesAppend(pos.w_queen, ~(between_squares | checker_mask), checker_mask, moveList, idx);
@@ -520,4 +518,43 @@ void getCheckMovesWhiteAppend(Position pos, Move* moveList, int* idx){
     getBishopMovesAppend(pos.w_bishop, ~(between_squares | checker_mask), checker_mask, moveList, idx);
 
     getKnightMovesAppend(pos.w_knight, ~(between_squares | checker_mask), checker_mask, moveList, idx);
+}
+
+void getPinnedMovesWhiteAppend(Position pos, Move* moveList, int* idx){
+    uint64_t pinned = pos.pinned;
+    int king_sq = __builtin_ctzll(pos.w_king);
+    int king_rank = king_sq / 8;
+    int king_file = king_sq % 8;
+
+    //Pinned Knights Cannot Move
+    pinned &= ~(pos.w_knight & pinned);
+
+    //Proccess Pinned Queens
+    if(pos.w_queen & pinned){
+        
+        pinned &= ~(pos.w_queen & pinned);
+    }
+
+    //Process Pinned Rooks
+    if(pos.w_rook & pinned){
+
+        pinned &= ~(pos.w_rook & pinned);
+    }
+
+    //Process Pinned Bishops
+    if(pos.w_bishop & pinned){
+
+        pinned &= ~(pos.w_bishop & pinned);
+    }
+
+    //Process Pinned Pawns
+    if(pos.w_pawn & pinned){
+        uint64_t pinned_pieces = pos.w_pawn & pinned;
+        while(pinned_pieces){
+            int sq = __builtin_ctzll(pinned_pieces);
+            if(sq/8 = king_rank) continue; //Same file cant get unpinned
+            pinned_pieces &= pinned_pieces - 1;
+        }
+        pinned &= ~(pos.w_pawn & pinned);
+    }
 }

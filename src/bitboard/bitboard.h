@@ -33,6 +33,7 @@ void getCastleMovesWhiteAppend(uint64_t white, char flags, Move* moveList, int* 
 
 
 void getCheckMovesWhiteAppend(Position position, Move* moveList, int* idx);
+void getPinnedMovesWhiteAppend(Position position, Move* moveList, int* idx);
 
 uint64_t getWhiteAttackers(Position pos, int square);
 uint64_t getBlackAttackers(Position pos, int square);
