@@ -65,6 +65,7 @@
 #endif
 
 uint64_t betweenMask[64][64];
+uint64_t rankMask[64], fileMask[64], NESWMask[64], NWSEMask[64];
 
 static void updateBit(uint64_t* bitboard, int square) {
     *bitboard |= (1ULL << square);
@@ -208,6 +209,42 @@ void generateBetweenMasks() {
         }
     }
 }
+
+void generateRankMasks() {
+    for (int sq = 0; sq < 64; ++sq) {
+        int rank = sq / 8;
+        rankMask[sq] = 0xFFULL << (rank * 8);
+    }
+}
+
+void generateFileMasks() {
+    for (int sq = 0; sq < 64; ++sq) {
+        int file = sq % 8;
+        fileMask[sq] = 0x0101010101010101ULL << file;
+    }
+}
+
+void generateDiagonalMasks() {
+    for (int sq = 0; sq < 64; ++sq) {
+        int rank = sq / 8;
+        int file = sq % 8;
+        NESWMask[sq] = 0;
+        NWSEMask[sq] = 0;
+
+        // Northeast-Southwest Diagonal
+        for (int r = rank, f = file; r < 8 && f < 8; ++r, ++f)
+            NESWMask[sq] |= (1ULL << (r * 8 + f));
+        for (int r = rank, f = file; r >= 0 && f >= 0; --r, --f)
+            NESWMask[sq] |= (1ULL << (r * 8 + f));
+
+        // Northwest-Southeast Diagonal
+        for (int r = rank, f = file; r < 8 && f >= 0; ++r, --f)
+            NWSEMask[sq] |= (1ULL << (r * 8 + f));
+        for (int r = rank, f = file; r >= 0 && f < 8; --r, ++f)
+            NWSEMask[sq] |= (1ULL << (r * 8 + f));
+    }
+}
+
 
 void printPosition(Position position){
     printf("-------------------------------------------------------------------------\n");

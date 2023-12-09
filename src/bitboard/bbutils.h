@@ -15,8 +15,13 @@
 
 
 extern uint64_t betweenMask[64][64];
+extern uint64_t rankMask[64], fileMask[64], NESWMask[64], NWSEMask[64];
 
 void generateBetweenMasks();
+void generateRankMasks();
+void generateFileMasks();
+void generateDiagonalMasks();
+
 void printBB(uint64_t BB);
 Position fenToPosition(char* FEN);
 uint64_t flipVertical(uint64_t board);
