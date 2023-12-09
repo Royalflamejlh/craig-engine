@@ -200,18 +200,14 @@ uint64_t getRookMovesAppend(uint64_t rooks, uint64_t ownPieces, uint64_t oppPiec
 
 
 //Pawn
-uint64_t getWhitePawnAttacks(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant) {
+uint64_t getWhitePawnAttacks(uint64_t pawns, uint64_t ownPieces) {
     uint64_t moves = 0ULL;
-    uint64_t occ =  0ULL;
 
     while (pawns) {
         int square = __builtin_ctzll(pawns);
 
-        occ = (oppPieces | enPassant) & pawnMoves[square][2];
-        if(occ) moves |= pawnMoves[square][2];
-
-        occ = (oppPieces | enPassant) & pawnMoves[square][3];
-        if(occ) moves |= pawnMoves[square][3];
+        moves |= pawnMoves[square][2];
+        moves |= pawnMoves[square][3];
 
         pawns &= pawns - 1;
     }
@@ -219,15 +215,11 @@ uint64_t getWhitePawnAttacks(uint64_t pawns, uint64_t ownPieces, uint64_t oppPie
     return (moves & ~ownPieces);
 }
 
-uint64_t getPawnAttacks(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant, char flags){
-    if(flags & WHITE_TURN) return getWhitePawnAttacks(pawns, ownPieces, oppPieces, enPassant);
-    return flipVertical(
-        getWhitePawnAttacks(
-            flipVertical(pawns), 
-            flipVertical(ownPieces), 
-            flipVertical(oppPieces), 
-            flipVertical(enPassant))
-        );
+uint64_t getPawnAttacks(uint64_t pawns, uint64_t ownPieces, char flags){
+
+    if(flags & WHITE_TURN) return getWhitePawnAttacks(pawns, ownPieces);
+
+    return flipVertical( getWhitePawnAttacks( flipVertical(pawns), flipVertical(ownPieces)));
 }
 
 uint64_t getWhitePawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant, Move* moveList, int* idx) {
@@ -501,7 +493,7 @@ void getCheckMovesWhiteAppend(Position pos, Move* moveList, int* idx){
             int rank = square / 8;
 
             uint64_t occ = (pos.white | pos.black) & pawnMoves[square][0];
-            
+
             //Double Step
             if(occ == 0 && rank == 1){
                 occ = (pos.white | pos.black) & pawnMoves[square][1];

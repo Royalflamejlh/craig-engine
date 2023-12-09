@@ -27,7 +27,7 @@ uint64_t generateWhiteAttacks(Position position){
     attack_mask |= getRookAttacks(  position.w_queen,  position.white, position.black);
     attack_mask |= getKnightAttacks(position.w_knight, position.white);
     attack_mask |= getKingAttacks(  position.w_king,   position.white);
-    attack_mask |= getPawnAttacks(  position.w_pawn,   position.white, position.black, position.en_passant, position.flags);
+    attack_mask |= getPawnAttacks(  position.w_pawn,   position.white, WHITE_TURN);
     return attack_mask;
 }
 
@@ -39,7 +39,7 @@ uint64_t generateBlackAttacks(Position position){
     attack_mask |= getRookAttacks(  position.b_queen,  position.black, position.white);
     attack_mask |= getKnightAttacks(position.b_knight, position.black);
     attack_mask |= getKingAttacks(  position.b_king,   position.black);
-    attack_mask |= getPawnAttacks(  position.b_pawn,   position.black, position.white, position.en_passant, position.flags);
+    attack_mask |= getPawnAttacks(  position.b_pawn,   position.black, ~WHITE_TURN);
     return attack_mask;
 }
 
