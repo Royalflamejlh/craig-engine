@@ -552,7 +552,7 @@ void getPinnedMovesWhiteAppend(Position pos, Move* moveList, int* idx){
         uint64_t pinned_pieces = pos.w_pawn & pinned;
         while(pinned_pieces){
             int sq = __builtin_ctzll(pinned_pieces);
-            if(sq/8 = king_rank) continue; //Same file cant get unpinned
+            if(sq/8 == king_rank) continue; //Same file cant get unpinned
             pinned_pieces &= pinned_pieces - 1;
         }
         pinned &= ~(pos.w_pawn & pinned);

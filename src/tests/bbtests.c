@@ -173,7 +173,84 @@ void testBB(void) {
         return;
     }
 
+    pos = fenToPosition(POSITION6);
+    generateLegalMoves(pos, moveList, &size);
+    if(size != P6_MOVES_D1){
+        printf("Failed to get correct amount of moves for Position 6, correct: %d, found: %d\n", P6_MOVES_D1, size);
+        printPosition(pos);
+        for(int i = 0; i < size; i++){
+            printMove(moveList[i]);
+        }
+        return;
+    }
 
+    pos = fenToPosition(POSITION7);
+    generateLegalMoves(pos, moveList, &size);
+    if(size != P7_MOVES_D1){
+        printf("Failed to get correct amount of moves for Position 7, correct: %d, found: %d\n", P7_MOVES_D1, size);
+        printPosition(pos);
+        for(int i = 0; i < size; i++){
+            printMove(moveList[i]);
+        }
+        return;
+    }
+
+    pos = fenToPosition(POSITION8);
+    generateLegalMoves(pos, moveList, &size);
+    if(size != P8_MOVES_D1){
+        printf("Failed to get correct amount of moves for Position 8, correct: %d, found: %d\n", P8_MOVES_D1, size);
+        printPosition(pos);
+        for(int i = 0; i < size; i++){
+            printMove(moveList[i]);
+        }
+        return;
+    }
+
+    pos = fenToPosition(POSITION9);
+    generateLegalMoves(pos, moveList, &size);
+    if(size != P9_MOVES_D1){
+        printf("Failed to get correct amount of moves for Position 9, correct: %d, found: %d\n", P9_MOVES_D1, size);
+        printPosition(pos);
+        for(int i = 0; i < size; i++){
+            printMove(moveList[i]);
+        }
+        return;
+    }
+
+    pos = fenToPosition(POSITION10);
+    generateLegalMoves(pos, moveList, &size);
+    if(size != P10_MOVES_D1){
+        printf("Failed to get correct amount of moves for Position 9, correct: %d, found: %d\n", P10_MOVES_D1, size);
+        printPosition(pos);
+        for(int i = 0; i < size; i++){
+            printMove(moveList[i]);
+        }
+        return;
+    }
+
+    pos = fenToPosition(POSITION11);
+    generateLegalMoves(pos, moveList, &size);
+    if(size != P11_MOVES_D1){
+        printf("Failed to get correct amount of moves for Position 9, correct: %d, found: %d\n", P11_MOVES_D1, size);
+        printPosition(pos);
+        for(int i = 0; i < size; i++){
+            printMove(moveList[i]);
+        }
+        return;
+    }
+
+    pos = fenToPosition(POSITION12);
+    generateLegalMoves(pos, moveList, &size);
+    if(size != P12_MOVES_D1){
+        printf("Failed to get correct amount of moves for Position 9, correct: %d, found: %d\n", P12_MOVES_D1, size);
+        printPosition(pos);
+        for(int i = 0; i < size; i++){
+            printMove(moveList[i]);
+        }
+        return;
+    }
+
+    printf("All position checks correct for depth 1 \n");
 
     #endif
 
