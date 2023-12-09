@@ -3,20 +3,40 @@
 #include "./bitboard/bitboard.h"
 #include "./bitboard/bbutils.h"
 
-static void generateWhiteMoves(Position position, Move* moveList, int* size);
-static void generateBlackMoves(Position position, Move* moveList, int* size);
 
+/*
+* Wow Cool! Totaly sensical move generation!
+*/
+uint16_t generateLegalMoves(Position position,  Move* moveList){
+    int size[] = {0};
+    char turn = position.flags & WHITE_TURN; //True for white false for black
+    uint64_t ownPos = turn ? position.white : position.black;
+    uint64_t oppPos = turn ? position.black : position.white;
+    uint64_t oppAttackMask = turn ? position.b_attack_mask : position.w_attack_mask;
 
-uint16_t generateLegalMoves(Position position,  Move* moveList, int* size){
-    *size = 0;
-    if(position.flags & WHITE_TURN){
-        generateWhiteMoves(position, moveList, size);
-        return *size;
+    if(position.flags & IN_CHECK){
+        if(position.flags & IN_D_CHECK){
+            getKingMovesAppend(turn ? position.w_king : position.b_king, ownPos, oppPos, oppAttackMask, moveList, size);
+        }
+        else{
+            getCheckMovesAppend(position, moveList, size);
+        }
+    }
+    else if(position.pinned & ownPos){
+        turn ? getPinnedMovesWhiteAppend(position, moveList, size) : getPinnedMovesBlackAppend(position, moveList, size);
     }
     else{
-        generateBlackMoves(position, moveList, size);
-        return *size;
+        turn ? getCastleMovesWhiteAppend(ownPos, position.flags, moveList, size) : getCastleMovesBlackAppend(ownPos, position.flags, moveList, size);
+
+        getBishopMovesAppend(turn ? position.w_queen  : position.b_queen,  ownPos, oppPos, moveList, size);
+        getRookMovesAppend(  turn ? position.w_queen  : position.b_queen,  ownPos, oppPos, moveList, size);
+        getRookMovesAppend(  turn ? position.w_rook   : position.b_rook,   ownPos, oppPos, moveList, size);
+        getBishopMovesAppend(turn ? position.w_bishop : position.b_bishop, ownPos, oppPos, moveList, size);
+        getKnightMovesAppend(turn ? position.w_knight : position.b_knight, ownPos, oppPos, moveList, size);
+        getKingMovesAppend(  turn ? position.w_king   : position.b_king,   ownPos, oppPos, oppAttackMask, moveList, size);
+        getPawnMovesAppend(  turn ? position.w_pawn   : position.b_pawn,   ownPos, oppPos, position.en_passant, position.flags, moveList, size);
     }
+    return *size;
 }
 
 uint64_t generateWhiteAttacks(Position position){
@@ -39,53 +59,11 @@ uint64_t generateBlackAttacks(Position position){
     attack_mask |= getRookAttacks(  position.b_queen,  position.black, position.white);
     attack_mask |= getKnightAttacks(position.b_knight, position.black);
     attack_mask |= getKingAttacks(  position.b_king,   position.black);
-    attack_mask |= getPawnAttacks(  position.b_pawn,   position.black, ~WHITE_TURN);
+    attack_mask |= getPawnAttacks(  position.b_pawn,   position.black, 0);
     return attack_mask;
 }
 
-static void generateWhiteMoves(Position position, Move* moveList, int* size){
-    
-    //Check for hashed moves
-    //If in check, call check move generator
 
-    if(position.flags & IN_CHECK){
-        if(position.flags & IN_D_CHECK){
-            getKingMovesAppend(position.w_king, position.white, position.black, position.b_attack_mask, moveList, size);
-        }
-        else{
-            getCheckMovesWhiteAppend(position, moveList, size);
-        }
-    }
-    else if(position.pinned){
-        getPinnedMovesWhiteAppend(position, moveList, size);
-    }
-    else{
-        getCastleMovesWhiteAppend(position.white, position.flags, moveList, size);
-
-        getBishopMovesAppend(position.w_queen,  position.white, position.black, moveList, size);
-        getRookMovesAppend(  position.w_queen,  position.white, position.black, moveList, size);
-        getRookMovesAppend(  position.w_rook,   position.white, position.black, moveList, size);
-        getBishopMovesAppend(position.w_bishop, position.white, position.black, moveList, size);
-        getKnightMovesAppend(position.w_knight, position.white, position.black, moveList, size);
-        getKingMovesAppend(  position.w_king,   position.white, position.black, position.b_attack_mask, moveList, size);
-        getPawnMovesAppend(  position.w_pawn,   position.white, position.black, position.en_passant, position.flags, moveList, size);
-    }
-
-}
-
-static void generateBlackMoves(Position position, Move* moveList, int* size){
-    //Check for hashed moves
-    //Check for capturing moves
-    //Check for killer moves
-    //Check rest of movesgetBishopMovesAppend(position.b_bishop, position.black, position.white, moveList, size);
-    //getRookMovesAppend(  position.b_rook,   position.black, position.white, moveList, size);
-    //getBishopMovesAppend(position.b_queen,  position.black, position.white, moveList, size);
-    //getRookMovesAppend(  position.b_queen,  position.black, position.white, moveList, size);
-    //getKnightMovesAppend(position.b_knight, position.black, position.white, moveList, size);
-    //getKingMovesAppend(  position.b_king,   position.black, position.white, moveList, size);
-    //getPawnMovesAppend(  position.b_pawn,   position.black, position.white, position.en_passant, position.flags, moveList, size);
-
-}
 
 
 void makeMove(Position *position, Move move){

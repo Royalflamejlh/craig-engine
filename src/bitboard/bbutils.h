@@ -32,6 +32,11 @@ uint64_t northTwo(uint64_t bb);
 uint64_t noEaOne(uint64_t bb);
 uint64_t noWeOne(uint64_t bb);
 
+uint64_t southOne(uint64_t bb);
+uint64_t southTwo(uint64_t bb);
+uint64_t soEaOne(uint64_t bb);
+uint64_t soWeOne(uint64_t bb);
+
 
 #endif /* bbutils_h */
 

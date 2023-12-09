@@ -30,10 +30,13 @@ uint64_t getKingAttacks(uint64_t kings, uint64_t ownPieces);
 uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, uint64_t oppPieces, uint64_t oppAttackMask, Move* moveList, int* idx);
 
 void getCastleMovesWhiteAppend(uint64_t white, char flags, Move* moveList, int* idx);
+void getCastleMovesBlackAppend(uint64_t white, char flags, Move* moveList, int* idx);
 
 
-void getCheckMovesWhiteAppend(Position position, Move* moveList, int* idx);
+void getCheckMovesAppend(Position position, Move* moveList, int* idx);
+
 void getPinnedMovesWhiteAppend(Position position, Move* moveList, int* idx);
+void getPinnedMovesBlackAppend(Position position, Move* moveList, int* idx);
 
 uint64_t getWhiteAttackers(Position pos, int square);
 uint64_t getBlackAttackers(Position pos, int square);

@@ -378,6 +378,11 @@ uint64_t northTwo(uint64_t bb) { return bb << 16; }
 uint64_t noEaOne (uint64_t bb) { return (bb & ~0x8080808080808080ULL) << 9; }
 uint64_t noWeOne (uint64_t bb) { return (bb & ~0x0101010101010101ULL) << 7; }
 
+uint64_t southOne(uint64_t bb) { return bb >> 8; }
+uint64_t southTwo(uint64_t bb) { return bb >> 16; }
+uint64_t soEaOne(uint64_t bb) { return (bb & ~0x8080808080808080ULL) >> 7; } 
+uint64_t soWeOne(uint64_t bb) { return (bb & ~0x0101010101010101ULL) >> 9; }
+
 
 uint64_t setBit(uint64_t bb, int square) {
     return bb | (1ULL << square);
