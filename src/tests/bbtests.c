@@ -26,9 +26,32 @@
 #define POSITION4 "r3k2r/Pppp1ppp/1b3nbN/nP6/BBP1P3/q4N2/Pp1P2PP/R2Q1RK1 w kq - 0 1"
 #define P4_MOVES_D1 6
 
+#define POSITION41 "r2q1rk1/pP1p2pp/Q4n2/bbp1p3/Np6/1B3NBn/pPPP1PPP/R3K2R b KQ - 0 1 "
+#define P41_MOVES_D1 6
+
 #define POSITION5 "rnbq1k1r/pp1Pbppp/2p5/8/2B5/8/PPP1NnPP/RNBQK2R w KQ - 1 8  "
 #define P5_MOVES_D1 44
 
+#define POSITION6 "r6r/1b2k1bq/8/8/7B/8/8/R3K2R b KQ - 3 2"
+#define P6_MOVES_D1 8
+
+#define POSITION7 "8/8/8/2k5/2pP4/8/B7/4K3 b - d3 0 3"
+#define P7_MOVES_D1 8
+
+#define POSITION8 "r1bqkbnr/pppppppp/n7/8/8/P7/1PPPPPPP/RNBQKBNR w KQkq - 2 2"
+#define P8_MOVES_D1 19
+
+#define POSITION9 "r3k2r/p1pp1pb1/bn2Qnp1/2qPN3/1p2P3/2N5/PPPBBPPP/R3K2R b KQkq - 3 2"
+#define P9_MOVES_D1 5
+
+#define POSITION10 "2kr3r/p1ppqpb1/bn2Qnp1/3PN3/1p2P3/2N5/PPPBBPPP/R3K2R b KQ - 3 2"
+#define P10_MOVES_D1 44
+
+#define POSITION11 "rnb2k1r/pp1Pbppp/2p5/q7/2B5/8/PPPQNnPP/RNB1K2R w KQ - 3 9"
+#define P11_MOVES_D1 39
+
+#define POSITION12 "2r5/3pk3/8/2P5/8/2K5/8/8 w - - 5 4"
+#define P12_MOVES_D1 9
 
 void testBB(void) {
     generateMasks();
@@ -81,19 +104,6 @@ void testBB(void) {
     #ifdef MOVE_GEN_TEST
     printf("\n----------------------------------\n");
 
-    FEN = "r3kb1r/pP1n2p1/b1pqp2p/3p1pP1/3P3n/N1P1PN1B/p1Q2P1P/1RB1K2R w Kkq f6 0 26";
-    pos = fenToPosition(FEN);
-    printf("Testing a position with a lil bit of everything\n");
-    printPosition(pos);
-    Move moveList[256];
-    int size;
-    generateLegalMoves(pos, moveList, &size);
-    for(int i = 0; i < size; i++){
-        printMove(moveList[i]);
-    }
-    printf("Found %d legal moves\n", size);
-
-
     pos = fenToPosition(POSITION1);
     generateLegalMoves(pos, moveList, &size);
     if(size != P1_MOVES_D1){
@@ -102,6 +112,7 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
+        return -1;
     }
 
     pos = fenToPosition(POSITION2);
@@ -112,6 +123,7 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
+        return -1;
     }
 
     pos = fenToPosition(POSITION3);
@@ -122,6 +134,7 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
+        return -1;
     }
 
     pos = fenToPosition(POSITION4);
@@ -132,6 +145,18 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
+        return -1;
+    }
+
+    pos = fenToPosition(POSITION41);
+    generateLegalMoves(pos, moveList, &size);
+    if(size != P41_MOVES_D1){
+        printf("Failed to get correct amount of moves for Position 4.1, correct: %d, found: %d\n", P41_MOVES_D1, size);
+        printPosition(pos);
+        for(int i = 0; i < size; i++){
+            printMove(moveList[i]);
+        }
+        return -1;
     }
 
     pos = fenToPosition(POSITION5);
@@ -142,6 +167,7 @@ void testBB(void) {
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
+        return -1;
     }
 
 
