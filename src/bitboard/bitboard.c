@@ -36,6 +36,7 @@ void generateMasks(void){
     generateKingMoveMasks();
     generateKnightMoveMasks();
     generatePawnMoveMasks();
+    generateBetweenMasks();
 }
 
 
@@ -236,7 +237,7 @@ uint64_t getWhitePawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t op
     while (pawns) {
         uint64_t q_moves = 0ULL;         //Quiet
         uint64_t dp_moves = 0ULL;        //Double Pawn
-        uint64_t cap_moves = 0ULL;   //Captures
+        uint64_t cap_moves = 0ULL;       //Captures
 
         int square = __builtin_ctzll(pawns);
         int rank = square / 8;
@@ -377,11 +378,11 @@ uint64_t getKingAttacks(uint64_t kings, uint64_t ownPieces) {
     return kingMoves[square] & ~ownPieces;
 }
 
-uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* idx) {
+uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, uint64_t oppPieces, uint64_t oppAttackMask, Move* moveList, int* idx) {
     uint64_t all_moves = 0ULL;
 
     int square = __builtin_ctzll(kings);
-    uint64_t nocap_moves = kingMoves[square] & ~ownPieces;
+    uint64_t nocap_moves = kingMoves[square] & ~ownPieces & ~oppAttackMask;
     all_moves |= nocap_moves;
 
     uint64_t cap_moves = nocap_moves & oppPieces;
@@ -428,4 +429,57 @@ void getCastleMovesBlackAppend(uint64_t black, char flags, Move* moveList, int* 
         moveList[*idx] = move;
         (*idx)++;
     }
+}
+
+
+uint64_t getWhiteAttackers(Position pos, int square){
+    uint64_t attackers = 0ULL;
+    uint64_t all_pieces = pos.white | pos.black;
+    uint64_t attack_mask;
+
+    attack_mask = rookAttacks(all_pieces, square);
+    attackers |= (attack_mask & (pos.w_queen | pos.w_rook));
+
+    attack_mask = bishopAttacks(all_pieces, square);
+    attackers |= (attack_mask & (pos.w_queen | pos.w_bishop));
+
+    attack_mask = knightMoves[square];
+    attackers |= (attack_mask & pos.w_knight);
+
+    attack_mask = flipVertical(pawnMoves[square][2]) | flipVertical(pawnMoves[square][3]);
+    attackers |= (attack_mask & pos.w_pawn);
+
+    attack_mask = kingMoves[square];
+    attackers |= (attack_mask & pos.w_king);
+
+    return attackers;
+}
+
+uint64_t getBlackAttackers(Position pos, int square){
+    uint64_t attackers = 0ULL;
+    uint64_t all_pieces = pos.white | pos.black;
+    uint64_t attack_mask;
+
+    attack_mask = rookAttacks(all_pieces, square);
+    attackers |= (attack_mask & (pos.b_queen | pos.b_rook));
+
+    attack_mask = bishopAttacks(all_pieces, square);
+    attackers |= (attack_mask & (pos.b_queen | pos.b_bishop));
+
+    attack_mask = knightMoves[square];
+    attackers |= (attack_mask & pos.b_knight);
+
+    attack_mask = pawnMoves[square][2] | pawnMoves[square][3];
+    attackers |= (attack_mask & pos.b_pawn);
+
+    attack_mask = kingMoves[square];
+    attackers |= (attack_mask & pos.b_king);
+
+    return attackers;
+}
+
+
+
+void getCheckWMovesAppend(position, moveList, size){
+
 }

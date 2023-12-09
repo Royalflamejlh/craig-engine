@@ -99,7 +99,7 @@ static inline Move MAKE_MOVE(int from, int to, int flags) {
     return move;
 }
 
-
+#define IN_D_CHECK     0x40
 #define IN_CHECK       0x20
 #define WHITE_TURN     0x10
 #define W_SHORT_CASTLE 0x08
@@ -126,7 +126,7 @@ typedef struct {
     uint64_t black;  //Black piece positions
 
     uint64_t en_passant;  //En Passant squares
-    char flags;  //Castle aval as bit flags, in order : w_long_castle | w_short_castle | b_long_castle | b_short_castle | turn | in_check
+    char flags;  //Castle aval as bit flags, in order : w_long_castle | w_short_castle | b_long_castle | b_short_castle | turn | in_check | in_double_check
     //1 means avaliable / white's turn
 
     char charBoard[64];  //Character Board

@@ -7,7 +7,10 @@
 
 #include "bbutils.h"
 #include "../movement.h"
+#include "bitboard.h"
 #include <string.h>
+#include <stdlib.h>
+
 
 #ifdef _MSC_VER
 
@@ -61,11 +64,13 @@
 
 #endif
 
+uint64_t betweenMask[64][64];
+
 static void updateBit(uint64_t* bitboard, int square) {
     *bitboard |= (1ULL << square);
 }
 
-static void generateAttackMasks(Position *pos);
+static void setAttackMasks(Position *pos);
 
 Position fenToPosition(char* FEN) {
     Position pos = {0};
@@ -141,17 +146,68 @@ Position fenToPosition(char* FEN) {
 
     sscanf(FEN, "%d", &pos.fullmove_number);
 
-    generateAttackMasks(&pos);
+    setAttackMasks(&pos);
 
+    //Check Flag
     if(pos.b_attack_mask & pos.w_king) pos.flags |= IN_CHECK;
     if(pos.w_attack_mask & pos.b_king) pos.flags |= IN_CHECK;
 
-    //pos.abs_pinned = getAbsPinnedBB(&pos);
+    //Double Check Flag
+    if(pos.flags & IN_CHECK){
+       int kign_sq = __builtin_ctzll(pos.w_king);
+       uint64_t attackers = getBlackAttackers(pos, kign_sq);
+       attackers &= attackers - 1;
+       if(attackers) pos.flags |= IN_D_CHECK;
+
+       kign_sq = __builtin_ctzll(pos.b_king);
+       attackers = getWhiteAttackers(pos, kign_sq);
+       attackers &= attackers - 1;
+       if(attackers) pos.flags |= IN_D_CHECK;
+    }
+
+    pos.abs_pinned = generatePinnedPieces(pos);
 
     return pos;
 }
 
+void generateBetweenMasks() {
+    for (int sq1 = 0; sq1 < 64; sq1++) {
+        int rank1 = sq1 / 8;
+        int file1 = sq1 % 8;
 
+        for (int sq2 = 0; sq2 < 64; sq2++) {
+            int rank2 = sq2 / 8;
+            int file2 = sq2 % 8;
+
+            if (sq1 == sq2) {
+                betweenMask[sq1][sq2] = 0;
+                continue;
+            }
+
+            uint64_t mask = 0;
+            
+            if (rank1 == rank2) {
+                for (int f = 1; f < abs(file2 - file1); f++) {
+                    int file = file1 + f * ((file2 > file1) ? 1 : -1);
+                    mask |= 1ULL << (rank1 * 8 + file);
+                }
+            } else if (file1 == file2) { 
+                for (int r = 1; r < abs(rank2 - rank1); r++) {
+                    int rank = rank1 + r * ((rank2 > rank1) ? 1 : -1);
+                    mask |= 1ULL << (rank * 8 + file1);
+                }
+            } else if (abs(rank1 - rank2) == abs(file1 - file2)) { 
+                for (int i = 1; i < abs(rank2 - rank1); i++) {
+                    int rank = rank1 + i * ((rank2 > rank1) ? 1 : -1);
+                    int file = file1 + i * ((file2 > file1) ? 1 : -1);
+                    mask |= 1ULL << (rank * 8 + file);
+                }
+            }
+
+            betweenMask[sq1][sq2] = mask;
+        }
+    }
+}
 
 void printPosition(Position position){
     printf("-------------------------------------------------------------------------\n");
@@ -182,7 +238,7 @@ void printPosition(Position position){
                 printf("%d   |  ", rank + 1);
                 if(rank == 7) printf("Current Turn: %s", (position.flags & WHITE_TURN) ? "White" : "Black");
                 if(rank == 5) printf("Halfmove Clock: %d -- Fullmove Number: %d", position.halfmove_clock, position.fullmove_number);
-                if(rank == 3) printf("In Check: %s", (position.flags & IN_CHECK) ? "Yes" : "No");
+                if(rank == 3) printf("In Check: %s -- In Double-Check: %s", (position.flags & IN_CHECK) ? "Yes" : "No", (position.flags & IN_D_CHECK) ? "Yes" : "No");
                 if(rank == 1) printf("Castling Availability: ");
                 if(rank == 0){
                     printf("W-Long: %s, ", (position.flags & W_LONG_CASTLE)   ? "Yes" : "No");
@@ -291,7 +347,7 @@ uint64_t setBit(uint64_t bb, int square) {
 }
 
 
-static void generateAttackMasks(Position *pos){
+static void setAttackMasks(Position *pos){
     pos->w_attack_mask = generateWhiteAttacks(*pos);
     pos->b_attack_mask = generateBlackAttacks(*pos);
 }

@@ -13,6 +13,10 @@
 #include <ctype.h>
 #include "../types.h"
 
+
+extern uint64_t betweenMask[64][64];
+
+void generateBetweenMasks();
 void printBB(uint64_t BB);
 Position fenToPosition(char* FEN);
 uint64_t flipVertical(uint64_t board);
