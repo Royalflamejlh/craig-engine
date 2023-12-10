@@ -567,11 +567,11 @@ static void getPinnedBishopMovesAppend(int king_rank, int king_file, uint64_t pi
         int bishop_sq = __builtin_ctzll(pinned_bishops);
         int bishop_rank = bishop_sq / 8;
         int bishop_file = bishop_sq % 8;
-        // Northeast / Southwest Diagonal Pin
+
         if(bishop_rank - bishop_file == king_rank - king_file){
             getBishopMovesAppend(1ULL << bishop_sq, ownPieces | NWSEMask[bishop_sq], oppPieces, moveList, size);
         }
-        // Northwest / Southeast Diagonal Pin
+        
         else if(bishop_rank + bishop_file == king_rank + king_file){
             getBishopMovesAppend(1ULL << bishop_sq, ownPieces | NESWMask[bishop_sq], oppPieces, moveList, size);
         }
@@ -585,16 +585,17 @@ static void getPinnedPawnMovesAppend(int king_rank, int king_file, uint64_t pinn
         int pawn_rank = pawn_sq / 8;
         int pawn_file = pawn_sq % 8;
         int pawn_mask_idx = (flags & WHITE_TURN) ? 0 : 4;
-        if(pawn_file == king_file) getPawnMovesAppend(1ULL << pawn_sq, ownPieces, (oppPieces & ~pawnMoves[pawn_sq][2] & ~pawnMoves[pawn_sq][3]), 0ULL, flags, moveList, size); //Hide black pieces that could be captured and no en-passant
+
+        if(pawn_file == king_file) getPawnMovesAppend(1ULL << pawn_sq, ownPieces, (oppPieces & ~pawnMoves[pawn_sq][pawn_mask_idx + 2] & ~pawnMoves[pawn_sq][pawn_mask_idx + 3]), 0ULL, flags, moveList, size); //Hide black pieces that could be captured and no en-passant
         else if(pawn_rank - pawn_file == king_rank - king_file){
-            uint64_t occ = (oppPieces | en_passant) & pawnMoves[pawn_sq][pawn_mask_idx +3];
-            printf("This will not set the en_passant flag and will fuck up perft :)\n");
-            getPawnMovesAppend(1ULL << pawn_sq, (ownPieces | ~occ), occ, 0ULL, flags, moveList, size); //Hacky logic, pawn only sees the piece up to the right and everything else is white 
+            uint64_t dir = pawnMoves[pawn_sq][pawn_mask_idx + 2];
+            uint64_t occ = oppPieces & dir;
+            getPawnMovesAppend(1ULL << pawn_sq, (ownPieces | ~occ), occ, en_passant & dir, flags, moveList, size);
         }
         else if(pawn_rank + pawn_file == king_rank + king_file){
-            uint64_t occ = (oppPieces | en_passant) & pawnMoves[pawn_sq][pawn_mask_idx +2];
-            printf("This will not set the en_passant flag and will fuck up perft :)\n");
-            getPawnMovesAppend(1ULL << pawn_sq, (ownPieces | ~occ), occ, 0ULL, flags, moveList, size);
+            uint64_t dir = pawnMoves[pawn_sq][pawn_mask_idx + 3];
+            uint64_t occ = oppPieces & dir;
+            getPawnMovesAppend(1ULL << pawn_sq, (ownPieces | ~occ), occ, en_passant & dir, flags, moveList, size);
         }
         pinned_pawns &= pinned_pawns - 1;
     }
@@ -644,8 +645,8 @@ void getPinnedMovesBlackAppend(Position pos, Move* moveList, int* size){
     uint64_t oppPieces = pos.white;
 
     //King does his thang
-    getKingMovesAppend(pos.b_king, ownPieces,  oppPieces, pos.b_attack_mask, moveList, size);
-    getCastleMovesWhiteAppend(ownPieces, pos.flags, moveList, size);
+    getKingMovesAppend(pos.b_king, ownPieces,  oppPieces, pos.w_attack_mask, moveList, size);
+    getCastleMovesBlackAppend(ownPieces, pos.flags, moveList, size);
 
     //Pinned Knights Cannot Move
     uint64_t pinned_knights = pos.b_knight & pinned;

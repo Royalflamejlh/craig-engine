@@ -56,7 +56,6 @@
 void testBB(void) {
     generateMasks();
     generateMagics();
-    char* FEN;
     Position pos;
     
 
@@ -64,7 +63,7 @@ void testBB(void) {
 
     #ifdef FENTEST
     printf("\n----------------------------------\n");
-
+    char* FEN;
     printf("Testing Starting Board Position\n");
     FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     pos = fenToPosition(FEN);
@@ -91,10 +90,7 @@ void testBB(void) {
 
     #ifdef MOVE_MASK_TEST
     printf("\n----------------------------------\n");
-
-    uint64_t moves;
-    FEN = "rn1qkbnr/pp1bppp1/2p5/3p2Pp/3P4/3BPN2/PPP2P1P/RNBQK2R w KQkq h6 0 7";
-    pos = fenToPosition(FEN);
+    pos = fenToPosition(POSITION1);
     //TODO: Add checks for moves
     #endif
 
@@ -106,7 +102,6 @@ void testBB(void) {
     int size;
     
     printf("\n---------------------------------- MOVE GEN TESTING ----------------------------------\n\n");
-
     pos = fenToPosition(POSITION1);
     size = generateLegalMoves(pos, moveList);
     if(size != P1_MOVES_D1){
@@ -218,7 +213,6 @@ void testBB(void) {
             printMove(moveList[i]);
         }
     }
-
     pos = fenToPosition(POSITION11);
     size = generateLegalMoves(pos, moveList);
     if(size != P11_MOVES_D1){
@@ -238,7 +232,6 @@ void testBB(void) {
             printMove(moveList[i]);
         }
     }
-
 
     printf("Finished Depth 1 Position Check \n");
     #endif
