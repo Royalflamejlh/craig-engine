@@ -299,10 +299,10 @@ uint64_t getPawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t oppPiec
         }
 
         while(ep_moves){
-            int move_sq = __builtin_ctzll(dp_moves);
-            moveList[*idx] = MAKE_MOVE(square, move_sq, DOUBLE_PAWN_PUSH);
+            int move_sq = __builtin_ctzll(ep_moves);
+            moveList[*idx] = MAKE_MOVE(square, move_sq, EP_CAPTURE);
             (*idx)++;
-            dp_moves &= dp_moves - 1;
+            ep_moves &= ep_moves - 1;
         }
 
         pawns &= pawns - 1;
