@@ -203,7 +203,7 @@ uint64_t getRookMovesAppend(uint64_t rooks, uint64_t ownPieces, uint64_t oppPiec
 /*
 * The worst piece in chess (in many ways) is below here.
 */
-uint64_t getPawnAttacks(uint64_t pawns, uint64_t ownPieces, char flags){
+uint64_t getPawnAttacks(uint64_t pawns, char flags){
     uint64_t moves = 0ULL;
     int pawn_mask_idx = (flags & WHITE_TURN) ? 0 : 4;
 
@@ -324,7 +324,7 @@ uint64_t getPawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t oppPiec
 /*
 * Jumpity jump these bad boys are the easiest thing to implement in chess somehow
 */
-uint64_t getKnightAttacks(uint64_t knights, uint64_t ownPieces) {
+uint64_t getKnightAttacks(uint64_t knights) {
     uint64_t moves = 0ULL;
 
     while (knights) {
@@ -368,7 +368,7 @@ uint64_t getKnightMovesAppend(uint64_t knights, uint64_t ownPieces, uint64_t opp
 }
 
 //King
-uint64_t getKingAttacks(uint64_t kings, uint64_t ownPieces) {
+uint64_t getKingAttacks(uint64_t kings) {
     int square = __builtin_ctzll(kings);
     return kingMoves[square];
 }
