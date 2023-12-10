@@ -105,8 +105,8 @@ void testBB(void) {
     Move moveList[256];
     int size;
     
-    printf("\n----------------------------------\n");
-    
+    printf("\n---------------------------------- MOVE GEN TESTING ----------------------------------\n\n");
+
     pos = fenToPosition(POSITION1);
     size = generateLegalMoves(pos, moveList);
     if(size != P1_MOVES_D1){
@@ -198,6 +198,7 @@ void testBB(void) {
         }
     }
 
+
     pos = fenToPosition(POSITION9);
     size = generateLegalMoves(pos, moveList);
     if(size != P9_MOVES_D1){
@@ -207,11 +208,11 @@ void testBB(void) {
             printMove(moveList[i]);
         }
     }
-
+ 
     pos = fenToPosition(POSITION10);
     size = generateLegalMoves(pos, moveList);
     if(size != P10_MOVES_D1){
-        printf("Failed to get correct amount of moves for Position 9, correct: %d, found: %d\n", P10_MOVES_D1, size);
+        printf("Failed to get correct amount of moves for Position 10, correct: %d, found: %d\n", P10_MOVES_D1, size);
         printPosition(pos);
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
@@ -221,7 +222,7 @@ void testBB(void) {
     pos = fenToPosition(POSITION11);
     size = generateLegalMoves(pos, moveList);
     if(size != P11_MOVES_D1){
-        printf("Failed to get correct amount of moves for Position 9, correct: %d, found: %d\n", P11_MOVES_D1, size);
+        printf("Failed to get correct amount of moves for Position 11, correct: %d, found: %d\n", P11_MOVES_D1, size);
         printPosition(pos);
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
@@ -231,12 +232,13 @@ void testBB(void) {
     pos = fenToPosition(POSITION12);
     size = generateLegalMoves(pos, moveList);
     if(size != P12_MOVES_D1){
-        printf("Failed to get correct amount of moves for Position 9, correct: %d, found: %d\n", P12_MOVES_D1, size);
+        printf("Failed to get correct amount of moves for Position 12, correct: %d, found: %d\n", P12_MOVES_D1, size);
         printPosition(pos);
         for(int i = 0; i < size; i++){
             printMove(moveList[i]);
         }
     }
+
 
     printf("Finished Depth 1 Position Check \n");
     #endif
@@ -261,7 +263,8 @@ void testBB(void) {
 
     
     
-    printf("\n----------------------------------\n");
+    
+    printf("\n--------------------------------------------------------------------------------------\n");
     return;
     
 }

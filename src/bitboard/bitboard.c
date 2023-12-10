@@ -121,11 +121,11 @@ uint64_t getBishopAttacks(uint64_t bishops, uint64_t ownPieces, uint64_t oppPiec
     return moves & ~ownPieces;
 }
 
-uint64_t getBishopMovesAppend(uint64_t bishops, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* idx) {
+static uint64_t getBishopMovesCheckAppend(uint64_t bishops, uint64_t ownPieces, uint64_t oppPieces, uint64_t legalSquares, Move* moveList, int* idx) {
     uint64_t all_moves = 0ULL;
     while (bishops) {
         int square = __builtin_ctzll(bishops);
-        uint64_t nocap_moves = bishopAttacks(ownPieces | oppPieces, square) & ~ownPieces;
+        uint64_t nocap_moves = bishopAttacks(ownPieces | oppPieces, square) & ~ownPieces & legalSquares;
         
         all_moves |= nocap_moves;
         uint64_t cap_moves = nocap_moves & oppPieces;
@@ -150,6 +150,10 @@ uint64_t getBishopMovesAppend(uint64_t bishops, uint64_t ownPieces, uint64_t opp
     return all_moves;
 }
 
+uint64_t getBishopMovesAppend(uint64_t bishops, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* idx) {
+    return getBishopMovesCheckAppend(bishops, ownPieces, oppPieces, ~(0x0ULL), moveList, idx);
+}
+
 //Rook
 uint64_t getRookAttacks(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces) {
     uint64_t moves = 0ULL;
@@ -161,11 +165,11 @@ uint64_t getRookAttacks(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces) 
     return moves & ~ownPieces;
 }
 
-uint64_t getRookMovesAppend(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* idx) {
+static uint64_t getRookMovesCheckAppend(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces, uint64_t legalSquares, Move* moveList, int* idx) {
     uint64_t all_moves = 0ULL;
     while (rooks) {
         int square = __builtin_ctzll(rooks);
-        uint64_t nocap_moves = rookAttacks(ownPieces | oppPieces, square) & ~ownPieces;
+        uint64_t nocap_moves = rookAttacks(ownPieces | oppPieces, square) & ~ownPieces & legalSquares;
         
         all_moves |= nocap_moves;
         uint64_t cap_moves = nocap_moves & oppPieces;
@@ -190,6 +194,9 @@ uint64_t getRookMovesAppend(uint64_t rooks, uint64_t ownPieces, uint64_t oppPiec
     return all_moves;
 }
 
+uint64_t getRookMovesAppend(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* idx) {
+    return getRookMovesCheckAppend(rooks, ownPieces, oppPieces, ~(0x0ULL), moveList, idx);
+}
 
 /*
 * The worst piece in chess (in many ways) is below here.
@@ -484,14 +491,14 @@ void getCheckMovesAppend(Position pos, Move* moveList, int* idx){
     uint64_t oppPieces = turn ? pos.black : pos.white;
     uint64_t between_squares = betweenMask[king_sq][checker_sq];
 
+    
     if(pos.en_passant){
-        uint64_t test_mask = turn ? southOne(pos.en_passant_square) : northOne(pos.en_passant_square);
+        uint64_t test_mask = turn ? southOne(pos.en_passant) : northOne(pos.en_passant);
         if(test_mask == checker_mask){
-            int move_sq = __builtin_ctzll(pos.en_passant_square);
-            moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
-            (*idx)++;
+            getPawnMovesAppend(turn ? pos.w_pawn : pos.b_pawn, ~(pos.en_passant), 0ULL, pos.en_passant, pos.flags, moveList, idx); 
         }
     }
+    
     
     getPawnMovesAppend(turn ? pos.w_pawn : pos.b_pawn, ~(between_squares | checker_mask), checker_mask, 0ULL, pos.flags, moveList, idx); 
     uint64_t pawns = turn ? pos.w_pawn : pos.b_pawn;
@@ -515,11 +522,13 @@ void getCheckMovesAppend(Position pos, Move* moveList, int* idx){
     }
 
     getKingMovesAppend(  turn ? pos.w_king   : pos.b_king, ownPieces,  oppPieces, turn ? pos.b_attack_mask : pos.w_attack_mask, moveList, idx);
-    getRookMovesAppend(  turn ? pos.w_queen  : pos.b_queen,  ~(between_squares | checker_mask), checker_mask, moveList, idx);
-    getBishopMovesAppend(turn ? pos.w_queen  : pos.b_queen,  ~(between_squares | checker_mask), checker_mask, moveList, idx);
-    getRookMovesAppend(  turn ? pos.w_rook   : pos.b_rook,   ~(between_squares | checker_mask), checker_mask, moveList, idx);
-    getBishopMovesAppend(turn ? pos.w_bishop : pos.b_bishop, ~(between_squares | checker_mask), checker_mask, moveList, idx);
     getKnightMovesAppend(turn ? pos.w_knight : pos.b_knight, ~(between_squares | checker_mask), checker_mask, moveList, idx);
+
+
+    getRookMovesCheckAppend(  turn ? pos.w_queen  : pos.b_queen,  ownPieces, oppPieces, (between_squares | checker_mask), moveList, idx);
+    getBishopMovesCheckAppend(turn ? pos.w_queen  : pos.b_queen,  ownPieces, oppPieces, (between_squares | checker_mask), moveList, idx);
+    getRookMovesCheckAppend(  turn ? pos.w_rook   : pos.b_rook,   ownPieces, oppPieces, (between_squares | checker_mask), moveList, idx);
+    getBishopMovesCheckAppend(turn ? pos.w_bishop : pos.b_bishop, ownPieces, oppPieces, (between_squares | checker_mask), moveList, idx);
 }
 
 

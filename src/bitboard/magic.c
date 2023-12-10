@@ -201,7 +201,6 @@ static void calculateAttackTableOffsets() {
         attack_table_offsets[sq + 64] = offset;
         offset += num_blocker_configs;
     }
-    printf("final offset is: %d", offset);
 }
 
 
