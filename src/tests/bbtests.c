@@ -38,11 +38,14 @@ int testBB(void) {
     }
 
     while (fgets(line, sizeof(line), file)) {
-        char *fen = strtok(line, " ;");
+        char *fenEnd = strchr(line, ';');
+        if (fenEnd) *fenEnd = '\0';
+        char *fen = line;
         pos = fenToPosition(fen);
+        if (fenEnd) *fenEnd = ';'; 
 
         char *token;
-        while ((token = strtok(NULL, " ;")) != NULL) {
+        while ((token = strtok(fenEnd ? fenEnd + 1 : NULL, " ;")) != NULL) {
             if (token[0] == 'D' && token[1] == '1') {
                 expectedMoves = atoi(token + 3);
                 size = generateLegalMoves(pos, moveList);
@@ -54,7 +57,7 @@ int testBB(void) {
                     }
                     return -1;
                 }
-                break; // Move to the next line after checking D1
+                break;
             }
         }
     }
