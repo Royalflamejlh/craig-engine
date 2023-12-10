@@ -220,6 +220,7 @@ uint64_t getPawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t oppPiec
         uint64_t q_moves = 0ULL;         //Quiet
         uint64_t dp_moves = 0ULL;        //Double Pawn
         uint64_t cap_moves = 0ULL;       //Captures
+        uint64_t ep_moves = 0ULL;        //En Passants
 
         int square = __builtin_ctzll(pawns);
         int rank = square / 8;
@@ -237,14 +238,20 @@ uint64_t getPawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t oppPiec
         }
 
         //Capture Left
-        occ = (oppPieces | enPassant) & pawnMoves[square][pawn_mask_idx + 2];
+        occ = (oppPieces) & pawnMoves[square][pawn_mask_idx + 2];
         if(occ) cap_moves |= pawnMoves[square][pawn_mask_idx + 2];
 
+        occ = (enPassant) & pawnMoves[square][pawn_mask_idx + 2];
+        if(occ) ep_moves |= pawnMoves[square][pawn_mask_idx + 2];
+
         //Capture Right
-        occ = (oppPieces | enPassant) & pawnMoves[square][pawn_mask_idx + 3];
+        occ = (oppPieces) & pawnMoves[square][pawn_mask_idx + 3];
         if(occ) cap_moves |= pawnMoves[square][pawn_mask_idx + 3];
 
-        all_moves |= q_moves | dp_moves | cap_moves;
+        occ = (enPassant) & pawnMoves[square][pawn_mask_idx + 3];
+        if(occ) ep_moves |= pawnMoves[square][pawn_mask_idx + 3];
+
+        all_moves |= q_moves | dp_moves | cap_moves | ep_moves;
 
         while(q_moves){
             int move_sq = __builtin_ctzll(q_moves);
@@ -285,6 +292,13 @@ uint64_t getPawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t oppPiec
         }
 
         while(dp_moves){
+            int move_sq = __builtin_ctzll(dp_moves);
+            moveList[*idx] = MAKE_MOVE(square, move_sq, DOUBLE_PAWN_PUSH);
+            (*idx)++;
+            dp_moves &= dp_moves - 1;
+        }
+
+        while(ep_moves){
             int move_sq = __builtin_ctzll(dp_moves);
             moveList[*idx] = MAKE_MOVE(square, move_sq, DOUBLE_PAWN_PUSH);
             (*idx)++;
@@ -375,6 +389,7 @@ uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, uint64_t oppPiec
     return all_moves;
 }
 
+//TODO: Add attacker mask
 void getCastleMovesWhiteAppend(uint64_t white, char flags, Move* moveList, int* idx){
     if ((flags & W_SHORT_CASTLE) && !(white & W_SHORT_CASTLE_MASK)) {
         Move move = MAKE_MOVE(4, 6, KING_CASTLE);
@@ -388,7 +403,7 @@ void getCastleMovesWhiteAppend(uint64_t white, char flags, Move* moveList, int* 
         (*idx)++;
     }
 }
-
+//TODO: Add attacker mask
 void getCastleMovesBlackAppend(uint64_t black, char flags, Move* moveList, int* idx){
     if ((flags & B_SHORT_CASTLE) && !(black & B_SHORT_CASTLE_MASK)) {
         Move move = MAKE_MOVE(60, 62, KING_CASTLE);
@@ -403,7 +418,9 @@ void getCastleMovesBlackAppend(uint64_t black, char flags, Move* moveList, int* 
     }
 }
 
-
+/*
+*  Returns all white pieces attacking a square
+*/
 uint64_t getWhiteAttackers(Position pos, int square){
     uint64_t attackers = 0ULL;
     uint64_t all_pieces = pos.white | pos.black;
@@ -427,6 +444,9 @@ uint64_t getWhiteAttackers(Position pos, int square){
     return attackers;
 }
 
+/*
+*  Returns all black pieces attacking a square
+*/
 uint64_t getBlackAttackers(Position pos, int square){
     uint64_t attackers = 0ULL;
     uint64_t all_pieces = pos.white | pos.black;
@@ -465,30 +485,35 @@ void getCheckMovesAppend(Position pos, Move* moveList, int* idx){
     uint64_t between_squares = betweenMask[king_sq][checker_sq];
 
     if(pos.en_passant){
-        printf("ADD IN THE EN PASSANT CHECK LOGIC STUFF \n");
-    }
-    else{
-        getPawnMovesAppend(turn ? pos.w_pawn : pos.b_pawn, ~(between_squares | checker_mask), checker_mask, 0ULL, pos.flags, moveList, idx); //Handle the case of double forward moves
-        uint64_t pawns = turn ? pos.w_pawn : pos.b_pawn;
-        while (pawns) {
-            uint64_t dp_moves = 0ULL;
-            int square = __builtin_ctzll(pawns);
-            int rank = square / 8;
-            char can_double = turn ? (rank == 1) : (rank == 6);
-            uint64_t occ = (ownPieces | oppPieces) & pawnMoves[square][pawn_mask_idx + 0];
-            if(occ == 0 && can_double){ //Double Step
-                occ = (ownPieces | oppPieces) & pawnMoves[square][pawn_mask_idx + 1];
-                if(!occ) dp_moves |= pawnMoves[square][pawn_mask_idx + 1] & (between_squares); //Allow double move to between square
-            }
-            while(dp_moves){
-                int move_sq = __builtin_ctzll(dp_moves);
-                moveList[*idx] = MAKE_MOVE(square, move_sq, DOUBLE_PAWN_PUSH);
-                (*idx)++;
-                dp_moves &= dp_moves - 1;
-            }
-            pawns &= pawns - 1;
+        uint64_t test_mask = turn ? southOne(pos.en_passant_square) : northOne(pos.en_passant_square);
+        if(test_mask == checker_mask){
+            int move_sq = __builtin_ctzll(pos.en_passant_square);
+            moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+            (*idx)++;
         }
     }
+    
+    getPawnMovesAppend(turn ? pos.w_pawn : pos.b_pawn, ~(between_squares | checker_mask), checker_mask, 0ULL, pos.flags, moveList, idx); 
+    uint64_t pawns = turn ? pos.w_pawn : pos.b_pawn;
+    while (pawns) { //Handle the case of double forward moves
+        uint64_t dp_moves = 0ULL;
+        int square = __builtin_ctzll(pawns);
+        int rank = square / 8;
+        char can_double = turn ? (rank == 1) : (rank == 6);
+        uint64_t occ = (ownPieces | oppPieces) & pawnMoves[square][pawn_mask_idx + 0];
+        if(occ == 0 && can_double){ //Double Step
+            occ = (ownPieces | oppPieces) & pawnMoves[square][pawn_mask_idx + 1];
+            if(!occ) dp_moves |= pawnMoves[square][pawn_mask_idx + 1] & (between_squares); //Allow double move to between square
+        }
+        while(dp_moves){
+            int move_sq = __builtin_ctzll(dp_moves);
+            moveList[*idx] = MAKE_MOVE(square, move_sq, DOUBLE_PAWN_PUSH);
+            (*idx)++;
+            dp_moves &= dp_moves - 1;
+        }
+        pawns &= pawns - 1;
+    }
+
     getKingMovesAppend(  turn ? pos.w_king   : pos.b_king, ownPieces,  oppPieces, turn ? pos.b_attack_mask : pos.w_attack_mask, moveList, idx);
     getRookMovesAppend(  turn ? pos.w_queen  : pos.b_queen,  ~(between_squares | checker_mask), checker_mask, moveList, idx);
     getBishopMovesAppend(turn ? pos.w_queen  : pos.b_queen,  ~(between_squares | checker_mask), checker_mask, moveList, idx);
@@ -550,14 +575,16 @@ static void getPinnedPawnMovesAppend(int king_rank, int king_file, uint64_t pinn
         int pawn_sq = __builtin_ctzll(pinned_pawns);
         int pawn_rank = pawn_sq / 8;
         int pawn_file = pawn_sq % 8;
+        int pawn_mask_idx = (flags & WHITE_TURN) ? 0 : 4;
         if(pawn_file == king_file) getPawnMovesAppend(1ULL << pawn_sq, ownPieces, (oppPieces & ~pawnMoves[pawn_sq][2] & ~pawnMoves[pawn_sq][3]), 0ULL, flags, moveList, size); //Hide black pieces that could be captured and no en-passant
         else if(pawn_rank - pawn_file == king_rank - king_file){
-            uint64_t occ = (oppPieces | en_passant) & pawnMoves[pawn_sq][3];
-            printf("WARNING THIS LOGIC WILL NOT WORK FOR BLACK AT ALL, NEED TO FLIP VERTICALLY\n");
+            uint64_t occ = (oppPieces | en_passant) & pawnMoves[pawn_sq][pawn_mask_idx +3];
+            printf("This will not set the en_passant flag and will fuck up perft :)\n");
             getPawnMovesAppend(1ULL << pawn_sq, (ownPieces | ~occ), occ, 0ULL, flags, moveList, size); //Hacky logic, pawn only sees the piece up to the right and everything else is white 
         }
         else if(pawn_rank + pawn_file == king_rank + king_file){
-            uint64_t occ = (oppPieces | en_passant) & pawnMoves[pawn_sq][2];
+            uint64_t occ = (oppPieces | en_passant) & pawnMoves[pawn_sq][pawn_mask_idx +2];
+            printf("This will not set the en_passant flag and will fuck up perft :)\n");
             getPawnMovesAppend(1ULL << pawn_sq, (ownPieces | ~occ), occ, 0ULL, flags, moveList, size);
         }
         pinned_pawns &= pinned_pawns - 1;

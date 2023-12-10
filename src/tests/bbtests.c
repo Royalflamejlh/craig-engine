@@ -167,7 +167,7 @@ void testBB(void) {
             printMove(moveList[i]);
         }
     }
-    /*
+
     pos = fenToPosition(POSITION6);
     size = generateLegalMoves(pos, moveList);
     if(size != P6_MOVES_D1){
@@ -237,7 +237,6 @@ void testBB(void) {
             printMove(moveList[i]);
         }
     }
-    */
 
     printf("Finished Depth 1 Position Check \n");
     #endif
@@ -262,6 +261,7 @@ void testBB(void) {
 
     
     
+    printf("\n----------------------------------\n");
     return;
     
 }
