@@ -26,7 +26,7 @@ uint16_t generateLegalMoves(Position position,  Move* moveList){
         turn ? getPinnedMovesWhiteAppend(position, moveList, size) : getPinnedMovesBlackAppend(position, moveList, size);
     }
     else{
-        turn ? getCastleMovesWhiteAppend(ownPos, position.flags, moveList, size) : getCastleMovesBlackAppend(ownPos, position.flags, moveList, size);
+        turn ? getCastleMovesWhiteAppend(ownPos, oppAttackMask, position.flags, moveList, size) : getCastleMovesBlackAppend(ownPos, oppAttackMask, position.flags, moveList, size);
 
         getBishopMovesAppend(turn ? position.w_queen  : position.b_queen,  ownPos, oppPos, moveList, size);
         getRookMovesAppend(  turn ? position.w_queen  : position.b_queen,  ownPos, oppPos, moveList, size);

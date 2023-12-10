@@ -29,8 +29,8 @@ uint64_t getPawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t oppPiec
 uint64_t getKingAttacks(uint64_t kings, uint64_t ownPieces);
 uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, uint64_t oppPieces, uint64_t oppAttackMask, Move* moveList, int* idx);
 
-void getCastleMovesWhiteAppend(uint64_t white, char flags, Move* moveList, int* idx);
-void getCastleMovesBlackAppend(uint64_t white, char flags, Move* moveList, int* idx);
+void getCastleMovesWhiteAppend(uint64_t white, uint64_t b_attack_mask, char flags, Move* moveList, int* idx);
+void getCastleMovesBlackAppend(uint64_t black, uint64_t w_attack_mask, char flags, Move* moveList, int* idx);
 
 
 void getCheckMovesAppend(Position position, Move* moveList, int* idx);

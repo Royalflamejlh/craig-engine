@@ -19,6 +19,8 @@
 #include "../util.h"
 #include "../types.h"
 
+
+#define B_FILE_MASK         0x0202020202020202ULL
 #define W_SHORT_CASTLE_MASK 0x0000000000000060ULL
 #define W_LONG_CASTLE_MASK  0x000000000000000EULL
 #define B_SHORT_CASTLE_MASK 0x6000000000000000ULL 
@@ -396,29 +398,28 @@ uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, uint64_t oppPiec
     return all_moves;
 }
 
-//TODO: Add attacker mask
-void getCastleMovesWhiteAppend(uint64_t white, char flags, Move* moveList, int* idx){
-    if ((flags & W_SHORT_CASTLE) && !(white & W_SHORT_CASTLE_MASK)) {
+void getCastleMovesWhiteAppend(uint64_t white, uint64_t b_attack_mask, char flags, Move* moveList, int* idx){
+    if ((flags & W_SHORT_CASTLE) && !((white | b_attack_mask) & W_SHORT_CASTLE_MASK)) {
         Move move = MAKE_MOVE(4, 6, KING_CASTLE);
         moveList[*idx] = move;
         (*idx)++;
     }
 
-    if ((flags & W_LONG_CASTLE) && !(white & W_LONG_CASTLE_MASK)) {
+    if ((flags & W_LONG_CASTLE) && !((white | (b_attack_mask & ~B_FILE_MASK)) & W_LONG_CASTLE_MASK)) {
         Move move = MAKE_MOVE(4, 2, QUEEN_CASTLE);
         moveList[*idx] = move;
         (*idx)++;
     }
 }
-//TODO: Add attacker mask
-void getCastleMovesBlackAppend(uint64_t black, char flags, Move* moveList, int* idx){
-    if ((flags & B_SHORT_CASTLE) && !(black & B_SHORT_CASTLE_MASK)) {
+
+void getCastleMovesBlackAppend(uint64_t black, uint64_t w_attack_mask, char flags, Move* moveList, int* idx){
+    if ((flags & B_SHORT_CASTLE) && !((black | w_attack_mask) & B_SHORT_CASTLE_MASK)) {
         Move move = MAKE_MOVE(60, 62, KING_CASTLE);
         moveList[*idx] = move;
         (*idx)++;
     }
 
-    if ((flags & B_LONG_CASTLE) && !(black & B_LONG_CASTLE_MASK)) {
+    if ((flags & B_LONG_CASTLE) && !((black | (w_attack_mask & ~B_FILE_MASK)) & B_LONG_CASTLE_MASK)) {
         Move move = MAKE_MOVE(60, 58, QUEEN_CASTLE);
         moveList[*idx] = move;
         (*idx)++;
@@ -609,7 +610,7 @@ void getPinnedMovesWhiteAppend(Position pos, Move* moveList, int* size){
 
     //King does his thang
     getKingMovesAppend(pos.w_king, pos.white,  pos.black, pos.b_attack_mask, moveList, size);
-    getCastleMovesWhiteAppend(pos.white, pos.flags, moveList, size);
+    getCastleMovesWhiteAppend(pos.white, pos.b_attack_mask, pos.flags, moveList, size);
 
     //Pinned Knights Cannot Move
     uint64_t pinned_knights = pos.w_knight & pinned;
@@ -646,7 +647,7 @@ void getPinnedMovesBlackAppend(Position pos, Move* moveList, int* size){
 
     //King does his thang
     getKingMovesAppend(pos.b_king, ownPieces,  oppPieces, pos.w_attack_mask, moveList, size);
-    getCastleMovesBlackAppend(ownPieces, pos.flags, moveList, size);
+    getCastleMovesBlackAppend(ownPieces, pos.w_attack_mask, pos.flags, moveList, size);
 
     //Pinned Knights Cannot Move
     uint64_t pinned_knights = pos.b_knight & pinned;
