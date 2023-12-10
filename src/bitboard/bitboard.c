@@ -544,8 +544,8 @@ static void getPinnedQueenMovesAppend(int king_rank, int king_file, uint64_t pin
         int queen_sq = __builtin_ctzll(pinned_queens);
         int queen_rank = queen_sq / 8;
         int queen_file = queen_sq % 8;
-        if(queen_rank == king_rank)                                getRookMovesAppend(1ULL << queen_sq, ownPieces | rankMask[queen_sq], oppPieces, moveList, size);
-        else if(queen_file == king_file)                           getRookMovesAppend(1ULL << queen_sq, ownPieces | fileMask[queen_sq], oppPieces, moveList, size);
+        if(queen_rank == king_rank)                                getRookMovesAppend(1ULL << queen_sq, ownPieces | fileMask[queen_sq], oppPieces, moveList, size);
+        else if(queen_file == king_file)                           getRookMovesAppend(1ULL << queen_sq, ownPieces | rankMask[queen_sq], oppPieces, moveList, size);
         else if(queen_rank - queen_file == king_rank - king_file)  getBishopMovesAppend(1ULL << queen_sq, ownPieces | NWSEMask[queen_sq], oppPieces, moveList, size);
         else if(queen_rank + queen_file == king_rank + king_file)  getBishopMovesAppend(1ULL << queen_sq, ownPieces | NESWMask[queen_sq], oppPieces, moveList, size);
         pinned_queens &= pinned_queens - 1;
@@ -557,8 +557,8 @@ static void getPinnedRookMovesAppend(int king_rank, int king_file, uint64_t pinn
         int rook_sq = __builtin_ctzll(pinned_rooks);
         int rook_rank = rook_sq / 8;
         int rook_file = rook_sq % 8;
-        if(rook_rank == king_rank)      getRookMovesAppend(1ULL << rook_sq, ownPieces | rankMask[rook_sq], oppPieces, moveList, size);
-        else if(rook_file == king_file) getRookMovesAppend(1ULL << rook_sq, ownPieces | fileMask[rook_sq], oppPieces, moveList, size);
+        if(rook_rank == king_rank)      getRookMovesAppend(1ULL << rook_sq, ownPieces | fileMask[rook_sq], oppPieces, moveList, size);
+        else if(rook_file == king_file) getRookMovesAppend(1ULL << rook_sq, ownPieces | rankMask[rook_sq], oppPieces, moveList, size);
         pinned_rooks &= pinned_rooks - 1;
     }
 }
