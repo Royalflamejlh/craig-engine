@@ -117,11 +117,10 @@ typedef struct {            //Each size of 2 array contains {Black, White}
     uint64_t queen[2];
     uint64_t king[2];
 
-     uint64_t attack_mask[2]; // {Attacked by Black, Attacked by White}
+    uint64_t attack_mask[2]; // {Attacked by Black, Attacked by White}
 
 
-    uint64_t white;  //White piece positions
-    uint64_t black;  //Black piece positions
+    uint64_t color[2];  // {White Pieces, Black Pieces}
 
     uint64_t en_passant;  //En Passant squares
     char flags;  //Castle aval as bit flags, in order : w_long_castle | w_short_castle | b_long_castle | b_short_castle | turn | in_check | in_double_check
@@ -131,7 +130,7 @@ typedef struct {            //Each size of 2 array contains {Black, White}
 
     uint64_t pinned; //Absolutely pinned pieces
 
-   
+
 
     int halfmove_clock;
     int fullmove_number;

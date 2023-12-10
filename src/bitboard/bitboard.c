@@ -639,38 +639,39 @@ static void getPinnedPawnMovesAppend(int king_rank, int king_file, uint64_t pinn
 }
 
 void getPinnedMovesWhiteAppend(Position pos, Move* moveList, int* size){
+    int turn = pos & WHITE_TURN;
     uint64_t pinned = pos.pinned;
-    int king_sq = __builtin_ctzll(pos.w_king);
+    int king_sq = __builtin_ctzll(pos.king[turn]);
     int king_rank = king_sq / 8;
     int king_file = king_sq % 8;
 
     //King does his thang
-    getKingMovesAppend(pos.w_king, pos.white,  pos.black, pos.b_attack_mask, moveList, size);
-    getCastleMovesWhiteAppend(pos.white, pos.b_attack_mask, pos.flags, moveList, size);
+    getKingMovesAppend(pos.king[turn], pos.color[turn],  pos.color[!turn], pos.b_attack_mask, moveList, size);
+    getCastleMovesWhiteAppend(pos.color[turn], pos.b_attack_mask, pos.flags, moveList, size);
 
     //Pinned Knights Cannot Move
-    uint64_t pinned_knights = pos.w_knight & pinned;
-    getKnightMovesAppend(pos.w_knight & ~pinned_knights, pos.white, pos.black, moveList, size);
+    uint64_t pinned_knights = pos.knight[turn] & pinned;
+    getKnightMovesAppend(pos.knight[turn] & ~pinned_knights, pos.color[turn], pos.color[!turn], moveList, size);
     
-    uint64_t pinned_queens = pos.w_queen & pinned;
-    getBishopMovesAppend(pos.w_queen & ~pinned_queens, pos.white, pos.black, moveList, size);
-    getRookMovesAppend(  pos.w_queen & ~pinned_queens, pos.white, pos.black, moveList, size);
-    getPinnedQueenMovesAppend(king_rank, king_file, pinned_queens, pos.white, pos.black, moveList, size);
+    uint64_t pinned_queens = pos.queen[turn] & pinned;
+    getBishopMovesAppend(pos.queen[turn] & ~pinned_queens, pos.color[turn], pos.color[!turn], moveList, size);
+    getRookMovesAppend(  pos.queen[turn] & ~pinned_queens, pos.color[turn], pos.color[!turn], moveList, size);
+    getPinnedQueenMovesAppend(king_rank, king_file, pinned_queens, pos.color[turn], pos.color[!turn], moveList, size);
     
-    uint64_t pinned_rooks = pos.w_rook & pinned;
-    getRookMovesAppend(pos.w_rook & ~pinned_rooks, pos.white, pos.black, moveList, size);
-    getPinnedRookMovesAppend(king_rank, king_file, pinned_rooks, pos.white, pos.black, moveList, size);
+    uint64_t pinned_rooks = pos.rook[turn] & pinned;
+    getRookMovesAppend(pos.rook[turn] & ~pinned_rooks, pos.color[turn], pos.color[!turn], moveList, size);
+    getPinnedRookMovesAppend(king_rank, king_file, pinned_rooks, pos.color[turn], pos.color[!turn], moveList, size);
 
     //Proccess Pinned Bishops
-    uint64_t pinned_bishops = pos.w_bishop & pinned;
-    getBishopMovesAppend(pos.w_bishop & ~pinned_bishops, pos.white, pos.black, moveList, size);
-    getPinnedBishopMovesAppend(king_rank, king_file, pinned_bishops, pos.white, pos.black, moveList, size);
+    uint64_t pinned_bishops = pos.bishop[turn] & pinned;
+    getBishopMovesAppend(pos.bishop[turn] & ~pinned_bishops, pos.color[turn], pos.color[!turn], moveList, size);
+    getPinnedBishopMovesAppend(king_rank, king_file, pinned_bishops, pos.color[turn], pos.color[!turn], moveList, size);
 
 
     //Proccess Pinned Pawns
-    uint64_t pinned_pawns = pos.pawn[1] & pinned;
-    getPawnMovesAppend(pos.pawn[1] & ~pinned_pawns, pos.white, pos.black, pos.en_passant, WHITE_TURN, moveList, size);
-    getPinnedPawnMovesAppend(king_rank, king_file, pinned_pawns, pos.white, pos.black, pos.en_passant, pos.flags, moveList, size);
+    uint64_t pinned_pawns = pos.pawn[turn] & pinned;
+    getPawnMovesAppend(pos.pawn[turn] & ~pinned_pawns, pos.color[turn], pos.color[!turn], pos.en_passant, WHITE_TURN, moveList, size);
+    getPinnedPawnMovesAppend(king_rank, king_file, pinned_pawns, pos.color[turn], pos.color[!turn], pos.en_passant, pos.flags, moveList, size);
 }
 
 void getPinnedMovesBlackAppend(Position pos, Move* moveList, int* size){
