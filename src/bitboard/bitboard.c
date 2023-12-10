@@ -120,7 +120,7 @@ uint64_t getBishopAttacks(uint64_t bishops, uint64_t ownPieces, uint64_t oppPiec
         moves |= bishopAttacks(ownPieces | oppPieces, square);
         bishops &= bishops - 1;
     }
-    return moves & ~ownPieces;
+    return moves;
 }
 
 static uint64_t getBishopMovesCheckAppend(uint64_t bishops, uint64_t ownPieces, uint64_t oppPieces, uint64_t legalSquares, Move* moveList, int* idx) {
@@ -164,7 +164,7 @@ uint64_t getRookAttacks(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces) 
         moves |= rookAttacks(ownPieces | oppPieces, square);
         rooks &= rooks - 1;
     }
-    return moves & ~ownPieces;
+    return moves;
 }
 
 static uint64_t getRookMovesCheckAppend(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces, uint64_t legalSquares, Move* moveList, int* idx) {
@@ -216,7 +216,7 @@ uint64_t getPawnAttacks(uint64_t pawns, uint64_t ownPieces, char flags){
         pawns &= pawns - 1;
     }
 
-    return (moves & ~ownPieces);
+    return moves;
 }
 
 uint64_t getPawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant, char flags, Move* moveList, int* idx) {
@@ -333,7 +333,7 @@ uint64_t getKnightAttacks(uint64_t knights, uint64_t ownPieces) {
         knights &= knights - 1;
     }
 
-    return moves & ~ownPieces;
+    return moves;
 }
 
 uint64_t getKnightMovesAppend(uint64_t knights, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* idx) {
@@ -370,7 +370,7 @@ uint64_t getKnightMovesAppend(uint64_t knights, uint64_t ownPieces, uint64_t opp
 //King
 uint64_t getKingAttacks(uint64_t kings, uint64_t ownPieces) {
     int square = __builtin_ctzll(kings);
-    return kingMoves[square] & ~ownPieces;
+    return kingMoves[square];
 }
 
 uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, uint64_t oppPieces, uint64_t oppAttackMask, Move* moveList, int* idx) {
