@@ -103,26 +103,22 @@ static inline Move MAKE_MOVE(int from, int to, int flags) {
 
 #define IN_D_CHECK     0x40
 #define IN_CHECK       0x20
-#define WHITE_TURN     0x10
-#define W_SHORT_CASTLE 0x08
-#define W_LONG_CASTLE  0x04
-#define B_SHORT_CASTLE 0x02 
-#define B_LONG_CASTLE  0x01 
+#define W_SHORT_CASTLE 0x10
+#define W_LONG_CASTLE  0x08
+#define B_SHORT_CASTLE 0x04 
+#define B_LONG_CASTLE  0x02 
+#define WHITE_TURN     0x01 //0 / False for black    1 / True for white
 
-typedef struct {
-    uint64_t w_pawn;
-    uint64_t w_bishop;
-    uint64_t w_knight;
-    uint64_t w_rook;
-    uint64_t w_queen;
-    uint64_t w_king;
+typedef struct {            //Each size of 2 array contains {Black, White}
+    uint64_t pawn[2];     
+    uint64_t bishop[2];
+    uint64_t knight[2];
+    uint64_t rook[2];
+    uint64_t queen[2];
+    uint64_t king[2];
 
-    uint64_t b_pawn;
-    uint64_t b_bishop;
-    uint64_t b_knight;
-    uint64_t b_rook;
-    uint64_t b_queen;
-    uint64_t b_king;
+     uint64_t attack_mask[2]; // {Attacked by Black, Attacked by White}
+
 
     uint64_t white;  //White piece positions
     uint64_t black;  //Black piece positions
@@ -135,8 +131,7 @@ typedef struct {
 
     uint64_t pinned; //Absolutely pinned pieces
 
-    uint64_t w_attack_mask; //Pieces white is attacking
-    uint64_t b_attack_mask; //Pieces black is attacking
+   
 
     int halfmove_clock;
     int fullmove_number;

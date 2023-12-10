@@ -88,18 +88,18 @@ Position fenToPosition(char* FEN) {
             if(isupper(*FEN)) updateBit(&pos.white, square);
             else updateBit(&pos.black, square);
             switch (*FEN) {
-                case 'P': updateBit(&pos.w_pawn, square); break;
-                case 'N': updateBit(&pos.w_knight, square); break;
-                case 'B': updateBit(&pos.w_bishop, square); break;
-                case 'R': updateBit(&pos.w_rook, square); break;
-                case 'Q': updateBit(&pos.w_queen, square); break;
-                case 'K': updateBit(&pos.w_king, square); break;
-                case 'p': updateBit(&pos.b_pawn, square); break;
-                case 'n': updateBit(&pos.b_knight, square); break;
-                case 'b': updateBit(&pos.b_bishop, square); break;
-                case 'r': updateBit(&pos.b_rook, square); break;
-                case 'q': updateBit(&pos.b_queen, square); break;
-                case 'k': updateBit(&pos.b_king, square); break;
+                case 'P': updateBit(&pos.pawn[1], square); break;
+                case 'N': updateBit(&pos.knight[1], square); break;
+                case 'B': updateBit(&pos.bishop[1], square); break;
+                case 'R': updateBit(&pos.rook[1], square); break;
+                case 'Q': updateBit(&pos.queen[1], square); break;
+                case 'K': updateBit(&pos.king[1], square); break;
+                case 'p': updateBit(&pos.pawn[0], square); break;
+                case 'n': updateBit(&pos.knight[0], square); break;
+                case 'b': updateBit(&pos.bishop[0], square); break;
+                case 'r': updateBit(&pos.rook[0], square); break;
+                case 'q': updateBit(&pos.queen[0], square); break;
+                case 'k': updateBit(&pos.king[0], square); break;
             }
             square++;
         }
@@ -150,17 +150,17 @@ Position fenToPosition(char* FEN) {
     setAttackMasks(&pos);
 
     //Check Flag
-    if(pos.b_attack_mask & pos.w_king) pos.flags |= IN_CHECK;
-    if(pos.w_attack_mask & pos.b_king) pos.flags |= IN_CHECK;
+    if(pos.attack_mask[0] & pos.king[1]) pos.flags |= IN_CHECK;
+    if(pos.attack_mask[1] & pos.king[0]) pos.flags |= IN_CHECK;
 
     //Double Check Flag
     if(pos.flags & IN_CHECK){
-       int kign_sq = __builtin_ctzll(pos.w_king);
+       int kign_sq = __builtin_ctzll(pos.king[1]);
        uint64_t attackers = getBlackAttackers(pos, kign_sq);
        attackers &= attackers - 1;
        if(attackers) pos.flags |= IN_D_CHECK;
 
-       kign_sq = __builtin_ctzll(pos.b_king);
+       kign_sq = __builtin_ctzll(pos.king[0]);
        attackers = getWhiteAttackers(pos, kign_sq);
        attackers &= attackers - 1;
        if(attackers) pos.flags |= IN_D_CHECK;
@@ -255,18 +255,18 @@ void printPosition(Position position){
             int square = rank * 8 + file;
             uint64_t mask = 1ULL << square;
 
-            if (position.w_pawn & mask) printf("P ");
-            else if (position.w_knight & mask) printf("N ");
-            else if (position.w_bishop & mask) printf("B ");
-            else if (position.w_rook & mask) printf("R ");
-            else if (position.w_queen & mask) printf("Q ");
-            else if (position.w_king & mask) printf("K ");
-            else if (position.b_pawn & mask) printf("p ");
-            else if (position.b_knight & mask) printf("n ");
-            else if (position.b_bishop & mask) printf("b ");
-            else if (position.b_rook & mask) printf("r ");
-            else if (position.b_queen & mask) printf("q ");
-            else if (position.b_king & mask) printf("k ");
+            if (position.pawn[1] & mask) printf("P ");
+            else if (position.knight[1] & mask) printf("N ");
+            else if (position.bishop[1] & mask) printf("B ");
+            else if (position.rook[1] & mask) printf("R ");
+            else if (position.queen[1] & mask) printf("Q ");
+            else if (position.king[1] & mask) printf("K ");
+            else if (position.pawn[0] & mask) printf("p ");
+            else if (position.knight[0] & mask) printf("n ");
+            else if (position.bishop[0] & mask) printf("b ");
+            else if (position.rook[0] & mask) printf("r ");
+            else if (position.queen[0] & mask) printf("q ");
+            else if (position.king[0] & mask) printf("k ");
             else if (position.en_passant & mask) printf("E ");
             else printf(". ");
 
@@ -311,7 +311,7 @@ void printPosition(Position position){
             int square = rank * 8 + file;
             uint64_t mask = 1ULL << square;
 
-            if (position.w_attack_mask & mask) printf("A ");
+            if (position.attack_mask[1] & mask) printf("A ");
             else printf(". ");
 
             if (file == 7) printf(" |  ");
@@ -323,7 +323,7 @@ void printPosition(Position position){
             int square = rank * 8 + file;
             uint64_t mask = 1ULL << square;
 
-            if (position.b_attack_mask & mask) printf("a ");
+            if (position.attack_mask[0] & mask) printf("a ");
             else printf(". ");
 
             if (file == 7) printf(" |  ");
@@ -335,7 +335,7 @@ void printPosition(Position position){
             int square = rank * 8 + file;
             uint64_t mask = 1ULL << square;
 
-            if (position.pinned & mask) printf("P ");
+            if (position.pinned & mask) printf("X ");
             else printf(". ");
 
             if (file == 7) printf(" |  ");
@@ -390,8 +390,8 @@ uint64_t setBit(uint64_t bb, int square) {
 
 
 static void setAttackMasks(Position *pos){
-    pos->w_attack_mask = generateWhiteAttacks(*pos);
-    pos->b_attack_mask = generateBlackAttacks(*pos);
+    pos->attack_mask[1] = generateWhiteAttacks(*pos);
+    pos->attack_mask[0] = generateBlackAttacks(*pos);
 }
 
 /**

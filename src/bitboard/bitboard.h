@@ -41,5 +41,7 @@ void getPinnedMovesBlackAppend(Position position, Move* moveList, int* idx);
 uint64_t getWhiteAttackers(Position pos, int square);
 uint64_t getBlackAttackers(Position pos, int square);
 
+uint64_t generateWhiteAttacks(Position position);
+uint64_t generateBlackAttacks(Position position);
 
 #endif /* bitboard_h */

@@ -3,6 +3,4 @@
 #endif
 
 uint16_t generateLegalMoves(Position position,  Move* moveList);
-uint64_t generateWhiteAttacks(Position position);
-uint64_t generateBlackAttacks(Position position);
 uint64_t generatePinnedPieces(Position pos);

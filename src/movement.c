@@ -34,37 +34,10 @@ uint16_t generateLegalMoves(Position position,  Move* moveList){
         getBishopMovesAppend(turn ? position.w_bishop : position.b_bishop, ownPos, oppPos, moveList, size);
         getKnightMovesAppend(turn ? position.w_knight : position.b_knight, ownPos, oppPos, moveList, size);
         getKingMovesAppend(  turn ? position.w_king   : position.b_king,   ownPos, oppPos, oppAttackMask, moveList, size);
-        getPawnMovesAppend(  turn ? position.w_pawn   : position.b_pawn,   ownPos, oppPos, position.en_passant, position.flags, moveList, size);
+        getPawnMovesAppend(  position.pawn[turn],   ownPos, oppPos, position.en_passant, position.flags, moveList, size);
     }
     return *size;
 }
-
-uint64_t generateWhiteAttacks(Position position){
-    uint64_t attack_mask = 0ULL;
-    attack_mask |= getBishopAttacks(position.w_bishop, position.white, position.black & ~position.b_king);
-    attack_mask |= getRookAttacks(  position.w_rook,   position.white, position.black & ~position.b_king);
-    attack_mask |= getBishopAttacks(position.w_queen,  position.white, position.black & ~position.b_king);
-    attack_mask |= getRookAttacks(  position.w_queen,  position.white, position.black & ~position.b_king);
-    attack_mask |= getKnightAttacks(position.w_knight);
-    attack_mask |= getKingAttacks(  position.w_king  );
-    attack_mask |= getPawnAttacks(  position.w_pawn, WHITE_TURN);
-    return attack_mask;
-}
-
-uint64_t generateBlackAttacks(Position position){
-    uint64_t attack_mask = 0ULL;
-    attack_mask |= getBishopAttacks(position.b_bishop, position.black, position.white & ~position.w_king);
-    attack_mask |= getRookAttacks(  position.b_rook,   position.black, position.white & ~position.w_king);
-    attack_mask |= getBishopAttacks(position.b_queen,  position.black, position.white & ~position.w_king);
-    attack_mask |= getRookAttacks(  position.b_queen,  position.black, position.white & ~position.w_king);
-    attack_mask |= getKnightAttacks(position.b_knight);
-    attack_mask |= getKingAttacks(  position.b_king  );
-    attack_mask |= getPawnAttacks(  position.b_pawn, 0);
-    return attack_mask;
-}
-
-
-
 
 void makeMove(Position *position, Move move){
     switch(GET_FLAGS(move)){
@@ -87,10 +60,10 @@ void makeMove(Position *position, Move move){
     }
 
     int from = GET_FROM(move);
-    //int to   = GET_TO(move);
+    int to   = GET_TO(move);
 
     char from_piece = position->charBoard[from];
-    //char to_piece   = position->charBoard[to];
+    char to_piece   = position->charBoard[to];
 
     switch(from_piece){
         case 'Q':
@@ -112,21 +85,16 @@ void makeMove(Position *position, Move move){
     }
 }
 
-static inline void clearBlackSquare(Position *position, uint64_t to){
-    position->black    &= ~to; 
-    position->b_pawn   &= ~to;
-    position->b_queen  &= ~to;
-    position->b_bishop &= ~to;
-    position->b_knight &= ~to;
-    position->b_rook   &= ~to;
-}
-
-
 void unmakeMove(Position *position, Move move){
     char from_piece = position->charBoard[GET_FROM(move)];
     switch(from_piece){
     }
 }
+
+
+
+
+
 
 static uint64_t generatePinnedPiecesWhite(Position pos){
     int k_square = __builtin_ctzll(pos.w_king);
@@ -136,14 +104,19 @@ static uint64_t generatePinnedPiecesWhite(Position pos){
     uint64_t pinned = pos.white;  //The peices belonging to white which become pinnged
     uint64_t d_attack_mask, h_attack_mask, attack_mask = 0ULL;  // A attack masks
     uint64_t pin_directions = 0ULL;
+
+    uint64_t ep_pawn_square = 0ULL;
+    if((pos.en_passant != 0) && (pos.flags & WHITE_TURN)){ //If white can capture en-passant
+        ep_pawn_square = southOne(pos.en_passant);
+    }
     
-    attack_mask |= rookAttacks(all_pieces, k_square);    //Get a bb of squares being attacked by the king
+    attack_mask |= rookAttacks(all_pieces & ~ep_pawn_square, k_square);  //Get a bb of squares being attacked by the king
     attack_mask |= bishopAttacks(all_pieces, k_square);
 
     pinned &= attack_mask; // The pinned white pieces now contains the ones with a ray to the king
 
     //Now get all pieces under attack as if king is queen again and these are the possible pinners
-    h_attack_mask = rookAttacks(all_pieces & ~pinned, k_square);
+    h_attack_mask = rookAttacks(all_pieces & ~pinned & ~ep_pawn_square, k_square);
     pos_pinners = h_attack_mask & (pos.b_queen | pos.b_rook);
     while(pos_pinners){
         int pinner_sq = __builtin_ctzll(pos_pinners);
@@ -171,14 +144,19 @@ static uint64_t generatePinnedPiecesBlack(Position pos){
     uint64_t pinned = pos.black;  //The peices belonging to white which become pinnged
     uint64_t d_attack_mask, h_attack_mask, attack_mask = 0ULL;  // A attack masks
     uint64_t pin_directions = 0ULL;
+
+    uint64_t ep_pawn_square = 0ULL;
+    if((pos.en_passant != 0) && !(pos.flags & WHITE_TURN)){ //If white can capture en-passant
+        ep_pawn_square = northOne(pos.en_passant);
+    }
     
-    attack_mask |= rookAttacks(all_pieces, k_square);    //Get a bb of squares being attacked by the king
+    attack_mask |= rookAttacks(all_pieces & ~ep_pawn_square, k_square);    //Get a bb of squares being attacked by the king
     attack_mask |= bishopAttacks(all_pieces, k_square);
 
     pinned &= attack_mask; // The pinned white pieces now contains the ones with a ray to the king
 
     //Now get all pieces under attack as if king is queen again and these are the possible pinners
-    h_attack_mask = rookAttacks(all_pieces & ~pinned, k_square);
+    h_attack_mask = rookAttacks(all_pieces & ~pinned & ~ep_pawn_square, k_square);
     pos_pinners = h_attack_mask & (pos.w_queen | pos.w_rook);
     while(pos_pinners){
         int pinner_sq = __builtin_ctzll(pos_pinners);
