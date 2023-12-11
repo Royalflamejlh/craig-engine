@@ -26,7 +26,6 @@ void printBB(uint64_t BB);
 Position fenToPosition(char* FEN);
 uint64_t flipVertical(uint64_t board);
 void printPosition(Position position);
-uint64_t setBit(uint64_t bb, int square);
 uint64_t northOne(uint64_t bb);
 uint64_t northTwo(uint64_t bb);
 uint64_t noEaOne(uint64_t bb);
@@ -37,6 +36,13 @@ uint64_t southTwo(uint64_t bb);
 uint64_t soEaOne(uint64_t bb);
 uint64_t soWeOne(uint64_t bb);
 
+static inline uint64_t setBit(uint64_t bb, int square) {
+    return bb | (1ULL << square);
+}
+
+static inline uint64_t clearBit(uint64_t bb, int square) {
+    return bb & ~(1ULL << square);
+}
 
 #endif /* bbutils_h */
 

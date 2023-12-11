@@ -4,3 +4,4 @@
 
 uint16_t generateLegalMoves(Position position,  Move* moveList);
 uint64_t generatePinnedPieces(Position pos);
+int makeMove(Position *pos, Move move);

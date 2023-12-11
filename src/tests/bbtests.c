@@ -9,16 +9,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
+#include <time.h>
 #include "../bitboard/bitboard.h"
 #include "../bitboard/magic.h"
 #include "../movement.h"
 #include "../util.h"
 
 #define MOVE_GEN_TEST
+#define MOVE_MAKE_TEST
 
 int testBB(void) {
     generateMasks();
     generateMagics();
+
+    
 
 
     #ifdef MOVE_GEN_TEST
@@ -66,6 +71,27 @@ int testBB(void) {
 
     printf("Finished Depth 1 Position Check \n");
     #endif
+
+    #ifdef MOVE_GEN_TEST
+    printf("\n---------------------------------- MOVE MAKING TESTING ----------------------------------\n\n");
+    time_t t;
+    srand((unsigned) time(&t));
+    char* FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+    pos = fenToPosition(FEN);
+    printf("Starting Posistion");
+    printPosition(pos);
+    
+    for(int i = 0; i < 20; i++){
+        size = generateLegalMoves(pos, moveList);
+        printf("Making move:\n");
+        int randMove = rand() % size;
+        printMove(moveList[randMove]);
+        makeMove(&pos, moveList[randMove]);
+        printPosition(pos);
+    }
+
+    #endif
+
 
 
 

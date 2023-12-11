@@ -384,10 +384,6 @@ uint64_t soEaOne(uint64_t bb) { return (bb & ~0x8080808080808080ULL) >> 7; }
 uint64_t soWeOne(uint64_t bb) { return (bb & ~0x0101010101010101ULL) >> 9; }
 
 
-uint64_t setBit(uint64_t bb, int square) {
-    return bb | (1ULL << square);
-}
-
 
 static void setAttackMasks(Position *pos){
     pos->attack_mask[1] = generateAttacks(*pos, 1);
