@@ -29,19 +29,14 @@ uint64_t getPawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t oppPiec
 uint64_t getKingAttacks(uint64_t kings);
 uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, uint64_t oppPieces, uint64_t oppAttackMask, Move* moveList, int* idx);
 
-void getCastleMovesWhiteAppend(uint64_t white, uint64_t b_attack_mask, char flags, Move* moveList, int* idx);
-void getCastleMovesBlackAppend(uint64_t black, uint64_t w_attack_mask, char flags, Move* moveList, int* idx);
-
+void getCastleMovesAppend(uint64_t white, uint64_t b_attack_mask, char flags, Move* moveList, int* idx);
 
 void getCheckMovesAppend(Position position, Move* moveList, int* idx);
 
-void getPinnedMovesWhiteAppend(Position position, Move* moveList, int* idx);
-void getPinnedMovesBlackAppend(Position position, Move* moveList, int* idx);
+void getPinnedMovesAppend(Position position, Move* moveList, int* idx);
 
-uint64_t getWhiteAttackers(Position pos, int square);
-uint64_t getBlackAttackers(Position pos, int square);
+uint64_t getAttackers(Position pos, int square, int attackerColor);
 
-uint64_t generateWhiteAttacks(Position position);
-uint64_t generateBlackAttacks(Position position);
+uint64_t generateAttacks(Position position, int turn);
 
 #endif /* bitboard_h */

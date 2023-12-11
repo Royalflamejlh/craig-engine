@@ -9,7 +9,7 @@
 */
 uint16_t generateLegalMoves(Position position,  Move* moveList){
     int size[] = {0};
-    char turn = position.flags & WHITE_TURN; //True for white false for black
+    int turn = position.flags & WHITE_TURN; //True for white false for black
     uint64_t ownPos = position.color[turn];
     uint64_t oppPos = position.color[!turn];
     uint64_t oppAttackMask = position.attack_mask[!turn];
@@ -23,10 +23,10 @@ uint16_t generateLegalMoves(Position position,  Move* moveList){
         }
     }
     else if(position.pinned & ownPos){
-        turn ? getPinnedMovesWhiteAppend(position, moveList, size) : getPinnedMovesBlackAppend(position, moveList, size);
+        getPinnedMovesAppend(position, moveList, size);
     }
     else{
-        turn ? getCastleMovesWhiteAppend(ownPos, oppAttackMask, position.flags, moveList, size) : getCastleMovesBlackAppend(ownPos, oppAttackMask, position.flags, moveList, size);
+        getCastleMovesAppend(ownPos, oppAttackMask, position.flags, moveList, size);
 
         getBishopMovesAppend(position.queen[turn],  ownPos, oppPos, moveList, size);
         getRookMovesAppend(  position.queen[turn],  ownPos, oppPos, moveList, size);

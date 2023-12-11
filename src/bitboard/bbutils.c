@@ -85,8 +85,8 @@ Position fenToPosition(char* FEN) {
             square += *FEN - '0'; // Skip empty squares
         } else {
             pos.charBoard[square] = *FEN;
-            if(isupper(*FEN)) updateBit(&pos.white, square);
-            else updateBit(&pos.black, square);
+            if(isupper(*FEN)) updateBit(&pos.color[1], square);
+            else updateBit(&pos.color[0], square);
             switch (*FEN) {
                 case 'P': updateBit(&pos.pawn[1], square); break;
                 case 'N': updateBit(&pos.knight[1], square); break;
@@ -156,12 +156,12 @@ Position fenToPosition(char* FEN) {
     //Double Check Flag
     if(pos.flags & IN_CHECK){
        int kign_sq = __builtin_ctzll(pos.king[1]);
-       uint64_t attackers = getBlackAttackers(pos, kign_sq);
+       uint64_t attackers = getAttackers(pos, kign_sq, 0);
        attackers &= attackers - 1;
        if(attackers) pos.flags |= IN_D_CHECK;
 
        kign_sq = __builtin_ctzll(pos.king[0]);
-       attackers = getWhiteAttackers(pos, kign_sq);
+       attackers = getAttackers(pos, kign_sq, WHITE_TURN);
        attackers &= attackers - 1;
        if(attackers) pos.flags |= IN_D_CHECK;
     }
@@ -298,8 +298,8 @@ void printPosition(Position position){
             int square = rank * 8 + file;
             uint64_t mask = 1ULL << square;
 
-            if (position.white & mask) printf("W ");
-            else if (position.black & mask) printf("b ");
+            if (position.color[1] & mask) printf("W ");
+            else if (position.color[0] & mask) printf("b ");
             else printf(". ");
 
             if (file == 7) printf(" |  ");
@@ -390,8 +390,8 @@ uint64_t setBit(uint64_t bb, int square) {
 
 
 static void setAttackMasks(Position *pos){
-    pos->attack_mask[1] = generateWhiteAttacks(*pos);
-    pos->attack_mask[0] = generateBlackAttacks(*pos);
+    pos->attack_mask[1] = generateAttacks(*pos, 1);
+    pos->attack_mask[0] = generateAttacks(*pos, 0);
 }
 
 /**
