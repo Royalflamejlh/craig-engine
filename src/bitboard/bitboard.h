@@ -39,4 +39,8 @@ uint64_t getAttackers(Position pos, int square, int attackerColor);
 
 uint64_t generateAttacks(Position position, int turn);
 
+static inline void setAttackMasks(Position *pos){
+    pos->attack_mask[1] = generateAttacks(*pos, 1);
+    pos->attack_mask[0] = generateAttacks(*pos, 0);
+}
 #endif /* bitboard_h */

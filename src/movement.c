@@ -74,6 +74,7 @@ static void movePiece(Position *pos, int turn, int from, int to){
     pos->color[turn] = setBit(pos->color[turn], to);
 }
 
+
 /*
 * Used to remove the captured piece
 */
@@ -172,7 +173,7 @@ int makeMove(Position *pos, Move move){
             break;
 
         case DOUBLE_PAWN_PUSH:
-            pos->en_passant = 1ULL <<  turn ? to - 8 : to + 8;
+            pos->en_passant = 1ULL <<  turn ? to + 8 : to - 8;
         case QUIET:
         default:
             movePiece(pos, turn, from, to);
@@ -189,9 +190,6 @@ void unmakeMove(Position *position, Move move){
     switch(from_piece){
     }
 }
-
-
-
 
 
 
