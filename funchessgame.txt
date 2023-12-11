@@ -1,0 +1,1631 @@
+Generating Magics!
+Finished generating rook magics, generating bishop magics.
+Initializing the attack table!
+All rook magics verified successfully
+All bishop magics verified successfully
+
+---------------------------------- MOVE GEN TESTING ----------------------------------
+
+Finished Depth 1 Position Check 
+
+---------------------------------- MOVE MAKING TESTING ----------------------------------
+
+Starting Posistion-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n r 8   |  Current Turn: White
+7 p p p p p p p p 7   |  
+6 . . . . . . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 1
+5 . . . . . . . . 5   |  
+4 . . . . . . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . . 3   |  
+2 P P P P P P P P 2   |  Castling Availability: 
+1 R N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b b  |  8 . . . . . . . .  |  8 . a a a a a a .  |  8 . . . . . . . .  |  8 r n b q k b n r  |
+7 b b b b b b b b  |  7 . . . . . . . .  |  7 a a a a a a a a  |  7 . . . . . . . .  |  7 p p p p p p p p  |
+6 . . . . . . . .  |  6 . . . . . . . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 . . . . . . . .  |
+5 . . . . . . . .  |  5 . . . . . . . .  |  5 . . . . . . . .  |  5 . . . . . . . .  |  5 . . . . . . . .  |
+4 . . . . . . . .  |  4 . . . . . . . .  |  4 . . . . . . . .  |  4 . . . . . . . .  |  4 . . . . . . . .  |
+3 . . . . . . . .  |  3 A A A A A A A A  |  3 . . . . . . . .  |  3 . . . . . . . .  |  3 . . . . . . . .  |
+2 W W W W W W W W  |  2 A A A A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 P P P P P P P P  |
+1 W W W W W W W W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 R N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: a2 to a4
+ (Double pawn push)
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n r 8   |  Current Turn: Black
+7 p p p p p p p p 7   |  
+6 . . . . . . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 1
+5 . . . . . . . . 5   |  
+4 P . . . . . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . . 3   |  
+2 . P P P P P P P 2   |  Castling Availability: 
+1 R N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b b  |  8 . . . . . . . .  |  8 . a a a a a a .  |  8 . . . . . . . .  |  8 r n b q k b n r  |
+7 b b b b b b b b  |  7 . . . . . . . .  |  7 a a a a a a a a  |  7 . . . . . . . .  |  7 p p p p p p p p  |
+6 . . . . . . . .  |  6 . . . . . . . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 . . . . . . . .  |
+5 . . . . . . . .  |  5 . A . . . . . .  |  5 . . . . . . . .  |  5 . . . . . . . .  |  5 . . . . . . . .  |
+4 W . . . . . . .  |  4 A . . . . . . .  |  4 . . . . . . . .  |  4 . . . . . . . .  |  4 P . . . . . . .  |
+3 . . . . . . . .  |  3 A A A A A A A A  |  3 . . . . . . . .  |  3 . . . . . . . .  |  3 . . . . . . . .  |
+2 . W W W W W W W  |  2 A A A A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P P P P P P P  |
+1 W W W W W W W W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 R N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: c7 to c6
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n r 8   |  Current Turn: White
+7 p p . p p p p p 7   |  
+6 . . p . . . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 2
+5 . . . . . . . . 5   |  
+4 P . . . . . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . . 3   |  
+2 . P P P P P P P 2   |  Castling Availability: 
+1 R N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b b  |  8 . . . . . . . .  |  8 . a a a a a a .  |  8 . . . . . . . .  |  8 r n b q k b n r  |
+7 b b . b b b b b  |  7 . . . . . . . .  |  7 a a a a a a a a  |  7 . . . . . . . .  |  7 p p . p p p p p  |
+6 . . b . . . . .  |  6 . . . . . . . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 . . p . . . . .  |
+5 . . . . . . . .  |  5 . A . . . . . .  |  5 a a . a . . . .  |  5 . . . . . . . .  |  5 . . . . . . . .  |
+4 W . . . . . . .  |  4 A . . . . . . .  |  4 . . . . . . . .  |  4 . . . . . . . .  |  4 P . . . . . . .  |
+3 . . . . . . . .  |  3 A A A A A A A A  |  3 . . . . . . . .  |  3 . . . . . . . .  |  3 . . . . . . . .  |
+2 . W W W W W W W  |  2 A A A A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P P P P P P P  |
+1 W W W W W W W W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 R N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: a1 to a3
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n r 8   |  Current Turn: Black
+7 p p . p p p p p 7   |  
+6 . . p . . . . . 6   |  Halfmove Clock: 1 -- Fullmove Number: 2
+5 . . . . . . . . 5   |  
+4 P . . . . . . . 4   |  In Check: No -- In Double-Check: No
+3 R . . . . . . . 3   |  
+2 . P P P P P P P 2   |  Castling Availability: 
+1 . N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b b  |  8 . . . . . . . .  |  8 . a a a a a a .  |  8 . . . . . . . .  |  8 r n b q k b n r  |
+7 b b . b b b b b  |  7 . . . . . . . .  |  7 a a a a a a a a  |  7 . . . . . . . .  |  7 p p . p p p p p  |
+6 . . b . . . . .  |  6 . . . . . . . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 . . p . . . . .  |
+5 . . . . . . . .  |  5 . A . . . . . .  |  5 a a . a . . . .  |  5 . . . . . . . .  |  5 . . . . . . . .  |
+4 W . . . . . . .  |  4 A . . . . . . .  |  4 . . . . . . . .  |  4 . . . . . . . .  |  4 P . . . . . . .  |
+3 W . . . . . . .  |  3 A A A A A A A A  |  3 . . . . . . . .  |  3 . . . . . . . .  |  3 R . . . . . . .  |
+2 . W W W W W W W  |  2 A A A A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P P P P P P P  |
+1 . W W W W W W W  |  1 A . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: a7 to a6
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n r 8   |  Current Turn: White
+7 . p . p p p p p 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 3
+5 . . . . . . . . 5   |  
+4 P . . . . . . . 4   |  In Check: No -- In Double-Check: No
+3 R . . . . . . . 3   |  
+2 . P P P P P P P 2   |  Castling Availability: 
+1 . N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b b  |  8 . . . . . . . .  |  8 . a a a a a a .  |  8 . . . . . . . .  |  8 r n b q k b n r  |
+7 . b . b b b b b  |  7 . . . . . . . .  |  7 a a a a a a a a  |  7 . . . . . . . .  |  7 . p . p p p p p  |
+6 b . b . . . . .  |  6 . . . . . . . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 . . . . . . . .  |  5 . A . . . . . .  |  5 a a . a . . . .  |  5 . . . . . . . .  |  5 . . . . . . . .  |
+4 W . . . . . . .  |  4 A . . . . . . .  |  4 . . . . . . . .  |  4 . . . . . . . .  |  4 P . . . . . . .  |
+3 W . . . . . . .  |  3 A A A A A A A A  |  3 . . . . . . . .  |  3 . . . . . . . .  |  3 R . . . . . . .  |
+2 . W W W W W W W  |  2 A A A A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P P P P P P P  |
+1 . W W W W W W W  |  1 A . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: a3 to f3
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n r 8   |  Current Turn: Black
+7 . p . p p p p p 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 1 -- Fullmove Number: 3
+5 . . . . . . . . 5   |  
+4 P . . . . . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . R . . 3   |  
+2 . P P P P P P P 2   |  Castling Availability: 
+1 . N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b b  |  8 . . . . . . . .  |  8 . a a a a a a .  |  8 . . . . . . . .  |  8 r n b q k b n r  |
+7 . b . b b b b b  |  7 . . . . . A . .  |  7 a a a a a a a a  |  7 . . . . . . . .  |  7 . p . p p p p p  |
+6 b . b . . . . .  |  6 . . . . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 . . . . . . . .  |  5 . A . . . A . .  |  5 a a . a . . . .  |  5 . . . . . . . .  |  5 . . . . . . . .  |
+4 W . . . . . . .  |  4 . . . . . A . .  |  4 . . . . . . . .  |  4 . . . . . . . .  |  4 P . . . . . . .  |
+3 . . . . . W . .  |  3 A A A A A A A A  |  3 . . . . . . . .  |  3 . . . . . . . .  |  3 . . . . . R . .  |
+2 . W W W W W W W  |  2 . A A A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P P P P P P P  |
+1 . W W W W W W W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: h7 to h5
+ (Double pawn push)
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n r 8   |  Current Turn: White
+7 . p . p p p p . 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 4
+5 . . . . . . . p 5   |  
+4 P . . . . . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . R . . 3   |  
+2 . P P P P P P P 2   |  Castling Availability: 
+1 E N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b b  |  8 . . . . . . . .  |  8 . a a a a a a .  |  8 . . . . . . . .  |  8 r n b q k b n r  |
+7 . b . b b b b .  |  7 . . . . . A . .  |  7 a a a a a a a a  |  7 . . . . . . . .  |  7 . p . p p p p .  |
+6 b . b . . . . .  |  6 . . . . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 . . . . . . . b  |  5 . A . . . A . .  |  5 a a . a . . . a  |  5 . . . . . . . .  |  5 . . . . . . . p  |
+4 W . . . . . . .  |  4 . . . . . A . .  |  4 . . . . . . a .  |  4 . . . . . . . .  |  4 P . . . . . . .  |
+3 . . . . . W . .  |  3 A A A A A A A A  |  3 . . . . . . . .  |  3 . . . . . . . .  |  3 . . . . . R . .  |
+2 . W W W W W W W  |  2 . A A A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P P P P P P P  |
+1 . W W W W W W W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: f3 to c3
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n r 8   |  Current Turn: Black
+7 . p . p p p p . 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 1 -- Fullmove Number: 4
+5 . . . . . . . p 5   |  
+4 P . . . . . . . 4   |  In Check: No -- In Double-Check: No
+3 . . R . . . . . 3   |  
+2 . P P P P P P P 2   |  Castling Availability: 
+1 E N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b b  |  8 . . . . . . . .  |  8 . a a a a a a .  |  8 . . . . . . . .  |  8 r n b q k b n r  |
+7 . b . b b b b .  |  7 . . . . . . . .  |  7 a a a a a a a a  |  7 . . . . . . . .  |  7 . p . p p p p .  |
+6 b . b . . . . .  |  6 . . A . . . . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 . . . . . . . b  |  5 . A A . . . . .  |  5 a a . a . . . a  |  5 . . . . . . . .  |  5 . . . . . . . p  |
+4 W . . . . . . .  |  4 . . A . . . . .  |  4 . . . . . . a .  |  4 . . . . . . . .  |  4 P . . . . . . .  |
+3 . . W . . . . .  |  3 A A A A A A A A  |  3 . . . . . . . .  |  3 . . . . . . . .  |  3 . . R . . . . .  |
+2 . W W W W W W W  |  2 . A A A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P P P P P P P  |
+1 . W W W W W W W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: h8 to h6
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n . 8   |  Current Turn: White
+7 . p . p p p p . 7   |  
+6 p . p . . . . r 6   |  Halfmove Clock: 2 -- Fullmove Number: 5
+5 . . . . . . . p 5   |  
+4 P . . . . . . . 4   |  In Check: No -- In Double-Check: No
+3 . . R . . . . . 3   |  
+2 . P P P P P P P 2   |  Castling Availability: 
+1 E N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b .  |  8 . . . . . . . .  |  8 . a a a a a . a  |  8 . . . . . . . .  |  8 r n b q k b n .  |
+7 . b . b b b b .  |  7 . . . . . . . .  |  7 a a a a a a a a  |  7 . . . . . . . .  |  7 . p . p p p p .  |
+6 b . b . . . . b  |  6 . . A . . . . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . r  |
+5 . . . . . . . b  |  5 . A A . . . . .  |  5 a a . a . . . a  |  5 . . . . . . . .  |  5 . . . . . . . p  |
+4 W . . . . . . .  |  4 . . A . . . . .  |  4 . . . . . . a .  |  4 . . . . . . . .  |  4 P . . . . . . .  |
+3 . . W . . . . .  |  3 A A A A A A A A  |  3 . . . . . . . .  |  3 . . . . . . . .  |  3 . . R . . . . .  |
+2 . W W W W W W W  |  2 . A A A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P P P P P P P  |
+1 . W W W W W W W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: b1 to a3
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n . 8   |  Current Turn: Black
+7 . p . p p p p . 7   |  
+6 p . p . . . . r 6   |  Halfmove Clock: 3 -- Fullmove Number: 5
+5 . . . . . . . p 5   |  
+4 P . . . . . . . 4   |  In Check: No -- In Double-Check: No
+3 N . R . . . . . 3   |  
+2 . P P P P P P P 2   |  Castling Availability: 
+1 E E B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b .  |  8 . . . . . . . .  |  8 . a a a a a . a  |  8 . . . . . . . .  |  8 r n b q k b n .  |
+7 . b . b b b b .  |  7 . . . . . . . .  |  7 a a a a a a a a  |  7 . . . . . . . .  |  7 . p . p p p p .  |
+6 b . b . . . . b  |  6 . . A . . . . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . r  |
+5 . . . . . . . b  |  5 . A A . . . . .  |  5 a a . a . . . a  |  5 . . . . . . . .  |  5 . . . . . . . p  |
+4 W . . . . . . .  |  4 . . A . . . . .  |  4 . . . . . . a .  |  4 . . . . . . . .  |  4 P . . . . . . .  |
+3 W . W . . . . .  |  3 A A A A A A A A  |  3 . . . . . . . .  |  3 . . . . . . . .  |  3 N . R . . . . .  |
+2 . W W W W W W W  |  2 . A A A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P P P P P P P  |
+1 . . W W W W W W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: h6 to f6
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n . 8   |  Current Turn: White
+7 . p . p p p p . 7   |  
+6 p . p . . r . . 6   |  Halfmove Clock: 4 -- Fullmove Number: 6
+5 . . . . . . . p 5   |  
+4 P . . . . . . . 4   |  In Check: No -- In Double-Check: No
+3 N . R . . . . . 3   |  
+2 . P P P P P P P 2   |  Castling Availability: 
+1 E E B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b .  |  8 . . . . . . . .  |  8 . a a a a a . .  |  8 . . . . . . . .  |  8 r n b q k b n .  |
+7 . b . b b b b .  |  7 . . . . . . . .  |  7 a a a a a a a .  |  7 . . . . . . . .  |  7 . p . p p p p .  |
+6 b . b . . b . .  |  6 . . A . . . . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . r . .  |
+5 . . . . . . . b  |  5 . A A . . . . .  |  5 a a . a . a . .  |  5 . . . . . . . .  |  5 . . . . . . . p  |
+4 W . . . . . . .  |  4 . . A . . . . .  |  4 . . . . . a a .  |  4 . . . . . . . .  |  4 P . . . . . . .  |
+3 W . W . . . . .  |  3 A A A A A A A A  |  3 . . . . . a . .  |  3 . . . . . . . .  |  3 N . R . . . . .  |
+2 . W W W W W W W  |  2 . A A A A A A A  |  2 . . . . . a . .  |  2 . . . . . . . .  |  2 . P P P P P P P  |
+1 . . W W W W W W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: a3 to b1
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n . 8   |  Current Turn: Black
+7 . p . p p p p . 7   |  
+6 p . p . . r . . 6   |  Halfmove Clock: 5 -- Fullmove Number: 6
+5 . . . . . . . p 5   |  
+4 P . . . . . . . 4   |  In Check: No -- In Double-Check: No
+3 . . R . . . . . 3   |  
+2 . P P P P P P P 2   |  Castling Availability: 
+1 E N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b .  |  8 . . . . . . . .  |  8 . a a a a a . .  |  8 . . . . . . . .  |  8 r n b q k b n .  |
+7 . b . b b b b .  |  7 . . . . . . . .  |  7 a a a a a a a .  |  7 . . . . . . . .  |  7 . p . p p p p .  |
+6 b . b . . b . .  |  6 . . A . . . . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . r . .  |
+5 . . . . . . . b  |  5 . A A . . . . .  |  5 a a . a . a . .  |  5 . . . . . . . .  |  5 . . . . . . . p  |
+4 W . . . . . . .  |  4 . . A . . . . .  |  4 . . . . . a a .  |  4 . . . . . . . .  |  4 P . . . . . . .  |
+3 . . W . . . . .  |  3 A A A A A A A A  |  3 . . . . . a . .  |  3 . . . . . . . .  |  3 . . R . . . . .  |
+2 . W W W W W W W  |  2 . A A A A A A A  |  2 . . . . . a . .  |  2 . . . . . . . .  |  2 . P P P P P P P  |
+1 . W W W W W W W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: b7 to b6
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n . 8   |  Current Turn: White
+7 . . . p p p p . 7   |  
+6 p p p . . r . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 7
+5 . . . . . . . p 5   |  
+4 P . . . . . . . 4   |  In Check: No -- In Double-Check: No
+3 . . R . . . . . 3   |  
+2 . P P P P P P P 2   |  Castling Availability: 
+1 E N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b .  |  8 . . . . . . . .  |  8 . a a a a a . .  |  8 . . . . . . . .  |  8 r n b q k b n .  |
+7 . . . b b b b .  |  7 . . . . . . . .  |  7 a a a a a a a .  |  7 . . . . . . . .  |  7 . . . p p p p .  |
+6 b b b . . b . .  |  6 . . A . . . . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p p p . . r . .  |
+5 . . . . . . . b  |  5 . A A . . . . .  |  5 a a a a . a . .  |  5 . . . . . . . .  |  5 . . . . . . . p  |
+4 W . . . . . . .  |  4 . . A . . . . .  |  4 . . . . . a a .  |  4 . . . . . . . .  |  4 P . . . . . . .  |
+3 . . W . . . . .  |  3 A A A A A A A A  |  3 . . . . . a . .  |  3 . . . . . . . .  |  3 . . R . . . . .  |
+2 . W W W W W W W  |  2 . A A A A A A A  |  2 . . . . . a . .  |  2 . . . . . . . .  |  2 . P P P P P P P  |
+1 . W W W W W W W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: e2 to e4
+ (Double pawn push)
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n . 8   |  Current Turn: Black
+7 . . . p p p p . 7   |  
+6 p p p . . r . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 7
+5 . . . . . . . p 5   |  
+4 P . . . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . R . . . . . 3   |  
+2 . P P P . P P P 2   |  Castling Availability: 
+1 . N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b .  |  8 . . . . . . . .  |  8 . a a a a a . .  |  8 . . . . . . . .  |  8 r n b q k b n .  |
+7 . . . b b b b .  |  7 . . . . . . . .  |  7 a a a a a a a .  |  7 . . . . . . . .  |  7 . . . p p p p .  |
+6 b b b . . b . .  |  6 A . A . . . . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p p p . . r . .  |
+5 . . . . . . . b  |  5 . A A A . A . A  |  5 a a a a . a . .  |  5 . . . . . . . .  |  5 . . . . . . . p  |
+4 W . . . W . . .  |  4 . . A . . . A .  |  4 . . . . . a a .  |  4 . . . . . . . .  |  4 P . . . P . . .  |
+3 . . W . . . . .  |  3 A A A A A A A A  |  3 . . . . . a . .  |  3 . . . . . . . .  |  3 . . R . . . . .  |
+2 . W W W . W W W  |  2 . A A A A A A A  |  2 . . . . . a . .  |  2 . . . . . . . .  |  2 . P P P . P P P  |
+1 . W W W W W W W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: f6 to d6
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n . 8   |  Current Turn: White
+7 . . . p p p p . 7   |  
+6 p p p r . . . . 6   |  Halfmove Clock: 1 -- Fullmove Number: 8
+5 . . . . . . . p 5   |  
+4 P . . . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . R . . . . . 3   |  
+2 . P P P . P P P 2   |  Castling Availability: 
+1 . N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b .  |  8 . . . . . . . .  |  8 . a a a a a . .  |  8 . . . . . . . .  |  8 r n b q k b n .  |
+7 . . . b b b b .  |  7 . . . . . . . .  |  7 a a a a a a a .  |  7 . . . . . . . .  |  7 . . . p p p p .  |
+6 b b b b . . . .  |  6 A . A . . . . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p p p r . . . .  |
+5 . . . . . . . b  |  5 . A A A . A . A  |  5 a a a a . . . .  |  5 . . . . . . . .  |  5 . . . . . . . p  |
+4 W . . . W . . .  |  4 . . A . . . A .  |  4 . . . a . . a .  |  4 . . . . . . . .  |  4 P . . . P . . .  |
+3 . . W . . . . .  |  3 A A A A A A A A  |  3 . . . a . . . .  |  3 . . . . . . . .  |  3 . . R . . . . .  |
+2 . W W W . W W W  |  2 . A A A A A A A  |  2 . . . a . . . .  |  2 . . . . . . . .  |  2 . P P P . P P P  |
+1 . W W W W W W W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: c3 to f3
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n . 8   |  Current Turn: Black
+7 . . . p p p p . 7   |  
+6 p p p r . . . . 6   |  Halfmove Clock: 2 -- Fullmove Number: 8
+5 . . . . . . . p 5   |  
+4 P . . . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . R . . 3   |  
+2 . P P P . P P P 2   |  Castling Availability: 
+1 . N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b .  |  8 . . . . . . . .  |  8 . a a a a a . .  |  8 . . . . . . . .  |  8 r n b q k b n .  |
+7 . . . b b b b .  |  7 . . . . . A . .  |  7 a a a a a a a .  |  7 . . . . . . . .  |  7 . . . p p p p .  |
+6 b b b b . . . .  |  6 A . . . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p p p r . . . .  |
+5 . . . . . . . b  |  5 . A . A . A . .  |  5 a a a a . . . .  |  5 . . . . . . . .  |  5 . . . . . . . p  |
+4 W . . . W . . .  |  4 . . A . . A . .  |  4 . . . a . . a .  |  4 . . . . . . . .  |  4 P . . . P . . .  |
+3 . . . . . W . .  |  3 A A A A A A A A  |  3 . . . a . . . .  |  3 . . . . . . . .  |  3 . . . . . R . .  |
+2 . W W W . W W W  |  2 . A A A A A A A  |  2 . . . a . . . .  |  2 . . . . . . . .  |  2 . P P P . P P P  |
+1 . W W W W W W W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: b6 to b5
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n . 8   |  Current Turn: White
+7 . . . p p p p . 7   |  
+6 p . p r . . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 9
+5 . p . . . . . p 5   |  
+4 P . . . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . R . . 3   |  
+2 . P P P . P P P 2   |  Castling Availability: 
+1 . N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b .  |  8 . . . . . . . .  |  8 . a a a a a . .  |  8 . . . . . . . .  |  8 r n b q k b n .  |
+7 . . . b b b b .  |  7 . . . . . A . .  |  7 a a a a a a a .  |  7 . . . . . . . .  |  7 . . . p p p p .  |
+6 b . b b . . . .  |  6 . . . . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p r . . . .  |
+5 . b . . . . . b  |  5 . A . A . A . .  |  5 a a . a . . . .  |  5 . . . . . . . .  |  5 . p . . . . . p  |
+4 W . . . W . . .  |  4 . . A . . A . .  |  4 a . a a . . a .  |  4 . . . . . . . .  |  4 P . . . P . . .  |
+3 . . . . . W . .  |  3 A A A A A A A A  |  3 . . . a . . . .  |  3 . . . . . . . .  |  3 . . . . . R . .  |
+2 . W W W . W W W  |  2 . A A A A A A A  |  2 . . . a . . . .  |  2 . . . . . . . .  |  2 . P P P . P P P  |
+1 . W W W W W W W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: f3 to f7
+ (Capture)
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 r n b q k b n . 8   |  Current Turn: Black
+7 . . . p p R p . 7   |  
+6 p . p r . . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 9
+5 . p . . . . . p 5   |  
+4 P . . . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . . 3   |  
+2 . P P P . P P P 2   |  Castling Availability: 
+1 . N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b b b b b b .  |  8 . . . . . A . .  |  8 . a a a a a . .  |  8 . . . . . . . .  |  8 r n b q k b n .  |
+7 . . . b b W b .  |  7 . . . . A . A .  |  7 a a a a a a a .  |  7 . . . . . . . .  |  7 . . . p p . p .  |
+6 b . b b . . . .  |  6 . . . . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p r . . . .  |
+5 . b . . . . . b  |  5 . A . A . A . A  |  5 a a . a . . . .  |  5 . . . . . . . .  |  5 . p . . . . . p  |
+4 W . . . W . . .  |  4 . . A . . A A .  |  4 a . a a . . a .  |  4 . . . . . . . .  |  4 P . . . P . . .  |
+3 . . . . . . . .  |  3 A A A A A A A A  |  3 . . . a . . . .  |  3 . . . . . . . .  |  3 . . . . . . . .  |
+2 . W W W . W W W  |  2 . A A A A A A A  |  2 . . . a . . . .  |  2 . . . . . . . .  |  2 . P P P . P P P  |
+1 . W W W W W W W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: a8 to a7
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n b q k b n . 8   |  Current Turn: White
+7 r . . p p R p . 7   |  
+6 p . p r . . . . 6   |  Halfmove Clock: 1 -- Fullmove Number: 10
+5 . p . . . . . p 5   |  
+4 P . . . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . . 3   |  
+2 . P P P . P P P 2   |  Castling Availability: 
+1 . N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b b b b b b .  |  8 . . . . . A . .  |  8 a . a a a a . .  |  8 . . . . . . . .  |  8 . n b q k b n .  |
+7 b . . b b W b .  |  7 . . . . A . A .  |  7 . a a a a a a .  |  7 . . . . . . . .  |  7 r . . p p . p .  |
+6 b . b b . . . .  |  6 . . . . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p r . . . .  |
+5 . b . . . . . b  |  5 . A . A . A . A  |  5 a a . a . . . .  |  5 . . . . . . . .  |  5 . p . . . . . p  |
+4 W . . . W . . .  |  4 . . A . . A A .  |  4 a . a a . . a .  |  4 . . . . . . . .  |  4 P . . . P . . .  |
+3 . . . . . . . .  |  3 A A A A A A A A  |  3 . . . a . . . .  |  3 . . . . . . . .  |  3 . . . . . . . .  |
+2 . W W W . W W W  |  2 . A A A A A A A  |  2 . . . a . . . .  |  2 . . . . . . . .  |  2 . P P P . P P P  |
+1 . W W W W W W W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: c2 to c4
+ (Double pawn push)
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n b q k b n . 8   |  Current Turn: Black
+7 r . . p p R p . 7   |  
+6 p . p r . . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 10
+5 . p . . . . . p 5   |  
+4 P . P . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . . 3   |  
+2 . P . P . P P P 2   |  Castling Availability: 
+1 . N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b b b b b b .  |  8 . . . . . A . .  |  8 a . a a a a . .  |  8 . . . . . . . .  |  8 . n b q k b n .  |
+7 b . . b b W b .  |  7 . . . . A . A .  |  7 . a a a a a a .  |  7 . . . . . . . .  |  7 r . . p p . p .  |
+6 b . b b . . . .  |  6 . . . . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p r . . . .  |
+5 . b . . . . . b  |  5 . A . A . A . A  |  5 a a . a . . . .  |  5 . . . . . . . .  |  5 . p . . . . . p  |
+4 W . W . W . . .  |  4 A . A . . A A .  |  4 a . a a . . a .  |  4 . . . . . . . .  |  4 P . P . P . . .  |
+3 . . . . . . . .  |  3 A A A A A A A A  |  3 . . . a . . . .  |  3 . . . . . . . .  |  3 . . . . . . . .  |
+2 . W . W . W W W  |  2 . A A A A A A A  |  2 . . . a . . . .  |  2 . . . . . . . .  |  2 . P . P . P P P  |
+1 . W W W W W W W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: d6 to d5
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n b q k b n . 8   |  Current Turn: White
+7 r . . p p R p . 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 1 -- Fullmove Number: 11
+5 . p . r . . . p 5   |  
+4 P . P . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . . 3   |  
+2 . P . P . P P P 2   |  Castling Availability: 
+1 . N B Q K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b b b b b b .  |  8 . . . . . A . .  |  8 a . a a a a . .  |  8 . . . . . . . .  |  8 . n b q k b n .  |
+7 b . . b b W b .  |  7 . . . . A . A .  |  7 . a a a a a a .  |  7 . . . . . . . .  |  7 r . . p p . p .  |
+6 b . b . . . . .  |  6 . . . . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 . b . b . . . b  |  5 . A . A . A . A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . p . r . . . p  |
+4 W . W . W . . .  |  4 A . A . . A A .  |  4 a . a a . . a .  |  4 . . . . . . . .  |  4 P . P . P . . .  |
+3 . . . . . . . .  |  3 A A A A A A A A  |  3 . . . a . . . .  |  3 . . . . . . . .  |  3 . . . . . . . .  |
+2 . W . W . W W W  |  2 . A A A A A A A  |  2 . . . a . . . .  |  2 . . . . . . . .  |  2 . P . P . P P P  |
+1 . W W W W W W W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B Q K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: d1 to c2
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n b q k b n . 8   |  Current Turn: Black
+7 r . . p p R p . 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 2 -- Fullmove Number: 11
+5 . p . r . . . p 5   |  
+4 P . P . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . . 3   |  
+2 . P Q P . P P P 2   |  Castling Availability: 
+1 . N B . K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b b b b b b .  |  8 . . . . . A . .  |  8 a . a a a a . .  |  8 . . . . . . . .  |  8 . n b q k b n .  |
+7 b . . b b W b .  |  7 . . . . A . A .  |  7 . a a a a a a .  |  7 . . . . . . . .  |  7 r . . p p . p .  |
+6 b . b . . . . .  |  6 . . . . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 . b . b . . . b  |  5 . A . A . A . .  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . p . r . . . p  |
+4 W . W . W . . .  |  4 A . A . A A . .  |  4 a . a a . . a .  |  4 . . . . . . . .  |  4 P . P . P . . .  |
+3 . . . . . . . .  |  3 A A A A A A A A  |  3 . . . a . . . .  |  3 . . . . . . . .  |  3 . . . . . . . .  |
+2 . W W W . W W W  |  2 . A . A A A A A  |  2 . . . a . . . .  |  2 . . . . . . . .  |  2 . P Q P . P P P  |
+1 . W W . W W W W  |  1 . A A A . A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B . K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: d5 to e5
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n b q k b n . 8   |  Current Turn: White
+7 r . . p p R p . 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 3 -- Fullmove Number: 12
+5 . p . . r . . p 5   |  
+4 P . P . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . . 3   |  
+2 . P Q P . P P P 2   |  Castling Availability: 
+1 . N B . K B N R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b b b b b b .  |  8 . . . . . A . .  |  8 a . a a a a . .  |  8 . . . . . . . .  |  8 . n b q k b n .  |
+7 b . . b b W b .  |  7 . . . . A . A .  |  7 . a a a a a a .  |  7 . . . . . . . .  |  7 r . . p p . p .  |
+6 b . b . . . . .  |  6 . . . . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 . b . . b . . b  |  5 . A . A . A . .  |  5 a a a a . a a a  |  5 . . . . . . . .  |  5 . p . . r . . p  |
+4 W . W . W . . .  |  4 A . A . A A . .  |  4 a . a . a . a .  |  4 . . . . X . . .  |  4 P . P . P . . .  |
+3 . . . . . . . .  |  3 A A A A A A A A  |  3 . . . . . . . .  |  3 . . . . . . . .  |  3 . . . . . . . .  |
+2 . W W W . W W W  |  2 . A . A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P Q P . P P P  |
+1 . W W . W W W W  |  1 . A A A . A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B . K B N R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: g1 to f3
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n b q k b n . 8   |  Current Turn: Black
+7 r . . p p R p . 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 4 -- Fullmove Number: 12
+5 . p . . r . . p 5   |  
+4 P . P . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . N . . 3   |  
+2 . P Q P . P P P 2   |  Castling Availability: 
+1 . N B . K B . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b b b b b b .  |  8 . . . . . A . .  |  8 a . a a a a . .  |  8 . . . . . . . .  |  8 . n b q k b n .  |
+7 b . . b b W b .  |  7 . . . . A . A .  |  7 . a a a a a a .  |  7 . . . . . . . .  |  7 r . . p p . p .  |
+6 b . b . . . . .  |  6 . . . . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 . b . . b . . b  |  5 . A . A A A A .  |  5 a a a a . a a a  |  5 . . . . . . . .  |  5 . p . . r . . p  |
+4 W . W . W . . .  |  4 A . A A A A . A  |  4 a . a . a . a .  |  4 . . . . X . . .  |  4 P . P . P . . .  |
+3 . . . . . W . .  |  3 A A A A A A A A  |  3 . . . . . . . .  |  3 . . . . . . . .  |  3 . . . . . N . .  |
+2 . W W W . W W W  |  2 . A . A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P Q P . P P P  |
+1 . W W . W W . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B . K B . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: c8 to b7
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . q k b n . 8   |  Current Turn: White
+7 r b . p p R p . 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 5 -- Fullmove Number: 13
+5 . p . . r . . p 5   |  
+4 P . P . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . N . . 3   |  
+2 . P Q P . P P P 2   |  Castling Availability: 
+1 . N B . K B . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b b b b .  |  8 . . . . . A . .  |  8 a a a a a a . .  |  8 . . . . . . . .  |  8 . n . q k b n .  |
+7 b b . b b W b .  |  7 . . . . A . A .  |  7 . a a a a a a .  |  7 . . . . . . . .  |  7 r b . p p . p .  |
+6 b . b . . . . .  |  6 . . . . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 . b . . b . . b  |  5 . A . A A A A .  |  5 a a a a . a a a  |  5 . . . . . . . .  |  5 . p . . r . . p  |
+4 W . W . W . . .  |  4 A . A A A A . A  |  4 a . a . a . a .  |  4 . . . . X . . .  |  4 P . P . P . . .  |
+3 . . . . . W . .  |  3 A A A A A A A A  |  3 . . . . . . . .  |  3 . . . . . . . .  |  3 . . . . . N . .  |
+2 . W W W . W W W  |  2 . A . A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P Q P . P P P  |
+1 . W W . W W . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B . K B . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: f7 to g7
+ (Capture)
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . q k b n . 8   |  Current Turn: Black
+7 r b . p p R p . 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 13
+5 . p . . r . . p 5   |  
+4 P . P . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . N . . 3   |  
+2 . P Q P . P P P 2   |  Castling Availability: 
+1 . N B . K B . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b b b b .  |  8 . . . . . A . .  |  8 a a a a a a . .  |  8 . . . . . . . .  |  8 . n . q k b n .  |
+7 b b . b b b W .  |  7 . . . . A . A .  |  7 . a a a a a a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b . b . . . . .  |  6 . . . . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 . b . . b . . b  |  5 . A . A A A A .  |  5 a a a a . a a a  |  5 . . . . . . . .  |  5 . p . . r . . p  |
+4 W . W . W . . .  |  4 A . A A A A . A  |  4 a . a . a . a .  |  4 . . . . X . . .  |  4 P . P . P . . .  |
+3 . . . . . W . .  |  3 A A A A A A A A  |  3 . . . . . . . .  |  3 . . . . . . . .  |  3 . . . . . N . .  |
+2 . W W W . W W W  |  2 . A . A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P Q P . P P P  |
+1 . W W . W W . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B . K B . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: d8 to b6
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . . k b n . 8   |  Current Turn: White
+7 r b . p p R p . 7   |  
+6 p q p . . . . . 6   |  Halfmove Clock: 1 -- Fullmove Number: 14
+5 . p . . r . . p 5   |  
+4 P . P . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . N . . 3   |  
+2 . P Q P . P P P 2   |  Castling Availability: 
+1 . N B . K B . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . . b b b .  |  8 . . . . . A . .  |  8 a . a a . a . .  |  8 . . . . . . . .  |  8 . n . . k b n .  |
+7 b b . b b b W .  |  7 . . . . A . A .  |  7 a a a a a a a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b b b . . . . .  |  6 . . . . . A . .  |  6 a . a a a a a a  |  6 . . . . . . . .  |  6 p q p . . . . .  |
+5 . b . . b . . b  |  5 . A . A A A A .  |  5 a a a a . a a a  |  5 . . . . . . . .  |  5 . p . . r . . p  |
+4 W . W . W . . .  |  4 A . A A A A . A  |  4 a . a a a . a .  |  4 . . . . X . . .  |  4 P . P . P . . .  |
+3 . . . . . W . .  |  3 A A A A A A A A  |  3 . . . . a . . .  |  3 . . . . . . . .  |  3 . . . . . N . .  |
+2 . W W W . W W W  |  2 . A . A A A A A  |  2 . . . . . a . .  |  2 . . . . . . . .  |  2 . P Q P . P P P  |
+1 . W W . W W . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B . K B . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: b1 to c3
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . . k b n . 8   |  Current Turn: Black
+7 r b . p p R p . 7   |  
+6 p q p . . . . . 6   |  Halfmove Clock: 2 -- Fullmove Number: 14
+5 . p . . r . . p 5   |  
+4 P . P . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . N . . N . . 3   |  
+2 . P Q P . P P P 2   |  Castling Availability: 
+1 . E B . K B . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . . b b b .  |  8 . . . . . A . .  |  8 a . a a . a . .  |  8 . . . . . . . .  |  8 . n . . k b n .  |
+7 b b . b b b W .  |  7 . . . . A . A .  |  7 a a a a a a a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b b b . . . . .  |  6 . . . . . A . .  |  6 a . a a a a a a  |  6 . . . . . . . .  |  6 p q p . . . . .  |
+5 . b . . b . . b  |  5 . A . A A A A .  |  5 a a a a . a a a  |  5 . . . . . . . .  |  5 . p . . r . . p  |
+4 W . W . W . . .  |  4 A . A A A A . A  |  4 a . a a a . a .  |  4 . . . . X . . .  |  4 P . P . P . . .  |
+3 . . W . . W . .  |  3 A A A A A A A A  |  3 . . . . a . . .  |  3 . . . . . . . .  |  3 . . N . . N . .  |
+2 . W W W . W W W  |  2 A A . A A A A A  |  2 . . . . . a . .  |  2 . . . . . . . .  |  2 . P Q P . P P P  |
+1 . . W . W W . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K B . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: e5 to d5
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . . k b n . 8   |  Current Turn: White
+7 r b . p p R p . 7   |  
+6 p q p . . . . . 6   |  Halfmove Clock: 3 -- Fullmove Number: 15
+5 . p . r . . . p 5   |  
+4 P . P . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . N . . N . . 3   |  
+2 . P Q P . P P P 2   |  Castling Availability: 
+1 . E B . K B . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . . b b b .  |  8 . . . . . A . .  |  8 a . a a . a . .  |  8 . . . . . . . .  |  8 . n . . k b n .  |
+7 b b . b b b W .  |  7 . . . . A . A .  |  7 a a a a a a a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b b b . . . . .  |  6 . . . . . A . .  |  6 a . a a a a a a  |  6 . . . . . . . .  |  6 p q p . . . . .  |
+5 . b . b . . . b  |  5 . A . A A A A .  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . p . r . . . p  |
+4 W . W . W . . .  |  4 A . A A A A . A  |  4 a . a a . . a .  |  4 . . . . . . . .  |  4 P . P . P . . .  |
+3 . . W . . W . .  |  3 A A A A A A A A  |  3 . . . a a . . .  |  3 . . . . . . . .  |  3 . . N . . N . .  |
+2 . W W W . W W W  |  2 A A . A A A A A  |  2 . . . a . a . .  |  2 . . . . . . . .  |  2 . P Q P . P P P  |
+1 . . W . W W . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K B . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: c3 to b1
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . . k b n . 8   |  Current Turn: Black
+7 r b . p p R p . 7   |  
+6 p q p . . . . . 6   |  Halfmove Clock: 4 -- Fullmove Number: 15
+5 . p . r . . . p 5   |  
+4 P . P . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . N . . 3   |  
+2 . P Q P . P P P 2   |  Castling Availability: 
+1 . N B . K B . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . . b b b .  |  8 . . . . . A . .  |  8 a . a a . a . .  |  8 . . . . . . . .  |  8 . n . . k b n .  |
+7 b b . b b b W .  |  7 . . . . A . A .  |  7 a a a a a a a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b b b . . . . .  |  6 . . . . . A . .  |  6 a . a a a a a a  |  6 . . . . . . . .  |  6 p q p . . . . .  |
+5 . b . b . . . b  |  5 . A . A A A A .  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . p . r . . . p  |
+4 W . W . W . . .  |  4 A . A A A A . A  |  4 a . a a . . a .  |  4 . . . . . . . .  |  4 P . P . P . . .  |
+3 . . . . . W . .  |  3 A A A A A A A A  |  3 . . . a a . . .  |  3 . . . . . . . .  |  3 . . . . . N . .  |
+2 . W W W . W W W  |  2 . A . A A A A A  |  2 . . . a . a . .  |  2 . . . . . . . .  |  2 . P Q P . P P P  |
+1 . W W . W W . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B . K B . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: b5 to a4
+ (Capture)
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . . k b n . 8   |  Current Turn: White
+7 r b . p p R p . 7   |  
+6 p q p . . . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 16
+5 . . . r . . . p 5   |  
+4 P . P . P . . . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . N . . 3   |  
+2 . P Q P . P P P 2   |  Castling Availability: 
+1 . N B . K B . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . . b b b .  |  8 . . . . . A . .  |  8 a . a a . a . .  |  8 . . . . . . . .  |  8 . n . . k b n .  |
+7 b b . b b b W .  |  7 . . . . A . A .  |  7 a a a a a a a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b b b . . . . .  |  6 . . . . . A . .  |  6 a . a a a a a a  |  6 . . . . . . . .  |  6 p q p . . . . .  |
+5 . . . b . . . b  |  5 . A . A A A A .  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . . . r . . . p  |
+4 W . W . W . . .  |  4 A . A A A A . A  |  4 . a . a . . a .  |  4 . . . . . . . .  |  4 . . P . P . . .  |
+3 . . . . . W . .  |  3 A A A A A A A A  |  3 . a . a a . . .  |  3 . . . . . . . .  |  3 . . . . . N . .  |
+2 . W W W . W W W  |  2 . A . A A A A A  |  2 . a . a . a . .  |  2 . . . . . . . .  |  2 . P Q P . P P P  |
+1 . W W . W W . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B . K B . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: g2 to g4
+ (Double pawn push)
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . . k b n . 8   |  Current Turn: Black
+7 r b . p p R p . 7   |  
+6 p q p . . . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 16
+5 . . . r . . . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . N . . 3   |  
+2 . P Q P . P . P 2   |  Castling Availability: 
+1 . N B . K B . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . . b b b .  |  8 . . . . . A . .  |  8 a . a a . a . .  |  8 . . . . . . . .  |  8 . n . . k b n .  |
+7 b b . b b b W .  |  7 . . . . A . A .  |  7 a a a a a a a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b b b . . . . .  |  6 . . . . . A . .  |  6 a . a a a a a a  |  6 . . . . . . . .  |  6 p q p . . . . .  |
+5 . . . b . . . b  |  5 . A . A A A A A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . . . r . . . p  |
+4 W . W . W . W .  |  4 A . A A A A . A  |  4 . a . a . . a .  |  4 . . . . . . . .  |  4 . . P . P . P .  |
+3 . . . . . W . .  |  3 A A A A A A A A  |  3 . a . a a . . .  |  3 . . . . . . . .  |  3 . . . . . N . .  |
+2 . W W W . W . W  |  2 . A . A A A A A  |  2 . a . a . a . .  |  2 . . . . . . . .  |  2 . P Q P . P . P  |
+1 . W W . W W . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B . K B . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: e8 to d8
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . b n . 8   |  Current Turn: White
+7 r b . p p R p . 7   |  
+6 p q p . . . . . 6   |  Halfmove Clock: 1 -- Fullmove Number: 17
+5 . . . r . . . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . N . . 3   |  
+2 . P Q P . P . P 2   |  Castling Availability: 
+1 . N B . K B . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . b b .  |  8 . . . . . A . .  |  8 a . a a a . . .  |  8 . . . . . . . .  |  8 . n . k . b n .  |
+7 b b . b b b W .  |  7 . . . . A . A .  |  7 a a a a a . a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b b b . . . . .  |  6 . . . . . A . .  |  6 a . a a a a a a  |  6 . . . . . . . .  |  6 p q p . . . . .  |
+5 . . . b . . . b  |  5 . A . A A A A A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . . . r . . . p  |
+4 W . W . W . W .  |  4 A . A A A A . A  |  4 . a . a . . a .  |  4 . . . . . . . .  |  4 . . P . P . P .  |
+3 . . . . . W . .  |  3 A A A A A A A A  |  3 . a . a a . . .  |  3 . . . . . . . .  |  3 . . . . . N . .  |
+2 . W W W . W . W  |  2 . A . A A A A A  |  2 . a . a . a . .  |  2 . . . . . . . .  |  2 . P Q P . P . P  |
+1 . W W . W W . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B . K B . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: f1 to h3
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . b n . 8   |  Current Turn: Black
+7 r b . p p R p . 7   |  
+6 p q p . . . . . 6   |  Halfmove Clock: 2 -- Fullmove Number: 17
+5 . . . r . . . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . N . B 3   |  
+2 . P Q P . P . P 2   |  Castling Availability: 
+1 . N B . K E . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . b b .  |  8 . . . . . A . .  |  8 a . a a a . . .  |  8 . . . . . . . .  |  8 . n . k . b n .  |
+7 b b . b b b W .  |  7 . . . . A . A .  |  7 a a a a a . a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b b b . . . . .  |  6 . . . . . A . .  |  6 a . a a a a a a  |  6 . . . . . . . .  |  6 p q p . . . . .  |
+5 . . . b . . . b  |  5 . A . A A A A A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . . . r . . . p  |
+4 W . W . W . W .  |  4 A . A A A A A A  |  4 . a . a . . a .  |  4 . . . . . . . .  |  4 . . P . P . P .  |
+3 . . . . . W . W  |  3 A A A A A A A .  |  3 . a . a a . . .  |  3 . . . . . . . .  |  3 . . . . . N . B  |
+2 . W W W . W . W  |  2 . A . A A A A A  |  2 . a . a . a . .  |  2 . . . . . . . .  |  2 . P Q P . P . P  |
+1 . W W . W . . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B . K . . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: g7 to g6
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . b n . 8   |  Current Turn: White
+7 r b . p p R p . 7   |  
+6 p q p . . . . . 6   |  Halfmove Clock: 3 -- Fullmove Number: 18
+5 . . . r . . . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . N . B 3   |  
+2 . P Q P . P . P 2   |  Castling Availability: 
+1 . N B . K E . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . b b .  |  8 . . . . . A . .  |  8 a . a a a . . .  |  8 . . . . . . . .  |  8 . n . k . b n .  |
+7 b b . b b b W .  |  7 . . . . A . A .  |  7 a a a a a . a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b b b . . . b .  |  6 . . . . . A . .  |  6 a . a a a a a a  |  6 . . . . . . . .  |  6 p q p . . . . .  |
+5 . . . b . . . b  |  5 . A . A A A A A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . . . r . . . p  |
+4 W . W . W . W .  |  4 A . A A A A A A  |  4 . a . a . . a .  |  4 . . . . . . . .  |  4 . . P . P . P .  |
+3 . . . . . W . W  |  3 A A A A A A A .  |  3 . a . a a . . .  |  3 . . . . . . . .  |  3 . . . . . N . B  |
+2 . W W W . W . W  |  2 . A . A A A A A  |  2 . a . a . a . .  |  2 . . . . . . . .  |  2 . P Q P . P . P  |
+1 . W W . W . . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B . K . . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: c2 to c3
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . b n . 8   |  Current Turn: Black
+7 r b . p p R p . 7   |  
+6 p q p . . . . . 6   |  Halfmove Clock: 4 -- Fullmove Number: 18
+5 . . . r . . . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . Q . . N . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . N B . K E . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . b b .  |  8 . . . . . A . .  |  8 a . a a a . . .  |  8 . . . . . . . .  |  8 . n . k . b n .  |
+7 b b . b b b W .  |  7 . . . . A . A .  |  7 a a a a a . a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b b b . . . b .  |  6 . . . . . A . .  |  6 a . a a a a a a  |  6 . . . . . . . .  |  6 p q p . . . . .  |
+5 . . . b . . . b  |  5 A A . A A A A A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . . . r . . . p  |
+4 W . W . W . W .  |  4 . A A A . A A A  |  4 . a . a . . a .  |  4 . . . . . . . .  |  4 . . P . P . P .  |
+3 . . W . . W . W  |  3 A A A A A A A .  |  3 . a . a a . . .  |  3 . . . . . . . .  |  3 . . Q . . N . B  |
+2 . W . W . W . W  |  2 . A A A A A A A  |  2 . a . a . a . .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . W W . W . . W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B . K . . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: b6 to a5
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . b n . 8   |  Current Turn: White
+7 r b . p p R p . 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 5 -- Fullmove Number: 19
+5 q . . r . . . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . Q . . N . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . N B . K E . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . b b .  |  8 . . . . . A . .  |  8 a . a a a . . .  |  8 . . . . . . . .  |  8 . n . k . b n .  |
+7 b b . b b b W .  |  7 . . . . A . A .  |  7 . a a a a . a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b . b . . . b .  |  6 . . . . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 b . . b . . . b  |  5 A A . A A A A A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 q . . r . . . p  |
+4 W . W . W . W .  |  4 . A A A . A A A  |  4 a a . a . . a .  |  4 . . . . . . . .  |  4 . . P . P . P .  |
+3 . . W . . W . W  |  3 A A A A A A A .  |  3 . a a a . . . .  |  3 . . . . . . . .  |  3 . . Q . . N . B  |
+2 . W . W . W . W  |  2 . A A A A A A A  |  2 . . . a . . . .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . W W . W . . W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . N B . K . . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: b1 to a3
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . b n . 8   |  Current Turn: Black
+7 r b . p p R p . 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 6 -- Fullmove Number: 19
+5 q . . r . . . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 N . Q . . N . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . E B . K E . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . b b .  |  8 . . . . . A . .  |  8 a . a a a . . .  |  8 . . . . . . . .  |  8 . n . k . b n .  |
+7 b b . b b b W .  |  7 . . . . A . A .  |  7 . a a a a . a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b . b . . . b .  |  6 . . . . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 b . . b . . . b  |  5 A A . A A A A A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 q . . r . . . p  |
+4 W . W . W . W .  |  4 . A A A . A A A  |  4 a a . a . . a .  |  4 . . . . . . . .  |  4 . . P . P . P .  |
+3 W . W . . W . W  |  3 A A A A A A A .  |  3 . a a a . . . .  |  3 . . . . . . . .  |  3 N . Q . . N . B  |
+2 . W . W . W . W  |  2 . A A A A A A A  |  2 . . . a . . . .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . . W . W . . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K . . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: d5 to f5
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . b n . 8   |  Current Turn: White
+7 r b . p p R p . 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 7 -- Fullmove Number: 20
+5 q . . . . r . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 N . Q . . N . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . E B . K E . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . b b .  |  8 . . . . . A . .  |  8 a . a a a . . .  |  8 . . . . . . . .  |  8 . n . k . b n .  |
+7 b b . b b b W .  |  7 . . . . A . A .  |  7 . a a a a a a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b . b . . . b .  |  6 . . . . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 b . . . . b . b  |  5 A A . A A A A A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 q . . . . r . p  |
+4 W . W . W . W .  |  4 . A A A . . A A  |  4 a a . . . a a .  |  4 . . . . . . . .  |  4 . . P . P . P .  |
+3 W . W . . W . W  |  3 A A A A A A A .  |  3 . a a . . a . .  |  3 . . . . . . . .  |  3 N . Q . . N . B  |
+2 . W . W . W . W  |  2 . A A A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . . W . W . . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K . . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: a3 to b5
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . b n . 8   |  Current Turn: Black
+7 r b . p p R p . 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 8 -- Fullmove Number: 20
+5 q N . . . r . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . Q . . N . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . E B . K E . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . b b .  |  8 . . . . . A . .  |  8 a . a a a . . .  |  8 . . . . . . . .  |  8 . n . k . b n .  |
+7 b b . b b b W .  |  7 A . A . A . A .  |  7 . a a a a a a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b . b . . . b .  |  6 . . . A . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 b W . . . b . b  |  5 A A . A A A A A  |  5 . a a a a . a a  |  5 . . . . . . . .  |  5 q N . . . r . p  |
+4 W . W . W . W .  |  4 . A A A . . A A  |  4 a a . . . a a .  |  4 . . . . . . . .  |  4 . . P . P . P .  |
+3 . . W . . W . W  |  3 A A A A A A A .  |  3 . a a . . a . .  |  3 . . . . . . . .  |  3 . . Q . . N . B  |
+2 . W . W . W . W  |  2 . A A A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . . W . W . . W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K . . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: f5 to e5
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . b n . 8   |  Current Turn: White
+7 r b . p p R p . 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 9 -- Fullmove Number: 21
+5 q N . . r . . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . Q . . N . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . E B . K E . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . b b .  |  8 . . . . . A . .  |  8 a . a a a . . .  |  8 . . . . . . . .  |  8 . n . k . b n .  |
+7 b b . b b b W .  |  7 A . A . A . A .  |  7 . a a a a . a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b . b . . . b .  |  6 . . . A . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 b W . . b . . b  |  5 A A . A A A A A  |  5 . a a a . a a a  |  5 . . . . . . . .  |  5 q N . . r . . p  |
+4 W . W . W . W .  |  4 . A A A . A A A  |  4 a a . . a . a .  |  4 . . . . X . . .  |  4 . . P . P . P .  |
+3 . . W . . W . W  |  3 A A A A A A A .  |  3 . a a . . . . .  |  3 . . . . . . . .  |  3 . . Q . . N . B  |
+2 . W . W . W . W  |  2 . A A A A A A A  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . . W . W . . W  |  1 . . A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K . . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: c3 to c2
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . b n . 8   |  Current Turn: Black
+7 r b . p p R p . 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 10 -- Fullmove Number: 21
+5 q N . . r . . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . N . B 3   |  
+2 . P Q P . P . P 2   |  Castling Availability: 
+1 . E B . K E . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . b b .  |  8 . . . . . A . .  |  8 a . a a a . . .  |  8 . . . . . . . .  |  8 . n . k . b n .  |
+7 b b . b b b W .  |  7 A . A . A . A .  |  7 . a a a a . a .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b . b . . . b .  |  6 . . . A . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 b W . . b . . b  |  5 . A . A A A A A  |  5 . a a a . a a a  |  5 . . . . . . . .  |  5 q N . . r . . p  |
+4 W . W . W . W .  |  4 A . A A A A A A  |  4 a a . . a . a .  |  4 . . . . X . . .  |  4 . . P . P . P .  |
+3 . . . . . W . W  |  3 A A A A A A A .  |  3 . a a . . . . .  |  3 . . . . . . . .  |  3 . . . . . N . B  |
+2 . W W W . W . W  |  2 . A . A A A A A  |  2 . . . a . . . .  |  2 . . . X . . . .  |  2 . P Q P . P . P  |
+1 . . W . W . . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K . . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: f8 to g7
+ (Capture)
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . . n . 8   |  Current Turn: White
+7 r b . p p R p . 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 22
+5 q N . . r . . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . N . B 3   |  
+2 . P Q P . P . P 2   |  Castling Availability: 
+1 . E B . K E . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . . b .  |  8 . . . . . A . .  |  8 a . a a a a . a  |  8 . . . . . . . .  |  8 . n . k . . n .  |
+7 b b . b b b W .  |  7 A . A . A . A .  |  7 . a a a a . . .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b . b . . . b .  |  6 . . . A . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 b W . . b . . b  |  5 . A . A A A A A  |  5 . a a a a a a a  |  5 . . . . . . . .  |  5 q N . . r . . p  |
+4 W . W . W . W .  |  4 A . A A A A A A  |  4 a a . . a . a .  |  4 . . . . X . . .  |  4 . . P . P . P .  |
+3 . . . . . W . W  |  3 A A A A A A A .  |  3 . a a . . . . .  |  3 . . . . . . . .  |  3 . . . . . N . B  |
+2 . W W W . W . W  |  2 . A . A A A A A  |  2 . . . a . . . .  |  2 . . . X . . . .  |  2 . P Q P . P . P  |
+1 . . W . W . . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K . . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: f3 to d4
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . . n . 8   |  Current Turn: Black
+7 r b . p p R p . 7   |  
+6 p . p . . . . . 6   |  Halfmove Clock: 1 -- Fullmove Number: 22
+5 q N . . r . . p 5   |  
+4 P . P N P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . B 3   |  
+2 . P Q P . P . P 2   |  Castling Availability: 
+1 . E B . K E . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . . b .  |  8 . . . . . A . .  |  8 a . a a a a . a  |  8 . . . . . . . .  |  8 . n . k . . n .  |
+7 b b . b b b W .  |  7 A . A . A . A .  |  7 . a a a a . . .  |  7 . . . . . . . .  |  7 r b . p p . . .  |
+6 b . b . . . b .  |  6 . . A A A A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p . . . . .  |
+5 b W . . b . . b  |  5 . A . A . A . A  |  5 . a a a a a a a  |  5 . . . . . . . .  |  5 q N . . r . . p  |
+4 W . W W W . W .  |  4 A . A A A A A .  |  4 a a . . a . a .  |  4 . . . . X . . .  |  4 . . P N P . P .  |
+3 . . . . . . . W  |  3 A A A A A A A .  |  3 . a a . . . . .  |  3 . . . . . . . .  |  3 . . . . . . . B  |
+2 . W W W . W . W  |  2 . A A A A A A A  |  2 . . . a . . . .  |  2 . . . X . . . .  |  2 . P Q P . P . P  |
+1 . . W . W . . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K . . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: d7 to d6
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . . n . 8   |  Current Turn: White
+7 r b . . p R p . 7   |  
+6 p . p p . . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 23
+5 q N . . r . . p 5   |  
+4 P . P N P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . B 3   |  
+2 . P Q P . P . P 2   |  Castling Availability: 
+1 . E B . K E . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . . b .  |  8 . . . . . A . .  |  8 a . a a a a . a  |  8 . . . . . . . .  |  8 . n . k . . n .  |
+7 b b . . b b W .  |  7 A . A . A . A .  |  7 . a a a a . . .  |  7 . . . . . . . .  |  7 r b . . p . . .  |
+6 b . b b . . b .  |  6 . . A A A A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p p . . . .  |
+5 b W . . b . . b  |  5 . A . A . A . A  |  5 . a a a a a a a  |  5 . . . . . . . .  |  5 q N . . r . . p  |
+4 W . W W W . W .  |  4 A . A A A A A .  |  4 a a . . a . a .  |  4 . . . . X . . .  |  4 . . P N P . P .  |
+3 . . . . . . . W  |  3 A A A A A A A .  |  3 . a a . . . . .  |  3 . . . . . . . .  |  3 . . . . . . . B  |
+2 . W W W . W . W  |  2 . A A A A A A A  |  2 . . . a . . . .  |  2 . . . X . . . .  |  2 . P Q P . P . P  |
+1 . . W . W . . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K . . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: d4 to e6
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . . n . 8   |  Current Turn: Black
+7 r b . . p R p . 7   |  
+6 p . p p N . . . 6   |  Halfmove Clock: 1 -- Fullmove Number: 23
+5 q N . . r . . p 5   |  
+4 P . P . P . P . 4   |  In Check: Yes -- In Double-Check: No
+3 . . . . . . . B 3   |  
+2 . P Q P . P . P 2   |  Castling Availability: 
+1 . E B . K E . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . . b .  |  8 . . . A . A . .  |  8 a . a a a a . a  |  8 . . . . . . . .  |  8 . n . k . . n .  |
+7 b b . . b b W .  |  7 A . A . A . A .  |  7 . a a a a . . .  |  7 . . . . . . . .  |  7 r b . . p . . .  |
+6 b . b b W . b .  |  6 . . . A . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p p N . . .  |
+5 b W . . b . . b  |  5 . A A A . A A A  |  5 . a a a a a a a  |  5 . . . . . . . .  |  5 q N . . r . . p  |
+4 W . W . W . W .  |  4 A . A A A A A .  |  4 a a . . a . a .  |  4 . . . . X . . .  |  4 . . P . P . P .  |
+3 . . . . . . . W  |  3 A A A A A A A .  |  3 . a a . . . . .  |  3 . . . . . . . .  |  3 . . . . . . . B  |
+2 . W W W . W . W  |  2 . A . A A A A A  |  2 . . . a . . . .  |  2 . . . X . . . .  |  2 . P Q P . P . P  |
+1 . . W . W . . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K . . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: g8 to e7
+ (Capture)
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . . . . 8   |  Current Turn: White
+7 r b . . p R p . 7   |  
+6 p . p p N . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 24
+5 q N . . r . . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . B 3   |  
+2 . P Q P . P . P 2   |  Castling Availability: 
+1 . E B . K E . R 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . . . .  |  8 . . . A . A . .  |  8 a . a a a a a a  |  8 . . . . . . . .  |  8 . n . k . . . .  |
+7 b b . . b b W .  |  7 A . A . A . A .  |  7 . a a a a . . .  |  7 . . . . . . . .  |  7 r b . . . . . .  |
+6 b . b b W . b .  |  6 . . . A . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p p N . . .  |
+5 b W . . b . . b  |  5 . A A A . A A A  |  5 . a a a a a a a  |  5 . . . . . . . .  |  5 q N . . r . . p  |
+4 W . W . W . W .  |  4 A . A A A A A .  |  4 a a . . a . a .  |  4 . . . . X . . .  |  4 . . P . P . P .  |
+3 . . . . . . . W  |  3 A A A A A A A .  |  3 . a a . . . . .  |  3 . . . . . . . .  |  3 . . . . . . . B  |
+2 . W W W . W . W  |  2 . A . A A A A A  |  2 . . . a . . . .  |  2 . . . X . . . .  |  2 . P Q P . P . P  |
+1 . . W . W . . W  |  1 . A A A A A A .  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K . . R  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: h1 to f1
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . . . . 8   |  Current Turn: Black
+7 r b . . p R p . 7   |  
+6 p . p p N . . . 6   |  Halfmove Clock: 1 -- Fullmove Number: 24
+5 q N . . r . . p 5   |  
+4 P . P . P . P . 4   |  In Check: Yes -- In Double-Check: No
+3 . . . . . . . B 3   |  
+2 . P Q P . P . P 2   |  Castling Availability: 
+1 . E B . K R . . 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . . . .  |  8 . . . A . A . .  |  8 a . a a a a a a  |  8 . . . . . . . .  |  8 . n . k . . . .  |
+7 b b . . b b W .  |  7 A . A . A . A .  |  7 . a a a a . . .  |  7 . . . . . . . .  |  7 r b . . . . . .  |
+6 b . b b W . b .  |  6 . . . A . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p p N . . .  |
+5 b W . . b . . b  |  5 . A A A . A A A  |  5 . a a a a a a a  |  5 . . . . . . . .  |  5 q N . . r . . p  |
+4 W . W . W . W .  |  4 A . A A A A A .  |  4 a a . . a . a .  |  4 . . . . X . . .  |  4 . . P . P . P .  |
+3 . . . . . . . W  |  3 A A A A A A A .  |  3 . a a . . . . .  |  3 . . . . . . . .  |  3 . . . . . . . B  |
+2 . W W W . W . W  |  2 . A . A A A A .  |  2 . . . a . . . .  |  2 . . . X . . . .  |  2 . P Q P . P . P  |
+1 . . W . W W . .  |  1 . A A A A A A A  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K R . .  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: a5 to c7
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . . . . 8   |  Current Turn: White
+7 r b q . p R p . 7   |  
+6 p . p p N . . . 6   |  Halfmove Clock: 2 -- Fullmove Number: 25
+5 . N . . r . . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . B 3   |  
+2 . P Q P . P . P 2   |  Castling Availability: 
+1 . E B . K R . . 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . . . .  |  8 . . . A . A . .  |  8 a a a a a a a a  |  8 . . . . . . . .  |  8 . n . k . . . .  |
+7 b b b . b b W .  |  7 A . A . A . A .  |  7 . a a a a . . .  |  7 . . . . . . . .  |  7 r b q . . . . .  |
+6 b . b b W . b .  |  6 . . . A . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p p N . . .  |
+5 . W . . b . . b  |  5 . A A A . A A A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . N . . r . . p  |
+4 W . W . W . W .  |  4 A . A A A A A .  |  4 . . . . a . a .  |  4 . . . . X . . .  |  4 . . P . P . P .  |
+3 . . . . . . . W  |  3 A A A A A A A .  |  3 . a . . . . . .  |  3 . . . . . . . .  |  3 . . . . . . . B  |
+2 . W W W . W . W  |  2 . A . A A A A .  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P Q P . P . P  |
+1 . . W . W W . .  |  1 . A A A A A A A  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K R . .  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: c2 to c3
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . k . . . . 8   |  Current Turn: Black
+7 r b q . p R p . 7   |  
+6 p . p p N . . . 6   |  Halfmove Clock: 3 -- Fullmove Number: 25
+5 . N . . r . . p 5   |  
+4 P . P . P . P . 4   |  In Check: Yes -- In Double-Check: No
+3 . . Q . . . . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . E B . K R . . 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . b . . . .  |  8 . . . A . A . .  |  8 a a a a a a a a  |  8 . . . . . . . .  |  8 . n . k . . . .  |
+7 b b b . b b W .  |  7 A . A . A . A .  |  7 . a a a a . . .  |  7 . . . . . . . .  |  7 r b q . . . . .  |
+6 b . b b W . b .  |  6 . . . A . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p p N . . .  |
+5 . W . . b . . b  |  5 A A A A A A A A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . N . . r . . p  |
+4 W . W . W . W .  |  4 . A A A . A A .  |  4 . . . . a . a .  |  4 . . . . X . . .  |  4 . . P . P . P .  |
+3 . . W . . . . W  |  3 A A A A A A A A  |  3 . a . . . . . .  |  3 . . . . . . . .  |  3 . . Q . . . . B  |
+2 . W . W . W . W  |  2 . A A A A A A .  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . . W . W W . .  |  1 . . A A A A A A  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K R . .  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: d8 to e8
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . . k . . . 8   |  Current Turn: White
+7 r b q . p R p . 7   |  
+6 p . p p N . . . 6   |  Halfmove Clock: 4 -- Fullmove Number: 26
+5 . N . . r . . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . Q . . . . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . E B . K R . . 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . . b . . .  |  8 . . . A . A . .  |  8 a a a a . a a a  |  8 . . . . . . . .  |  8 . n . . k . . .  |
+7 b b b . b b W .  |  7 A . A . A . A .  |  7 . a . a a a . .  |  7 . . . . . . . .  |  7 r b q . . . . .  |
+6 b . b b W . b .  |  6 . . . A . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p p N . . .  |
+5 . W . . b . . b  |  5 A A A A A A A A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . N . . r . . p  |
+4 W . W . W . W .  |  4 . A A A . A A .  |  4 . . . . a . a .  |  4 . . . . X . . .  |  4 . . P . P . P .  |
+3 . . W . . . . W  |  3 A A A A A A A A  |  3 . a . . . . . .  |  3 . . . . . . . .  |  3 . . Q . . . . B  |
+2 . W . W . W . W  |  2 . A A A A A A .  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . . W . W W . .  |  1 . . A A A A A A  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K R . .  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: b5 to a7
+ (Capture)
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . . k . . . 8   |  Current Turn: Black
+7 N b q . p R p . 7   |  
+6 p . p p N . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 26
+5 . . . . r . . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . Q . . . . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . E B . K R . . 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . . b . . .  |  8 . . A A . A . .  |  8 a a a a . a a a  |  8 . . . . . . . .  |  8 . n . . k . . .  |
+7 W b b . b b W .  |  7 . . A . A . A .  |  7 . a . a a a . .  |  7 . . . . . . . .  |  7 . b q . . . . .  |
+6 b . b b W . b .  |  6 . . A . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . p p N . . .  |
+5 . . . . b . . b  |  5 A A A A A A A A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . . . . r . . p  |
+4 W . W . W . W .  |  4 . A A A . A A .  |  4 . . . . a . a .  |  4 . . . . X . . .  |  4 . . P . P . P .  |
+3 . . W . . . . W  |  3 A A A A A A A A  |  3 . a . . . . . .  |  3 . . . . . . . .  |  3 . . Q . . . . B  |
+2 . W . W . W . W  |  2 . A A A A A A .  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . . W . W W . .  |  1 . . A A A A A A  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K R . .  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: c6 to c5
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . . k . . . 8   |  Current Turn: White
+7 N b q . p R p . 7   |  
+6 p . . p N . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 27
+5 . . p . r . . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . Q . . . . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . E B . K R . . 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . . b . . .  |  8 . . A A . A . .  |  8 a a a a . a a a  |  8 . . . . . . . .  |  8 . n . . k . . .  |
+7 W b b . b b W .  |  7 . . A . A . A .  |  7 . a . a a a . .  |  7 . . . . . . . .  |  7 . b q . . . . .  |
+6 b . . b W . b .  |  6 . . A . . A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . . p N . . .  |
+5 . . b . b . . b  |  5 A A A A A A A A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . . p . r . . p  |
+4 W . W . W . W .  |  4 . A A A . A A .  |  4 . a . a a . a .  |  4 . . . . X . . .  |  4 . . P . P . P .  |
+3 . . W . . . . W  |  3 A A A A A A A A  |  3 . a . . . . . .  |  3 . . . . . . . .  |  3 . . Q . . . . B  |
+2 . W . W . W . W  |  2 . A A A A A A .  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . . W . W W . .  |  1 . . A A A A A A  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K R . .  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: e6 to c5
+ (Capture)
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . . k . . . 8   |  Current Turn: Black
+7 N b q . p R p . 7   |  
+6 p . . p . . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 27
+5 . . N . r . . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . Q . . . . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . E B . K R . . 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . . b . . .  |  8 . . A . . A . .  |  8 a a a a . a a a  |  8 . . . . . . . .  |  8 . n . . k . . .  |
+7 W b b . b b W .  |  7 . A . A A . A .  |  7 . a . a a a . .  |  7 . . . . . . . .  |  7 . b q . . . . .  |
+6 b . . b . . b .  |  6 A . A . A A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . . p . . . .  |
+5 . . W . b . . b  |  5 A A . A A A . A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . . . . r . . p  |
+4 W . W . W . W .  |  4 A A A A A A A .  |  4 . a . a a . a .  |  4 . . . . X . . .  |  4 . . P . P . P .  |
+3 . . W . . . . W  |  3 A A A A A A A A  |  3 . a . . . . . .  |  3 . . . . . . . .  |  3 . . Q . . . . B  |
+2 . W . W . W . W  |  2 . A A A A A A .  |  2 . . . . . . . .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . . W . W W . .  |  1 . . A A A A A A  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K R . .  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: e5 to f5
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . . k . . . 8   |  Current Turn: White
+7 N b q . p R p . 7   |  
+6 p . . p . . . . 6   |  Halfmove Clock: 1 -- Fullmove Number: 28
+5 . . N . . r . p 5   |  
+4 P . P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . Q . . . . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . E B . K R . . 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . . b . . .  |  8 . . A . . A . .  |  8 a a a a . a a a  |  8 . . . . . . . .  |  8 . n . . k . . .  |
+7 W b b . b b W .  |  7 . A . A A . A .  |  7 . a . a a a . .  |  7 . . . . . . . .  |  7 . b q . . . . .  |
+6 b . . b . . b .  |  6 A . A . A A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . . p . . . .  |
+5 . . W . . b . b  |  5 A A . A A A . A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . . . . . r . p  |
+4 W . W . W . W .  |  4 A A A A A . A .  |  4 . a . a a a a .  |  4 . . . . . . . .  |  4 . . P . P . P .  |
+3 . . W . . . . W  |  3 A A A A A A A A  |  3 . a a . . a . .  |  3 . . . . . . . .  |  3 . . Q . . . . B  |
+2 . W . W . W . W  |  2 . A A A A A A .  |  2 . . . . . a . .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . . W . W W . .  |  1 . . A A A A A A  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K R . .  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: c3 to b4
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . . k . . . 8   |  Current Turn: Black
+7 N b q . p R p . 7   |  
+6 p . . p . . . . 6   |  Halfmove Clock: 2 -- Fullmove Number: 28
+5 . . N . . r . p 5   |  
+4 P Q P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . E B . K R . . 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . . b . . .  |  8 . . A . . A . .  |  8 a a a a . a a a  |  8 . . . . . . . .  |  8 . n . . k . . .  |
+7 W b b . b b W .  |  7 . A . A A . A .  |  7 . a . a a a . .  |  7 . . . . . . . .  |  7 . b q . . . . .  |
+6 b . . b . . b .  |  6 A A A . A A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . . p . . . .  |
+5 . . W . . b . b  |  5 A A A A . A . A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . . . . . r . p  |
+4 W W W . W . W .  |  4 A . A . A . A .  |  4 . a . a a a a .  |  4 . . . . . . . .  |  4 . Q P . P . P .  |
+3 . . . . . . . W  |  3 A A A A A . A .  |  3 . a a . . a . .  |  3 . . . . . . . .  |  3 . . . . . . . B  |
+2 . W . W . W . W  |  2 . A . A A A A .  |  2 . a . . . a . .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . . W . W W . .  |  1 . . . A A A A A  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K R . .  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: g7 to f8
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . . k . . . 8   |  Current Turn: White
+7 N b q . p R p . 7   |  
+6 p . . p . . . . 6   |  Halfmove Clock: 3 -- Fullmove Number: 29
+5 . . N . . r . p 5   |  
+4 P Q P . P . P . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . E B . K R . . 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . . b b . .  |  8 . . A . . A . .  |  8 a a a a . a a a  |  8 . . . . . . . .  |  8 . n . . k . . .  |
+7 W b b . b b W .  |  7 . A . A A . A .  |  7 . a . a a a . .  |  7 . . . . . . . .  |  7 . b q . . . . .  |
+6 b . . b . . b .  |  6 A A A . A A . .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . . p . . . .  |
+5 . . W . . b . b  |  5 A A A A . A . A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . . . . . r . p  |
+4 W W W . W . W .  |  4 A . A . A . A .  |  4 . a . a a a a .  |  4 . . . . . . . .  |  4 . Q P . P . P .  |
+3 . . . . . . . W  |  3 A A A A A . A .  |  3 . a a . . a . .  |  3 . . . . . . . .  |  3 . . . . . . . B  |
+2 . W . W . W . W  |  2 . A . A A A A .  |  2 . a . . . a . .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . . W . W W . .  |  1 . . . A A A A A  |  1 . . . . . . . .  |  1 . . . . . . . .  |  1 . . B . K R . .  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: e4 to f5
+ (Capture)
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 . n . . k . . . 8   |  Current Turn: Black
+7 N b q . p R p . 7   |  
+6 p . . p . . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 29
+5 . . N . . P . p 5   |  
+4 P Q P . . . P . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . E B . K R . . 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 . b . . b b . .  |  8 . . A . . A . .  |  8 a a a a . a a a  |  8 . . . . . . . .  |  8 . n . . k . . .  |
+7 W b b . b b W .  |  7 . A . A A . A .  |  7 . a . a a a . .  |  7 . . . . . . . .  |  7 . b q . . . . .  |
+6 b . . b . . b .  |  6 A A A . A A A .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . . p . . . .  |
+5 . . W . . W . b  |  5 A A A A . A . A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . . . . . . . p  |
+4 W W W . . . W .  |  4 A . A . A . A .  |  4 . a . a a a a .  |  4 . . . . . . . .  |  4 . Q P . . . P .  |
+3 . . . . . . . W  |  3 A A A A A . A .  |  3 . a a . . a . .  |  3 . . . . . . . .  |  3 . . . . . . . B  |
+2 . W . W . W . W  |  2 . A . A A A A .  |  2 . a . . . a a .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . . W . W W . .  |  1 . . . A A A A A  |  1 . . . . . . . a  |  1 . . . . . . . .  |  1 . . B . K R . .  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: b7 to a8
+
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 b n . . k . . . 8   |  Current Turn: White
+7 N . q . p R p . 7   |  
+6 p . . p . . . . 6   |  Halfmove Clock: 1 -- Fullmove Number: 30
+5 . . N . . P . p 5   |  
+4 P Q P . . . P . 4   |  In Check: No -- In Double-Check: No
+3 . . . . . . . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . E B . K R . . 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b b . . b b . .  |  8 . A A . . A . .  |  8 a a a a . a a a  |  8 . . . . . . . .  |  8 b n . . k . . .  |
+7 W . b . b b W .  |  7 . A . A A . A .  |  7 a a a a a a . .  |  7 . . . . . . . .  |  7 . . q . . . . .  |
+6 b . . b . . b .  |  6 A A A . A A A .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . . p . . . .  |
+5 . . W . . W . b  |  5 A A A A . A . A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . . . . . . . p  |
+4 W W W . . . W .  |  4 A . A . A . A .  |  4 . a . a a a a .  |  4 . . . . . . . .  |  4 . Q P . . . P .  |
+3 . . . . . . . W  |  3 A A A A A . A .  |  3 . a a . . a . .  |  3 . . . . . . . .  |  3 . . . . . . . B  |
+2 . W . W . W . W  |  2 . A . A A A A .  |  2 . a . . . a a .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . . W . W W . .  |  1 . . . A A A A A  |  1 . . . . . . . a  |  1 . . . . . . . .  |  1 . . B . K R . .  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+Making move:
+Move: b4 to b8
+ (Capture)
+-------------------------------------------------------------------------
+  A B C D E F G H
+8 b Q . . k . . . 8   |  Current Turn: Black
+7 N . q . p R p . 7   |  
+6 p . . p . . . . 6   |  Halfmove Clock: 0 -- Fullmove Number: 30
+5 . . N . . P . p 5   |  
+4 P . P . . . P . 4   |  In Check: Yes -- In Double-Check: No
+3 . . . . . . . B 3   |  
+2 . P . P . P . P 2   |  Castling Availability: 
+1 . E B . K R . . 1   |  W-Long: Yes, W-Short: Yes, B-Long: Yes, B-Short: Yes
+  A B C D E F G H
+------------------------------------------------------------------------------------------------------------
+  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+8 b W . . b b . .  |  8 A . A A A A . .  |  8 a a a a . a a a  |  8 . . . . . . . .  |  8 b . . . k . . .  |
+7 W . b . b b W .  |  7 A A A A A . A .  |  7 a a a a a a . .  |  7 . . . . . . . .  |  7 . . q . . . . .  |
+6 b . . b . . b .  |  6 A A A . A A A .  |  6 a a a a a a a a  |  6 . . . . . . . .  |  6 p . . p . . . .  |
+5 . . W . . W . b  |  5 . A . A . A . A  |  5 a a a a a a a a  |  5 . . . . . . . .  |  5 . . . . . . . p  |
+4 W . W . . . W .  |  4 A A . . A . A .  |  4 . a . a a a a .  |  4 . . . . . . . .  |  4 . . P . . . P .  |
+3 . . . . . . . W  |  3 A A A A A . A .  |  3 . a a . . a . .  |  3 . . . . . . . .  |  3 . . . . . . . B  |
+2 . W . W . W . W  |  2 . A . A A A A .  |  2 . a . . . a a .  |  2 . . . . . . . .  |  2 . P . P . P . P  |
+1 . . W . W W . .  |  1 . . . A A A A A  |  1 . . . . . . . a  |  1 . . . . . . . .  |  1 . . B . K R . .  |
+  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |
+------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------

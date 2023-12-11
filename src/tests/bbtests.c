@@ -80,14 +80,17 @@ int testBB(void) {
     pos = fenToPosition(FEN);
     printf("Starting Posistion");
     printPosition(pos);
-    
-    for(int i = 0; i < 20; i++){
-        size = generateLegalMoves(pos, moveList);
+
+    size = generateLegalMoves(pos, moveList);
+    int i = 0;
+    while(size != 0 && i < 10000){
         printf("Making move:\n");
         int randMove = rand() % size;
         printMove(moveList[randMove]);
         makeMove(&pos, moveList[randMove]);
         printPosition(pos);
+        size = generateLegalMoves(pos, moveList);
+        i++;
     }
 
     #endif
