@@ -116,6 +116,67 @@ Position fenToPosition(char* FEN) {
     return pos;
 }
 
+int PositionToFen(Position pos, char* FEN) {
+    int index = 0;
+    for (int rank = 7; rank >= 0; rank--) {
+        int emptyCount = 0;
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            char piece = pos.charBoard[square];
+            if (piece == 0) {
+                emptyCount++;
+            } else {
+                if (emptyCount != 0) {
+                    FEN[index++] = '0' + emptyCount;
+                    emptyCount = 0;
+                }
+                FEN[index++] = piece;
+            }
+        }
+        if (emptyCount != 0) {
+            FEN[index++] = '0' + emptyCount;
+        }
+        if (rank > 0) {
+            FEN[index++] = '/';
+        }
+    }
+
+    // Active color
+    FEN[index++] = ' ';
+    FEN[index++] = (pos.flags & WHITE_TURN) ? 'w' : 'b';
+
+    // Castling availability
+    FEN[index++] = ' ';
+    if (pos.flags & W_SHORT_CASTLE) FEN[index++] = 'K';
+    if (pos.flags & W_LONG_CASTLE) FEN[index++] = 'Q';
+    if (pos.flags & B_SHORT_CASTLE) FEN[index++] = 'k';
+    if (pos.flags & B_LONG_CASTLE) FEN[index++] = 'q';
+    if (index == 0 || FEN[index - 1] == ' ') FEN[index++] = '-';
+
+    // En passant target square
+    FEN[index++] = ' ';
+    if (pos.en_passant) {
+        int square = __builtin_ctzll(pos.en_passant);
+        FEN[index++] = 'a' + (square % 8);
+        FEN[index++] = '1' + (square / 8);
+    } else {
+        FEN[index++] = '-';
+    }
+
+    // Halfmove clock
+    FEN[index++] = ' ';
+    index += sprintf(&FEN[index], "%d", pos.halfmove_clock);
+
+    // Fullmove number
+    FEN[index++] = ' ';
+    index += sprintf(&FEN[index], "%d", pos.fullmove_number);
+
+    FEN[index] = '\0';
+
+    return index;
+}
+
+
 void generateBetweenMasks() {
     for (int sq1 = 0; sq1 < 64; sq1++) {
         int rank1 = sq1 / 8;
