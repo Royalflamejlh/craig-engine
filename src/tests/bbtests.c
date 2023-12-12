@@ -23,6 +23,7 @@
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 int testBB(void) {
+    python_init();
     generateMasks();
     generateMagics();
 
@@ -108,19 +109,16 @@ int testBB(void) {
     printf("\n--------------------------------------------------------------------------------------\n");
 
     pos = fenToPosition(START_FEN);
-    for(int depth = 1; depth < 7; depth++){
+    for(int depth = 1; depth < 6; depth++){
         uint64_t num_moves = perft(depth, pos);
         printf("Perft output is %lld for depth %d\n", (long long unsigned)num_moves, depth);
     }
     #endif
-    
 
 
+    pos = fenToPosition(START_FEN);
+    checkMoveCount(pos);
     
-
-    
-    
-    
+    python_close();
     return 0;
-    
 }

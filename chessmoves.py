@@ -1,15 +1,23 @@
+#!/usr/bin/env python3
 import chess
-import sys
+import os
 
-def main():
-    if len(sys.argv) != 2:
-        print("Usage: chessmoves.py 'fen_string'")
-        return
+fifo_in_path = '/tmp/chess_fifo_in'
+fifo_out_path = '/tmp/chess_fifo_out'
 
-    fen = sys.argv[1]
+def process_fen(fen):
     board = chess.Board(fen)
     moves = list(board.legal_moves)
-    print(len(moves))
+    return len(moves)
+
+def main():
+    while True:
+        with open(fifo_in_path, 'r') as fifo_in, open(fifo_out_path, 'w') as fifo_out:
+            for line in fifo_in:
+                fen = line.strip()
+                move_count = process_fen(fen)
+                fifo_out.write(f"{move_count}\n")
+                fifo_out.flush()
 
 if __name__ == "__main__":
     main()

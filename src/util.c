@@ -1,8 +1,16 @@
 #include "util.h"
+#include "./bitboard/bbutils.h"
 #include "movement.h"
 #include "types.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <signal.h>
 
+static int fifo_fd_in, fifo_fd_out;
+static pid_t pid;
 
 void printMove(Move move){
     int from = GET_FROM(move);
@@ -86,6 +94,7 @@ uint64_t perft(int depth, Position pos){
   for (i = 0; i < n_moves; i++) {
     Position prevPos = pos;
     makeMove(&pos, move_list[i]);
+    checkMoveCount(pos);
     nodes += perft(depth - 1, pos);
     pos = prevPos;
   }
@@ -95,4 +104,86 @@ uint64_t perft(int depth, Position pos){
 
 char getPiece(Position pos, int square){
     return pos.charBoard[square];
+}
+
+int python_init() {
+    system("mkfifo /tmp/chess_fifo_in");
+    system("mkfifo /tmp/chess_fifo_out");
+
+    pid = fork();
+    if (pid == -1) {
+        perror("fork failed");
+        return -1;
+    }
+
+    if (pid == 0) {
+        execlp("python3", "python3", "chessmoves.py", NULL);
+        perror("execlp failed");
+        exit(EXIT_FAILURE);
+    }
+
+    fifo_fd_in = open("/tmp/chess_fifo_in", O_WRONLY);
+    fifo_fd_out = open("/tmp/chess_fifo_out", O_RDONLY);
+    if (fifo_fd_in == -1 || fifo_fd_out == -1) {
+        perror("Error opening FIFO");
+        return -1;
+    }
+
+    printf("Python running and connected through FIFO\n");
+
+    return 0;
+}
+
+
+static int python_movecount(char* fen) {
+    char buffer[256];
+    ssize_t bytes_read;
+    size_t total_bytes_read = 0;
+
+    write(fifo_fd_in, fen, strlen(fen));
+    write(fifo_fd_in, "\n", 1);
+
+    memset(buffer, 0, sizeof(buffer));
+
+    do {
+        bytes_read = read(fifo_fd_out, buffer + total_bytes_read, sizeof(buffer) - total_bytes_read - 1);
+        if (bytes_read == -1) {
+            perror("Error reading from FIFO");
+            return -1;
+        }
+        total_bytes_read += bytes_read;
+    } while (bytes_read > 0 && buffer[total_bytes_read - 1] != '\n');
+
+    buffer[total_bytes_read] = '\0';
+
+    int move_count = atoi(buffer);
+    return move_count;
+}
+
+
+int python_close() {
+    close(fifo_fd_in);
+    close(fifo_fd_out);
+    kill(pid, SIGKILL);
+    unlink("/tmp/chess_fifo_in");
+    unlink("/tmp/chess_fifo_out");
+    return 0;
+}
+
+
+int checkMoveCount(Position pos){
+    Move moveList[MAX_MOVES];
+    int num_moves = generateLegalMoves(pos, moveList);
+    char fen[128];
+    PositionToFen(pos, fen);
+    int correct_num_moves = python_movecount(fen);
+    if(num_moves != correct_num_moves){
+        printf("Incorrect amount of moves found (%d/%d) at pos:\n", num_moves, correct_num_moves);
+        printPosition(pos);
+        for (int i = 0; i < num_moves; i++) {
+            printMove(moveList[i]);
+        }
+        return -1;
+    }
+    return 0;
 }
