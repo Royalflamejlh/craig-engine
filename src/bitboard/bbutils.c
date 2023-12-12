@@ -18,8 +18,6 @@ static void updateBit(uint64_t* bitboard, int square) {
     *bitboard |= (1ULL << square);
 }
 
-static void setAttackMasks(Position *pos);
-
 Position fenToPosition(char* FEN) {
     Position pos = {0};
     memset(pos.charBoard, 0, sizeof(pos.charBoard));
@@ -235,9 +233,9 @@ void printPosition(Position position){
         }
     }
     printf("  A B C D E F G H\n");
-    printf("------------------------------------------------------------------------------------------------------------\n");
-    printf("  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |       Char Board    |\n");
-    printf("  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |\n");
+    printf("----------------------------------------------------------------------------------------------------------------------------------\n");
+    printf("  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |         EP Board    |       Char Board    |\n");
+    printf("  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |\n");
     for (int rank = 7; rank >= 0; rank--) {
         //Color BB
         printf("%d ", rank + 1);
@@ -288,6 +286,18 @@ void printPosition(Position position){
             if (file == 7) printf(" |  ");
         }
 
+        //En-Passant Pieces
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.en_passant & mask) printf("E ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
         //Char Board
         printf("%d ", rank + 1);
         for (int file = 0; file < 8; file++) {
@@ -298,9 +308,188 @@ void printPosition(Position position){
             
             if (file == 7) printf(" |\n");
         }
+        
     }
-    printf("  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |\n");
-    printf("------------------------------------------------------------------------------------------------------------\n");
+    printf("  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |\n");
+    printf("--------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+    printf("        White      |     White Pawn      |      White Bishop   |     White Knight    |      White Rook     |      White Queen    |      White King     |\n");
+    printf("  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |\n");
+    for (int rank = 7; rank >= 0; rank--) {
+        //White BB
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.color[1] & mask) printf("W ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
+        //W Pawn BB
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.pawn[1] & mask) printf("P ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
+        //W Bishop BB
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.bishop[1] & mask) printf("B ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
+        //W Knight BB
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.knight[1] & mask) printf("N ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
+        //W Rook
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.rook[1] & mask) printf("R ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
+        //W Queen
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.queen[1] & mask) printf("Q ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
+        //White King
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.king[1] & mask) printf("K ");
+            else printf(". ");
+            
+            if (file == 7) printf(" |\n");
+        }
+    }
+    printf("  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |\n");
+    printf("--------------------------------------------------------------------------------------------------------------------------------------------------------\n");
+    printf("        Black      |       Black Pawn    |      Black Bishop   |     Black Knight    |      Black Rook     |      Black Queen    |      Black King     |\n");
+    printf("  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |\n");
+    for (int rank = 7; rank >= 0; rank--) {
+        //Black BB
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.color[0] & mask) printf("b ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
+        //Black Pawn BB
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.pawn[0] & mask) printf("p ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
+        //Black Bishop BB
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.bishop[0] & mask) printf("b ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
+        //Black Knight BB
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.knight[0] & mask) printf("n ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
+        //Black Rook
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.rook[0] & mask) printf("r ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
+        //Black Queen
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.queen[0] & mask) printf("q ");
+            else printf(". ");
+
+            if (file == 7) printf(" |  ");
+        }
+
+        //Black King
+        printf("%d ", rank + 1);
+        for (int file = 0; file < 8; file++) {
+            int square = rank * 8 + file;
+            uint64_t mask = 1ULL << square;
+
+            if (position.king[0] & mask) printf("k ");
+            else printf(". ");
+            
+            if (file == 7) printf(" |\n");
+        }
+    }
+    printf("  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |\n");
+    printf("--------------------------------------------------------------------------------------------------------------------------------------------------------\n");
 }
 
 

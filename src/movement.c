@@ -3,7 +3,7 @@
 #include "./bitboard/magic.h"
 #include "./bitboard/bitboard.h"
 #include "./bitboard/bbutils.h"
-
+#include "util.h"
 
 /*
 * Wow Cool! Totaly sensical move generation!
@@ -83,25 +83,27 @@ static void removeCaptured(Position *pos, int square){
     int turn = pos->flags & WHITE_TURN;
     switch(toupper(pos->charBoard[square])){
         case 'Q':
-            clearBit(pos->queen[!turn], square);
+            pos->queen[!turn] = clearBit(pos->queen[!turn], square);
             break;
         case 'K':
-            clearBit(pos->king[!turn], square);
+            //pos->king[!turn] = clearBit(pos->king[!turn], square);
+            printf("WARNING ATTEMPTED TO CAPTURE A KING AT POS:\n");
+            printPosition(*pos);
             break;
         case 'N':
-            clearBit(pos->knight[!turn], square);
+            pos->knight[!turn] = clearBit(pos->knight[!turn], square);
             break;
         case 'B':
-            clearBit(pos->bishop[!turn], square);
+            pos->bishop[!turn] = clearBit(pos->bishop[!turn], square);
             break;
         case 'R':
-            clearBit(pos->rook[!turn], square);
+            pos->rook[!turn] = clearBit(pos->rook[!turn], square);
             break;
         case 'P':
-            clearBit(pos->pawn[!turn], square);
+            pos->pawn[!turn] = clearBit(pos->pawn[!turn], square);
             break;
     }
-    clearBit(pos->color[!turn], square);
+    pos->color[!turn] = clearBit(pos->color[!turn], square);
     pos->charBoard[square] = 0;
     pos->halfmove_clock = 0;
 }
@@ -112,29 +114,57 @@ int makeMove(Position *pos, Move move){
     int to   = GET_TO(move);
     
     pos->halfmove_clock++;
+    pos->en_passant = 0ULL;
 
     switch(GET_FLAGS(move)){
         case QUEEN_PROMO_CAPTURE:
-            pos->queen[turn] = setBit(pos->queen[turn], to);
             removeCaptured(pos, to);
+            pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
+            pos->charBoard[from] = 0;
+            pos->queen[turn] = setBit(pos->queen[turn], to); 
+            pos->charBoard[to] = turn ? 'Q' : 'q';
+            pos->color[turn] = clearBit(pos->color[turn], from);
+            pos->color[turn] = setBit(pos->color[turn], to);
+            pos->halfmove_clock = 0;
             break;
         case ROOK_PROMO_CAPTURE:
-            pos->rook[turn] = setBit(pos->rook[turn], to);
             removeCaptured(pos, to);
+            pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
+            pos->charBoard[from] = 0;
+            pos->rook[turn] = setBit(pos->rook[turn], to); 
+            pos->charBoard[to] = turn ? 'R' : 'r';
+            pos->color[turn] = clearBit(pos->color[turn], from);
+            pos->color[turn] = setBit(pos->color[turn], to);
+            pos->halfmove_clock = 0;
             break;
         case BISHOP_PROMO_CAPTURE:
-            pos->bishop[turn] = setBit(pos->bishop[turn], to);
             removeCaptured(pos, to);
+            pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
+            pos->charBoard[from] = 0;
+            pos->bishop[turn] = setBit(pos->bishop[turn], to); 
+            pos->charBoard[to] = turn ? 'B' : 'b';
+            pos->color[turn] = clearBit(pos->color[turn], from);
+            pos->color[turn] = setBit(pos->color[turn], to);
+            pos->halfmove_clock = 0;
             break;
         case KNIGHT_PROMO_CAPTURE:
-            pos->knight[turn] = setBit(pos->knight[turn], to);
             removeCaptured(pos, to);
+            pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
+            pos->charBoard[from] = 0;
+            pos->knight[turn] = setBit(pos->knight[turn], to); 
+            pos->charBoard[to] = turn ? 'N' : 'n';
+            pos->color[turn] = clearBit(pos->color[turn], from);
+            pos->color[turn] = setBit(pos->color[turn], to);
+            pos->halfmove_clock = 0;
             break;
+            
         case EP_CAPTURE:
+            removeCaptured(pos, (turn ? to - 8 : to + 8));
+            movePiece(pos, turn, from, to);
             break;
         case CAPTURE:
-            movePiece(pos, turn, from, to);
             removeCaptured(pos, to);
+            movePiece(pos, turn, from, to);
             break;
 
         case QUEEN_PROMOTION:
@@ -175,19 +205,31 @@ int makeMove(Position *pos, Move move){
             break;
             
         case QUEEN_CASTLE:
-            pos->flags &= turn ? W_LONG_CASTLE : B_LONG_CASTLE;
+            pos->flags &= ~(turn ? W_LONG_CASTLE : B_LONG_CASTLE);
             break;
         case KING_CASTLE:
-            pos->flags &= turn ? W_SHORT_CASTLE : B_SHORT_CASTLE;
+            pos->flags &= ~(turn ? W_SHORT_CASTLE : B_SHORT_CASTLE);
             break;
 
         case DOUBLE_PAWN_PUSH:
-            pos->en_passant = 1ULL <<  turn ? to + 8 : to - 8;
+            pos->en_passant = 1ULL << (turn ? to - 8 : to + 8);
         case QUIET:
         default:
             movePiece(pos, turn, from, to);
             break;
     }
+
+    //Castle Aval Rooks Moves
+    if(to == 0 || from == 0)   pos->flags &= ~W_LONG_CASTLE;
+    if(to == 7 || from == 7)   pos->flags &= ~W_SHORT_CASTLE;
+    if(to == 56 || from == 56) pos->flags &= ~B_LONG_CASTLE;
+    if(to == 63 || from == 63) pos->flags &= ~B_SHORT_CASTLE;
+
+    //King Moves
+    if(from == 4) pos->flags &= ~(W_LONG_CASTLE | W_SHORT_CASTLE);
+    if(from == 60) pos->flags &= ~(B_LONG_CASTLE | B_SHORT_CASTLE);
+
+
 
     if(!turn) pos->fullmove_number++;
 
@@ -198,17 +240,20 @@ int makeMove(Position *pos, Move move){
 
     //Double Check Flag
     if(pos->flags & IN_CHECK){
-       int kign_sq = __builtin_ctzll(pos->king[!turn]);
-       uint64_t attackers = getAttackers(*pos, kign_sq, turn);
+       int king_sq = __builtin_ctzll(pos->king[!turn]);
+       if(king_sq < 0 || king_sq >= 64){
+            printMove(move);
+            return -1;
+       }
+       uint64_t attackers = getAttackers(*pos, king_sq, turn);
        attackers &= attackers - 1;
        if(attackers) pos->flags |= IN_D_CHECK;
     }
     else pos->flags &= ~IN_D_CHECK;
 
-    pos->pinned = generatePinnedPieces(*pos);
-
-
     pos->flags ^= WHITE_TURN;
+
+    pos->pinned = generatePinnedPieces(*pos);
 
     return 0;
 }

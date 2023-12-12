@@ -458,7 +458,7 @@ uint64_t getAttackers(Position pos, int square, int attackerColor){
     attack_mask = knightMoves[square];
     attackers |= (attack_mask & pos.knight[attackerColor]);
 
-    attack_mask = pawnMoves[square][pawn_mask_idx + 6] | pawnMoves[square][pawn_mask_idx + 7];
+    attack_mask = pawnMoves[square][pawn_mask_idx + 2] | pawnMoves[square][pawn_mask_idx + 3];
     attackers |= (attack_mask & pos.pawn[attackerColor]);
 
     attack_mask = kingMoves[square];
@@ -473,7 +473,7 @@ uint64_t getAttackers(Position pos, int square, int attackerColor){
 void getCheckMovesAppend(Position pos, Move* moveList, int* idx){
     int turn = pos.flags & WHITE_TURN;
     int king_sq = __builtin_ctzll(pos.king[turn]);
-    uint64_t checker_mask = getAttackers(pos, king_sq, turn);
+    uint64_t checker_mask = getAttackers(pos, king_sq, !turn);
     int checker_sq = __builtin_ctzll(checker_mask);
     int pawn_mask_idx = turn ? 0 : 4;
     uint64_t ownPieces = pos.color[turn];
@@ -574,10 +574,11 @@ static void getPinnedPawnMovesAppend(int king_rank, int king_file, uint64_t pinn
         int pawn_sq = __builtin_ctzll(pinned_pawns);
         int pawn_rank = pawn_sq / 8;
         int pawn_file = pawn_sq % 8;
-        int pawn_mask_idx = (flags & WHITE_TURN) ? 0 : 4;
+        char turn = (flags & WHITE_TURN);
+        int pawn_mask_idx = turn ? 0 : 4;
 
         if(pawn_rank == king_rank){
-            if(en_passant && (pawn_rank == ((flags & WHITE_TURN) ? 4 : 5))){
+            if(en_passant && (pawn_rank == (turn ? 4 : 5))){
                 int ep_sq = __builtin_ctzll(pinned_pawns);
                 if(ep_sq % 8 == pawn_file){
                     getPawnMovesAppend(1ULL << pawn_sq, ownPieces, oppPieces, 0ULL, flags, moveList, size);
@@ -588,13 +589,13 @@ static void getPinnedPawnMovesAppend(int king_rank, int king_file, uint64_t pinn
         }
 
         if(pawn_file == king_file) getPawnMovesAppend(1ULL << pawn_sq, ownPieces, (oppPieces & ~pawnMoves[pawn_sq][pawn_mask_idx + 2] & ~pawnMoves[pawn_sq][pawn_mask_idx + 3]), 0ULL, flags, moveList, size); //Hide black pieces that could be captured and no en-passant
-        else if(pawn_rank - pawn_file == king_rank - king_file){
-            uint64_t dir = pawnMoves[pawn_sq][pawn_mask_idx + 2];
+        else if(pawn_rank - pawn_file == king_rank - king_file){ //Up right
+            uint64_t dir = pawnMoves[pawn_sq][turn ? 3 : 6];
             uint64_t occ = oppPieces & dir;
             getPawnMovesAppend(1ULL << pawn_sq, (ownPieces | ~occ), occ, en_passant & dir, flags, moveList, size);
         }
-        else if(pawn_rank + pawn_file == king_rank + king_file){
-            uint64_t dir = pawnMoves[pawn_sq][pawn_mask_idx + 3];
+        else if(pawn_rank + pawn_file == king_rank + king_file){ //Up Left
+            uint64_t dir = pawnMoves[pawn_sq][turn ? 2 : 7]; 
             uint64_t occ = oppPieces & dir;
             getPawnMovesAppend(1ULL << pawn_sq, (ownPieces | ~occ), occ, en_passant & dir, flags, moveList, size);
         }
@@ -634,6 +635,6 @@ void getPinnedMovesAppend(Position pos, Move* moveList, int* size){
 
     //Proccess Pinned Pawns
     uint64_t pinned_pawns = pos.pawn[turn] & pinned;
-    getPawnMovesAppend(pos.pawn[turn] & ~pinned_pawns, pos.color[turn], pos.color[!turn], pos.en_passant, WHITE_TURN, moveList, size);
+    getPawnMovesAppend(pos.pawn[turn] & ~pinned_pawns, pos.color[turn], pos.color[!turn], pos.en_passant, pos.flags, moveList, size);
     getPinnedPawnMovesAppend(king_rank, king_file, pinned_pawns, pos.color[turn], pos.color[!turn], pos.en_passant, pos.flags, moveList, size);
 }
