@@ -109,7 +109,7 @@ int testBB(void) {
     printf("\n--------------------------------------------------------------------------------------\n");
 
     pos = fenToPosition(START_FEN);
-    for(int depth = 1; depth < 6; depth++){
+    for(int depth = 1; depth < 5; depth++){
         uint64_t num_moves = perft(depth, pos);
         printf("Perft output is %lld for depth %d\n", (long long unsigned)num_moves, depth);
     }

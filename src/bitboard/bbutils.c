@@ -253,7 +253,10 @@ void generateDiagonalMasks() {
 
 
 void printPosition(Position position){
-    printf("-------------------------------------------------------------------------\n");
+    char fen[128];
+    PositionToFen(position, fen);
+    printf("----------------------------------------------------------------------------------------------------------------------------------\n");
+    printf("\nFEN: %s \n\n", fen);
     printf("  A B C D E F G H\n");
     for (int rank = 7; rank >= 0; rank--) {
         printf("%d ", rank + 1);

@@ -265,19 +265,21 @@ void unmakeMove(Position *position, Move move){
 }
 
 
-
-static uint64_t generatePinnedPiecesWhite(Position pos){
-    int k_square = __builtin_ctzll(pos.king[1]);
+static uint64_t generatePinnedPiecesColor(Position pos, int turn){
+    int k_square = __builtin_ctzll(pos.king[turn]);
     //Lets do white first!
     uint64_t pos_pinners;
     uint64_t all_pieces = pos.color[0] | pos.color[1];  //Contains all the initial pieces
-    uint64_t pinned = pos.color[1];  //The peices belonging to white which become pinnged
+    uint64_t pinned = pos.color[turn];  //The peices belonging to white which become pinnged
     uint64_t d_attack_mask, h_attack_mask, attack_mask = 0ULL;  // A attack masks
     uint64_t pin_directions = 0ULL;
 
     uint64_t ep_pawn_square = 0ULL;
-    if((pos.en_passant != 0) && (pos.flags & WHITE_TURN)){ //If white can capture en-passant
-        ep_pawn_square = southOne(pos.en_passant);
+    //Make sure ep_pawn_square is the same row as the k_square
+    //if white turn => king must be row 5
+    //if black turn => king must be row 4
+    if((pos.en_passant != 0) && (turn) && (k_square / 8 == (turn ? 4 : 3))){ //If can capture en-passant
+        ep_pawn_square = turn ? southOne(pos.en_passant) : northOne(pos.en_passant);
     }
     
     attack_mask |= rookAttacks(all_pieces & ~ep_pawn_square, k_square);  //Get a bb of squares being attacked by the king
@@ -287,7 +289,7 @@ static uint64_t generatePinnedPiecesWhite(Position pos){
 
     //Now get all pieces under attack as if king is queen again and these are the possible pinners
     h_attack_mask = rookAttacks(all_pieces & ~pinned & ~ep_pawn_square, k_square);
-    pos_pinners = h_attack_mask & (pos.queen[0] | pos.rook[0]);
+    pos_pinners = h_attack_mask & (pos.queen[!turn] | pos.rook[!turn]);
     while(pos_pinners){
         int pinner_sq = __builtin_ctzll(pos_pinners);
         pin_directions |= betweenMask[k_square][pinner_sq];
@@ -295,47 +297,7 @@ static uint64_t generatePinnedPiecesWhite(Position pos){
     }
 
     d_attack_mask = bishopAttacks(all_pieces & ~pinned, k_square);
-    pos_pinners = d_attack_mask & (pos.queen[0] | pos.bishop[0]);
-    while(pos_pinners){
-        int pinner_sq = __builtin_ctzll(pos_pinners);
-        pin_directions |= betweenMask[k_square][pinner_sq];
-        pos_pinners &= pos_pinners - 1;
-    }
-
-    pinned &= pin_directions; //Only keep the pieces that are actually pinned
-    return pinned;
-}
-
-static uint64_t generatePinnedPiecesBlack(Position pos){
-    int k_square = __builtin_ctzll(pos.king[0]);
-    //Lets do white first!
-    uint64_t pos_pinners;
-    uint64_t all_pieces = pos.color[0] | pos.color[1];  //Contains all the initial pieces
-    uint64_t pinned = pos.color[0];  //The peices belonging to white which become pinnged
-    uint64_t d_attack_mask, h_attack_mask, attack_mask = 0ULL;  // A attack masks
-    uint64_t pin_directions = 0ULL;
-
-    uint64_t ep_pawn_square = 0ULL;
-    if((pos.en_passant != 0) && !(pos.flags & WHITE_TURN)){ //If white can capture en-passant
-        ep_pawn_square = northOne(pos.en_passant);
-    }
-    
-    attack_mask |= rookAttacks(all_pieces & ~ep_pawn_square, k_square);    //Get a bb of squares being attacked by the king
-    attack_mask |= bishopAttacks(all_pieces, k_square);
-
-    pinned &= attack_mask; // The pinned white pieces now contains the ones with a ray to the king
-
-    //Now get all pieces under attack as if king is queen again and these are the possible pinners
-    h_attack_mask = rookAttacks(all_pieces & ~pinned & ~ep_pawn_square, k_square);
-    pos_pinners = h_attack_mask & (pos.queen[1] | pos.rook[1]);
-    while(pos_pinners){
-        int pinner_sq = __builtin_ctzll(pos_pinners);
-        pin_directions |= betweenMask[k_square][pinner_sq];
-        pos_pinners &= pos_pinners - 1;
-    }
-
-    d_attack_mask = bishopAttacks(all_pieces & ~pinned, k_square);
-    pos_pinners = d_attack_mask & (pos.queen[1] | pos.bishop[1]);
+    pos_pinners = d_attack_mask & (pos.queen[!turn] | pos.bishop[!turn]);
     while(pos_pinners){
         int pinner_sq = __builtin_ctzll(pos_pinners);
         pin_directions |= betweenMask[k_square][pinner_sq];
@@ -347,6 +309,6 @@ static uint64_t generatePinnedPiecesBlack(Position pos){
 }
 
 uint64_t generatePinnedPieces(Position pos){
-    return generatePinnedPiecesBlack(pos) | generatePinnedPiecesWhite(pos);
+    return generatePinnedPiecesColor(pos, 0) | generatePinnedPiecesColor(pos, 1);
 }
 
