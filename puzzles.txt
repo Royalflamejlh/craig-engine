@@ -1,16 +1,6 @@
+One of the moves in:
 
-position startpos moves e2e3 b8c6 g1f3 d7d6 f1b5 a8b8 e3e4    #dont give up king
+Testing: 4k3/8/8/8/8/8/8/R3K2R w KQ - 0 1 ;D1 26 ;D2 112 ;D3 3189 ;D4 17945 ;D5 532933 ;D6 2788982
+D1: 26 |D2: 116 |D3: 3279 |D4: 18700 |
 
-
-position startpos moves d2d4 b8c6 d4d5     #crashes
-
-
-#using FEN
-position fen rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1
-go movetime 60000
-position  moves d2d4
-go infinite
-
-
-#dont move to mate
-position startpos moves d2d4 b8c6 c1f4 d7d5 e2e3 g8f6 g1f3 c6b4 c2c3 f6e4 f1d3 a8b8 e1g1 b4d3 d1d3 e7e6 b1d2 b7b6 d2e4 d5e4 d3e4 h7h5 f3e5 a7a5 e5c6 d8d7 c6b8 d7d8 e4c6 e8e7 f4g5 f7f6 g5f4 g7g6 f4c7 d8c7 c6c7 e7e8 c7c8 e8f7 c8b7 f7g8 b7b6 f6f5 b6a5 h5h4 c3c4 h4h3 g2g3 g6g5 c4c5 h8h7 c5c6 g8f7 c6c7 f7e8 c7c8q e8f7 a5c7 f8e7 b8c6 f7g6 c8e6
+Dont work
