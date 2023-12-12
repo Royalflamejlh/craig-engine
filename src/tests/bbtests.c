@@ -82,7 +82,7 @@ int testBB(void) {
     srand((unsigned) time(&t));
 
     
-    printf("Quick Crash Check\n");
+    printf("Starting Quick Check\n");
     for(int j = 0; j < 1000; j++){
         char* FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         pos = fenToPosition(FEN);
@@ -95,29 +95,45 @@ int testBB(void) {
             i++;
         }
     }
-    printf("Crash Check Complete.\n");
-
-    
+    printf("Check Complete.\n");
 
     #endif
-
-
-
 
 
     #ifdef PERF_TEST
-    printf("\n--------------------------------------------------------------------------------------\n");
+    printf("\n---------------------------------- PERFT TESTING ----------------------------------\n\n");
 
+    printf("Perft from default position:\n");
     pos = fenToPosition(START_FEN);
-    for(int depth = 1; depth < 5; depth++){
+    for(int depth = 1; depth < 4; depth++){
         uint64_t num_moves = perft(depth, pos);
         printf("Perft output is %lld for depth %d\n", (long long unsigned)num_moves, depth);
     }
+
+    printf("\nComplete, running perft suite.\n");
+
+    file = fopen("perftsuite.epd", "r");
+    if (file == NULL) {
+        perror("Error opening file");
+        return -1;
+    }
+
+    while (fgets(line, sizeof(line), file)) {
+        char *fen = line;
+        pos = fenToPosition(fen);
+        printf("Testing: %s", fen);
+        for(int depth = 1; depth < 5; depth++){
+            uint64_t num_moves = perft(depth, pos);
+            printf("D%d: %ld |", depth, num_moves);
+        }
+        printf("\n\n");
+    }
+    printf("\nPerft Suite Complete\n");
+
+    fclose(file);
+
+    printf("\n-----------------------------------------------------------------------------------\n\n");
     #endif
-
-
-    pos = fenToPosition(START_FEN);
-    checkMoveCount(pos);
     
     python_close();
     return 0;

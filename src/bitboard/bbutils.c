@@ -104,11 +104,12 @@ Position fenToPosition(char* FEN) {
        uint64_t attackers = getAttackers(pos, kign_sq, 0);
        attackers &= attackers - 1;
        if(attackers) pos.flags |= IN_D_CHECK;
-
+       
        kign_sq = __builtin_ctzll(pos.king[0]);
        attackers = getAttackers(pos, kign_sq, WHITE_TURN);
        attackers &= attackers - 1;
        if(attackers) pos.flags |= IN_D_CHECK;
+       
     }
 
     pos.pinned = generatePinnedPieces(pos);

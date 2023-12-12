@@ -107,6 +107,8 @@ char getPiece(Position pos, int square){
 }
 
 int python_init() {
+    system("rm /tmp/chess_fifo_in");
+    system("rm /tmp/chess_fifo_out");
     system("mkfifo /tmp/chess_fifo_in");
     system("mkfifo /tmp/chess_fifo_out");
 

@@ -411,28 +411,28 @@ uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, uint64_t oppPiec
     return all_moves;
 }
 
-void getCastleMovesAppend(uint64_t color, uint64_t attack_mask, char flags, Move* moveList, int* idx){
+void getCastleMovesAppend(uint64_t pieces, uint64_t attack_mask, char flags, Move* moveList, int* idx){
     if(flags & WHITE_TURN){
-        if ((flags & W_SHORT_CASTLE) && !((color | attack_mask) & W_SHORT_CASTLE_MASK)) {
+        if ((flags & W_SHORT_CASTLE) && !((pieces | attack_mask) & W_SHORT_CASTLE_MASK)) {
             Move move = MAKE_MOVE(4, 6, KING_CASTLE);
             moveList[*idx] = move;
             (*idx)++;
         }
 
-        if ((flags & W_LONG_CASTLE) && !((color | (attack_mask & ~B_FILE_MASK)) & W_LONG_CASTLE_MASK)) {
+        if ((flags & W_LONG_CASTLE) && !((pieces | (attack_mask & ~B_FILE_MASK)) & W_LONG_CASTLE_MASK)) {
             Move move = MAKE_MOVE(4, 2, QUEEN_CASTLE);
             moveList[*idx] = move;
             (*idx)++;
         }
     }
     else{
-        if ((flags & B_SHORT_CASTLE) && !((color | attack_mask) & B_SHORT_CASTLE_MASK)) {
+        if ((flags & B_SHORT_CASTLE) && !((pieces | attack_mask) & B_SHORT_CASTLE_MASK)) {
             Move move = MAKE_MOVE(60, 62, KING_CASTLE);
             moveList[*idx] = move;
             (*idx)++;
         }
 
-        if ((flags & B_LONG_CASTLE) && !((color | (attack_mask & ~B_FILE_MASK)) & B_LONG_CASTLE_MASK)) {
+        if ((flags & B_LONG_CASTLE) && !((pieces | (attack_mask & ~B_FILE_MASK)) & B_LONG_CASTLE_MASK)) {
             Move move = MAKE_MOVE(60, 58, QUEEN_CASTLE);
             moveList[*idx] = move;
             (*idx)++;
@@ -441,11 +441,11 @@ void getCastleMovesAppend(uint64_t color, uint64_t attack_mask, char flags, Move
 }
 
 /*
-*  Returns all white pieces attacking a square
+*  Returns all attackerColor pieces attacking a square
 */
 uint64_t getAttackers(Position pos, int square, int attackerColor){
     uint64_t attackers = 0ULL;
-    uint64_t all_pieces = pos.color[0] | pos.color[attackerColor];
+    uint64_t all_pieces = pos.color[0] | pos.color[1];
     int pawn_mask_idx = attackerColor ? 4 : 0; //Reverse of normal
     uint64_t attack_mask;
 
@@ -578,7 +578,7 @@ static void getPinnedPawnMovesAppend(int king_rank, int king_file, uint64_t pinn
         int pawn_mask_idx = turn ? 0 : 4;
 
         if(pawn_rank == king_rank){
-            if(en_passant && (pawn_rank == (turn ? 4 : 5))){
+            if(en_passant && (pawn_rank == (turn ? 4 : 3))){
                 int ep_sq = __builtin_ctzll(pinned_pawns);
                 if(ep_sq % 8 == pawn_file){
                     getPawnMovesAppend(1ULL << pawn_sq, ownPieces, oppPieces, 0ULL, flags, moveList, size);
@@ -612,7 +612,7 @@ void getPinnedMovesAppend(Position pos, Move* moveList, int* size){
 
     //King does his thang
     getKingMovesAppend(pos.king[turn], pos.color[turn],  pos.color[!turn], pos.attack_mask[!turn], moveList, size);
-    getCastleMovesAppend(pos.color[turn], pos.attack_mask[!turn], pos.flags, moveList, size);
+    getCastleMovesAppend(pos.color[0] | pos.color[1], pos.attack_mask[!turn], pos.flags, moveList, size);
 
     //Pinned Knights Cannot Move
     uint64_t pinned_knights = pos.knight[turn] & pinned;

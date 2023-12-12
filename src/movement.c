@@ -27,7 +27,7 @@ uint16_t generateLegalMoves(Position position,  Move* moveList){
         getPinnedMovesAppend(position, moveList, size);
     }
     else{
-        getCastleMovesAppend(ownPos, oppAttackMask, position.flags, moveList, size);
+        getCastleMovesAppend(ownPos | oppPos, oppAttackMask, position.flags, moveList, size);
 
         getBishopMovesAppend(position.queen[turn],  ownPos, oppPos, moveList, size);
         getRookMovesAppend(  position.queen[turn],  ownPos, oppPos, moveList, size);
@@ -241,10 +241,6 @@ int makeMove(Position *pos, Move move){
     //Double Check Flag
     if(pos->flags & IN_CHECK){
        int king_sq = __builtin_ctzll(pos->king[!turn]);
-       if(king_sq < 0 || king_sq >= 64){
-            printMove(move);
-            return -1;
-       }
        uint64_t attackers = getAttackers(*pos, king_sq, turn);
        attackers &= attackers - 1;
        if(attackers) pos->flags |= IN_D_CHECK;
