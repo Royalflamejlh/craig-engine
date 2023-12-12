@@ -206,9 +206,13 @@ int makeMove(Position *pos, Move move){
             
         case QUEEN_CASTLE:
             pos->flags &= ~(turn ? W_LONG_CASTLE : B_LONG_CASTLE);
+            movePiece(pos, turn, from, to);
+            movePiece(pos, turn, turn ? 0 : 56, turn ? 3 : 59);
             break;
         case KING_CASTLE:
             pos->flags &= ~(turn ? W_SHORT_CASTLE : B_SHORT_CASTLE);
+            movePiece(pos, turn, from, to);
+            movePiece(pos, turn, turn ? 7 : 63, turn ? 5 : 61);
             break;
 
         case DOUBLE_PAWN_PUSH:
