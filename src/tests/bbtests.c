@@ -18,6 +18,9 @@
 
 #define MOVE_GEN_TEST
 #define MOVE_MAKE_TEST
+#define PERF_TEST
+
+#define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 int testBB(void) {
     generateMasks();
@@ -79,7 +82,7 @@ int testBB(void) {
 
     
     printf("Quick Crash Check\n");
-    for(int j = 0; j < 10000; j++){
+    for(int j = 0; j < 1000; j++){
         char* FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         pos = fenToPosition(FEN);
         size = generateLegalMoves(pos, moveList);
@@ -93,44 +96,6 @@ int testBB(void) {
     }
     printf("Crash Check Complete.\n");
 
-    /*
-    char* FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"; //Default
-    //FEN = "8/7p/5K1k/8/6Pp/7P/5P2/8 b - g3 0 1"; //EP
-    //FEN = "8/PPPPPPPP/8/8/2K2k2/8/pppppppp/8 b - - 0 1"; //Promotion Madness
-    FEN = "4k3/2r1nr2/p7/P7/5pbP/8/4P3/3K4 w - - 0 1"; //En passant stuff
-    pos = fenToPosition(FEN);
-    printf("Starting Posistion:\n");
-    printPosition(pos);
-
-    printf("Press ENTER key to Continue\n");  
-    getchar();  
-    size = generateLegalMoves(pos, moveList);
-    printf("Legal moves:\n");
-    for (int i = 0; i < size; i++) {
-        printMove(moveList[i]);
-    }
-    int i = 0;
-    while(size != 0 && i < 10000){
-        printf("Making move:\n");
-        int randMove = rand() % size;
-        printMove(moveList[randMove]);
-        makeMove(&pos, moveList[randMove]);
-        printPosition(pos);
-        size = generateLegalMoves(pos, moveList);
-        i++;
-        printf("Press ENTER key to Continue\n");  
-        getchar();   
-    }  
-    char* FEN = "5k2/1R6/8/1N1rPpK1/n7/8/2P5/8 w - f6 0 1";
-    pos = fenToPosition(FEN);
-    printf("Starting Posistion:\n");
-    printPosition(pos);
-    size = generateLegalMoves(pos, moveList);
-    printf("Legal moves:\n");
-    for (int i = 0; i < size; i++) {
-        printMove(moveList[i]);
-    }
-    */
     
 
     #endif
@@ -140,11 +105,10 @@ int testBB(void) {
 
 
     #ifdef PERF_TEST
-    printf("\n----------------------------------\n");
+    printf("\n--------------------------------------------------------------------------------------\n");
 
-    FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    pos = fenToPosition(FEN);
-    for(int depth = 1; depth < 5; depth++){
+    pos = fenToPosition(START_FEN);
+    for(int depth = 1; depth < 7; depth++){
         uint64_t num_moves = perft(depth, pos);
         printf("Perft output is %lld for depth %d\n", (long long unsigned)num_moves, depth);
     }
@@ -157,7 +121,6 @@ int testBB(void) {
     
     
     
-    printf("\n--------------------------------------------------------------------------------------\n");
     return 0;
     
 }
