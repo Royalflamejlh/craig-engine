@@ -8,8 +8,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/config/workspace/godengine/src",
-      "program": "/config/workspace/godengine/src/build/Debug/outDebug",
+      "cwd": "/config/workspace/godengine/src/tests",
+      "program": "/config/workspace/godengine/src/tests/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

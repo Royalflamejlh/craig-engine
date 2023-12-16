@@ -1,6 +1,40 @@
 #include "tree.h"
+#include <stdio.h>
+#include <limits.h>
 #include "movement.h"
+#include "util.h"
 #include "evaluator.h"
+
+Move getBestMove(Position pos){
+   int size;
+   Move moveList[MAX_MOVES];
+   int moveScores[MAX_MOVES];
+   int turn = pos.flags & WHITE_TURN;
+   
+   Position prevPos = pos;
+   size = generateLegalMoves(pos, moveList);
+   if(size == 0) return 0;
+
+   for(int j = 0; j < 3; j += 1){
+      for(int i = 0; i < size; i++)  {
+         makeMove(&pos, moveList[i]);
+         moveScores[i] = pvSearch(&pos, -10000, 10000, j);
+         pos = prevPos;
+      }
+   }
+
+   int best_move_val = turn ? INT_MIN : INT_MAX;
+   int best_move_idx = 0;
+
+   for (int i = 0; i < size; i++)  {
+      if(turn ? moveScores[i] > best_move_val : moveScores[i] < best_move_val){
+         best_move_val = moveScores[i];
+         best_move_idx = i;
+      }
+   }
+
+   return moveList[best_move_idx];
+}
 
 int pvSearch( Position* pos, int alpha, int beta, int depth ) {
    if( depth == 0 ) return quiesce(pos, alpha, beta);

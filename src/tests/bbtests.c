@@ -15,10 +15,12 @@
 #include "../bitboard/magic.h"
 #include "../movement.h"
 #include "../util.h"
+#include "../tree.h"
 
 #define MOVE_GEN_TEST
 #define MOVE_MAKE_TEST
 #define PERF_TEST
+#define NODE_TEST
 
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
@@ -121,16 +123,38 @@ int testBB(void) {
     while (fgets(line, sizeof(line), file)) {
         char *fen = line;
         pos = fenToPosition(fen);
-        printf("Testing: %s", fen);
-        for(int depth = 1; depth < 4; depth++){
-            uint64_t num_moves = perft(depth, pos);
-            printf("D%d: %ld |", depth, num_moves);
+        //printf("Testing: %s", fen);
+        for(int depth = 1; depth < 3; depth++){
+            perft(depth, pos);
+            //uint64_t num_moves = perft(depth, pos);
+            //printf("D%d: %ld |", depth, num_moves);
         }
-        printf("\n\n");
+        //printf("\n\n");
     }
     printf("\nPerft Suite Complete\n");
 
     fclose(file);
+
+    printf("\n-----------------------------------------------------------------------------------\n\n");
+    #endif
+
+
+    #ifdef NODE_TEST
+    printf("\n---------------------------------- Node TESTING ----------------------------------\n\n");
+
+    pos = fenToPosition(START_FEN);
+    printPosition(pos);
+    Move best_move = getBestMove(pos);
+    while(best_move != 0){
+        printf("Best move found to be: \n");
+        printMove(best_move);
+        printf("Press Enter to Continue\n");
+        while( getchar() != '\n' && getchar() != '\r');
+        makeMove(&pos, best_move);
+        printf("Pos after move: \n");
+        printPosition(pos);
+        best_move = getBestMove(pos);
+    }
 
     printf("\n-----------------------------------------------------------------------------------\n\n");
     #endif

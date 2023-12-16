@@ -8,6 +8,7 @@
 #include "bbutils.h"
 #include "../movement.h"
 #include "bitboard.h"
+#include "../evaluator.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -283,7 +284,7 @@ void printPosition(Position position){
             
             if (file == 7){
                 printf("%d   |  ", rank + 1);
-                if(rank == 7) printf("Current Turn: %s", (position.flags & WHITE_TURN) ? "White" : "Black");
+                if(rank == 7) printf("Current Turn: %s -- Evaluation: %d", ((position.flags & WHITE_TURN) ? "White" : "Black"), evaluate(position));
                 if(rank == 5) printf("Halfmove Clock: %d -- Fullmove Number: %d", position.halfmove_clock, position.fullmove_number);
                 if(rank == 3) printf("In Check: %s -- In Double-Check: %s", (position.flags & IN_CHECK) ? "Yes" : "No", (position.flags & IN_D_CHECK) ? "Yes" : "No");
                 if(rank == 1) printf("Castling Availability: ");
