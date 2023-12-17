@@ -24,32 +24,30 @@ int evaluate(Position pos){
     int eval_val = 0;
     int turn = pos.flags & WHITE_TURN;
 
-    if(pos.flags & IN_CHECK) eval_val += turn ? -CHECK_PEN : CHECK_PEN;
-
-    eval_val += turn ? TURN_BONUS : -TURN_BONUS;
+    if(pos.flags & IN_CHECK) eval_val -= CHECK_PEN;
 
     //Pieces
-    eval_val += KING_VALUE * count_bits(pos.king[1]);
-    eval_val += QUEEN_VALUE * count_bits(pos.queen[1]);
-    eval_val += ROOK_VALUE * count_bits(pos.rook[1]);
-    eval_val += BISHOP_VALUE * count_bits(pos.bishop[1]);
-    eval_val += KNIGHT_VALUE * count_bits(pos.knight[1]);
-    eval_val += PAWN_VALUE * count_bits(pos.pawn[1]);
+    eval_val += KING_VALUE * count_bits(pos.king[turn]);
+    eval_val += QUEEN_VALUE * count_bits(pos.queen[turn]);
+    eval_val += ROOK_VALUE * count_bits(pos.rook[turn]);
+    eval_val += BISHOP_VALUE * count_bits(pos.bishop[turn]);
+    eval_val += KNIGHT_VALUE * count_bits(pos.knight[turn]);
+    eval_val += PAWN_VALUE * count_bits(pos.pawn[turn]);
 
-    eval_val -= KING_VALUE * count_bits(pos.king[0]);
-    eval_val -= QUEEN_VALUE * count_bits(pos.queen[0]);
-    eval_val -= ROOK_VALUE * count_bits(pos.rook[0]);
-    eval_val -= BISHOP_VALUE * count_bits(pos.bishop[0]);
-    eval_val -= KNIGHT_VALUE * count_bits(pos.knight[0]);
-    eval_val -= PAWN_VALUE * count_bits(pos.pawn[0]);
+    eval_val = KING_VALUE * count_bits(pos.king[!turn]);
+    eval_val -= QUEEN_VALUE * count_bits(pos.queen[!turn]);
+    eval_val -= ROOK_VALUE * count_bits(pos.rook[!turn]);
+    eval_val -= BISHOP_VALUE * count_bits(pos.bishop[!turn]);
+    eval_val -= KNIGHT_VALUE * count_bits(pos.knight[!turn]);
+    eval_val -= PAWN_VALUE * count_bits(pos.pawn[!turn]);
 
-    eval_val += DEFEND_BONUS * count_bits(pos.color[1] &  pos.attack_mask[1]);
-    eval_val += ATTACK_BONUS * count_bits(pos.attack_mask[1]);
-    eval_val += D_ATTACK_BONUS * count_bits(pos.color[0] &  pos.attack_mask[1]);
+    eval_val += DEFEND_BONUS * count_bits(pos.color[turn] &  pos.attack_mask[turn]);
+    eval_val += ATTACK_BONUS * count_bits(pos.attack_mask[turn]);
+    eval_val += D_ATTACK_BONUS * count_bits(pos.color[!turn] &  pos.attack_mask[turn]);
 
-    eval_val -= DEFEND_BONUS * count_bits(pos.color[0] &  pos.attack_mask[0]);
-    eval_val -= ATTACK_BONUS * count_bits(pos.attack_mask[0]);
-    eval_val -= D_ATTACK_BONUS * count_bits(pos.color[1] &  pos.attack_mask[0]);
+    eval_val -= DEFEND_BONUS * count_bits(pos.color[!turn] &  pos.attack_mask[!turn]);
+    eval_val -= ATTACK_BONUS * count_bits(pos.attack_mask[!turn]);
+    eval_val -= D_ATTACK_BONUS * count_bits(pos.color[turn] &  pos.attack_mask[!turn]);
 
     return eval_val;
 }

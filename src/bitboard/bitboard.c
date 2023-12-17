@@ -570,7 +570,7 @@ static void getPinnedBishopMovesAppend(int king_rank, int king_file, uint64_t pi
 }
 
 static void getPinnedPawnMovesAppend(int king_rank, int king_file, uint64_t pinned_pawns, uint64_t ownPieces, uint64_t oppPieces, uint64_t en_passant, char flags, Move* moveList, int* size) {
-    while(pinned_pawns){ //Process Each Pinned pawns Individually
+    while(pinned_pawns){ //Process Each Pinned pawn Individually
         int pawn_sq = __builtin_ctzll(pinned_pawns);
         int pawn_rank = pawn_sq / 8;
         int pawn_file = pawn_sq % 8;
@@ -627,13 +627,13 @@ void getPinnedMovesAppend(Position pos, Move* moveList, int* size){
     getRookMovesAppend(pos.rook[turn] & ~pinned_rooks, pos.color[turn], pos.color[!turn], moveList, size);
     getPinnedRookMovesAppend(king_rank, king_file, pinned_rooks, pos.color[turn], pos.color[!turn], moveList, size);
 
-    //Proccess Pinned Bishops
+    //Process Pinned Bishops
     uint64_t pinned_bishops = pos.bishop[turn] & pinned;
     getBishopMovesAppend(pos.bishop[turn] & ~pinned_bishops, pos.color[turn], pos.color[!turn], moveList, size);
     getPinnedBishopMovesAppend(king_rank, king_file, pinned_bishops, pos.color[turn], pos.color[!turn], moveList, size);
 
 
-    //Proccess Pinned Pawns
+    //Process Pinned Pawns
     uint64_t pinned_pawns = pos.pawn[turn] & pinned;
     getPawnMovesAppend(pos.pawn[turn] & ~pinned_pawns, pos.color[turn], pos.color[!turn], pos.en_passant, pos.flags, moveList, size);
     getPinnedPawnMovesAppend(king_rank, king_file, pinned_pawns, pos.color[turn], pos.color[!turn], pos.en_passant, pos.flags, moveList, size);

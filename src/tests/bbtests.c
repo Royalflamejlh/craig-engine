@@ -22,10 +22,13 @@
 #define PERF_TEST
 #define NODE_TEST
 
+
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 int testBB(void) {
+    #ifdef PYTHON
     python_init();
+    #endif
     generateMasks();
     generateMagics();
 
@@ -158,7 +161,10 @@ int testBB(void) {
 
     printf("\n-----------------------------------------------------------------------------------\n\n");
     #endif
-    
+
+    #ifdef PYTHON
     python_close();
+    #endif
+
     return 0;
 }

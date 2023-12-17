@@ -91,10 +91,14 @@ uint64_t perft(int depth, Position pos){
 
 
   n_moves = generateLegalMoves(pos, move_list);
+
   for (i = 0; i < n_moves; i++) {
     Position prevPos = pos;
     makeMove(&pos, move_list[i]);
+    
+    #ifdef PYTHON
     checkMoveCount(pos);
+    #endif
     nodes += perft(depth - 1, pos);
     pos = prevPos;
   }

@@ -167,14 +167,15 @@ int PositionToFen(Position pos, char* FEN) {
 
     // Halfmove clock
     FEN[index++] = ' ';
-    index += sprintf(&FEN[index], "%d", pos.halfmove_clock);
+    index += snprintf(&FEN[index], MAX_FEN_LEN, "%d", pos.halfmove_clock);
 
     // Fullmove number
     FEN[index++] = ' ';
-    index += sprintf(&FEN[index], "%d", pos.fullmove_number);
+    index += snprintf(&FEN[index], MAX_FEN_LEN, "%d", pos.fullmove_number);
 
     FEN[index] = '\0';
 
+    printf("pos t o fen 3");
     return index;
 }
 
