@@ -3,9 +3,10 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <time.h>
+#include <string.h>
 
 
-static uint64_t find_magic(int sq, int m, int bishop);
+//static uint64_t find_magic(int sq, int m, int bishop);
 static uint64_t rmask(int sq);
 static uint64_t bmask(int sq);
 static uint64_t ratt(int sq, uint64_t block);
@@ -34,6 +35,141 @@ typedef struct {
 
 SMagic mBishopTbl[64];
 SMagic mRookTbl[64];
+
+static const uint64_t rook_magics[64] = {
+    0x80002080400016ULL,
+    0xc0004010002000ULL,
+    0x880100008822000ULL,
+    0x100090020041000ULL,
+    0x8200200200040810ULL,
+    0x4100020400010008ULL,
+    0x200020004410088ULL,
+    0x4080088002244300ULL,
+    0x109800c80400025ULL,
+    0x402000401000ULL,
+    0x4110801000200080ULL,
+    0x8800804801000ULL,
+    0x4181001008010004ULL,
+    0x180800400800200ULL,
+    0x2100c100040200ULL,
+    0x820801840801100ULL,
+    0xa100848000400020ULL,
+    0x44b00040004c2004ULL,
+    0x3868020001000ULL,
+    0x402020010200840ULL,
+    0x40828004000800ULL,
+    0x808004000200ULL,
+    0x1080010100040200ULL,
+    0x20004118641ULL,
+    0x1080004040002000ULL,
+    0xc810014140002002ULL,
+    0x88a0100180200088ULL,
+    0x8000240900100100ULL,
+    0x2a0040080080081ULL,
+    0x421002900020400ULL,
+    0x400020400080110ULL,
+    0x2002040200218047ULL,
+    0x40804000800020ULL,
+    0x8200044401004ULL,
+    0x100200388801000ULL,
+    0x640080080801004ULL,
+    0x44000800808004ULL,
+    0x802040080800200ULL,
+    0x129004000148ULL,
+    0x200009122000044ULL,
+    0x804000218000ULL,
+    0x6000c02010014002ULL,
+    0x402001010010ULL,
+    0x82002008120040ULL,
+    0x82002008120004ULL,
+    0x414040002008080ULL,
+    0x800080102040090ULL,
+    0x58000094004a0001ULL,
+    0x2000800040002080ULL,
+    0x8000200140008280ULL,
+    0x2011002004401100ULL,
+    0xa80801000080080ULL,
+    0xa08000408110100ULL,
+    0x4112001400800280ULL,
+    0x840100822210400ULL,
+    0x10008420410200ULL,
+    0x2800150210441ULL,
+    0x1204522180400105ULL,
+    0x50402001000811ULL,
+    0x1450210008041001ULL,
+    0x1000204080011ULL,
+    0x710008020c0003ULL,
+    0x22000088010402ULL,
+    0x40001880410c0022ULL
+};
+
+static const uint64_t bishop_magics[64] = {
+    0x812210011a040040ULL,
+    0x801210e160230ULL,
+    0x12080049010200ULL,
+    0x400404148000082aULL,
+    0x441104196004140ULL,
+    0x8982080289120424ULL,
+    0x38100a805400020ULL,
+    0x6001004a46201004ULL,
+    0x821002a80803a0ULL,
+    0x4082021042008502ULL,
+    0x8000118404004100ULL,
+    0x1002244048810840ULL,
+    0x900220210002430ULL,
+    0x18010422410410ULL,
+    0x400404908184019ULL,
+    0x1808004100a82080ULL,
+    0xc0000810014200ULL,
+    0x2008640410088220ULL,
+    0x2001004001021ULL,
+    0xc8000082024008ULL,
+    0x8084022083a00000ULL,
+    0x200804100a001ULL,
+    0x1504000201014900ULL,
+    0xa0020aa20802ULL,
+    0x20088005510400ULL,
+    0x484e001ca081300ULL,
+    0x8032022021040400ULL,
+    0x48080000220060ULL,
+    0x920020006405001ULL,
+    0xc000420001012114ULL,
+    0x840000a20800ULL,
+    0x9010203d04801ULL,
+    0x140202a00090a000ULL,
+    0x20008a100418b040ULL,
+    0x90108204500400ULL,
+    0x4020080880080ULL,
+    0x11110400060020ULL,
+    0x8100100249040ULL,
+    0x610020222209080ULL,
+    0x8022040602901ULL,
+    0xc242301a8800e000ULL,
+    0x200842420022200ULL,
+    0x805001082011001ULL,
+    0x104200800808ULL,
+    0x2001400102104100ULL,
+    0x4004009822000840ULL,
+    0x5280825040a0155ULL,
+    0x121140410802040ULL,
+    0x12020120080000ULL,
+    0x41140104028000ULL,
+    0x8292048a211080ULL,
+    0x8050000d08482480ULL,
+    0x402a0c0850241004ULL,
+    0x10400821210298ULL,
+    0x840028404008201ULL,
+    0x802084104008010ULL,
+    0x2100840490842000ULL,
+    0xc014404200900801ULL,
+    0x1041002842009000ULL,
+    0x21000008842400ULL,
+    0x10800009502400ULL,
+    0x42002120a02ULL,
+    0x2400200244010400ULL,
+    0x10200121020401c8ULL
+};
+
 
 const int BitTable[64] = {
   63, 30, 3, 32, 25, 41, 22, 33, 15, 50, 42, 13, 11, 53, 19, 34, 61, 29, 2,
@@ -71,12 +207,14 @@ int generateMagics(void) {
     printf("Generating Magics!\n");
     calculateAttackTableOffsets();
     int square;
-
+    printf("Rooks\n");
     for(square = 0; square < 64; square++){
-        mRookTbl[square].magic = find_magic(square, RBits[square], 0);
+        //uint64_t magic = find_magic(square, RBits[square], 0);
+        mRookTbl[square].magic = rook_magics[square];
         mRookTbl[square].mask  = rmask(square);
         mRookTbl[square].shift = 64 - RBits[square];
         mRookTbl[square].ptr = &attack_table[attack_table_offsets[square]];
+        //printf("0x%llxULL,\n", magic);
         
         #ifdef DEBUG
         printf("Rook Square %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, AttackTableIdx = %d, Ptr = %p\n",
@@ -90,13 +228,15 @@ int generateMagics(void) {
     }
 
     printf("Finished generating rook magics, generating bishop magics.\n");
-
+    printf("Bishops:\n");
     for(square = 0; square < 64; square++){
-        mBishopTbl[square].magic = find_magic(square, BBits[square], 1);
+        //uint64_t magic = find_magic(square, BBits[square], 1);
+        mBishopTbl[square].magic = bishop_magics[square];
         mBishopTbl[square].mask  = bmask(square);
         mBishopTbl[square].shift = 64 - BBits[square];
         mBishopTbl[square].ptr   = &attack_table[attack_table_offsets[square + 64]];
-        
+        //printf("0x%llxULL,\n", magic);
+
         #ifdef DEBUG
         printf("Bishop Square %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, AttackTableIdx = %d, Ptr = %p\n",
             square,
@@ -280,9 +420,10 @@ uint64_t random_uint64_fewbits() {
 }
 
 static int count_1s(uint64_t b) {
-  int r;
-  for(r = 0; b; r++, b &= b - 1);
-  return r;
+  return __builtin_popcountll(b);
+  // int r;
+  // for(r = 0; b; r++, b &= b - 1);
+  // return r;
 }
 
 int pop_1st_bit(uint64_t *bb) {
@@ -297,7 +438,7 @@ static uint64_t index_to_uint64(int index, int bits, uint64_t m) {
   uint64_t result = 0ULL;
   for(i = 0; i < bits; i++) {
     j = pop_1st_bit(&m);
-    if(index & (1 << i)) result |= (1ULL << j);
+    if(index & (1ULL << i)) result |= (1ULL << j);
   }
   return result;
 }
@@ -371,8 +512,9 @@ static int transform(uint64_t b, uint64_t magic, int bits) {
   return (int)((b * magic) >> (64 - bits));
 }
 
+/*
 static uint64_t find_magic(int sq, int m, int bishop) {
-  uint64_t mask, b[4096], a[4096], used[4096], magic;
+  uint64_t mask, b[4096], a[4096], magic;
   int i, j, k, n, fail;
 
   mask = bishop? bmask(sq) : rmask(sq);
@@ -385,7 +527,8 @@ static uint64_t find_magic(int sq, int m, int bishop) {
   for(k = 0; k < 100000000; k++) {
     magic = random_uint64_fewbits();
     if(count_1s((mask * magic) & 0xFF00000000000000ULL) < 6) continue;
-    for(i = 0; i < 4096; i++) used[i] = 0ULL;
+    //for(i = 0; i < 4096; i++) used[i] = 0ULL;
+    uint64_t used[4096] = {0ULL};
     for(i = 0, fail = 0; !fail && i < (1 << n); i++) {
       j = transform(b[i], magic, m);
       if(used[j] == 0ULL) used[j] = a[i];
@@ -396,6 +539,5 @@ static uint64_t find_magic(int sq, int m, int bishop) {
   printf("***Failed***\n");
   return 0ULL;
 }
-
-
+*/
 

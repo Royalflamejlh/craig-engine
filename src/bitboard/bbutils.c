@@ -175,7 +175,6 @@ int PositionToFen(Position pos, char* FEN) {
 
     FEN[index] = '\0';
 
-    printf("pos t o fen 3");
     return index;
 }
 

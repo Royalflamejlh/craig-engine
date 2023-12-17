@@ -127,10 +127,10 @@ int testBB(void) {
         char *fen = line;
         pos = fenToPosition(fen);
         //printf("Testing: %s", fen);
-        for(int depth = 1; depth < 3; depth++){
+        for(int depth = 1; depth < 2; depth++){
             perft(depth, pos);
-            //uint64_t num_moves = perft(depth, pos);
-            //printf("D%d: %ld |", depth, num_moves);
+            //int64_t num_moves = perft(depth, pos);
+            //printf("D%d: %lld |", depth, (long long int)num_moves);
         }
         //printf("\n\n");
     }
