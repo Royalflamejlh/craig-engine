@@ -16,6 +16,8 @@
 #include "../movement.h"
 #include "../util.h"
 #include "../tree.h"
+#include "../hash.h"
+#include "../transposition.h"
 
 #define MOVE_GEN_TEST
 #define MOVE_MAKE_TEST
@@ -31,6 +33,9 @@ int testBB(void) {
     #endif
     generateMasks();
     generateMagics();
+    initZobrist();
+    initTT();
+    
 
     
 

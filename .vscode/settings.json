@@ -1,7 +1,10 @@
 {
   "files.associations": {
     "*.h": "c",
-    "*.c": "c"
+    "*.c": "c",
+    "__locale": "c",
+    "__threading_support": "c",
+    "vector": "c"
   },
   "makefile.launchConfigurations": [
     {

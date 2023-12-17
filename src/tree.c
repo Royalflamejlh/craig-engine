@@ -4,6 +4,7 @@
 #include "movement.h"
 #include "util.h"
 #include "evaluator.h"
+#include "transposition.h"
 
 #define MAX_DEPTH 3
 

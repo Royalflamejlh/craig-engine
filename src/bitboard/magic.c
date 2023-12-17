@@ -1,4 +1,5 @@
 #include "magic.h"
+#include "../util.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
@@ -407,13 +408,6 @@ static uint64_t debug_rookAttacks(uint64_t occ, int sq) {
     return aptr[index];
 }
 #endif
-
-uint64_t random_uint64() {
-  uint64_t u1, u2, u3, u4;
-  u1 = (uint64_t)(rand()) & 0xFFFF; u2 = (uint64_t)(rand()) & 0xFFFF;
-  u3 = (uint64_t)(rand()) & 0xFFFF; u4 = (uint64_t)(rand()) & 0xFFFF;
-  return u1 | (u2 << 16) | (u3 << 32) | (u4 << 48);
-}
 
 uint64_t random_uint64_fewbits() {
   return random_uint64() & random_uint64() & random_uint64();

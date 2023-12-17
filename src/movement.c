@@ -4,7 +4,7 @@
 #include "./bitboard/bitboard.h"
 #include "./bitboard/bbutils.h"
 #include "util.h"
-
+#include "hash.h"
 /*
 * Wow Cool! Totaly sensical move generation!
 */
@@ -254,6 +254,8 @@ int makeMove(Position *pos, Move move){
     pos->flags ^= WHITE_TURN;
 
     pos->pinned = generatePinnedPieces(*pos);
+
+    pos->hash = hashPosition(*pos);
 
     return 0;
 }

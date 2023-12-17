@@ -9,6 +9,7 @@
 #include "../movement.h"
 #include "bitboard.h"
 #include "../evaluator.h"
+#include "../hash.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -114,6 +115,7 @@ Position fenToPosition(char* FEN) {
     }
 
     pos.pinned = generatePinnedPieces(pos);
+    pos.hash = hashPosition(pos);
 
     return pos;
 }
@@ -259,6 +261,7 @@ void printPosition(Position position){
     PositionToFen(position, fen);
     printf("----------------------------------------------------------------------------------------------------------------------------------\n");
     printf("\nFEN: %s \n\n", fen);
+    printf("Hash: %llu \n\n", position.hash);
     printf("  A B C D E F G H\n");
     for (int rank = 7; rank >= 0; rank--) {
         printf("%d ", rank + 1);

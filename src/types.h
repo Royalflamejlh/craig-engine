@@ -131,6 +131,7 @@ typedef struct {            //Each size of 2 array contains {Black, White}
 
     uint64_t pinned; //Absolutely pinned pieces
 
+    uint64_t hash; //Hash of the position
 
 
     int halfmove_clock;
