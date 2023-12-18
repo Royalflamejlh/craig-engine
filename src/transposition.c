@@ -3,6 +3,20 @@
 
 #define KEY_MASK 0xFFF
 
+
+#ifdef DEBUG
+#include <stdio.h>
+static uint64_t get_suc, get_col, store_cnt;
+void startTTDebug(void){
+    get_suc = 0;
+    get_col = 0;
+    store_cnt = 0;
+}
+void printTTDebug(void){
+    printf("TT Collisions %llu, TT Sucesses %llu, TT Stores %llu\n", get_col, get_suc, store_cnt);
+}
+#endif
+
 static TTEntry* table;
 
 int initTT(){
@@ -11,11 +25,20 @@ int initTT(){
     return 0;
 }
 
-TTEntry getTTEntry(uint64_t hash){
-    return table[hash & KEY_MASK];
+TTEntry* getTTEntry(uint64_t hash){
+    if(table[hash & KEY_MASK].hash == hash){
+        #ifdef DEBUG
+        get_suc++;
+        #endif
+        return &table[hash & KEY_MASK];
+    }
+    #ifdef DEBUG
+    get_col++;
+    #endif
+    return NULL;
 }
 
-void setTTEntry(int eval, char depth, Move move, char nodeType, uint64_t hash){
+void storeTTEntry(uint64_t hash, char depth, int eval, char nodeType, Move move){
     table[hash & KEY_MASK].eval = eval;
     table[hash & KEY_MASK].depth = depth;
     table[hash & KEY_MASK].move = move;

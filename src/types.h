@@ -13,6 +13,9 @@
 #define MAX_MOVES 256 //Most moves possible in a single position
 #define MAX_FEN_LEN 100 //Max length of a fen string
 
+
+#define NO_MOVE 0
+
 #define MOVE_FROM_MASK        0x003F  // 0000 0000 0011 1111
 #define MOVE_TO_MASK          0x0FC0  // 0000 1111 1100 0000
 #define MOVE_FLAG_MASK        0xF000  // 1111 0000 0000 0000
