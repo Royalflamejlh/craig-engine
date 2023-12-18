@@ -39,6 +39,9 @@ TTEntry* getTTEntry(uint64_t hash){
 }
 
 void storeTTEntry(uint64_t hash, char depth, int eval, char nodeType, Move move){
+    #ifdef DEBUG
+    store_cnt++;
+    #endif
     table[hash & KEY_MASK].eval = eval;
     table[hash & KEY_MASK].depth = depth;
     table[hash & KEY_MASK].move = move;
