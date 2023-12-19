@@ -1,7 +1,7 @@
 #include "transposition.h"
 #include <stdlib.h>
 
-#define KEY_MASK 0xFFF
+#define KEY_MASK 0xFFFFFF
 
 
 #ifdef DEBUG

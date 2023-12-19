@@ -7,7 +7,7 @@
 #include "transposition.h"
 
 #define DEBUG
-#define MAX_DEPTH 3
+#define MAX_DEPTH 5
 
 
 #ifdef DEBUG
@@ -36,60 +36,66 @@ void printTreeDebug(void){
 #endif
 
 Move getBestMove(Position pos){
-   int size;
-   Move moveList[MAX_MOVES];
-   int moveScores[MAX_MOVES];
+   Move bestMove;
+   int moveScore;
    
-   Position prevPos = pos;
-   size = generateLegalMoves(pos, moveList);
-   if(size == 0) return 0;
-
-   //for(int j = 0; j < 3; j += 1){
    #ifdef DEBUG
    startTTDebug();
    startTreeDebug();
    #endif
-      for(int i = 0; i < size; i++)  {
-         makeMove(&pos, moveList[i]);
-         moveScores[i] = -pvSearch(&pos, -10000, 10000, MAX_DEPTH);
-         pos = prevPos;
-      }
+
+   moveScore = -pvSearch(&pos, -10000, 10000, MAX_DEPTH, &bestMove);
+
    #ifdef DEBUG
    printTreeDebug();
    printTTDebug();
    #endif
-   //}
 
-   int best_move_val = INT_MIN;
-   int best_move_idx = 0;
 
-   for (int i = 0; i < size; i++)  {
-      if(moveScores[i] > best_move_val){
-         best_move_val = moveScores[i];
-         best_move_idx = i;
-      }
-   }
+   printf("Move found with score %d\n", moveScore);
+   printMove(bestMove);
 
-   return moveList[best_move_idx];
+   return bestMove;
 }
 
-int pvSearch( Position* pos, int alpha, int beta, char depth ) {
-   if( depth == 0 ) return quiesce(pos, alpha, beta);
+int pvSearch( Position* pos, int alpha, int beta, char depth, Move* returnMove ) {
+   // printf("Searching at depth %d, a: %d, b: %d, pos:%llu\n", (int)depth, alpha, beta, pos->hash);
+   if( depth == 0 ) {
+      int q_eval = quiesce(pos, alpha, beta);
+      // printf("Q search returned score: %d\n", q_eval);
+      return q_eval;
+   }
    #ifdef DEBUG
    pvs_count++;
    #endif
 
+   // int pv_node_found = 0;
+   // int stored_eval = 0;
+   // char stored_depth = 0;
+   // Move stored_move = NO_MOVE;
+
    TTEntry* ttEntry = getTTEntry(pos->hash);
-   if (ttEntry && ttEntry->depth >= depth) {
-      switch (ttEntry->nodeType) {
-         case PV_NODE: // Exact value
-            return ttEntry->eval;
-         case CUT_NODE: // Lower bound
-            if (ttEntry->eval >= beta) return ttEntry->eval;
-            break;
-         case ALL_NODE: // Upper bound
-            if (ttEntry->eval <= alpha) return ttEntry->eval;
-            break;
+   Move ttMove = NO_MOVE;
+   if (ttEntry) {
+      if(ttEntry->depth >= depth){
+         switch (ttEntry->nodeType) {
+            case PV_NODE: // Exact value
+               // pv_node_found = 1;
+               // stored_eval = ttEntry->eval;
+               // stored_depth = ttEntry->depth;
+               // stored_move = ttEntry->move;
+               return ttEntry->eval;
+               break;
+            case CUT_NODE: // Lower bound
+               if (ttEntry->eval >= beta) return beta;
+               break;
+            case ALL_NODE: // Upper bound
+               if (ttEntry->eval > alpha) alpha = ttEntry->eval;
+               break;
+         }
+      }
+      else{
+         ttMove = ttEntry->move;
       }
    }
 
@@ -98,23 +104,31 @@ int pvSearch( Position* pos, int alpha, int beta, char depth ) {
    
    uint64_t cur_hash = pos->hash;
    Move bestMove = NO_MOVE;
-   Move moveList[MAX_MOVES];
-   size = generateLegalMoves(*pos, moveList);
+   Move moveList[MAX_MOVES + 1];
+   if (ttMove != NO_MOVE) {
+      moveList[0] = ttMove;
+      size = generateLegalMoves(*pos, moveList + 1) + 1; // Including ttMove
+   } else {
+      size = generateLegalMoves(*pos, moveList);
+   }
+   // printf("Generated %d nodes\n", size);
+   Position prevPos = *pos;
    for (int i = 0; i < size; i++)  {
-      Position prevPos = *pos;
       makeMove(pos, moveList[i]);
       int score;
       if ( bSearchPv ) {
-         score = -pvSearch(pos, -beta, -alpha, depth - 1);
+         score = -pvSearch(pos, -beta, -alpha, depth - 1, NULL);
       } else {
          score = -zwSearch(pos, -alpha, depth - 1);
          if ( score > alpha) // && score < beta
-            score = -pvSearch(pos, -beta, -alpha, depth - 1); // re-search
+            score = -pvSearch(pos, -beta, -alpha, depth - 1, NULL); // re-search
       }
       *pos = prevPos;
       //unmakeMove(currentPosition)
       if( score >= beta ) {
-         //storeTTEntry(cur_hash, depth, beta, CUT_NODE, moveList[i]);
+         //printf("Storing CUT_NODE for hash %llu with elo %d at depth %d\n", cur_hash, beta, (int)depth);
+         storeTTEntry(cur_hash, depth, beta, CUT_NODE, moveList[i]);
+         // if(pv_node_found) printf(" and it had a real (beta) value of %d\n", beta);
          return beta;   // fail-hard beta-cutoff
       }
       if( score > alpha ) {
@@ -125,11 +139,20 @@ int pvSearch( Position* pos, int alpha, int beta, char depth ) {
    }
    if (bestMove != NO_MOVE) {
       // PV Node (exact value)
+      // printf("Storing PV_NODE for hash %llu with elo %d at depth %d (move: %d)\n", pos->hash, alpha, (int)depth, bestMove);
       storeTTEntry(pos->hash, depth, alpha, PV_NODE, bestMove);
    } else {
       // ALL Node (upper bound)
-      //storeTTEntry(pos->hash, depth, alpha, ALL_NODE, NO_MOVE);
+      // printf("Storing ALL_NODE for hash %llu with elo %d at depth %d\n", pos->hash, alpha, (int)depth);
+      storeTTEntry(pos->hash, depth, alpha, ALL_NODE, NO_MOVE);
    }
+   // if(pv_node_found){
+   //    printf("Found a PV_NODE (%llu) in TT with eval: %d", ttEntry->hash, stored_eval);
+   //    printf(" at depth (TT:%d , R:%d)", (int)stored_depth, (int)depth);
+   //    printf(" with move (TT:%d, R:%d)", stored_move, bestMove);
+   //    printf(" and it had a real value of %d\n", alpha);
+   // }
+   if(returnMove) *returnMove = bestMove;
    return alpha;
 }
 

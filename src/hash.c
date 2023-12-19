@@ -1,6 +1,7 @@
 #include "hash.h"
 #include <ctype.h>
 #include <stdint.h>
+#include <stdio.h>
 #include "util.h"
 #include <time.h>
 #include <stdlib.h>
@@ -37,7 +38,7 @@ uint64_t hashPosition(Position pos){
     uint64_t hash = 0;
 
     //Hash the board
-    for (int i = 0; i < 8; i++) { 
+    for (int i = 0; i < 64; i++) { 
         if (pos.charBoard[i] != 0) { 
             int piece = convertPieceToIndex(pos.charBoard[i]);
             hash ^= zobristTable[i][piece];
