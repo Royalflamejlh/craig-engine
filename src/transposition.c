@@ -6,14 +6,15 @@
 
 #ifdef DEBUG
 #include <stdio.h>
-static uint64_t get_suc, get_col, store_cnt;
+static uint64_t get_suc, get_rej, store_cnt, store_rej;
 void startTTDebug(void){
     get_suc = 0;
-    get_col = 0;
+    get_rej = 0;
     store_cnt = 0;
+    store_rej = 0;
 }
 void printTTDebug(void){
-    printf("TT Collisions %llu, TT Sucesses %llu, TT Stores %llu\n", get_col, get_suc, store_cnt);
+    printf("TT GET Suc: %llu Fail: %llu, TT STORE Suc: %llu Fail: %llu\n", get_suc, get_rej, store_cnt, store_rej);
 }
 #endif
 
@@ -33,12 +34,24 @@ TTEntry* getTTEntry(uint64_t hash){
         return &table[hash & KEY_MASK];
     }
     #ifdef DEBUG
-    get_col++;
+    get_rej++;
     #endif
     return NULL;
 }
 
 void storeTTEntry(uint64_t hash, char depth, int eval, char nodeType, Move move){
+    if(nodeType != PV_NODE && table[hash & KEY_MASK].nodeType == PV_NODE){
+        #ifdef DEBUG
+        store_rej++;
+        #endif
+        return;
+    }
+    if(depth < table[hash & KEY_MASK].depth){
+        #ifdef DEBUG
+        store_rej++;
+        #endif
+        return;
+    }
     #ifdef DEBUG
     store_cnt++;
     #endif

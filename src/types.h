@@ -113,6 +113,26 @@ static inline Move MAKE_MOVE(int from, int to, int flags) {
 #define B_LONG_CASTLE  0x02 
 #define WHITE_TURN     0x01 //0 / False for black    1 / True for white
 
+typedef enum {
+    WHITE_PAWN, WHITE_KNIGHT, WHITE_BISHOP, WHITE_ROOK, WHITE_QUEEN, WHITE_KING,
+    BLACK_PAWN, BLACK_KNIGHT, BLACK_BISHOP, BLACK_ROOK, BLACK_QUEEN, BLACK_KING
+} PieceIndex;
+
+static const int pieceToIndex[128] = {
+    ['P'] = WHITE_PAWN,
+    ['N'] = WHITE_KNIGHT,
+    ['B'] = WHITE_BISHOP,
+    ['R'] = WHITE_ROOK,
+    ['Q'] = WHITE_QUEEN,
+    ['K'] = WHITE_KING,
+    ['p'] = BLACK_PAWN,
+    ['n'] = BLACK_KNIGHT,
+    ['b'] = BLACK_BISHOP,
+    ['r'] = BLACK_ROOK,
+    ['q'] = BLACK_QUEEN,
+    ['k'] = BLACK_KING
+};
+
 typedef struct {            //Each size of 2 array contains {Black, White}
     uint64_t pawn[2];     
     uint64_t bishop[2];

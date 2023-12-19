@@ -34,7 +34,10 @@ int testBB(void) {
     generateMasks();
     generateMagics();
     initZobrist();
-    initTT();
+    if(initTT()){
+        printf("WARNING FAILED TO ALLOCATED SPACE FOR TRANSPOSITION TABLE\n");
+        return -1;
+    }
     
 
     

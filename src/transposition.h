@@ -1,7 +1,9 @@
 #ifndef TRANSPOSITION_H
 #define TRANSPOSITION_H
 #include "types.h"
+
 enum {
+    NO_NODE,
     PV_NODE,
     CUT_NODE,
     ALL_NODE

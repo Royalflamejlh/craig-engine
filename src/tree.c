@@ -7,7 +7,8 @@
 #include "transposition.h"
 
 #define DEBUG
-#define MAX_DEPTH 5
+#define MAX_DEPTH 7
+#define ID_STEP 1
 
 
 #ifdef DEBUG
@@ -44,7 +45,12 @@ Move getBestMove(Position pos){
    startTreeDebug();
    #endif
 
-   moveScore = -pvSearch(&pos, -10000, 10000, MAX_DEPTH, &bestMove);
+   for(int i = 1; i <= MAX_DEPTH; i+=ID_STEP){
+      moveScore = -pvSearch(&pos, -10000, 10000, i, &bestMove);
+      printf("Move found with score %d at depth %d\n", moveScore, i);
+      printMove(bestMove);
+      fflush(stdout);
+   }
 
    #ifdef DEBUG
    printTreeDebug();
@@ -84,9 +90,11 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, Move* returnMove )
                // stored_eval = ttEntry->eval;
                // stored_depth = ttEntry->depth;
                // stored_move = ttEntry->move;
+               if(returnMove) *returnMove = ttEntry->move;
                return ttEntry->eval;
                break;
             case CUT_NODE: // Lower bound
+               if(returnMove) *returnMove = ttEntry->move;
                if (ttEntry->eval >= beta) return beta;
                break;
             case ALL_NODE: // Upper bound
@@ -120,7 +128,7 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, Move* returnMove )
          score = -pvSearch(pos, -beta, -alpha, depth - 1, NULL);
       } else {
          score = -zwSearch(pos, -alpha, depth - 1);
-         if ( score > alpha) // && score < beta
+         if ( score > alpha && score < beta) // && score < beta
             score = -pvSearch(pos, -beta, -alpha, depth - 1, NULL); // re-search
       }
       *pos = prevPos;
@@ -164,17 +172,48 @@ int zwSearch( Position* pos, int beta, char depth ) {
    #ifdef DEBUG
    zws_count++;
    #endif
+
+   TTEntry* ttEntry = getTTEntry(pos->hash);
+   Move ttMove = NO_MOVE;
+   if (ttEntry) {
+      if(ttEntry->depth >= depth){
+         switch (ttEntry->nodeType) {
+            case PV_NODE: // Exact value
+               return ttEntry->eval;
+               break;
+            case CUT_NODE: // Lower bound
+               if (ttEntry->eval >= beta) return beta;
+               break;
+            case ALL_NODE: // Upper bound
+               if (ttEntry->eval <= beta-1) return beta-1;
+               break;
+         }
+      }
+      else{
+         ttMove = ttEntry->move;
+      }
+   }
+
    int size;
-   Move moveList[MAX_MOVES];
-   size = generateLegalMoves(*pos, moveList);
+   Move moveList[MAX_MOVES + 1];
+   if (ttMove != NO_MOVE) {
+      moveList[0] = ttMove;
+      size = generateLegalMoves(*pos, moveList + 1) + 1; // Including ttMove
+   } else {
+      size = generateLegalMoves(*pos, moveList);
+   }
+
+   uint64_t cur_hash = pos->hash;
+   Position prevPos = *pos;
    for (int i = 0; i < size; i++)  {
-     Position prevPos = *pos;
      makeMove(pos, moveList[i]);
      int score = -zwSearch(pos, 1-beta, depth - 1);
      *pos = prevPos;
      //unmakeMove(pos)
-     if( score >= beta )
+     if( score >= beta ){
+        storeTTEntry(cur_hash, depth, beta, CUT_NODE, moveList[i]);
         return beta;   // fail-hard beta-cutoff
+     }
    }
    return beta-1; // fail-hard, return alpha
 }

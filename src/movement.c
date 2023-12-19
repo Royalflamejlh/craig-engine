@@ -76,6 +76,7 @@ static void movePiece(Position *pos, int turn, int from, int to){
 }
 
 
+
 /*
 * Used to remove the captured piece
 */
