@@ -89,7 +89,7 @@ static void removeCaptured(Position *pos, int square){
         case 'K':
             //pos->king[!turn] = clearBit(pos->king[!turn], square);
             printf("WARNING ATTEMPTED TO CAPTURE A KING AT POS:\n");
-            printPosition(*pos);
+            printPosition(*pos, TRUE);
             break;
         case 'N':
             pos->knight[!turn] = clearBit(pos->knight[!turn], square);

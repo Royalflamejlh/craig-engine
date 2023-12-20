@@ -67,6 +67,21 @@ static inline void clearKillerMoves(void){
 }
 
 /*
+* Functions pertaining to storage in the history table
+*/
+static uint32_t historyTable[PLAYER_COUNT][BOARD_SIZE][BOARD_SIZE] = {0};
+
+static inline void storeHistoryMove(char pos_flags, Move move, char depth){
+   if(GET_FLAGS(move) & CAPTURE) return;
+   historyTable[pos_flags & WHITE_TURN][GET_FROM(move)][GET_TO(move)] += 1 << depth;
+}
+
+int getHistoryScore(char pos_flags, Move move){
+   if(GET_FLAGS(move) & CAPTURE) return 0;
+   return historyTable[pos_flags & WHITE_TURN][GET_FROM(move)][GET_TO(move)];
+}
+
+/*
 * Get that move son.
 */
 Move getBestMove(Position pos){
@@ -161,6 +176,7 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* re
       if( score >= beta ) {
          storeTTEntry(pos->hash, depth, beta, CUT_NODE, moveList[i]);
          storeKillerMove(ply, moveList[i]);
+         storeHistoryMove(pos->flags, moveList[i], depth);
          return beta;
       }
       if( score > alpha ) {
@@ -233,6 +249,7 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
      if( score >= beta ){
         storeTTEntry(pos->hash, depth, beta, CUT_NODE, moveList[i]);
         storeKillerMove(ply, moveList[i]);
+        storeHistoryMove(pos->flags, moveList[i], depth);
         return beta;   // fail-hard beta-cutoff
      }
    }

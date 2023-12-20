@@ -185,7 +185,7 @@ int checkMoveCount(Position pos){
     int correct_num_moves = python_movecount(fen);
     if(num_moves != correct_num_moves){
         printf("Incorrect amount of moves found (%d/%d) at pos:\n", num_moves, correct_num_moves);
-        printPosition(pos);
+        printPosition(pos, TRUE);
         for (int i = 0; i < num_moves; i++) {
             printMove(moveList[i]);
         }

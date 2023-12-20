@@ -256,7 +256,7 @@ void generateDiagonalMasks() {
 }
 
 
-void printPosition(Position position){
+void printPosition(Position position, char verbose){
     char fen[128];
     PositionToFen(position, fen);
     printf("----------------------------------------------------------------------------------------------------------------------------------\n");
@@ -303,6 +303,7 @@ void printPosition(Position position){
     }
     printf("  A B C D E F G H\n");
     printf("----------------------------------------------------------------------------------------------------------------------------------\n");
+    if(!verbose) return;
     printf("  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |         EP Board    |       Char Board    |\n");
     printf("  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |\n");
     for (int rank = 7; rank >= 0; rank--) {

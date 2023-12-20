@@ -10,6 +10,14 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#define TRUE 1
+#define FALSE 0
+
+#define PLAYER_COUNT 2
+
+#define BOARD_SIZE 64
+
+
 #define MAX_MOVES 256 //Most moves possible in a single position
 #define MAX_FEN_LEN 100 //Max length of a fen string
 

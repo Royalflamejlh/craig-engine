@@ -75,7 +75,7 @@ int testBB(void) {
                 size = generateLegalMoves(pos, moveList);
                 if (size != expectedMoves) {
                     printf("Failed to get correct amount of moves for Position %s, correct: %d, found: %d\n", fen, expectedMoves, size);
-                    printPosition(pos);
+                    printPosition(pos, TRUE);
                     for (int i = 0; i < size; i++) {
                         printMove(moveList[i]);
                     }
@@ -156,7 +156,7 @@ int testBB(void) {
     printf("\n---------------------------------- Node TESTING ----------------------------------\n\n");
 
     pos = fenToPosition(START_FEN);
-    printPosition(pos);
+    printPosition(pos, FALSE);
 
     Move moveListNode[MAX_MOVES];
     int sizeNode = 0;
@@ -183,7 +183,7 @@ int testBB(void) {
         while( getchar() != '\n' && getchar() != '\r');
         makeMove(&pos, best_move);
         printf("Pos after move: \n");
-        printPosition(pos);
+        printPosition(pos, FALSE);
         best_move = getBestMove(pos);
     }
 

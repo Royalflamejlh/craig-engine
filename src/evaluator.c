@@ -1,6 +1,7 @@
 #include "evaluator.h"
 #include <limits.h>
 #include "util.h"
+#include "tree.h"
 #include "bitboard/bbutils.h"
 
 #define KING_VALUE     100000
@@ -225,6 +226,9 @@ void evalMoves(Move* moveList, int* moveVals, int size, Move ttMove, Move *kille
 
         //Add on the PST values
         moveVals[i] += PST[pieceToIndex[(int)from_piece]][GET_TO(move)];
+
+        //Add on the history scores
+        moveVals[i] += getHistoryScore(pos.flags, moveList[i]);
         
         //Add on the flag values
         switch(GET_FLAGS(move)){
