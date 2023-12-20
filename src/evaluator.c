@@ -201,7 +201,7 @@ void initPST(){
 //Then generate values for the remaining moves
 //Selection sort remaining moves
 
-
+#define HIST_SCORE_SHIFT 16
 
 void evalMoves(Move* moveList, int* moveVals, int size, Move ttMove, Move *killerMoves, int kmv_size, Position pos){
     for(int i = 0; i < size; i++){
@@ -228,7 +228,7 @@ void evalMoves(Move* moveList, int* moveVals, int size, Move ttMove, Move *kille
         moveVals[i] += PST[pieceToIndex[(int)from_piece]][GET_TO(move)];
 
         //Add on the history scores
-        moveVals[i] += getHistoryScore(pos.flags, moveList[i]);
+        moveVals[i] += getHistoryScore(pos.flags, moveList[i]) >> HIST_SCORE_SHIFT;
         
         //Add on the flag values
         switch(GET_FLAGS(move)){

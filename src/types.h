@@ -141,6 +141,12 @@ static const int pieceToIndex[128] = {
     ['k'] = BLACK_KING
 };
 
+typedef struct {
+    uint64_t* hash_stack; //A stack of hashes of player positions
+    int current_idx; //An index to the current hash
+    int last_reset_idx; //An index to the last move which reset halfmove clock
+} GameState;
+
 typedef struct {            //Each size of 2 array contains {Black, White}
     uint64_t pawn[2];     
     uint64_t bishop[2];
@@ -164,6 +170,7 @@ typedef struct {            //Each size of 2 array contains {Black, White}
 
     uint64_t hash; //Hash of the position
 
+    GameState* gameState; //Pointer to the gamestate position is in
 
     int halfmove_clock;
     int fullmove_number;
@@ -174,6 +181,8 @@ typedef struct {
     uint16_t move;
     uint64_t hash;
 } Node;
+
+
 
 typedef enum {
     A1, B1, C1, D1, E1, F1, G1, H1,

@@ -9,16 +9,18 @@
 
 #define DEBUG
 
-#define DEPTH 8
+#define DEPTH 4
 #define ID_STEP 1
 
+#define CHECKMATE_VALUE (INT_MIN + 10)
 
 #define KMV_CNT 4 //How many killer moves are stored for a pos
 
 #define MAX_QUIESCE_PLY 4 //How far q search can go
 #define MAX_PLY 255 //How far the total search can go
 
-
+#define LMR_DEPTH 3 //The min depth to start performing lmr
+#define LMR_MIN_MOVE 5 //the move number to start performing lmr on
 
 //static void selectSort(int i, Move *moveList, int *moveVals, int size);
 
@@ -76,7 +78,7 @@ static inline void storeHistoryMove(char pos_flags, Move move, char depth){
    historyTable[pos_flags & WHITE_TURN][GET_FROM(move)][GET_TO(move)] += 1 << depth;
 }
 
-int getHistoryScore(char pos_flags, Move move){
+uint32_t getHistoryScore(char pos_flags, Move move){
    if(GET_FLAGS(move) & CAPTURE) return 0;
    return historyTable[pos_flags & WHITE_TURN][GET_FROM(move)][GET_TO(move)];
 }
@@ -95,9 +97,9 @@ Move getBestMove(Position pos){
 
    clearKillerMoves();
    for(int i = 1; i <= DEPTH; i+=ID_STEP){
-      moveScore = -pvSearch(&pos, -10000, 10000, i, 0, &bestMove);
+      moveScore = -pvSearch(&pos, INT_MIN+1, INT_MAX, i, 0, &bestMove);
       //printf("Move found with score %d at depth %d\n", moveScore, i);
-      //printMove(bestMove);
+      printMove(bestMove);
    }
 
    #ifdef DEBUG
@@ -114,8 +116,10 @@ Move getBestMove(Position pos){
 
 
 int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* returnMove) {
-   if( depth == 0 ) {
+   //printf("pvSearch (%llu) a: %d, b: %d, d: %d, ply: %d, retMove %p\n", pos->hash, alpha, beta, (int)depth, (int)ply, returnMove);
+   if( depth <= 0 ) {
       int q_eval = quiesce(pos, alpha, beta, ply, 0);
+      //printf("Returning q_eval: %d\n", q_eval);
       return q_eval;
    }
    #ifdef DEBUG
@@ -127,7 +131,7 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* re
    int size = generateLegalMoves(*pos, moveList);
    //Handle Draw or Mate
    if(size == 0){
-      if(pos->flags & IN_CHECK) return INT_MIN;
+      if(pos->flags & IN_CHECK) return CHECKMATE_VALUE;
       else return 0;
    }
    if(pos->halfmove_clock >= 50) return 0;
@@ -136,22 +140,26 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* re
    TTEntry* ttEntry = getTTEntry(pos->hash);
    Move ttMove = NO_MOVE;
    if (ttEntry) {
+      ttMove = ttEntry->move;
       if(ttEntry->depth >= depth){
          switch (ttEntry->nodeType) {
             case PV_NODE: // Exact value
                if(returnMove) *returnMove = ttEntry->move;
+               //printf("Returning PV_NODE: %d\n", ttEntry->eval);
                return ttEntry->eval;
             case CUT_NODE: // Lower bound
                if(returnMove) *returnMove = ttEntry->move;
-               if (ttEntry->eval >= beta) return beta;
+               if (ttEntry->eval >= beta){
+                  //printf("Returning CUT_NODE beta: %d\n", beta);
+                  return beta;
+               }
                break;
             case ALL_NODE: // Upper bound
                if (ttEntry->eval > alpha) alpha = ttEntry->eval;
                break;
+            default:
+               break;
          }
-      }
-      else{
-         ttMove = ttEntry->move;
       }
    }
 
@@ -159,16 +167,29 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* re
    
    evalMoves(moveList, moveVals, size, ttMove, killerMoves[(int)ply], KMV_CNT, *pos);
 
+   //Set up late move reduction rules
+   char LMR = TRUE;
+   if(pos->flags & IN_CHECK) LMR = FALSE;
+   if(depth < LMR_DEPTH) LMR = FALSE;
+
    Position prevPos = *pos;
    Move bestMove = NO_MOVE;
    for (int i = 0; i < size; i++)  {
       selectSort(i, moveList, moveVals, size);
       makeMove(pos, moveList[i]);
+
+      //Update current late move reduction rules
+      char LMR_cur = LMR;
+      if(pos->flags & IN_CHECK) LMR_cur = FALSE;
+      if(i < LMR_MIN_MOVE) LMR_cur = FALSE;
+
+
       int score;
       if ( bSearchPv ) {
          score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, NULL);
       } else {
-         score = -zwSearch(pos, -alpha, depth - 1, ply + 1);
+         if(LMR_cur) score = -zwSearch(pos, -alpha, LMR_DEPTH, ply + 1);
+         else score = -zwSearch(pos, -alpha, depth - 1, ply + 1);
          if ( score > alpha && score < beta)
             score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, NULL);
       }
@@ -177,6 +198,7 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* re
          storeTTEntry(pos->hash, depth, beta, CUT_NODE, moveList[i]);
          storeKillerMove(ply, moveList[i]);
          storeHistoryMove(pos->flags, moveList[i], depth);
+         //printf("Returning beta cutoff: %d >= %d\n", score, beta);
          return beta;
       }
       if( score > alpha ) {
@@ -193,6 +215,7 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* re
       storeTTEntry(pos->hash, depth, alpha, ALL_NODE, NO_MOVE);
    }
    if(returnMove) *returnMove = bestMove;
+   //printf("Returning alpha: %d\n", alpha);
    return alpha;
 }
 
@@ -200,7 +223,7 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* re
 int zwSearch( Position* pos, int beta, char depth, char ply ) {
    // alpha == beta - 1
    // this is either a cut- or all-node
-   if( depth == 0 ) return quiesce(pos, beta-1, beta, ply, 0);
+   if( depth <= 0 ) return quiesce(pos, beta-1, beta, ply, 0);
    #ifdef DEBUG
    zws_count++;
    #endif
@@ -210,7 +233,7 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
    int size = generateLegalMoves(*pos, moveList);
    //Handle Draw or Mate
    if(size == 0){
-      if(pos->flags & IN_CHECK) return INT_MIN;
+      if(pos->flags & IN_CHECK) return CHECKMATE_VALUE;
       else return 0;
    }
    if(pos->halfmove_clock >= 50) return 0;
@@ -218,6 +241,7 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
    TTEntry* ttEntry = getTTEntry(pos->hash);
    Move ttMove = NO_MOVE;
    if (ttEntry) {
+      ttMove = ttEntry->move;
       if(ttEntry->depth >= depth){
          switch (ttEntry->nodeType) {
             case PV_NODE: // Exact value
@@ -229,10 +253,9 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
             case ALL_NODE: // Upper bound
                if (ttEntry->eval <= beta-1) return beta-1;
                break;
+            default:
+               break;
          }
-      }
-      else{
-         ttMove = ttEntry->move;
       }
    }
 
@@ -268,7 +291,7 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply) {
 
    //Handle Draw or Mate
    if(size == 0){
-      if(pos->flags & IN_CHECK) return INT_MIN;
+      if(pos->flags & IN_CHECK) return CHECKMATE_VALUE;
       else return 0;
    }
    if(pos->halfmove_clock >= 50) return 0;
@@ -280,8 +303,28 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply) {
       alpha = stand_pat;
    if(q_ply >= MAX_QUIESCE_PLY) return alpha;
 
-   evalMoves(moveList, moveVals, size, NO_MOVE, killerMoves[(int)ply], KMV_CNT, *pos);
+   TTEntry* ttEntry = getTTEntry(pos->hash);
+   Move ttMove = NO_MOVE;
+   if (ttEntry) {
+      ttMove = ttEntry->move;
+      switch (ttEntry->nodeType) {
+         case Q_NODE:
+            return ttEntry->eval;
+            break;
+         case CUT_NODE:
+            if (ttEntry->eval >= beta) return beta;
+            break;
+         case ALL_NODE: // Upper bound
+            if (ttEntry->eval > alpha) alpha = ttEntry->eval;
+            break;
+         default:
+            break;
+      }
+   }
+
+   evalMoves(moveList, moveVals, size, ttMove, killerMoves[(int)ply], KMV_CNT, *pos);
    
+   Move bestMove = NO_MOVE;
    Position prevPos = *pos;
    for (int i = 0; i < size; i++)  {
       selectSort(i, moveList, moveVals, size);
@@ -292,13 +335,16 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply) {
 
       if( score >= beta ){
          storeKillerMove(ply, moveList[i]);
+         storeTTEntry(pos->hash, 0, beta, CUT_NODE, moveList[i]);
          return beta;
       }
       if( score > alpha ){
          alpha = score;
+         bestMove = moveList[i];
       }
-    }
-    return alpha;
+   }
+   storeTTEntry(pos->hash, 0, beta, Q_NODE, bestMove);
+   return alpha;
 }
 
 
