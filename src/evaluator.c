@@ -1,4 +1,5 @@
 #include "evaluator.h"
+#include <limits.h>
 #include "util.h"
 
 #define KING_VALUE     100000
@@ -17,6 +18,21 @@
 
 #define DOUBLE_PAWN_PEN   200  //Eval lost for double pawns
 #define ISO_PAWN_PEN      100  //Eval lost for isolated pawns
+
+static const int pieceValues[] = {
+    [WHITE_PAWN] = PAWN_VALUE,
+    [WHITE_KNIGHT] = KNIGHT_VALUE,
+    [WHITE_BISHOP] = BISHOP_VALUE,
+    [WHITE_ROOK] = ROOK_VALUE,
+    [WHITE_QUEEN] = QUEEN_VALUE,
+    [WHITE_KING] = KING_VALUE,
+    [BLACK_PAWN] = PAWN_VALUE,
+    [BLACK_KNIGHT] = KNIGHT_VALUE,
+    [BLACK_BISHOP] = BISHOP_VALUE,
+    [BLACK_ROOK] = ROOK_VALUE,
+    [BLACK_QUEEN] = QUEEN_VALUE,
+    [BLACK_KING] = KING_VALUE
+};
 
 enum {
     OPENING,
@@ -60,13 +76,94 @@ int evaluate(Position pos){
 /*
 *  Below here is the move evaluating code
 */
-int PST[12][64];
+static int PST[12][64];
 
 void initPST(){
-    //put a piece on each square and get attack
-    for(int i = 0; i < 64; i++){
-        return;
+
+    int PST_PAWN[64] = {
+        0,  0,  0,  0,  0,  0,  0,  0,
+        1,  1,  1,  0,  0,  1,  1,  1,
+        0,  1,  1, -1, -1,  1,  1,  0,
+        0,  0,  0,  1,  1,  0,  0,  0,
+        0,  0,  0,  2,  2,  0,  0,  0,
+        1,  1,  2,  3,  3,  2,  1,  1,
+        5,  5,  5,  5,  5,  5,  5,  5,
+        0,  0,  0,  0,  0,  0,  0,  0
+    };
+
+    int PST_KNIGHT[64] = {
+        -5, -4, -3, -3, -3, -3, -4, -5,
+        -4, -2,  0,  0,  0,  0, -2, -4,
+        -3,  0,  1,  1,  1,  1,  0, -3,
+        -3,  0,  1,  2,  2,  1,  0, -3,
+        -3,  0,  1,  2,  2,  1,  0, -3,
+        -3,  0,  1,  1,  1,  1,  0, -3,
+        -4, -2,  0,  0,  0,  0, -2, -4,
+        -5, -4, -3, -3, -3, -3, -4, -5
+    };
+
+    int PST_BISHOP[64] = {
+        -2, -1, -1, -1, -1, -1, -1, -2,
+        -1,  1,  0,  0,  0,  0,  1, -1,
+        -1,  0,  1,  1,  1,  1,  0, -1,
+        -1,  0,  1,  1,  1,  1,  0, -1,
+        -1,  0,  1,  1,  1,  1,  0, -1,
+        -1,  1,  1,  1,  1,  1,  1, -1,
+        -1,  0,  0,  0,  0,  0,  0, -1,
+        -2, -1, -1, -1, -1, -1, -1, -2
+    };
+
+    int PST_ROOK[64] = {
+        0,  0,  3,  4,  4,  3,  0,  0,
+        0,  0,  0,  0,  0,  0,  0,  0,
+        0,  0,  0,  0,  0,  0,  0,  0,
+        0,  0,  0,  0,  0,  0,  0,  0,
+        0,  0,  0,  0,  0,  0,  0,  0,
+        0,  0,  0,  0,  0,  0,  0,  0,
+        5,  5,  5,  5,  5,  5,  5,  5,
+       10, 10, 10, 10, 10, 10, 10, 10
+    };
+
+    int PST_QUEEN[64] = {
+        -2, -1, -1, -1, -1, -1, -1, -2,
+        -1,  0,  0,  0,  0,  0,  0, -1,
+        -1,  0,  1,  1,  1,  1,  0, -1,
+        -1,  0,  1,  1,  1,  1,  0, -1,
+        -1,  0,  1,  1,  1,  1,  0, -1,
+        -1,  0,  1,  1,  1,  1,  0, -1,
+        -1,  0,  0,  0,  0,  0,  0, -1,
+        -2, -1, -1, -1, -1, -1, -1, -2
+    };
+
+    int PST_KING[64] = {
+        3,  4,  4, -2, -2,  4,  4,  3,
+        2,  2,  0,  0,  0,  0,  2,  2,
+        -1, -2, -2, -2, -2, -2, -2, -1,
+        -2, -3, -3, -4, -4, -3, -3, -2,
+        -3, -4, -4, -5, -5, -4, -4, -3,
+        -3, -4, -4, -5, -5, -4, -4, -3,
+        -3, -4, -4, -5, -5, -4, -4, -3,
+        -3, -4, -4, -5, -5, -4, -4, -3
+    };
+
+
+    // Initialize PST for white pieces
+    for (int i = 0; i < 64; i++) {
+        PST[WHITE_PAWN][i] = PST_PAWN[i];
+        PST[WHITE_KNIGHT][i] = PST_KNIGHT[i];
+        PST[WHITE_BISHOP][i] = PST_BISHOP[i];
+        PST[WHITE_ROOK][i] = PST_ROOK[i];
+        PST[WHITE_QUEEN][i] = PST_QUEEN[i];
+        PST[WHITE_KING][i] = PST_KING[i];
+
+        PST[BLACK_PAWN][63 - i] = PST_PAWN[i];
+        PST[BLACK_KNIGHT][63 - i] = PST_KNIGHT[i];
+        PST[BLACK_BISHOP][63 - i] = PST_BISHOP[i];
+        PST[BLACK_ROOK][63 - i] = PST_ROOK[i];
+        PST[BLACK_QUEEN][63 - i] = PST_QUEEN[i];
+        PST[BLACK_KING][63 - i] = PST_KING[i];
     }
+
 }
 
 //Move iterating logic
@@ -77,14 +174,26 @@ void initPST(){
 
 
 
-void evalMoves(Move* moveList, int* moveVals, int size, Position pos){
-
-    int i = 0;
+void evalMoves(Move* moveList, int* moveVals, int size, Move ttMove, Move *killerMoves, int kmv_size, Position pos){
     for(int i = 0; i < size; i++){
         Move move = moveList[i];
-        int to_value = 0;
-        int from_value = 0;
-        char from_piece = pos.charBoard[GET_FROM(move)];
+        //Score the TT move
+        if(move == ttMove){
+            moveVals[i] = INT_MAX;
+            continue;
+        }
+
+        int found = 0;
+        for(int j = 0; j < kmv_size; j++){
+            if(move == killerMoves[j]){
+                moveVals[i] = INT_MAX - 1;
+                break;
+            }
+        }
+        if(found) continue;
+
+        int from_piece = (int)pos.charBoard[GET_FROM(move)];
+        int to_piece = (int)pos.charBoard[GET_TO(move)];
 
         //Add on the PST values
         moveVals[i] += PST[pieceToIndex[(int)from_piece]][GET_TO(move)];
@@ -92,23 +201,23 @@ void evalMoves(Move* moveList, int* moveVals, int size, Position pos){
         //Add on the flag values
         switch(GET_FLAGS(move)){
             case QUEEN_PROMO_CAPTURE:
-                moveVals[i] += ((to_value + QUEEN_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
+                moveVals[i] += ((pieceValues[to_piece] + QUEEN_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
                 break;
             case ROOK_PROMO_CAPTURE:
-                moveVals[i] += ((to_value + ROOK_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
+                moveVals[i] += ((pieceValues[to_piece] + ROOK_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
                 break;
             case BISHOP_PROMO_CAPTURE:
-                moveVals[i] += ((to_value + BISHOP_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
+                moveVals[i] += ((pieceValues[to_piece] + BISHOP_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
                 break;
             case KNIGHT_PROMO_CAPTURE:
-                moveVals[i] += ((to_value + KNIGHT_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
+                moveVals[i] += ((pieceValues[to_piece] + KNIGHT_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
                 break;
                 
             case EP_CAPTURE:
                 moveVals[i] += ((PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
                 break;
             case CAPTURE:
-                moveVals[i] += ((to_value)+QUEEN_VALUE) - from_value;
+                moveVals[i] += ((pieceValues[to_piece])+QUEEN_VALUE) - pieceValues[from_piece];
                 break;
 
             case QUEEN_PROMOTION:
@@ -134,7 +243,6 @@ void evalMoves(Move* moveList, int* moveVals, int size, Position pos){
             default:
                 break;
         }
-        //mmv - lva
     }
 
     return;

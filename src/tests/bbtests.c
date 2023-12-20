@@ -18,6 +18,7 @@
 #include "../tree.h"
 #include "../hash.h"
 #include "../transposition.h"
+#include "../evaluator.h"
 
 #define MOVE_GEN_TEST
 #define MOVE_MAKE_TEST
@@ -34,6 +35,7 @@ int testBB(void) {
     generateMasks();
     generateMagics();
     initZobrist();
+    initPST();
     if(initTT()){
         printf("WARNING FAILED TO ALLOCATED SPACE FOR TRANSPOSITION TABLE\n");
         return -1;
@@ -155,8 +157,26 @@ int testBB(void) {
 
     pos = fenToPosition(START_FEN);
     printPosition(pos);
+
+    Move moveListNode[MAX_MOVES];
+    int sizeNode = 0;
+    int moveVals[MAX_MOVES] = {0};
+    sizeNode = generateLegalMoves(pos, moveListNode);
+    evalMoves(moveListNode, moveVals, sizeNode, NO_MOVE, NULL, 0, pos);
+    for(int i = 0; i < sizeNode; i++){
+        printf("Move found with move value of %d:\n", moveVals[i]);
+        printMove(moveListNode[i]);
+    }
+    printf("\n---------------------------testing select sort----------------------------\n");
+    for (int i = 0; i < sizeNode; i++)  {
+        selectSort(i, moveListNode, moveVals, sizeNode);
+        printf("Move with value %d selected at pos %d\n", moveVals[i], i);
+        printMove(moveListNode[i]);
+    }
+    printf("\n--------------------------------------------------------------------------\n");
+
     Move best_move = getBestMove(pos);
-    while(best_move != 0){
+    while(best_move != NO_MOVE){
         printf("Best move found to be: \n");
         printMove(best_move);
         printf("Press Enter to Continue\n");
