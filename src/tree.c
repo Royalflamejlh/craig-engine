@@ -53,13 +53,12 @@ void printTreeDebug(void){
 * Function pertaining to storage of killer moves 
 */
 static Move killerMoves[MAX_PLY][KMV_CNT] = {0};
+static unsigned int kmvIdx = 0;
 
 static inline void storeKillerMove(int ply, Move move){
-   for(int i = 0; i < KMV_CNT; i++){
-      if(killerMoves[ply][i] != move){
-         killerMoves[ply][i] = move;
-         return;
-      }
+   if(killerMoves[ply][kmvIdx] != move){
+      killerMoves[ply][kmvIdx] = move;
+      kmvIdx = (kmvIdx + 1) % KMV_CNT;
    }
 }
 
