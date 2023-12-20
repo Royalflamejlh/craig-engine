@@ -9,11 +9,14 @@
 
 #define DEBUG
 
-#define DEPTH 7
+#define DEPTH 8
 #define ID_STEP 1
 
-#define MAX_QUIESCE_PLY 10
-#define MAX_PLY 255
+
+#define KMV_CNT 4 //How many killer moves are stored for a pos
+
+#define MAX_QUIESCE_PLY 4 //How far q search can go
+#define MAX_PLY 255 //How far the total search can go
 
 
 
@@ -49,7 +52,6 @@ void printTreeDebug(void){
 /*
 * Function pertaining to storage of killer moves 
 */
-#define KMV_CNT 10
 static Move killerMoves[MAX_PLY][KMV_CNT] = {0};
 
 static inline void storeKillerMove(int ply, Move move){
@@ -68,7 +70,6 @@ static inline void clearKillerMoves(void){
 /*
 * Get that move son.
 */
-
 Move getBestMove(Position pos){
    Move bestMove;
    int moveScore;
@@ -81,9 +82,8 @@ Move getBestMove(Position pos){
    clearKillerMoves();
    for(int i = 1; i <= DEPTH; i+=ID_STEP){
       moveScore = -pvSearch(&pos, -10000, 10000, i, 0, &bestMove);
-      printf("Move found with score %d at depth %d\n", moveScore, i);
-      printMove(bestMove);
-      fflush(stdout);
+      //printf("Move found with score %d at depth %d\n", moveScore, i);
+      //printMove(bestMove);
    }
 
    #ifdef DEBUG
@@ -101,12 +101,22 @@ Move getBestMove(Position pos){
 
 int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* returnMove) {
    if( depth == 0 ) {
-      int q_eval = quiesce(pos, alpha, beta, ply + 1, 0);
+      int q_eval = quiesce(pos, alpha, beta, ply, 0);
       return q_eval;
    }
    #ifdef DEBUG
    pvs_count++;
    #endif
+
+   Move moveList[MAX_MOVES];
+   int moveVals[MAX_MOVES];
+   int size = generateLegalMoves(*pos, moveList);
+   //Handle Draw or Mate
+   if(size == 0){
+      if(pos->flags & IN_CHECK) return INT_MIN;
+      else return 0;
+   }
+   if(pos->halfmove_clock >= 50) return 0;
 
 
    TTEntry* ttEntry = getTTEntry(pos->hash);
@@ -132,16 +142,11 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* re
    }
 
    char bSearchPv = 1;
-   int size;
    
-   //TTmove
-   //KillerMoves[ply][kmove_size]
-   Move moveList[MAX_MOVES];
-   int moveVals[MAX_MOVES];
-   size = generateLegalMoves(*pos, moveList);
    evalMoves(moveList, moveVals, size, ttMove, killerMoves[(int)ply], KMV_CNT, *pos);
+
    Position prevPos = *pos;
-   Move bestMove;
+   Move bestMove = NO_MOVE;
    for (int i = 0; i < size; i++)  {
       selectSort(i, moveList, moveVals, size);
       makeMove(pos, moveList[i]);
@@ -180,10 +185,20 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* re
 int zwSearch( Position* pos, int beta, char depth, char ply ) {
    // alpha == beta - 1
    // this is either a cut- or all-node
-   if( depth == 0 ) return quiesce(pos, beta-1, beta, ply + 1, 0);
+   if( depth == 0 ) return quiesce(pos, beta-1, beta, ply, 0);
    #ifdef DEBUG
    zws_count++;
    #endif
+
+   Move moveList[MAX_MOVES];
+   int moveVals[MAX_MOVES];
+   int size = generateLegalMoves(*pos, moveList);
+   //Handle Draw or Mate
+   if(size == 0){
+      if(pos->flags & IN_CHECK) return INT_MIN;
+      else return 0;
+   }
+   if(pos->halfmove_clock >= 50) return 0;
 
    TTEntry* ttEntry = getTTEntry(pos->hash);
    Move ttMove = NO_MOVE;
@@ -206,9 +221,7 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
       }
    }
 
-   Move moveList[MAX_MOVES];
-   int moveVals[MAX_MOVES];
-   int size = generateLegalMoves(*pos, moveList);
+
    evalMoves(moveList, moveVals, size, ttMove, killerMoves[(int)ply], KMV_CNT, *pos);
 
    Position prevPos = *pos;
@@ -229,20 +242,28 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
 
 //quisce search
 int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply) {
-    #ifdef DEBUG
-    q_count++;
-    #endif
-    int stand_pat = evaluate(*pos);
-    if( stand_pat >= beta )
-        return beta;
-    if( alpha < stand_pat )
-        alpha = stand_pat;
+   #ifdef DEBUG
+   q_count++;
+   #endif
    
-    if(q_ply >= MAX_QUIESCE_PLY) return alpha;
-
    Move moveList[MAX_MOVES];
    int moveVals[MAX_MOVES];
    int size = generateLegalMoves(*pos, moveList);
+
+   //Handle Draw or Mate
+   if(size == 0){
+      if(pos->flags & IN_CHECK) return INT_MIN;
+      else return 0;
+   }
+   if(pos->halfmove_clock >= 50) return 0;
+
+   int stand_pat = evaluate(*pos);
+   if( stand_pat >= beta )
+      return beta;
+   if( alpha < stand_pat )
+      alpha = stand_pat;
+   if(q_ply >= MAX_QUIESCE_PLY) return alpha;
+
    evalMoves(moveList, moveVals, size, NO_MOVE, killerMoves[(int)ply], KMV_CNT, *pos);
    
    Position prevPos = *pos;
