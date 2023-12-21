@@ -9,6 +9,7 @@
 #define types_h
 #include <stdint.h>
 #include <stddef.h>
+#include <inttypes.h>
 
 #define TRUE 1
 #define FALSE 0

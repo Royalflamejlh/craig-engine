@@ -7,7 +7,6 @@
 #include "evaluator.h"
 #include "transposition.h"
 
-#define DEBUG
 
 #define DEPTH 4
 #define ID_STEP 1
@@ -26,27 +25,38 @@
 
 
 #ifdef DEBUG
+
+#if defined(__unix__) || defined(__APPLE__)
+#define DEBUG_TIME
 #include <time.h>
+static struct timespec start_time, end_time;
+#endif
+
 static int64_t pvs_count;
 static int64_t zws_count;
 static int64_t q_count;
-static struct timespec start_time, end_time;
 
 void startTreeDebug(void){
    pvs_count = 0;
    zws_count = 0;
    q_count = 0;
+   #ifdef DEBUG_TIME
    clock_gettime(CLOCK_MONOTONIC, &start_time);
+   #endif
 }
 void printTreeDebug(void){
-    clock_gettime(CLOCK_MONOTONIC, &end_time);
-    double elap_time = (end_time.tv_sec - start_time.tv_sec) +
-                       (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
+   #ifdef DEBUG_TIME
+   clock_gettime(CLOCK_MONOTONIC, &end_time);
+   double elap_time = (end_time.tv_sec - start_time.tv_sec) +
+                     (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
+   #endif
 
    uint64_t total_count = pvs_count + zws_count + q_count;
 
-   printf("Tree searched %lld evals (pvs: %lld, zws: %lld, q: %lld)\n", total_count, pvs_count, zws_count, q_count);
+   printf("Tree searched %" PRIu64 " evals (pvs: %" PRIu64 ", zws: %" PRIu64 ", q: %" PRIu64 ")\n", total_count, pvs_count, zws_count, q_count);
+   #ifdef DEBUG_TIME
    printf("Took %lf seconds, with %lf eval/sec\n", elap_time, ( (double)total_count) / elap_time);
+   #endif
 }
 #endif
 

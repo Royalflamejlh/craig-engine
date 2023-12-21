@@ -1,7 +1,5 @@
 #include "hash.h"
-#include <ctype.h>
 #include <stdint.h>
-#include <stdio.h>
 #include "util.h"
 #include <time.h>
 #include <stdlib.h>

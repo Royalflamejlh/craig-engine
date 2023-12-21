@@ -261,7 +261,7 @@ void printPosition(Position position, char verbose){
     PositionToFen(position, fen);
     printf("----------------------------------------------------------------------------------------------------------------------------------\n");
     printf("\nFEN: %s \n\n", fen);
-    printf("Hash: %llu \n\n", position.hash);
+    printf("Hash: %" PRIu64 " \n\n", position.hash);
     printf("  A B C D E F G H\n");
     for (int rank = 7; rank >= 0; rank--) {
         printf("%d ", rank + 1);

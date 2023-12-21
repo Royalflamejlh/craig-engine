@@ -218,6 +218,7 @@ int makeMove(Position *pos, Move move){
 
         case DOUBLE_PAWN_PUSH:
             pos->en_passant = 1ULL << (turn ? to - 8 : to + 8);
+            // fall through
         case QUIET:
         default:
             movePiece(pos, turn, from, to);

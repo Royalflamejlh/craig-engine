@@ -9,8 +9,10 @@
 #include <fcntl.h>
 #include <signal.h>
 
+#ifdef PYTHON
 static int fifo_fd_in, fifo_fd_out;
 static pid_t pid;
+#endif
 
 void printMove(Move move){
     int from = GET_FROM(move);
@@ -110,6 +112,9 @@ char getPiece(Position pos, int square){
     return pos.charBoard[square];
 }
 
+
+
+#ifdef PYTHON
 int python_init() {
     system("rm /tmp/chess_fifo_in");
     system("rm /tmp/chess_fifo_out");
@@ -166,7 +171,6 @@ static int python_movecount(char* fen) {
     return move_count;
 }
 
-
 int python_close() {
     close(fifo_fd_in);
     close(fifo_fd_out);
@@ -175,7 +179,6 @@ int python_close() {
     unlink("/tmp/chess_fifo_out");
     return 0;
 }
-
 
 int checkMoveCount(Position pos){
     Move moveList[MAX_MOVES];
@@ -193,3 +196,5 @@ int checkMoveCount(Position pos){
     }
     return 0;
 }
+
+#endif

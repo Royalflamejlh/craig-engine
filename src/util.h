@@ -2,6 +2,9 @@
 #define UTIL_H
 #include <stdlib.h>
 
+
+
+
 #include "types.h"
 void printMove(Move move);
 uint64_t perft(int depth, Position pos);

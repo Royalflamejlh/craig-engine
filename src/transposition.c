@@ -14,7 +14,7 @@ void startTTDebug(void){
     store_rej = 0;
 }
 void printTTDebug(void){
-    printf("TT GET Suc: %llu Fail: %llu, TT STORE Suc: %llu Fail: %llu\n", get_suc, get_rej, store_cnt, store_rej);
+    printf("TT GET Suc: %" PRIu64 " Fail: %" PRIu64 ", TT STORE Suc: %" PRIu64 " Fail: %" PRIu64 "\n", get_suc, get_rej, store_cnt, store_rej);
 }
 #endif
 
