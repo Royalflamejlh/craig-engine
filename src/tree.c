@@ -7,7 +7,6 @@
 #include "evaluator.h"
 #include "transposition.h"
 #include "globals.h"
-#include "pthread.h"
 
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -35,6 +34,7 @@
 #if defined(__unix__) || defined(__APPLE__)
 #define DEBUG_TIME
 #include <time.h>
+#include "pthread.h"
 static struct timespec start_time, end_time;
 #endif
 
@@ -116,8 +116,8 @@ Move getBestMove(Position pos){
    while(run_get_best_move){
       i+=ID_STEP;
       moveScore = -pvSearch(&pos, INT_MIN+1, INT_MAX, i, 0, &bestMove);
-      printf("Move found with score %d at depth %d\n", moveScore, i);
-      printMove(bestMove);
+      //printf("Move found with score %d at depth %d\n", moveScore, i);
+      //printMove(bestMove);
       global_best_move = bestMove;
    }
 
@@ -127,7 +127,7 @@ Move getBestMove(Position pos){
    #endif
 
 
-   printf("Move found with score %d\n", moveScore);
+   //printf("Move found with score %d\n", moveScore);
    printMove(bestMove);
 
    return bestMove;

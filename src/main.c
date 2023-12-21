@@ -8,7 +8,6 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
-#include <unistd.h>
 #include "transposition.h"
 #include "bitboard/bitboard.h"
 #include "bitboard/magic.h"
@@ -40,6 +39,7 @@ typedef struct {
 #if defined(__unix__) || defined(__APPLE__)
 
 #include <pthread.h>
+#include <unistd.h>
 
 static pthread_t search_threads[NUM_SEARCH_THREADS];
 
@@ -125,22 +125,34 @@ static HANDLE search_threads[NUM_SEARCH_THREADS];
 volatile int runTimerThread = 1;
 static HANDLE timerThread;
 
+long time_left;
+
 // Timer thread function
 DWORD WINAPI timerThreadFunction(LPVOID timeDuration) {
-    long duration = *(long*)timeDuration;
-    Sleep(duration * 1000);  // Sleep for the specified duration, convert seconds to milliseconds
+    // long duration = *(long*)timeDuration;
+    // printf("%ld\r\n", duration);
+    // free(timeDuration);
+    printf("Wow\r\n");
+    fflush(stdout);
+    Sleep((DWORD)(time_left));  // Sleep for the specified duration, convert seconds to milliseconds
 
     if (runTimerThread) {
         printBestMove();  // Call the function after waking up
     }
 
+    fflush(stdout);
     return 0;
 }
 
 int startTimerThread(long durationInSeconds) {
     runTimerThread = 1;
     DWORD threadId;
-    timerThread = CreateThread(NULL, 0, timerThreadFunction, &durationInSeconds, 0, &threadId);
+    // long *j = malloc(sizeof(long));
+    // *j = durationInSeconds;
+    long j=0;
+    time_left = durationInSeconds;
+    printf("Hooray!\r\n");
+    timerThread = CreateThread(NULL, 0, timerThreadFunction, &j, 0, &threadId);
     if (timerThread == NULL) {
         printf("Failed to create timer thread\n");
         return 1;
@@ -275,7 +287,7 @@ void processMoves(char* str) {
         if(isNullMove(moveStr)){
             goto get_next_token;
         }
-        printf("Move String found: %s", moveStr);
+        //printf("Move String found: %s", moveStr);
         makeMove(&pos, moveStrToType(pos, moveStr));
 get_next_token:
         pch = strtok_r(NULL, " ", &rest);
@@ -356,44 +368,42 @@ void processGoCommand(char* input) {
 static int processInput(char* input){
     if (strncmp(input, "uci", 3) == 0) {
         processUCI();
+        fflush(stdout);
         return 0;
     } 
     else if (strncmp(input, "isready", 7) == 0) {
         processIsReady();
+        fflush(stdout);
         return 0;
     }
     else if (strncmp(input, "position", 8) == 0) {
         input += 9;
+        stopSearchThreads();
         if (strncmp(input, "startpos", 8) == 0) {
             input += 9;
             if (strncmp(input, "moves", 5) == 0) {
                 input += 6;
-                stopSearchThreads();
                 processMoves(input);
-                startSearchThreads();
-                return 0;
             }
             else{
-                stopSearchThreads();
                 global_position = fenToPosition(START_FEN);
-                startSearchThreads();
-                return 0;
             }
         }
         else if (strncmp(input, "fen", 3) == 0) {
             input += 4;
-            stopSearchThreads();
             global_position = fenToPosition(input);
-            startSearchThreads();
-            return 0;
         }
+        fflush(stdout);
+    }
+    else if (strncmp(input, "go", 2) == 0) {
+        startSearchThreads();
+        processGoCommand(input + 3);
+        // printf("www\r\n");
+        fflush(stdout);
     }
     else if (strncmp(input, "stop", 4) == 0){
         stopTimerThread();
         printBestMove();
-    }
-    else if (strncmp(input, "go", 2) == 0) {
-        processGoCommand(input + 3);
     }
     else if (strncmp(input, "quit", 4) == 0) {
         return -1; 
