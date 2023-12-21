@@ -9,6 +9,11 @@
 #include "globals.h"
 #include "pthread.h"
 
+
+#if defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+#endif
+
 #define DEPTH 8
 #define ID_STEP 1
 
@@ -130,7 +135,11 @@ Move getBestMove(Position pos){
 
 
 int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* returnMove) {
+   #if defined(__unix__) || defined(__APPLE__)
    if(!run_get_best_move) pthread_exit(NULL);
+   #elif defined(_WIN32) || defined(_WIN64)
+   if(!run_get_best_move) ExitThread(0);
+   #endif
    //printf("pvSearch (%llu) a: %d, b: %d, d: %d, ply: %d, retMove %p\n", pos->hash, alpha, beta, (int)depth, (int)ply, returnMove);
    if( depth <= 0 ) {
       int q_eval = quiesce(pos, alpha, beta, ply, 0);
@@ -236,7 +245,11 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* re
 
 // fail-hard zero window search, returns either beta-1 or beta
 int zwSearch( Position* pos, int beta, char depth, char ply ) {
+   #if defined(__unix__) || defined(__APPLE__)
    if(!run_get_best_move) pthread_exit(NULL);
+   #elif defined(_WIN32) || defined(_WIN64)
+   if(!run_get_best_move) ExitThread(0);
+   #endif
    // alpha == beta - 1
    // this is either a cut- or all-node
    if( depth <= 0 ) return quiesce(pos, beta-1, beta, ply, 0);
@@ -297,7 +310,11 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
 
 //quisce search
 int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply) {
+   #if defined(__unix__) || defined(__APPLE__)
    if(!run_get_best_move) pthread_exit(NULL);
+   #elif defined(_WIN32) || defined(_WIN64)
+   if(!run_get_best_move) ExitThread(0);
+   #endif
    #ifdef DEBUG
    q_count++;
    #endif

@@ -119,51 +119,83 @@ static int launch_threads(void){
 #elif defined(_WIN32) || defined(_WIN64)
 
 #include <windows.h>
+static HANDLE search_threads[NUM_SEARCH_THREADS];
 
-static DWORD WINAPI io_thread_entry(LPVOID lpParam) {
-    (void)lpParam;
+// Global variable to control the timer thread
+volatile int runTimerThread = 1;
+static HANDLE timerThread;
+
+// Timer thread function
+DWORD WINAPI timerThreadFunction(LPVOID timeDuration) {
+    long duration = *(long*)timeDuration;
+    Sleep(duration * 1000);  // Sleep for the specified duration, convert seconds to milliseconds
+
+    if (runTimerThread) {
+        printBestMove();  // Call the function after waking up
+    }
+
+    return 0;
+}
+
+int startTimerThread(long durationInSeconds) {
+    runTimerThread = 1;
+    DWORD threadId;
+    timerThread = CreateThread(NULL, 0, timerThreadFunction, &durationInSeconds, 0, &threadId);
+    if (timerThread == NULL) {
+        printf("Failed to create timer thread\n");
+        return 1;
+    }
+    return 0;
+}
+
+void stopTimerThread() {
+    runTimerThread = 0;
+    WaitForSingleObject(timerThread, INFINITE);
+    CloseHandle(timerThread);
+}
+
+DWORD WINAPI io_thread_entry(LPVOID arg) {
+    (void)arg;
     printf("IO Thread running...\n");
     readInput();
     return 0;
 }
 
-static DWORD WINAPI search_thread_entry(LPVOID lpParam) {
-    (void)lpParam;
-    printf("Search Thread running...\n");
-    //Call start search function or something
+DWORD WINAPI search_thread_entry(LPVOID arg) {
+    (void)arg;
+    searchLoop();
     return 0;
+}
+
+void startSearchThreads(){
+    run_get_best_move = true;
+    DWORD threadId;
+    for (int i = 0; i < NUM_SEARCH_THREADS; i++) {
+        search_threads[i] = CreateThread(NULL, 0, search_thread_entry, NULL, 0, &threadId);
+    }
+}
+
+void stopSearchThreads(){
+    run_get_best_move = false;
+    for (int i = 0; i < NUM_SEARCH_THREADS; i++) {
+        if(search_threads[i]){
+            WaitForSingleObject(search_threads[i], INFINITE);
+            CloseHandle(search_threads[i]);
+        }
+    }
 }
 
 static int launch_threads(void){
     HANDLE io_thread;
-    HANDLE search_threads[NUM_SEARCH_THREADS];
-    int i;
-
-    // Create IO thread
-    io_thread = CreateThread(NULL, 0, io_thread_entry, NULL, 0, NULL);
+    DWORD ioThreadId;
+    io_thread = CreateThread(NULL, 0, io_thread_entry, NULL, 0, &ioThreadId);
     if (io_thread == NULL) {
         fprintf(stderr, "Error creating IO thread\n");
         return 1;
     }
 
-    // Create search threads
-    for (i = 0; i < NUM_SEARCH_THREADS; i++) {
-        search_threads[i] = CreateThread(NULL, 0, search_thread_entry, NULL, 0, NULL);
-        if (search_threads[i] == NULL) {
-            fprintf(stderr, "Error creating search thread %d\n", i);
-            return 1;
-        }
-    }
-
-    // Wait for IO thread to terminate
     WaitForSingleObject(io_thread, INFINITE);
     CloseHandle(io_thread);
-
-    // Wait for search threads to terminate
-    for (i = 0; i < NUM_SEARCH_THREADS; i++) {
-        WaitForSingleObject(search_threads[i], INFINITE);
-        CloseHandle(search_threads[i]);
-    }
 
     return 0;
 }
