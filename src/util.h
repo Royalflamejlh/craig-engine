@@ -3,7 +3,8 @@
 #include <stdlib.h>
 
 
-
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
 #include "types.h"
 void printMove(Move move);
@@ -13,7 +14,7 @@ int python_init();
 int python_close();
 
 Move moveStrToType(Position pos, char* str);
-
+void printPV(Move *pvArray, int depth);
 static inline int count_bits(uint64_t v){
     unsigned int c;
     for (c = 0; v; c++){
@@ -28,4 +29,9 @@ static inline uint64_t random_uint64() {
   u3 = (uint64_t)(rand()) & 0xFFFF; u4 = (uint64_t)(rand()) & 0xFFFF;
   return u1 | (u2 << 16) | (u3 << 32) | (u4 << 48);
 }
+
+static inline void movcpy (Move* pTarget, const Move* pSource, int n) {
+   while (n-- && (*pTarget++ = *pSource++));
+}
+
 #endif

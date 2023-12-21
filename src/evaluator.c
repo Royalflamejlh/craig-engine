@@ -1,8 +1,12 @@
 #include "evaluator.h"
 #include <limits.h>
+#include "types.h"
 #include "util.h"
 #include "tree.h"
 #include "bitboard/bbutils.h"
+
+#define EARLY_GAME_MOVES   8 //Moves that count as early game (fullmoves)
+#define END_GAME_PIECES   16 //Pieces left to count as late game
 
 #define KING_VALUE     100000
 #define QUEEN_VALUE     10000
@@ -11,10 +15,10 @@
 #define KNIGHT_VALUE     3500
 #define PAWN_VALUE       1000
 
-#define ATTACK_BONUS       10  //Eval for each square under attack
-#define D_ATTACK_BONUS     50  //Eval for each enemy under attack
-#define DEFEND_BONUS      100  //Eval for each defended piece
-#define HANGING_PEN       950  //Eval lost for hanging a piece
+#define ATTACK_BONUS        5  //Eval for each square under attack
+#define D_ATTACK_BONUS     10  //Eval for each enemy under attack
+#define DEFEND_BONUS        5  //Eval for each defended piece
+#define HANGING_PEN        50  //Eval lost for hanging a piece
 
 #define CHECK_PEN         100  //Eval lost under check
 
@@ -22,6 +26,17 @@
 
 #define DOUBLE_PAWN_PEN   100  //Eval lost for double pawns
 #define ISO_PAWN_PEN      100  //Eval lost for isolated pawns
+
+#define PST_PAWN_MULT       1  //Multiplier Pawns in Eval
+#define PST_KNIGHT_MULT     1  //Mult Knights in Eval
+#define PST_BISHOP_MULT     1  //Mult Bishop in Eval
+#define PST_QUEEN_MULT      1  //Mult Queen in Eval
+#define PST_ROOK_MULT       1  //Mult Rook in Eval
+#define PST_KING_MULT       1  //Mult King in Eval
+
+
+
+static int PST[12][64];
 
 static const int pieceValues[] = {
     [WHITE_PAWN] = PAWN_VALUE,
@@ -38,15 +53,20 @@ static const int pieceValues[] = {
     [BLACK_KING] = KING_VALUE
 };
 
-enum {
-    OPENING,
+typedef enum {
+    EARLY_GAME,
     MID_GAME,
     END_GAME
-};
+} Stage;
 
 int evaluate(Position pos){
     int eval_val = 0;
     int turn = pos.flags & WHITE_TURN;
+
+    //Get the stage
+    int stage = MID_GAME;
+    if(pos.fullmove_number < EARLY_GAME_MOVES) stage = EARLY_GAME; 
+    if(count_bits(pos.color[0] | pos.color[1]) <= END_GAME_PIECES) stage = END_GAME;
 
     //Penalty for being in check
     if(pos.flags & IN_CHECK) eval_val -= CHECK_PEN;
@@ -93,6 +113,22 @@ int evaluate(Position pos){
         }
     }
 
+
+    //PST
+    //Pawns
+    uint64_t pawns = pos.pawn[turn];
+    while (pawns) {
+        int square = __builtin_ctzll(pawns);
+        eval_val += PST_PAWN_MULT * PST[WHITE_PAWN][square];
+        pawns &= pawns - 1;
+    }
+    pawns = pos.pawn[!turn];
+    while (pawns) {
+        int square = __builtin_ctzll(pawns);
+        eval_val -= PST_PAWN_MULT * PST[BLACK_PAWN][square];
+        pawns &= pawns - 1;
+    }
+
     
     
 
@@ -105,7 +141,6 @@ int evaluate(Position pos){
 /*
 *  Below here is the move evaluating code
 */
-static int PST[12][64];
 
 void initPST(){
 
@@ -229,6 +264,7 @@ void evalMoves(Move* moveList, int* moveVals, int size, Move ttMove, Move *kille
 
         
         //Add on the flag values
+        int histScore;
         switch(GET_FLAGS(move)){
             case QUEEN_PROMO_CAPTURE:
                 moveVals[i] += ((pieceValues[to_piece] + QUEEN_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
@@ -270,7 +306,8 @@ void evalMoves(Move* moveList, int* moveVals, int size, Move ttMove, Move *kille
 
             case DOUBLE_PAWN_PUSH:
             case QUIET:
-                moveVals[i] += getHistoryScore(pos.flags, moveList[i]) >> HIST_SCORE_SHIFT;
+                histScore = getHistoryScore(pos.flags, moveList[i]) >> HIST_SCORE_SHIFT;
+                moveVals[i] += MIN(histScore, PAWN_VALUE-100);
             default:
                 break;
         }

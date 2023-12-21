@@ -48,8 +48,9 @@ volatile int runTimerThread = 1;
 static pthread_t timerThread;
 
 // Timer thread function
-void* timerThreadFunction(void* timeDuration) {
-    long duration = *(long*)timeDuration;
+void* timerThreadFunction(void* durationPtr) {
+    long duration = *(long*)durationPtr;
+    free(durationPtr);
     sleep(duration / 1000);  // Sleep for the specified duration
 
     if (runTimerThread) {
@@ -60,8 +61,14 @@ void* timerThreadFunction(void* timeDuration) {
 }
 
 int startTimerThread(long durationInSeconds) {
+    long *durationPtr = malloc(sizeof(long));
+    if(!durationPtr){
+        printf("info Warning failed to allocate space for duration pointer.");
+        return -1;
+    }
+    *durationPtr = durationInSeconds;
     runTimerThread = 1;
-    if (pthread_create(&timerThread, NULL, timerThreadFunction, &durationInSeconds)) {
+    if (pthread_create(&timerThread, NULL, timerThreadFunction, durationPtr)) {
         perror("Failed to create timer thread");
         return 1;
     }
@@ -125,16 +132,11 @@ static HANDLE search_threads[NUM_SEARCH_THREADS];
 volatile int runTimerThread = 1;
 static HANDLE timerThread;
 
-long time_left;
-
 // Timer thread function
-DWORD WINAPI timerThreadFunction(LPVOID timeDuration) {
-    // long duration = *(long*)timeDuration;
-    // printf("%ld\r\n", duration);
-    // free(timeDuration);
-    printf("Wow\r\n");
-    fflush(stdout);
-    Sleep((DWORD)(time_left));  // Sleep for the specified duration, convert seconds to milliseconds
+DWORD WINAPI timerThreadFunction(LPVOID durationPtr) {
+    long duration = *(long*)durationPtr;
+    free(durationPtr);
+    Sleep((DWORD)(duration));  // Sleep for the specified duration, convert seconds to milliseconds
 
     if (runTimerThread) {
         printBestMove();  // Call the function after waking up
@@ -147,15 +149,16 @@ DWORD WINAPI timerThreadFunction(LPVOID timeDuration) {
 int startTimerThread(long durationInSeconds) {
     runTimerThread = 1;
     DWORD threadId;
-    // long *j = malloc(sizeof(long));
-    // *j = durationInSeconds;
-    long j=0;
-    time_left = durationInSeconds;
-    printf("Hooray!\r\n");
-    timerThread = CreateThread(NULL, 0, timerThreadFunction, &j, 0, &threadId);
+    long *durationPtr = malloc(sizeof(long));
+    if(!durationPtr){
+        printf("info Warning failed to allocate space for duration pointer.");
+        return -1;
+    }
+    *durationPtr = durationInSeconds;
+    timerThread = CreateThread(NULL, 0, timerThreadFunction, durationPtr, 0, &threadId);
     if (timerThread == NULL) {
         printf("Failed to create timer thread\n");
-        return 1;
+        return -1;
     }
     return 0;
 }
@@ -298,6 +301,9 @@ get_next_token:
 static void printBestMove(){
     char str[6];
     Move bestMove = global_best_move;
+    while(bestMove == NO_MOVE){
+        bestMove = global_best_move;
+    }
     str[0] = (GET_FROM(bestMove) % 8) + 'a';
     str[1] = (GET_FROM(bestMove) / 8) + '1';
     str[2] = (GET_TO(bestMove) % 8) + 'a';
@@ -398,12 +404,18 @@ static int processInput(char* input){
     else if (strncmp(input, "go", 2) == 0) {
         startSearchThreads();
         processGoCommand(input + 3);
-        // printf("www\r\n");
         fflush(stdout);
     }
     else if (strncmp(input, "stop", 4) == 0){
         stopTimerThread();
         printBestMove();
+    }
+    else if (strncmp(input, "debug", 5) == 0){
+        printPosition(global_position, TRUE);
+        printf("Best move is: ");
+        printMove(global_best_move);
+        printf("\r\n");
+        fflush(stdout);
     }
     else if (strncmp(input, "quit", 4) == 0) {
         return -1; 
@@ -434,7 +446,9 @@ int readInput(){
 int searchLoop(){
     while(TRUE){
         if(global_position.hash && run_get_best_move){
-            getBestMove(global_position);
+            if(getBestMove(global_position)){
+                return -1;
+            }
         }
     }
     return 0;

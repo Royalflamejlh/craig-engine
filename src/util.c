@@ -30,7 +30,7 @@ void printMove(Move move){
     int rank_num_from = rank_from + 1;
     int rank_num_to = rank_to + 1;
 
-    printf("Move: %c%d to %c%d\n", file_char_from, rank_num_from, file_char_to, rank_num_to);
+    printf("%c%d%c%d", file_char_from, rank_num_from, file_char_to, rank_num_to);
 
     switch(GET_FLAGS(move)){
         case DOUBLE_PAWN_PUSH:
@@ -76,8 +76,6 @@ void printMove(Move move){
         default:
             break;
     }
-
-    printf("\n");
 }
 
 
@@ -158,6 +156,17 @@ Move moveStrToType(Position pos, char* str){
     printf("info warning move not found");
     return NO_MOVE;
 }
+
+void printPV(Move *pvArray, int depth) {
+    printf("Principal Variation at depth %d: ", depth);
+    for (int i = 0; i < depth; i++) {
+        if(pvArray[i] != NO_MOVE){ 
+            printMove(pvArray[i]);
+            printf(" ");
+        }
+    }
+}
+
 
 #ifdef PYTHON
 int python_init() {

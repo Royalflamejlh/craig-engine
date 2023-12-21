@@ -3,6 +3,7 @@
 #include <limits.h>
 #include <string.h>
 #include "movement.h"
+#include "types.h"
 #include "util.h"
 #include "evaluator.h"
 #include "transposition.h"
@@ -13,7 +14,7 @@
 #include <windows.h>
 #endif
 
-#define DEPTH 8
+#define MAX_DEPTH 8
 #define ID_STEP 1
 
 #define CHECKMATE_VALUE (INT_MIN + 10)
@@ -24,7 +25,7 @@
 #define MAX_PLY 255 //How far the total search can go
 
 #define LMR_DEPTH 3 //The min depth to start performing lmr
-#define LMR_MIN_MOVE 2 //the move number to start performing lmr on
+#define LMR_MIN_MOVE 5 //the move number to start performing lmr on
 
 //static void selectSort(int i, Move *moveList, int *moveVals, int size);
 
@@ -102,23 +103,36 @@ uint32_t getHistoryScore(char pos_flags, Move move){
 /*
 * Get that move son.
 */
-Move getBestMove(Position pos){
-   Move bestMove;
+int getBestMove(Position pos){
    int moveScore;
    
    #ifdef DEBUG
    startTTDebug();
    startTreeDebug();
    #endif
-
-   clearKillerMoves();
+   clearKillerMoves(); //TODO: make thread safe!
    int i = 1;
-   while(run_get_best_move){
+   while(run_get_best_move 
+   #ifdef MAX_DEPTH
+   && i <= MAX_DEPTH
+   #endif
+   ){
+      Move *pvArray = malloc(sizeof(Move) * (i*i + i)/2);
+      memset(pvArray, 0, sizeof(Move) * (i*i + i)/2);
+
+      if(!pvArray){
+         printf("info Warning: failed to allocate space for pvArray");
+         return -1;
+      }
+      //printf("Running pv search at depth %d\n", i);
+      moveScore = -pvSearch(&pos, INT_MIN+1, INT_MAX, i, 0, pvArray, 0);
+
+      printPV(pvArray, i);
+      printf("found with score %d\n", moveScore);
+
+      global_best_move = pvArray[0];
+      free(pvArray);
       i+=ID_STEP;
-      moveScore = -pvSearch(&pos, INT_MIN+1, INT_MAX, i, 0, &bestMove);
-      //printf("Move found with score %d at depth %d\n", moveScore, i);
-      //printMove(bestMove);
-      global_best_move = bestMove;
    }
 
    #ifdef DEBUG
@@ -126,15 +140,16 @@ Move getBestMove(Position pos){
    printTTDebug();
    #endif
 
+   #ifdef MAX_DEPTH
+   return 1;
+   #endif
 
-   //printf("Move found with score %d\n", moveScore);
-   printMove(bestMove);
-
-   return bestMove;
+   return 0;
 }
 
 
-int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* returnMove) {
+int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pvArray, int pvIndex) {
+   //printf("Depth = %d, Ply = %d, Depth+ply = %d\n", depth, ply, depth+ply);
    #if defined(__unix__) || defined(__APPLE__)
    if(!run_get_best_move) pthread_exit(NULL);
    #elif defined(_WIN32) || defined(_WIN64)
@@ -161,6 +176,10 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* re
    if(pos->halfmove_clock >= 50) return 0;
 
 
+
+   char bSearchPv = 1;
+   int pvNextIndex = pvIndex + depth;
+
    TTEntry* ttEntry = getTTEntry(pos->hash);
    Move ttMove = NO_MOVE;
    if (ttEntry) {
@@ -168,26 +187,34 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* re
       if(ttEntry->depth >= depth){
          switch (ttEntry->nodeType) {
             case PV_NODE: // Exact value
-               if(returnMove) *returnMove = ttEntry->move;
-               //printf("Returning PV_NODE: %d\n", ttEntry->eval);
+               pvArray[pvIndex] = ttEntry->move;
+               //movcpy (pvArray + pvIndex + 1, pvArray + pvNextIndex, depth - 1);
                return ttEntry->eval;
             case CUT_NODE: // Lower bound
-               if(returnMove) *returnMove = ttEntry->move;
                if (ttEntry->eval >= beta){
                   //printf("Returning CUT_NODE beta: %d\n", beta);
                   return beta;
                }
                break;
             case ALL_NODE: // Upper bound
-               if (ttEntry->eval > alpha) alpha = ttEntry->eval;
+               if (ttEntry->eval > alpha){
+                  alpha = ttEntry->eval;
+                  pvArray[pvIndex] = ttEntry->move;
+                  movcpy (pvArray + pvIndex + 1, pvArray + pvNextIndex, depth - 1);
+                  bSearchPv = 0; 
+               }
                break;
             default:
                break;
          }
       }
+      else{
+         if(ttEntry->nodeType == ALL_NODE || PV_NODE){
+            bSearchPv = 0; 
+         }
+      }
    }
 
-   char bSearchPv = 1;
    
    evalMoves(moveList, moveVals, size, ttMove, killerMoves[(int)ply], KMV_CNT, *pos);
 
@@ -196,8 +223,8 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* re
    if(pos->flags & IN_CHECK) LMR = FALSE;
    if(depth < LMR_DEPTH) LMR = FALSE;
 
+
    Position prevPos = *pos;
-   Move bestMove = NO_MOVE;
    for (int i = 0; i < size; i++)  {
       selectSort(i, moveList, moveVals, size);
       makeMove(pos, moveList[i]);
@@ -210,12 +237,12 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* re
 
       int score;
       if ( bSearchPv ) {
-         score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, NULL);
+         score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
       } else {
          if(LMR_cur) score = -zwSearch(pos, -alpha, LMR_DEPTH, ply + 1);
          else score = -zwSearch(pos, -alpha, depth - 1, ply + 1);
          if ( score > alpha && score < beta)
-            score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, NULL);
+            score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
       }
       *pos = prevPos; //Unmake move
       if( score >= beta ) {
@@ -227,18 +254,18 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* re
       }
       if( score > alpha ) {
          alpha = score;
-         bestMove = moveList[i];
+         pvArray[pvIndex] = moveList[i];
+         movcpy (pvArray + pvIndex + 1, pvArray + pvNextIndex, depth - 1);
          bSearchPv = 0; 
       }
    }
-   if (bestMove != NO_MOVE) {
+   if (!bSearchPv) {
       // PV Node (exact value)
-      storeTTEntry(pos->hash, depth, alpha, PV_NODE, bestMove);
+      storeTTEntry(pos->hash, depth, alpha, PV_NODE, pvArray[pvIndex]);
    } else {
       // ALL Node (upper bound)
       storeTTEntry(pos->hash, depth, alpha, ALL_NODE, NO_MOVE);
    }
-   if(returnMove) *returnMove = bestMove;
    //printf("Returning alpha: %d\n", alpha);
    return alpha;
 }
