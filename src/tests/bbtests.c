@@ -9,13 +9,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <inttypes.h>
 #include <time.h>
 #include "../bitboard/bitboard.h"
 #include "../bitboard/magic.h"
 #include "../movement.h"
 #include "../util.h"
-#include "../tree.h"
 #include "../hash.h"
 #include "../transposition.h"
 #include "../evaluator.h"
@@ -26,20 +24,11 @@
 #define NODE_TEST
 
 
-#define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-
 int testBB(void) {
     #ifdef PYTHON
     python_init();
     #endif
-    generateMasks();
-    generateMagics();
-    initZobrist();
-    initPST();
-    if(initTT()){
-        printf("WARNING FAILED TO ALLOCATED SPACE FOR TRANSPOSITION TABLE\n");
-        return -1;
-    }
+    
     
 
     
@@ -152,7 +141,7 @@ int testBB(void) {
     #endif
 
 
-    #ifdef NODE_TEST
+    #ifdef NODE_TEST_OFF
     printf("\n---------------------------------- Node TESTING ----------------------------------\n\n");
 
     pos = fenToPosition(START_FEN);

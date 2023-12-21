@@ -1,6 +1,5 @@
 One of the moves in:
 
-Testing: 4k3/8/8/8/8/8/8/R3K2R w KQ - 0 1 ;D1 26 ;D2 112 ;D3 3189 ;D4 17945 ;D5 532933 ;D6 2788982
-D1: 26 |D2: 116 |D3: 3279 |D4: 18700 |
+FEN: r1bqkbnr/pppp1ppp/4p3/1B2P3/8/2N5/1PPP1PPP/Q3K1NR b Kkq - 1 9
 
 Dont work

@@ -112,7 +112,52 @@ char getPiece(Position pos, int square){
     return pos.charBoard[square];
 }
 
+Move moveStrToType(Position pos, char* str){
+    Move moveList[MAX_MOVES] = {0};
+    int size = generateLegalMoves(pos, moveList);
 
+    int from  = (str[0] - 'a') + ((str[1] - '1') * 8);
+    int to = (str[2] - 'a') + ((str[3] - '1') * 8);
+    char promo = str[4];
+
+    if(str[4] != '\0'){
+        while(TRUE){
+            printf("ERROR WILL SHIT SELF IMPLEMENT PROMO");
+        }
+    }
+
+    for(int i = 0; i < size; i++){
+        int fromCur = GET_FROM(moveList[i]);
+        int toCur = GET_TO(moveList[i]);
+        char promoCur;
+        switch(GET_FLAGS(moveList[i])){
+            case QUEEN_PROMO_CAPTURE:
+            case QUEEN_PROMOTION:
+                promoCur = 'q';
+                break;
+            case ROOK_PROMO_CAPTURE:
+            case ROOK_PROMOTION:
+                promoCur = 'r';
+                break;
+            case BISHOP_PROMO_CAPTURE:
+            case BISHOP_PROMOTION:
+                promoCur = 'b';
+                break;
+            case KNIGHT_PROMO_CAPTURE:
+            case KNIGHT_PROMOTION:
+                promoCur = 'n';
+                break;
+            default:
+                promoCur = '\0';
+                break;
+        }
+        if(fromCur == from && toCur == to && promo == promoCur){
+            return moveList[i];
+        }
+    }
+    printf("info warning move not found");
+    return NO_MOVE;
+}
 
 #ifdef PYTHON
 int python_init() {

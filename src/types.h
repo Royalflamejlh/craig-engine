@@ -18,6 +18,7 @@
 
 #define BOARD_SIZE 64
 
+#define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
 #define MAX_MOVES 256 //Most moves possible in a single position
 #define MAX_FEN_LEN 100 //Max length of a fen string

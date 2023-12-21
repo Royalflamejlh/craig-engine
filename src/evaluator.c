@@ -227,8 +227,6 @@ void evalMoves(Move* moveList, int* moveVals, int size, Move ttMove, Move *kille
         //Add on the PST values
         moveVals[i] += PST[pieceToIndex[(int)from_piece]][GET_TO(move)];
 
-        //Add on the history scores
-        moveVals[i] += getHistoryScore(pos.flags, moveList[i]) >> HIST_SCORE_SHIFT;
         
         //Add on the flag values
         switch(GET_FLAGS(move)){
@@ -272,6 +270,7 @@ void evalMoves(Move* moveList, int* moveVals, int size, Move ttMove, Move *kille
 
             case DOUBLE_PAWN_PUSH:
             case QUIET:
+                moveVals[i] += getHistoryScore(pos.flags, moveList[i]) >> HIST_SCORE_SHIFT;
             default:
                 break;
         }

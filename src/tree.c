@@ -6,9 +6,10 @@
 #include "util.h"
 #include "evaluator.h"
 #include "transposition.h"
+#include "globals.h"
+#include "pthread.h"
 
-
-#define DEPTH 4
+#define DEPTH 8
 #define ID_STEP 1
 
 #define CHECKMATE_VALUE (INT_MIN + 10)
@@ -19,7 +20,7 @@
 #define MAX_PLY 255 //How far the total search can go
 
 #define LMR_DEPTH 3 //The min depth to start performing lmr
-#define LMR_MIN_MOVE 5 //the move number to start performing lmr on
+#define LMR_MIN_MOVE 2 //the move number to start performing lmr on
 
 //static void selectSort(int i, Move *moveList, int *moveVals, int size);
 
@@ -106,10 +107,13 @@ Move getBestMove(Position pos){
    #endif
 
    clearKillerMoves();
-   for(int i = 1; i <= DEPTH; i+=ID_STEP){
+   int i = 1;
+   while(run_get_best_move){
+      i+=ID_STEP;
       moveScore = -pvSearch(&pos, INT_MIN+1, INT_MAX, i, 0, &bestMove);
-      //printf("Move found with score %d at depth %d\n", moveScore, i);
+      printf("Move found with score %d at depth %d\n", moveScore, i);
       printMove(bestMove);
+      global_best_move = bestMove;
    }
 
    #ifdef DEBUG
@@ -126,6 +130,7 @@ Move getBestMove(Position pos){
 
 
 int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* returnMove) {
+   if(!run_get_best_move) pthread_exit(NULL);
    //printf("pvSearch (%llu) a: %d, b: %d, d: %d, ply: %d, retMove %p\n", pos->hash, alpha, beta, (int)depth, (int)ply, returnMove);
    if( depth <= 0 ) {
       int q_eval = quiesce(pos, alpha, beta, ply, 0);
@@ -231,6 +236,7 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* re
 
 // fail-hard zero window search, returns either beta-1 or beta
 int zwSearch( Position* pos, int beta, char depth, char ply ) {
+   if(!run_get_best_move) pthread_exit(NULL);
    // alpha == beta - 1
    // this is either a cut- or all-node
    if( depth <= 0 ) return quiesce(pos, beta-1, beta, ply, 0);
@@ -291,6 +297,7 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
 
 //quisce search
 int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply) {
+   if(!run_get_best_move) pthread_exit(NULL);
    #ifdef DEBUG
    q_count++;
    #endif

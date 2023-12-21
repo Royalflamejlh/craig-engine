@@ -12,6 +12,8 @@ int checkMoveCount(Position pos);
 int python_init();
 int python_close();
 
+Move moveStrToType(Position pos, char* str);
+
 static inline int count_bits(uint64_t v){
     unsigned int c;
     for (c = 0; v; c++){
