@@ -34,43 +34,43 @@ void printMove(Move move){
 
     switch(GET_FLAGS(move)){
         case DOUBLE_PAWN_PUSH:
-            printf(" (Double pawn push)");
+            printf(" (DPP)");
             break;
         case KING_CASTLE:
-            printf(" (King's castle)");
+            printf(" (KCstl)");
             break;
         case QUEEN_CASTLE:
-            printf(" (Queen's castle)");
+            printf(" (QCstl)");
             break;
         case CAPTURE:
-            printf(" (Capture)");
+            printf(" (Cap)");
             break;
         case EP_CAPTURE:
-            printf(" (En passant capture)");
+            printf(" (EPCap)");
             break;
         case KNIGHT_PROMOTION:
-            printf(" (Knight promotion)");
+            printf(" (NPro)");
             break;
         case BISHOP_PROMOTION:
-            printf(" (Bishop promotion)");
+            printf(" (BPro)");
             break;
         case ROOK_PROMOTION:
-            printf(" (Rook promotion)");
+            printf(" (RPro)");
             break;
         case QUEEN_PROMOTION:
-            printf(" (Queen promotion)");
+            printf(" (QPro)");
             break;
         case KNIGHT_PROMO_CAPTURE:
-            printf(" (Knight promotion capture)");
+            printf(" (NProCap)");
             break;
         case BISHOP_PROMO_CAPTURE:
-            printf(" (Bishop promotion capture)");
+            printf(" (BProCap)");
             break;
         case ROOK_PROMO_CAPTURE:
-            printf(" (Rook promotion capture)");
+            printf(" (RProCap)");
             break;
         case QUEEN_PROMO_CAPTURE:
-            printf(" (Queen promotion capture)");
+            printf(" (QProCap)");
             break;
         case QUIET:
         default:

@@ -24,9 +24,11 @@ TTEntry* getTTEntry(uint64_t hash);
 
 void storeTTEntry(uint64_t hash, char depth, int eval, char nodeType, Move move);
 
-#define DEBUG
+#ifdef __COMPILE_DEBUG
+#define TT_DEBUG
+#endif
 
-#ifdef DEBUG
+#ifdef TT_DEBUG
 void startTTDebug(void);
 void printTTDebug(void);
 #endif

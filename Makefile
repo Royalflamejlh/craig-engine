@@ -4,9 +4,9 @@
 CC = gcc
 ASAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer -Wno-format-security
 CFLAGS = -Wall -Wextra 
-DEBUG_FLAGS = -g $(ASAN_FLAGS) -Werror -Wfatal-errors
-RELEASE_FLAGS = -O3 -Ofast -funroll-loops -flto -finline-functions -fexpensive-optimizations -fomit-frame-pointer
-DEBUG_LDFLAGS += -lpthread $(ASAN_FLAGS)
+DEBUG_FLAGS = -g $(ASAN_FLAGS) -Werror -Wfatal-errors -D __COMPILE_DEBUG=1
+RELEASE_FLAGS = -O3 -Ofast -funroll-loops -flto -finline-functions -fexpensive-optimizations -fomit-frame-pointer -D __FAST_AS_POOP=1
+DEBUG_LDFLAGS += -lpthread $(ASAN_FLAGS) 
 RELEASE_LDFLAGS += -lpthread
 LINUX_TARGET_DEBUG = $(BINDIR)/chess_db
 LINUX_TARGET_RELEASE = $(BINDIR)/chess

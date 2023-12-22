@@ -18,6 +18,10 @@
 #include "types.h"
 #include "util.h"
 
+#ifdef __COMPILE_DEBUG
+#define RUN_TEST
+#endif
+
 #define NUM_SEARCH_THREADS 1
 
 //Fake Headers
@@ -226,7 +230,9 @@ int main(void) {
         printf("WARNING FAILED TO ALLOCATED SPACE FOR TRANSPOSITION TABLE\n");
         return -1;
     }
+    #ifdef RUN_TEST
     testBB();
+    #endif
 
     // Create IO thread
     global_position = fenToPosition(START_FEN);

@@ -10,63 +10,134 @@
 #include "globals.h"
 
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(__unix__) || defined(__APPLE__)
+#include "pthread.h"
+#elif defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 #endif
 
-#define MAX_DEPTH 8
+#ifdef __COMPILE_DEBUG
+#define DEBUG
+#endif
+
+#ifdef __FAST_AS_POOP
+
 #define ID_STEP 1 //Changing this may break Aspiration windows (it will)
 
 #define CHECKMATE_VALUE (MAX_EVAL - 1000)
 
-#define KMV_CNT 3 //How many killer moves are stored for a pos
+#define KMV_CNT 3 //How many killer moves are stored for a pos 
 
-#define MAX_QUIESCE_PLY 10 //How far q search can go
+#define MAX_QUIESCE_PLY 4
 #define MAX_PLY 255 //How far the total search can go
 
-#define LMR_DEPTH 10 //The depth gone to for lmr
-#define LMR_MIN_MOVE 10 //the move number to start performing lmr on
+#define LMR_DEPTH 3
+#define LMR_MIN_MOVE 2
 
-#define MAX_ASP_START 100 //Maximum size of bounds for an aspiration window to start on
-#define ASP_EDGE 1//Buffer size of aspiration window
+#define MAX_ASP_START 100
+#define ASP_EDGE 1
+
+#define FUTIL_DEPTH 1 //Depth to start futility pruning
+#define FUTIL_MARGIN 100 //Score difference for a node to be futility pruned
+
+#define RAZOR_DEPTH 3 //Depth to start razoring
+#define RAZOR_MARGIN PAWN_VALUE*2 //Margin to start razoring
+
+#else
+
+#define MAX_DEPTH 10
+#define ID_STEP 1 //Changing this may break Aspiration windows (it will)
+
+#define CHECKMATE_VALUE (MAX_EVAL - 1000)
+
+#define KMV_CNT 3 //How many killer moves are stored for a pos (fast: 4)
+
+#define MAX_QUIESCE_PLY 10 //How far q search can go (fast: 4)
+#define MAX_PLY 255 //How far the total search can go
+
+#define LMR_DEPTH 10 //The depth gone to for lmr (fast : 3)
+#define LMR_MIN_MOVE 10 //the move number to start performing lmr on (fast: 2)
+
+#define MAX_ASP_START 1000 //Maximum size of bounds for an aspiration window to start on (fast: 100)
+#define ASP_EDGE 30  //Buffer size of aspiration window (fast: 1)
+
+#define FUTIL_DEPTH 1 //Depth to start futility pruning
+#define FUTIL_MARGIN PAWN_VALUE //Score difference for a node to be futility pruned
+
+#define RAZOR_DEPTH 3 //Depth to start razoring
+#define RAZOR_MARGIN PAWN_VALUE*3 //Margin to start razoring
+
+#endif
 
 //static void selectSort(int i, Move *moveList, int *moveVals, int size);
-
 
 #ifdef DEBUG
 
 #if defined(__unix__) || defined(__APPLE__)
 #define DEBUG_TIME
 #include <time.h>
-#include "pthread.h"
 static struct timespec start_time, end_time;
 #endif
 
-static int64_t pvs_count;
-static int64_t zws_count;
-static int64_t q_count;
+typedef enum searchs{
+   PVS,
+   ZWS,
+   QS,
+   SEARCH_TYPE_COUNT
+} SearchType;
+
+typedef enum stats{
+   NODE_COUNT,
+   NODE_LOOP_CHILDREN,
+   NODE_BETA_CUT,
+   NODE_PRUNED
+} DebugStats;
+
+static int64_t debug[sizeof(SearchType)][sizeof(DebugStats)] = {0};
 
 void startTreeDebug(void){
-   pvs_count = 0;
-   zws_count = 0;
-   q_count = 0;
    #ifdef DEBUG_TIME
    clock_gettime(CLOCK_MONOTONIC, &start_time);
    #endif
 }
 void printTreeDebug(void){
+   printf("\n--------------------------------------------------------------------------------------------------------------\n");
    #ifdef DEBUG_TIME
    clock_gettime(CLOCK_MONOTONIC, &end_time);
    double elap_time = (end_time.tv_sec - start_time.tv_sec) +
                      (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
    #endif
 
-   uint64_t total_count = pvs_count + zws_count + q_count;
+   int64_t total_count = 0;
+   int64_t pvs_count = 0, zws_count = 0, q_count = 0;
 
-   printf("Tree searched %" PRIu64 " evals (pvs: %" PRIu64 ", zws: %" PRIu64 ", q: %" PRIu64 ")\n", total_count, pvs_count, zws_count, q_count);
+   for (int i = 0; i < SEARCH_TYPE_COUNT; i++) {
+      int64_t node_count = debug[i][NODE_COUNT];
+      total_count += node_count;
+      char typestr[5];
+      if (i == PVS){
+         pvs_count = node_count;
+         strcpy(typestr, "PVS");
+      }
+      else if (i == ZWS){
+         zws_count = node_count;
+         strcpy(typestr, "ZWS");
+      }
+      else if (i == QS){
+         q_count = node_count;
+         strcpy(typestr, "Q");
+      }
+      int64_t fully = debug[i][NODE_LOOP_CHILDREN] - debug[i][NODE_BETA_CUT] - debug[i][NODE_PRUNED];
+      printf("%s: Called: %" PRIu64 ", Entered Loop: %" PRIu64 ", Beta Cuts: %" PRIu64 ", Prunes: %" PRIu64 ", Fully Searched: %" PRIu64 "\n",
+            typestr, debug[i][NODE_COUNT], debug[i][NODE_LOOP_CHILDREN], debug[i][NODE_BETA_CUT], debug[i][NODE_PRUNED], fully);
+   }
+
+   printf("\nTree searched %" PRIu64 " evals (pvs: %" PRIu64 ", zws: %" PRIu64 ", q: %" PRIu64 ")\n", total_count, pvs_count, zws_count, q_count);
+
    #ifdef DEBUG_TIME
-   printf("Took %lf seconds, with %lf eval/sec\n", elap_time, ( (double)total_count) / elap_time);
+   printf("\nTook %lf seconds, with %lf eval/sec\n", elap_time, ((double)total_count) / elap_time);
    #endif
+   printf("\n--------------------------------------------------------------------------------------------------------------\n");
 }
 #endif
 
@@ -108,9 +179,8 @@ uint32_t getHistoryScore(char pos_flags, Move move){
 */
 int getBestMove(Position pos){
    
-   #ifdef DEBUG
+   #ifdef TT_DEBUG
    startTTDebug();
-   startTreeDebug();
    #endif
    clearKillerMoves(); //TODO: make thread safe!
    int i = 1;
@@ -120,6 +190,9 @@ int getBestMove(Position pos){
    && i <= MAX_DEPTH
    #endif
    ){
+      #ifdef DEBUG
+      startTreeDebug();
+      #endif
       Move *pvArray = malloc(sizeof(Move) * (i*i + i)/2);
       memset(pvArray, 0, sizeof(Move) * (i*i + i)/2);
 
@@ -155,11 +228,13 @@ int getBestMove(Position pos){
 
       global_best_move = pvArray[0];
       free(pvArray);
+      #ifdef DEBUG
+      printTreeDebug();
+      #endif
       i+=ID_STEP;
    }
 
-   #ifdef DEBUG
-   printTreeDebug();
+   #ifdef TT_DEBUG
    printTTDebug();
    #endif
 
@@ -185,7 +260,7 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
       return q_eval;
    }
    #ifdef DEBUG
-   pvs_count++;
+   debug[PVS][NODE_COUNT]++;
    #endif
 
    Move moveList[MAX_MOVES];
@@ -193,7 +268,7 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
    int size = generateLegalMoves(*pos, moveList);
    //Handle Draw or Mate
    if(size == 0){
-      if(pos->flags & IN_CHECK) return CHECKMATE_VALUE;
+      if(pos->flags & IN_CHECK) return CHECKMATE_VALUE - ply;
       else return 0;
    }
    if(pos->halfmove_clock >= 50) return 0;
@@ -243,7 +318,9 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
    if(pos->flags & IN_CHECK) LMR = FALSE;
    if(depth < LMR_DEPTH) LMR = FALSE;
 
-
+   #ifdef DEBUG
+   if(size > 0) debug[PVS][NODE_LOOP_CHILDREN]++;
+   #endif
    Position prevPos = *pos;
    for (int i = 0; i < size; i++)  {
       selectSort(i, moveList, moveVals, size);
@@ -264,12 +341,15 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
          if ( score > alpha && score < beta)
             score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
       }
-      *pos = prevPos; //Unmake move
-      if( score >= beta ) {
+      *pos = prevPos;
+      if( score >= beta ) { //Beta cutoff
          storeTTEntry(pos->hash, depth, beta, CUT_NODE, moveList[i]);
          storeKillerMove(ply, moveList[i]);
          storeHistoryMove(pos->flags, moveList[i], depth);
          //printf("Returning beta cutoff: %d >= %d\n", score, beta);
+         #ifdef DEBUG
+         debug[PVS][NODE_BETA_CUT]++;
+         #endif
          return beta;
       }
       if( score > alpha ) {
@@ -301,7 +381,7 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
    // this is either a cut- or all-node
    if( depth <= 0 ) return quiesce(pos, beta-1, beta, ply, 0);
    #ifdef DEBUG
-   zws_count++;
+   debug[ZWS][NODE_COUNT]++;
    #endif
 
    Move moveList[MAX_MOVES];
@@ -309,7 +389,7 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
    int size = generateLegalMoves(*pos, moveList);
    //Handle Draw or Mate
    if(size == 0){
-      if(pos->flags & IN_CHECK) return CHECKMATE_VALUE;
+      if(pos->flags & IN_CHECK) return CHECKMATE_VALUE - ply;
       else return 0;
    }
    if(pos->halfmove_clock >= 50) return 0;
@@ -334,23 +414,52 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
          }
       }
    }
-
-
    evalMoves(moveList, moveVals, size, ttMove, killerMoves[(int)ply], KMV_CNT, *pos);
 
+   //Set up prunability
+   char prunable = !(pos->flags & IN_CHECK);
+   if(beta-1 >= CHECKMATE_VALUE - 2*MAX_MOVES) prunable = 0;
+
+   #ifdef DEBUG
+   if(size > 0) debug[ZWS][NODE_LOOP_CHILDREN]++;
+   #endif
    Position prevPos = *pos;
    for (int i = 0; i < size; i++)  {
-     selectSort(i, moveList, moveVals, size);
-     makeMove(pos, moveList[i]);
-     int score = -zwSearch(pos, 1-beta, depth - 1, ply + 1);
-     *pos = prevPos;
-     //unmakeMove(pos)
-     if( score >= beta ){
-        storeTTEntry(pos->hash, depth, beta, CUT_NODE, moveList[i]);
-        storeKillerMove(ply, moveList[i]);
-        storeHistoryMove(pos->flags, moveList[i], depth);
-        return beta;   // fail-hard beta-cutoff
-     }
+      selectSort(i, moveList, moveVals, size);
+      makeMove(pos, moveList[i]);
+      int score = -zwSearch(pos, 1-beta, depth - 1, ply + 1);
+      *pos = prevPos;
+
+      if( score >= beta ){ //Beta Cutoff
+         storeTTEntry(pos->hash, depth, beta, CUT_NODE, moveList[i]);
+         storeKillerMove(ply, moveList[i]);
+         storeHistoryMove(pos->flags, moveList[i], depth);
+         #ifdef DEBUG
+         debug[ZWS][NODE_BETA_CUT]++;
+         #endif
+         return beta;   // fail-hard beta-cutoff
+      }
+
+      //Set up prunability
+      if(pos->flags & IN_CHECK) prunable = 0;
+      if(GET_FLAGS(moveList[i]) & CAPTURE) prunable = 0;
+
+      if(prunable && (depth <= FUTIL_DEPTH && score < beta - 1 - FUTIL_MARGIN)){ //Futility Pruning
+         #ifdef DEBUG
+         debug[ZWS][NODE_PRUNED]++;
+         #endif
+         return beta-1;
+      }
+
+      if(prunable && (depth <= RAZOR_DEPTH && score < beta - RAZOR_MARGIN)){
+         int razor_score = quiesce(pos, beta-1, beta, ply, 0);
+         if(razor_score >= beta){
+            #ifdef DEBUG
+            debug[ZWS][NODE_PRUNED]++;
+            #endif
+            return razor_score;
+         }
+      }
    }
    return beta-1; // fail-hard, return alpha
 }
@@ -363,7 +472,7 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply) {
    if(!run_get_best_move) ExitThread(0);
    #endif
    #ifdef DEBUG
-   q_count++;
+   debug[QS][NODE_COUNT]++;
    #endif
    
    Move moveList[MAX_MOVES];
@@ -372,7 +481,7 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply) {
 
    //Handle Draw or Mate
    if(size == 0){
-      if(pos->flags & IN_CHECK) return CHECKMATE_VALUE;
+      if(pos->flags & IN_CHECK) return CHECKMATE_VALUE - ply;
       else return 0;
    }
    if(pos->halfmove_clock >= 50) return 0;
@@ -406,6 +515,9 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply) {
    evalMoves(moveList, moveVals, size, ttMove, killerMoves[(int)ply], KMV_CNT, *pos);
    
    Move bestMove = NO_MOVE;
+   #ifdef DEBUG
+   if(size > 0) debug[QS][NODE_LOOP_CHILDREN]++;
+   #endif
    Position prevPos = *pos;
    for (int i = 0; i < size; i++)  {
       selectSort(i, moveList, moveVals, size);
@@ -417,6 +529,9 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply) {
       if( score >= beta ){
          storeKillerMove(ply, moveList[i]);
          storeTTEntry(pos->hash, 0, beta, CUT_NODE, moveList[i]);
+         #ifdef DEBUG
+         debug[QS][NODE_BETA_CUT]++;
+         #endif
          return beta;
       }
       if( score > alpha ){

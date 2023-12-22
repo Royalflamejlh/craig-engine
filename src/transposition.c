@@ -1,10 +1,14 @@
 #include "transposition.h"
 #include <stdlib.h>
 
-#define KEY_MASK 0xFFF//0xFFFFFFF
+#ifdef __FAST_AS_POOP
+#define KEY_MASK 0xFFFFFFF
+#else
+#define KEY_MASK 0xFFF
+#endif
 
 
-#ifdef DEBUG
+#ifdef TT_DEBUG
 #include <stdio.h>
 static uint64_t get_suc, get_rej, store_cnt, store_rej;
 void startTTDebug(void){
