@@ -17,15 +17,18 @@
 #define MAX_DEPTH 8
 #define ID_STEP 1
 
-#define CHECKMATE_VALUE (INT_MIN + 1000)
+#define CHECKMATE_VALUE (MAX_EVAL - 1000)
 
-#define KMV_CNT 4 //How many killer moves are stored for a pos
+#define KMV_CNT 3 //How many killer moves are stored for a pos
 
 #define MAX_QUIESCE_PLY 4 //How far q search can go
 #define MAX_PLY 255 //How far the total search can go
 
-#define LMR_DEPTH 3 //The depth gone to for lmr
-#define LMR_MIN_MOVE 5 //the move number to start performing lmr on
+#define LMR_DEPTH 10 //The depth gone to for lmr
+#define LMR_MIN_MOVE 10 //the move number to start performing lmr on
+
+#define MAX_ASP_START 100 //Maximum size of bounds for an aspiration window to start on
+#define ASP_EDGE 1//Buffer size of aspiration window
 
 //static void selectSort(int i, Move *moveList, int *moveVals, int size);
 
@@ -104,7 +107,6 @@ uint32_t getHistoryScore(char pos_flags, Move move){
 * Get that move son.
 */
 int getBestMove(Position pos){
-   int moveScore;
    
    #ifdef DEBUG
    startTTDebug();
@@ -112,6 +114,7 @@ int getBestMove(Position pos){
    #endif
    clearKillerMoves(); //TODO: make thread safe!
    int i = 1;
+   int eval, eval_prev, asp_upper, asp_lower;
    while(run_get_best_move 
    #ifdef MAX_DEPTH
    && i <= MAX_DEPTH
@@ -125,10 +128,30 @@ int getBestMove(Position pos){
          return -1;
       }
       //printf("Running pv search at depth %d\n", i);
-      moveScore = -pvSearch(&pos, INT_MIN+1, INT_MAX, i, 0, pvArray, 0);
+      if(i <= 2) eval = -pvSearch(&pos, INT_MIN+1, INT_MAX, i, 0, pvArray, 0);
+      else{
+         int asp_dif = (abs(eval_prev - eval)/2)+ASP_EDGE;
+         asp_upper = asp_lower = MIN(asp_dif, MAX_ASP_START);
+         int q = (eval_prev + eval) / 2;
+         //printf("Eval: %d Eval_Prev: %d, asp_up: %d, asp_lower: %d, q:%d", eval, eval_prev, asp_upper, asp_lower, q);
+         //printf("\nRunning with window: %d, %d\n", q-asp_lower, q+asp_upper);
+         int eval_tmp = -pvSearch(&pos, q-asp_lower, q+asp_upper, i, 0, pvArray, 0);
+         while(eval_tmp <= q-asp_lower || eval_tmp >= q+asp_upper || pvArray[0] == NO_MOVE){
+            if(eval_tmp <= q-asp_lower){ asp_lower *= 2;}
+            if(eval_tmp >= q+asp_upper){ asp_upper *= 2;}
+            if(pvArray[0] == NO_MOVE){
+               asp_upper *= 2;
+               asp_lower *= 2;
+            }
+            //printf("Running again with window: %d, %d\n", q-asp_lower, q+asp_upper);
+            eval_tmp = -pvSearch(&pos, q-asp_lower, q+asp_upper, i, 0, pvArray, 0);
+         }
+         eval_prev = eval;
+         eval = eval_tmp;
+      }
 
       printPV(pvArray, i);
-      printf("found with score %d\n", moveScore);
+      printf("found with score %d\n", eval);
 
       global_best_move = pvArray[0];
       free(pvArray);

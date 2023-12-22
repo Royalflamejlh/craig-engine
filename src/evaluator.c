@@ -5,15 +5,10 @@
 #include "tree.h"
 #include "bitboard/bbutils.h"
 
+//Piece values defined in header
+
 #define EARLY_GAME_MOVES   8 //Moves that count as early game (fullmoves)
 #define END_GAME_PIECES   16 //Pieces left to count as late game
-
-#define KING_VALUE     100000
-#define QUEEN_VALUE     10000
-#define ROOK_VALUE       5000
-#define BISHOP_VALUE     3550
-#define KNIGHT_VALUE     3500
-#define PAWN_VALUE       1000
 
 #define ATTACK_BONUS        5  //Eval for each square under attack
 #define D_ATTACK_BONUS     10  //Eval for each enemy under attack
@@ -312,6 +307,8 @@ void evalMoves(Move* moveList, int* moveVals, int size, Move ttMove, Move *kille
             default:
                 break;
         }
+
+        moveVals[i] = MIN(moveVals[i], MAX_EVAL);
     }
 
     return;
