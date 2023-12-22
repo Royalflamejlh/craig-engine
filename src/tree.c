@@ -17,14 +17,14 @@
 #define MAX_DEPTH 8
 #define ID_STEP 1
 
-#define CHECKMATE_VALUE (INT_MIN + 10)
+#define CHECKMATE_VALUE (INT_MIN + 1000)
 
 #define KMV_CNT 4 //How many killer moves are stored for a pos
 
 #define MAX_QUIESCE_PLY 4 //How far q search can go
 #define MAX_PLY 255 //How far the total search can go
 
-#define LMR_DEPTH 3 //The min depth to start performing lmr
+#define LMR_DEPTH 3 //The depth gone to for lmr
 #define LMR_MIN_MOVE 5 //the move number to start performing lmr on
 
 //static void selectSort(int i, Move *moveList, int *moveVals, int size);
@@ -201,16 +201,13 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
                   alpha = ttEntry->eval;
                   pvArray[pvIndex] = ttEntry->move;
                   movcpy (pvArray + pvIndex + 1, pvArray + pvNextIndex, depth - 1);
-                  bSearchPv = 0; 
+                  bSearchPv = 0;
                }
                break;
+            case Q_NODE:
+               ttMove = NO_MOVE;
             default:
                break;
-         }
-      }
-      else{
-         if(ttEntry->nodeType == ALL_NODE || PV_NODE){
-            bSearchPv = 0; 
          }
       }
    }
