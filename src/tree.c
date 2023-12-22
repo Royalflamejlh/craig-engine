@@ -15,13 +15,13 @@
 #endif
 
 #define MAX_DEPTH 8
-#define ID_STEP 1
+#define ID_STEP 1 //Changing this may break Aspiration windows (it will)
 
 #define CHECKMATE_VALUE (MAX_EVAL - 1000)
 
 #define KMV_CNT 3 //How many killer moves are stored for a pos
 
-#define MAX_QUIESCE_PLY 4 //How far q search can go
+#define MAX_QUIESCE_PLY 10 //How far q search can go
 #define MAX_PLY 255 //How far the total search can go
 
 #define LMR_DEPTH 10 //The depth gone to for lmr
