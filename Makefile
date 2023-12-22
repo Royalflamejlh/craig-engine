@@ -40,9 +40,9 @@ create_dirs:
 
 all: linux_debug windows
 
-debug: linux_debug windows
+debug: linux_debug 
 
-release: linux_release
+release: linux_release windows
 
 
 $(BINDIR) $(OBJDIR):
