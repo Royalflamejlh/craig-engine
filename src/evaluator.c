@@ -67,6 +67,7 @@ int evaluate(Position pos){
     int stage = MID_GAME;
     if(pos.fullmove_number < EARLY_GAME_MOVES) stage = EARLY_GAME; 
     if(count_bits(pos.color[0] | pos.color[1]) <= END_GAME_PIECES) stage = END_GAME;
+    (void)stage;
 
     //Penalty for being in check
     if(pos.flags & IN_CHECK) eval_val -= CHECK_PEN;
