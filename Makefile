@@ -17,7 +17,7 @@ OBJS = $(SRCS:src/%.c=$(OBJDIR)/%.o)
 # Windows Vars
 ##
 WIN_CC = x86_64-w64-mingw32-gcc
-WIN_CFLAGS = -Wall -Wextra  -Werror -Wfatal-errors -g
+WIN_CFLAGS = -Wall -Wextra  -O3 -Ofast -funroll-loops -flto -finline-functions -fexpensive-optimizations -fomit-frame-pointer -D __FAST_AS_POOP=1
 WIN_LDFLAGS = -static-libgcc -static-libstdc++
 WIN_TARGET = $(BINDIR)/chess.exe
 WIN_OBJS = $(SRCS:src/%.c=$(OBJDIR)/win_%.o)
