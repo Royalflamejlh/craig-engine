@@ -20,6 +20,11 @@
       "cwd": "/config/workspace/godengine/bin",
       "binaryPath": "/config/workspace/godengine/bin/chess",
       "binaryArgs": []
+    },
+    {
+      "cwd": "/Users/johnhoward/Documents/github/godengine/bin",
+      "binaryPath": "/Users/johnhoward/Documents/github/godengine/bin/chess",
+      "binaryArgs": []
     }
   ],
   "C_Cpp_Runner.cCompilerPath": "gcc",
@@ -78,5 +83,6 @@
   "C_Cpp_Runner.useLeakSanitizer": false,
   "C_Cpp_Runner.showCompilationTime": false,
   "C_Cpp_Runner.useLinkTimeOptimization": false,
-  "C_Cpp_Runner.msvcSecureNoWarnings": false
+  "C_Cpp_Runner.msvcSecureNoWarnings": false,
+  "makefile.buildLog": "./build"
 }
