@@ -4,7 +4,7 @@
 #ifdef __FAST_AS_POOP
 #define KEY_MASK 0xFFFFFFF
 #else
-#define KEY_MASK 0xFFF
+#define KEY_MASK 0xFFFFFFF
 #endif
 
 
@@ -32,12 +32,12 @@ int initTT(){
 
 TTEntry* getTTEntry(uint64_t hash){
     if(table[hash & KEY_MASK].hash == hash){
-        #ifdef DEBUG
+        #ifdef TT_DEBUG
         get_suc++;
         #endif
         return &table[hash & KEY_MASK];
     }
-    #ifdef DEBUG
+    #ifdef TT_DEBUG
     get_rej++;
     #endif
     return NULL;
@@ -45,18 +45,18 @@ TTEntry* getTTEntry(uint64_t hash){
 
 void storeTTEntry(uint64_t hash, char depth, int eval, char nodeType, Move move){
     if(nodeType != PV_NODE && table[hash & KEY_MASK].nodeType == PV_NODE){
-        #ifdef DEBUG
+        #ifdef TT_DEBUG
         store_rej++;
         #endif
         return;
     }
     if(depth < table[hash & KEY_MASK].depth){
-        #ifdef DEBUG
+        #ifdef TT_DEBUG
         store_rej++;
         #endif
         return;
     }
-    #ifdef DEBUG
+    #ifdef TT_DEBUG
     store_cnt++;
     #endif
     table[hash & KEY_MASK].eval = eval;

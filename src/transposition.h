@@ -7,7 +7,8 @@ enum {
     PV_NODE,
     CUT_NODE,
     ALL_NODE,
-    Q_NODE
+    Q_ALL_NODE,
+    Q_EXACT_NODE
 };
 
 typedef struct {
