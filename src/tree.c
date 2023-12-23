@@ -45,6 +45,7 @@
 
 #define NULL_PRUNE_R 2 //How much Null prunin' takes off
 #define NULL_PRUNE_DEPTH 3 //What depth at which null pruning starts
+
 #else
 
 #define ID_STEP 1 //Changing this may break Aspiration windows (it will)
@@ -69,7 +70,7 @@
 #define RAZOR_MARGIN PAWN_VALUE*3 //Margin to start razoring
 
 #define NULL_PRUNE_R 2 //How much Null prunin' takes off
-#define NULL_PRUNE_DEPTH 4 //What depth at which null pruning starts
+#define NULL_PRUNE_DEPTH 4 //What depth at which null pruning ends
 
 #endif
 
@@ -185,6 +186,16 @@ uint32_t getHistoryScore(char pos_flags, Move move){
    return historyTable[pos_flags & WHITE_TURN][GET_FROM(move)][GET_TO(move)];
 }
 
+//exit thread function
+static void exit_search(Move* pvArray){
+   free(pvArray);
+   #if defined(__unix__) || defined(__APPLE__)
+   pthread_exit(NULL);
+   #elif defined(_WIN32) || defined(_WIN64)
+   ExitThread(0);
+   #endif
+}
+
 /*
 * Get that move son.
 */
@@ -259,14 +270,11 @@ int getBestMove(Position pos){
 
 int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pvArray, int pvIndex) {
    //printf("Depth = %d, Ply = %d, Depth+ply = %d\n", depth, ply, depth+ply);
-   #if defined(__unix__) || defined(__APPLE__)
-   if(!run_get_best_move) pthread_exit(NULL);
-   #elif defined(_WIN32) || defined(_WIN64)
-   if(!run_get_best_move) ExitThread(0);
-   #endif
+   if(!run_get_best_move) exit_search(pvArray);
+
    //printf("pvSearch (%llu) a: %d, b: %d, d: %d, ply: %d, retMove %p\n", pos->hash, alpha, beta, (int)depth, (int)ply, returnMove);
    if( depth <= 0 ) {
-      int q_eval = quiesce(pos, alpha, beta, ply, 0);
+      int q_eval = quiesce(pos, alpha, beta, ply, 0, pvArray);
       //printf("Returning q_eval: %d\n", q_eval);
       return q_eval;
    }
@@ -324,7 +332,7 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
    if(!(pos->flags & IN_CHECK) && pos->stage != END_GAME && depth >= NULL_PRUNE_DEPTH){
       Position prevPos = *pos;
       makeNullMove(pos);
-      int score = -zwSearch(pos, 1-beta, depth - NULL_PRUNE_R - 1, ply + 1);
+      int score = -zwSearch(pos, 1-beta, depth - NULL_PRUNE_R - 1, ply + 1, pvArray);
       if( score >= beta ){
          storeTTEntry(pos->hash, depth, beta, CUT_NODE, NO_MOVE);
          #ifdef DEBUG
@@ -347,6 +355,9 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
    #ifdef DEBUG
    if(size > 0) debug[PVS][NODE_LOOP_CHILDREN]++;
    #endif
+
+   Move bestMove = NO_MOVE;
+   int bestScore = INT_MIN;
    Position prevPos = *pos;
    for (int i = 0; i < size; i++)  {
       selectSort(i, moveList, moveVals, size);
@@ -362,8 +373,8 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
       if ( bSearchPv ) {
          score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
       } else {
-         if(LMR_cur) score = -zwSearch(pos, -alpha, LMR_DEPTH, ply + 1);
-         else score = -zwSearch(pos, -alpha, depth - 1, ply + 1);
+         if(LMR_cur) score = -zwSearch(pos, -alpha, LMR_DEPTH, ply + 1, pvArray);
+         else score = -zwSearch(pos, -alpha, depth - 1, ply + 1, pvArray);
          if ( score > alpha && score < beta)
             score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
       }
@@ -384,28 +395,28 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
          movcpy (pvArray + pvIndex + 1, pvArray + pvNextIndex, depth - 1);
          bSearchPv = 0; 
       }
+      if( score > bestScore ){
+         bestMove = moveList[i];
+         bestScore = moveVals[i];
+      }
    }
    if (!bSearchPv) {
       // PV Node (exact value)
       storeTTEntry(pos->hash, depth, alpha, PV_NODE, pvArray[pvIndex]);
    } else {
       // ALL Node (upper bound)
-      storeTTEntry(pos->hash, depth, alpha, ALL_NODE, NO_MOVE);
+      storeTTEntry(pos->hash, depth, alpha, ALL_NODE, bestMove);
    }
    //printf("Returning alpha: %d\n", alpha);
    return alpha;
 }
 
 // fail-hard zero window search, returns either beta-1 or beta
-int zwSearch( Position* pos, int beta, char depth, char ply ) {
-   #if defined(__unix__) || defined(__APPLE__)
-   if(!run_get_best_move) pthread_exit(NULL);
-   #elif defined(_WIN32) || defined(_WIN64)
-   if(!run_get_best_move) ExitThread(0);
-   #endif
+int zwSearch( Position* pos, int beta, char depth, char ply, Move* pvArray ) {
+   if(!run_get_best_move) exit_search(pvArray);
    // alpha == beta - 1
    // this is either a cut- or all-node
-   if( depth <= 0 ) return quiesce(pos, beta-1, beta, ply, 0);
+   if( depth <= 0 ) return quiesce(pos, beta-1, beta, ply, 0, pvArray);
    #ifdef DEBUG
    debug[ZWS][NODE_COUNT]++;
    #endif
@@ -432,9 +443,6 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
             case CUT_NODE: // Lower bound
                if (ttEntry->eval >= beta) return beta;
                break;
-            case ALL_NODE: // Upper bound
-               if (ttEntry->eval <= beta-1) return beta-1;
-               break;
             default:
                break;
          }
@@ -445,7 +453,7 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
    if(!(pos->flags & IN_CHECK) && pos->stage != END_GAME && depth >= NULL_PRUNE_DEPTH){
       Position prevPos = *pos;
       makeNullMove(pos);
-      int score = -zwSearch(pos, 1-beta, depth - NULL_PRUNE_R - 1, ply + 1);
+      int score = -zwSearch(pos, 1-beta, depth - NULL_PRUNE_R - 1, ply + 1, pvArray);
       if( score >= beta ){
          storeTTEntry(pos->hash, depth, beta, CUT_NODE, NO_MOVE);
          #ifdef DEBUG
@@ -470,7 +478,7 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
    for (int i = 0; i < size; i++)  {
       selectSort(i, moveList, moveVals, size);
       makeMove(pos, moveList[i]);
-      int score = -zwSearch(pos, 1-beta, depth - 1, ply + 1);
+      int score = -zwSearch(pos, 1-beta, depth - 1, ply + 1, pvArray);
       *pos = prevPos;
 
       if( score >= beta ){ //Beta Cutoff
@@ -495,7 +503,7 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
       }
 
       if(prunable && (depth <= RAZOR_DEPTH && score < beta - RAZOR_MARGIN)){
-         int razor_score = quiesce(pos, beta-1, beta, ply, 0);
+         int razor_score = quiesce(pos, beta-1, beta, ply, 0, pvArray);
          if(razor_score >= beta){
             #ifdef DEBUG
             debug[ZWS][NODE_PRUNED]++;
@@ -508,12 +516,8 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
 }
 
 //quisce search
-int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply) {
-   #if defined(__unix__) || defined(__APPLE__)
-   if(!run_get_best_move) pthread_exit(NULL);
-   #elif defined(_WIN32) || defined(_WIN64)
-   if(!run_get_best_move) ExitThread(0);
-   #endif
+int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvArray) {
+   if(!run_get_best_move) exit_search(pvArray);
    #ifdef DEBUG
    debug[QS][NODE_COUNT]++;
    #endif
@@ -566,7 +570,7 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply) {
       selectSort(i, moveList, moveVals, size);
       if(!(GET_FLAGS(moveList[i]) & CAPTURE)) continue;
       makeMove(pos, moveList[i]);
-      int score = -quiesce(pos,  -beta, -alpha, ply + 1, q_ply + 1);
+      int score = -quiesce(pos,  -beta, -alpha, ply + 1, q_ply + 1, pvArray);
       *pos = prevPos;
 
       if( score >= beta ){
