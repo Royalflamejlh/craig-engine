@@ -45,7 +45,6 @@
 
 #else
 
-#define MAX_DEPTH 10
 #define ID_STEP 1 //Changing this may break Aspiration windows (it will)
 
 #define CHECKMATE_VALUE (MAX_EVAL - 1000)
@@ -67,6 +66,13 @@
 #define RAZOR_DEPTH 3 //Depth to start razoring
 #define RAZOR_MARGIN PAWN_VALUE*3 //Margin to start razoring
 
+#endif
+
+//Set up the Depth sizes depending on mode
+#ifdef DEBUG
+#define MAX_DEPTH 10
+#elif defined(__PROFILE)
+#define MAX_DEPTH 8
 #endif
 
 //static void selectSort(int i, Move *moveList, int *moveVals, int size);
@@ -273,11 +279,10 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
    }
    if(pos->halfmove_clock >= 50) return 0;
 
-
-
    char bSearchPv = 1;
    int pvNextIndex = pvIndex + depth;
 
+   //Test the TT table
    TTEntry* ttEntry = getTTEntry(pos->hash);
    Move ttMove = NO_MOVE;
    if (ttEntry) {
@@ -310,7 +315,15 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
       }
    }
 
-   
+   //Null move prunin'
+   if(!(pos->flags & IN_CHECK) && pos->stage != END_GAME){
+
+   }
+
+
+
+
+
    evalMoves(moveList, moveVals, size, ttMove, killerMoves[(int)ply], KMV_CNT, *pos);
 
    //Set up late move reduction rules

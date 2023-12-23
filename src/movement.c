@@ -257,6 +257,27 @@ int makeMove(Position *pos, Move move){
 
     pos->pinned = generatePinnedPieces(*pos);
 
+    pos->stage = calculateStage(*pos);
+
+    pos->hash = hashPosition(*pos);
+
+    return 0;
+}
+
+int makeNullMove(Position *pos){
+
+    int turn = pos->flags & WHITE_TURN;
+
+    pos->halfmove_clock++;
+    if(!turn) pos->fullmove_number++;
+
+    int regen_pinned = pos->en_passant != 0;
+    pos->en_passant = 0ULL;
+
+    pos->flags ^= WHITE_TURN;
+
+    if(regen_pinned) pos->pinned = generatePinnedPieces(*pos);
+
     pos->hash = hashPosition(*pos);
 
     return 0;

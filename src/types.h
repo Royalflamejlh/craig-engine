@@ -149,6 +149,15 @@ typedef struct {
     int last_reset_idx; //An index to the last move which reset halfmove clock
 } GameState;
 
+#define EARLY_GAME_MOVES   8 //Moves that count as early game (fullmoves)
+#define END_GAME_PIECES   16 //Pieces left to count as late game
+
+typedef enum {
+    EARLY_GAME,
+    MID_GAME,
+    END_GAME
+} Stage;
+
 typedef struct {            //Each size of 2 array contains {Black, White}
     uint64_t pawn[2];     
     uint64_t bishop[2];
@@ -173,6 +182,8 @@ typedef struct {            //Each size of 2 array contains {Black, White}
     uint64_t hash; //Hash of the position
 
     GameState* gameState; //Pointer to the gamestate position is in
+
+    Stage stage; //The stage of the game
 
     int halfmove_clock;
     int fullmove_number;

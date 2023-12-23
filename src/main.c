@@ -20,6 +20,8 @@
 
 #ifdef __COMPILE_DEBUG
 #define RUN_TEST
+#elif defined(__PROFILE)
+void playSelfInfinite(void);
 #endif
 
 #define NUM_SEARCH_THREADS 1
@@ -234,11 +236,18 @@ int main(void) {
     testBB();
     #endif
 
+    #ifdef __PROFILE
+    printf("In profile mode, running forever.\r\n");
+    fflush(stdout);
+    playSelfInfinite();
+    #endif  
+
     // Create IO thread
     global_position = fenToPosition(START_FEN);
     global_best_move = NO_MOVE;
     launch_threads();
-    
+
+      
 
     printf("All threads have finished.\n");
     return 0;
@@ -459,3 +468,18 @@ int searchLoop(){
     }
     return 0;
 }
+
+#ifdef __PROFILE
+void playSelfInfinite(void){
+    global_position = fenToPosition(START_FEN);
+    global_best_move = NO_MOVE;
+    run_get_best_move = TRUE;
+    while(true){
+        getBestMove(global_position);
+        if(global_best_move != NO_MOVE){
+            makeMove(&global_position, global_best_move);
+            printPosition(global_position, FALSE);
+        }
+    }
+}
+#endif

@@ -8,9 +8,6 @@
 
 //Piece values defined in header
 
-#define EARLY_GAME_MOVES   8 //Moves that count as early game (fullmoves)
-#define END_GAME_PIECES   16 //Pieces left to count as late game
-
 #define ATTACK_BONUS        3  //Eval for each square under attack
 #define D_ATTACK_BONUS      6  //Eval for each enemy under attack
 #define DEFEND_BONUS        3  //Eval for each defended piece
@@ -49,22 +46,14 @@ static const int pieceValues[] = {
     [BLACK_KING] = KING_VALUE
 };
 
-typedef enum {
-    EARLY_GAME,
-    MID_GAME,
-    END_GAME
-} Stage;
 
 int evaluate(Position pos){
     int eval_val = 0;
     int turn = pos.flags & WHITE_TURN;
 
     //Get the stage
-    int stage = MID_GAME;
-    if(pos.fullmove_number < EARLY_GAME_MOVES) stage = EARLY_GAME; 
-    if(count_bits(pos.color[0] | pos.color[1]) <= END_GAME_PIECES) stage = END_GAME;
-    (void)stage;
-
+    int stage = pos.stage;
+    
     #ifdef DEBUG
     printf("\nEval for stage: %d, Starting at:%d\n", stage, eval_val);
     #endif

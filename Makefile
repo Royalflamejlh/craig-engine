@@ -6,10 +6,13 @@ ASAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer -Wno-format-security
 CFLAGS = -Wall -Wextra 
 DEBUG_FLAGS = -g $(ASAN_FLAGS) -Werror -Wfatal-errors -D __COMPILE_DEBUG=1
 RELEASE_FLAGS = -O3 -Ofast -funroll-loops -flto -finline-functions -fexpensive-optimizations -fomit-frame-pointer -D __FAST_AS_POOP=1
+PROFILE_FLAGS = -g -O2 -fno-lto -fno-omit-frame-pointer -pthread -D __PROFILE=1
 DEBUG_LDFLAGS += -lpthread $(ASAN_FLAGS) 
 RELEASE_LDFLAGS += -lpthread
+PROFILE_LDFLAGS += -lpthread
 LINUX_TARGET_DEBUG = $(BINDIR)/chess_db
 LINUX_TARGET_RELEASE = $(BINDIR)/chess
+LINUX_TARGET_PROFILE = $(BINDIR)/chess_prof
 OBJS = $(SRCS:src/%.c=$(OBJDIR)/%.o)
 
 
@@ -42,6 +45,8 @@ all: linux_debug windows
 
 debug: linux_debug 
 
+profile: linux_profile
+
 release: linux_release windows
 
 
@@ -57,6 +62,9 @@ linux_debug: create_dirs $(LINUX_TARGET_DEBUG)
 linux_release: CFLAGS += $(RELEASE_FLAGS)
 linux_release: create_dirs $(LINUX_TARGET_RELEASE)
 
+linux_profile: CFLAGS += $(PROFILE_FLAGS)
+linux_profile: create_dirs $(LINUX_TARGET_PROFILE)
+
 $(OBJDIR)/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -65,6 +73,9 @@ $(LINUX_TARGET_DEBUG): $(BINDIR) $(OBJS)
 
 $(LINUX_TARGET_RELEASE): $(BINDIR) $(OBJS)
 	$(CC) $(CFLAGS) $(RELEASE_FLAGS) -o $(LINUX_TARGET_RELEASE) $(OBJS)
+
+$(LINUX_TARGET_PROFILE): $(BINDIR) $(OBJS)
+	$(CC) $(CFLAGS) $(PROFILE_FLAGS) -o $(LINUX_TARGET_PROFILE) $(OBJS)
 
 
 ##

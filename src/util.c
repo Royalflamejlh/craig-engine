@@ -167,6 +167,12 @@ void printPV(Move *pvArray, int depth) {
     }
 }
 
+Stage calculateStage(Position pos){
+    Stage stage = MID_GAME;
+    if(pos.fullmove_number < EARLY_GAME_MOVES) stage = EARLY_GAME; 
+    if(count_bits(pos.color[0] | pos.color[1]) <= END_GAME_PIECES) stage = END_GAME;
+    return stage;
+}
 
 #ifdef PYTHON
 int python_init() {

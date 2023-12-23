@@ -14,6 +14,8 @@ int python_init();
 int python_close();
 
 Move moveStrToType(Position pos, char* str);
+Stage calculateStage(Position pos);
+
 void printPV(Move *pvArray, int depth);
 static inline int count_bits(uint64_t v){
     unsigned int c;
@@ -33,5 +35,6 @@ static inline uint64_t random_uint64() {
 static inline void movcpy (Move* pTarget, const Move* pSource, int n) {
    while (n-- && (*pTarget++ = *pSource++));
 }
+
 
 #endif
