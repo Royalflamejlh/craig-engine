@@ -1,18 +1,35 @@
 {
   "configurations": [
-    
-  {
-    "name": "(lldb) Launch",
-    "type": "cppdbg",
-    "request": "launch",
-    "program": "${workspaceFolder}/bin/chess",
-    "args": [],
-    "stopAtEntry": false,
-    "cwd": "${fileDirname}",
-    "environment": [],
-    "externalConsole": true,
-    "MIMode": "lldb"
-  }
+    {
+      "name": "(lldb) Launch",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/bin/chess",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "externalConsole": true,
+      "MIMode": "lldb"
+    },
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "cppdbg",
+      "request": "launch",
+      "args": [],
+      "stopAtEntry": false,
+      "externalConsole": false,
+      "cwd": "/config/workspace/godengine/src",
+      "program": "/config/workspace/godengine/src/build/Debug/outDebug",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
   ]
-  
 }
