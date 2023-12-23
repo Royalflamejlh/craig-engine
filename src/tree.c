@@ -43,6 +43,8 @@
 #define RAZOR_DEPTH 3 //Depth to start razoring
 #define RAZOR_MARGIN PAWN_VALUE*2 //Margin to start razoring
 
+#define NULL_PRUNE_R 2 //How much Null prunin' takes off
+#define NULL_PRUNE_DEPTH 3 //What depth at which null pruning starts
 #else
 
 #define ID_STEP 1 //Changing this may break Aspiration windows (it will)
@@ -65,6 +67,9 @@
 
 #define RAZOR_DEPTH 3 //Depth to start razoring
 #define RAZOR_MARGIN PAWN_VALUE*3 //Margin to start razoring
+
+#define NULL_PRUNE_R 2 //How much Null prunin' takes off
+#define NULL_PRUNE_DEPTH 4 //What depth at which null pruning starts
 
 #endif
 
@@ -222,7 +227,7 @@ int getBestMove(Position pos){
                asp_upper *= 2;
                asp_lower *= 2;
             }
-            //printf("Running again with window: %d, %d\n", q-asp_lower, q+asp_upper);
+            printf("Running again with window: %d, %d\n", q-asp_lower, q+asp_upper);
             eval_tmp = -pvSearch(&pos, q-asp_lower, q+asp_upper, i, 0, pvArray, 0);
          }
          eval_prev = eval;
@@ -316,11 +321,19 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
    }
 
    //Null move prunin'
-   if(!(pos->flags & IN_CHECK) && pos->stage != END_GAME){
-
+   if(!(pos->flags & IN_CHECK) && pos->stage != END_GAME && depth >= NULL_PRUNE_DEPTH){
+      Position prevPos = *pos;
+      makeNullMove(pos);
+      int score = -zwSearch(pos, 1-beta, depth - NULL_PRUNE_R - 1, ply + 1);
+      if( score >= beta ){
+         storeTTEntry(pos->hash, depth, beta, CUT_NODE, NO_MOVE);
+         #ifdef DEBUG
+         debug[PVS][NODE_PRUNED]++;
+         #endif
+         return beta;
+      }
+      *pos = prevPos;
    }
-
-
 
 
 
@@ -427,6 +440,23 @@ int zwSearch( Position* pos, int beta, char depth, char ply ) {
          }
       }
    }
+
+   //Null move prunin'
+   if(!(pos->flags & IN_CHECK) && pos->stage != END_GAME && depth >= NULL_PRUNE_DEPTH){
+      Position prevPos = *pos;
+      makeNullMove(pos);
+      int score = -zwSearch(pos, 1-beta, depth - NULL_PRUNE_R - 1, ply + 1);
+      if( score >= beta ){
+         storeTTEntry(pos->hash, depth, beta, CUT_NODE, NO_MOVE);
+         #ifdef DEBUG
+         debug[ZWS][NODE_PRUNED]++;
+         #endif
+         return beta;
+      }
+      *pos = prevPos;
+   }
+
+
    evalMoves(moveList, moveVals, size, ttMove, killerMoves[(int)ply], KMV_CNT, *pos);
 
    //Set up prunability

@@ -10,6 +10,7 @@
 #include "bitboard.h"
 #include "../evaluator.h"
 #include "../hash.h"
+#include "../util.h"
 #include <string.h>
 #include <stdlib.h>
 

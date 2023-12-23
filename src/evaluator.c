@@ -53,6 +53,7 @@ int evaluate(Position pos){
 
     //Get the stage
     int stage = pos.stage;
+    (void) stage;
     
     #ifdef DEBUG
     printf("\nEval for stage: %d, Starting at:%d\n", stage, eval_val);
