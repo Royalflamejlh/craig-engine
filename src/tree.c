@@ -206,7 +206,7 @@ int getBestMove(Position pos){
    #endif
    clearKillerMoves(); //TODO: make thread safe!
    int i = 1;
-   int eval, eval_prev, asp_upper, asp_lower;
+   int eval = 0, eval_prev = 0, asp_upper = 0, asp_lower = 0;
    while(run_get_best_move 
    #ifdef MAX_DEPTH
    && i <= MAX_DEPTH
