@@ -202,8 +202,12 @@ int BBits[64] = {
 };
 
 int generateMagics(void) {
+    #ifdef __RAND_SEED
+    srand(__RAND_SEED);
+    #else
     time_t t;
     srand((unsigned) time(&t));
+    #endif
 
     printf("Generating Magics!\n");
     calculateAttackTableOffsets();

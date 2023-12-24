@@ -12,8 +12,15 @@ static uint64_t zobristTurn;
 static int convertPieceToIndex(char piece);
 
 void initZobrist(void) {
+    
+    
+    #ifdef __RAND_SEED
+    srand(__RAND_SEED);
+    #else
     time_t t;
     srand((unsigned) time(&t));
+    #endif
+    
 
     for (int square = 0; square < 64; square++) {
         for (int piece = 0; piece < 12; piece++) {

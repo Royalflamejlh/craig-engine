@@ -4,9 +4,9 @@
 CC = gcc
 ASAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer -Wno-format-security
 CFLAGS = -Wall -Wextra 
-DEBUG_FLAGS = -g $(ASAN_FLAGS) -Werror -Wfatal-errors -D __COMPILE_DEBUG=1
+DEBUG_FLAGS = -g $(ASAN_FLAGS) -Werror -Wfatal-errors -D __COMPILE_DEBUG=1 -D __RAND_SEED=287091847
 RELEASE_FLAGS = -O3 -Ofast -funroll-loops -flto -finline-functions -fexpensive-optimizations -fomit-frame-pointer -D __FAST_AS_POOP=1
-PROFILE_FLAGS = -g -O2 -fno-lto -fno-omit-frame-pointer -pthread -D __PROFILE=1
+PROFILE_FLAGS = -g -O2 -fno-lto -fno-omit-frame-pointer -pthread -D __PROFILE=1 -D __RAND_SEED=287091847
 DEBUG_LDFLAGS += -lpthread $(ASAN_FLAGS) 
 RELEASE_LDFLAGS += -lpthread
 PROFILE_LDFLAGS += -lpthread

@@ -46,6 +46,24 @@ static const int pieceValues[] = {
     [BLACK_KING] = KING_VALUE
 };
 
+int quickEval(Position pos){
+    int eval_val = 0;
+    int turn = pos.flags & WHITE_TURN;
+    eval_val += KING_VALUE * count_bits(pos.king[turn]);
+    eval_val += QUEEN_VALUE * count_bits(pos.queen[turn]);
+    eval_val += ROOK_VALUE * count_bits(pos.rook[turn]);
+    eval_val += BISHOP_VALUE * count_bits(pos.bishop[turn]);
+    eval_val += KNIGHT_VALUE * count_bits(pos.knight[turn]);
+    eval_val += PAWN_VALUE * count_bits(pos.pawn[turn]);
+
+    eval_val -= KING_VALUE * count_bits(pos.king[!turn]);
+    eval_val -= QUEEN_VALUE * count_bits(pos.queen[!turn]);
+    eval_val -= ROOK_VALUE * count_bits(pos.rook[!turn]);
+    eval_val -= BISHOP_VALUE * count_bits(pos.bishop[!turn]);
+    eval_val -= KNIGHT_VALUE * count_bits(pos.knight[!turn]);
+    eval_val -= PAWN_VALUE * count_bits(pos.pawn[!turn]);
+    return eval_val;
+}
 
 int evaluate(Position pos){
     int eval_val = 0;

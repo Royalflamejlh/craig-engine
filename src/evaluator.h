@@ -13,6 +13,7 @@
 #define PAWN_VALUE       1000
 
 int evaluate(Position pos);
+int quickEval(Position pos);
 void initPST(void);
 void evalMoves(Move* moveList, int* moveVals, int size, 
                Move ttMove, Move *killerMoves, int kmv_size, Position pos);

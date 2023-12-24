@@ -4,7 +4,9 @@
 #ifdef __FAST_AS_POOP
 #define KEY_MASK 0xFFFFFFF
 #else
+
 #define KEY_MASK 0xFFFFFFF
+
 #endif
 
 
