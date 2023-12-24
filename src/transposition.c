@@ -9,6 +9,7 @@
 
 #endif
 
+#define ROTATION 5 //How many slots to rotate to try to insert / find
 
 #ifdef TT_DEBUG
 #include <stdio.h>
@@ -33,11 +34,14 @@ int initTT(){
 }
 
 TTEntry* getTTEntry(uint64_t hash){
-    if(table[hash & KEY_MASK].hash == hash){
-        #ifdef TT_DEBUG
-        get_suc++;
-        #endif
-        return &table[hash & KEY_MASK];
+    uint64_t key = hash & KEY_MASK;
+    for(int i = 0; i < ROTATION; i++){
+        if(table[key + i].hash == hash){
+            #ifdef TT_DEBUG
+            get_suc++;
+            #endif
+            return &table[hash & KEY_MASK];
+        }   
     }
     #ifdef TT_DEBUG
     get_rej++;
@@ -46,22 +50,26 @@ TTEntry* getTTEntry(uint64_t hash){
 }
 
 void storeTTEntry(uint64_t hash, char depth, int eval, char nodeType, Move move){
-    if(nodeType != PV_NODE && table[hash & KEY_MASK].nodeType == PV_NODE){
-        #ifdef TT_DEBUG
-        store_rej++;
-        #endif
-        return;
+    uint64_t key = hash & KEY_MASK;
+    for(int i = 0; i < ROTATION; i++){
+        if(nodeType != PV_NODE && table[key].nodeType == PV_NODE){
+            key++;
+            continue;
+        }
+        if(depth < table[key].depth){
+            key++;
+            continue;
+        }sda
+        
     }
-    if(depth < table[hash & KEY_MASK].depth){
-        #ifdef TT_DEBUG
-        store_rej++;
-        #endif
-        return;
-    }
+    #ifdef TT_DEBUG
+    store_rej++;
+    #endif
+    
     #ifdef TT_DEBUG
     store_cnt++;
     #endif
-    table[hash & KEY_MASK].eval = eval;
+    table[key].eval = eval;
     table[hash & KEY_MASK].depth = depth;
     table[hash & KEY_MASK].move = move;
     table[hash & KEY_MASK].nodeType = nodeType;

@@ -508,17 +508,33 @@ int zwSearch( Position* pos, int beta, char depth, char ply, Move* pvArray ) {
    TTEntry* ttEntry = getTTEntry(pos->hash);
    Move ttMove = NO_MOVE;
    if (ttEntry) {
+      #ifdef DEBUG
+      debug[ZWS][NODE_TT_HIT]++;
+      #endif
       ttMove = ttEntry->move;
       if(ttEntry->depth >= depth){
          switch (ttEntry->nodeType) {
             case PV_NODE: // Exact value
+               #ifdef DEBUG
+               debug[ZWS][NODE_TT_PVS_RET]++;
+               #endif
                return ttEntry->eval;
                break;
             case CUT_NODE: // Lower bound
-               if (ttEntry->eval >= beta) return beta;
+               if (ttEntry->eval >= beta){
+                  #ifdef DEBUG
+                  debug[ZWS][NODE_TT_BETA_RET]++;
+                  #endif
+                  return beta;
+               }
                break;
             case ALL_NODE:
-               if (ttEntry->eval < beta-1) return beta-1;
+               if (ttEntry->eval < beta-1){
+                  #ifdef DEBUG
+                  debug[ZWS][NODE_TT_ALPHA_RET]++;
+                  #endif
+                  return beta-1;
+               }
                break;
             default:
                ttMove = NO_MOVE;
@@ -631,17 +647,33 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvA
    TTEntry* ttEntry = getTTEntry(pos->hash);
    Move ttMove = NO_MOVE;
    if (ttEntry) {
+      #ifdef DEBUG
+      debug[QS][NODE_TT_HIT]++;
+      #endif
       ttMove = ttEntry->move;
       switch (ttEntry->nodeType) {
          case Q_EXACT_NODE:
+            #ifdef DEBUG
+            debug[QS][NODE_TT_PVS_RET]++;
+            #endif
             return ttEntry->eval;
             break;
          case CUT_NODE:
-            if (ttEntry->eval >= beta) return beta;
+            if (ttEntry->eval >= beta){
+               #ifdef DEBUG
+               debug[QS][NODE_TT_BETA_RET]++;
+               #endif
+               return beta;
+            }
             break;
          case Q_ALL_NODE:
          case ALL_NODE: // Upper bound
-            if (ttEntry->eval < alpha) return alpha;
+            if (ttEntry->eval < alpha){
+               #ifdef DEBUG
+               debug[QS][NODE_TT_ALPHA_RET]++;
+               #endif
+               return alpha;
+            }
             break;
          default:
             break;
@@ -669,7 +701,7 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvA
 
       if( score >= beta ){
          storeKillerMove(ply, moveList[i]);
-         storeTTEntry(prevPos.hash, 0, score, CUT_NODE, moveList[i]);
+         //storeTTEntry(prevPos.hash, 0, score, CUT_NODE, moveList[i]);
          #ifdef DEBUG
          debug[QS][NODE_BETA_CUT]++;
          #endif
@@ -689,8 +721,12 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvA
    //Handle the case were there where no captures or checks
    if(bestScore == INT_MIN) bestScore = evaluate(*pos);
 
-   if(exact) storeTTEntry(pos->hash, 0, bestScore, Q_EXACT_NODE, bestMove);
+   if(exact) storeTTEntry(pos->hash, 0, alpha, Q_EXACT_NODE, bestMove);
    else      storeTTEntry(pos->hash, 0, bestScore, Q_ALL_NODE, bestMove);
+
+   #ifdef DEBUG
+   debug[QS][NODE_ALPHA_RET]++;
+   #endif
    return alpha;
 }
 
