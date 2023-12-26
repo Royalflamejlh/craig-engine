@@ -70,7 +70,7 @@
 #ifdef DEBUG
 #define MAX_DEPTH 12
 #elif defined(__PROFILE)
-#define MAX_DEPTH 6
+#define MAX_DEPTH 4
 #endif
 
 //static void selectSort(int i, Move *moveList, int *moveVals, int size);
@@ -303,10 +303,10 @@ static int pruneNullMoves(Position* pos, int beta, int depth, int ply, Move* pvA
       Position prevPos = *pos;
       makeNullMove(pos);
       int score = -zwSearch(pos, 1-beta, depth - NULL_PRUNE_R - 1, ply + 1, pvArray);
+      *pos = prevPos;
       if( score >= beta ){
          return beta;
       }
-      *pos = prevPos;
    }
    return beta-1;
 }
@@ -439,7 +439,8 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
          #ifdef DEBUG
          debug[PVS][NODE_PRUNED_FUTIL]++;
          #endif
-         goto next_pvs_move;
+         *pos = prevPos; //Unmake Move
+         continue;
       }
 
       int score;
@@ -455,10 +456,13 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
             score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
          }
       }
+
+      *pos = prevPos; //Unmake Move
+
       if( score >= beta ) { //Beta cutoff
-         storeTTEntry(prevPos.hash, depth, score, CUT_NODE, moveList[i]);
+         storeTTEntry(pos->hash, depth, score, CUT_NODE, moveList[i]);
          storeKillerMove(ply, moveList[i]);
-         storeHistoryMove(prevPos.flags, moveList[i], depth);
+         storeHistoryMove(pos->flags, moveList[i], depth);
          //printf("Returning beta cutoff: %d >= %d\n", score, beta);
          #ifdef DEBUG
          debug[PVS][NODE_BETA_CUT]++;
@@ -475,8 +479,6 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
          bestMove = moveList[i];
          bestScore = moveVals[i];
       }
-next_pvs_move:
-      *pos = prevPos;
    }
    if (!bSearchPv) {
       // PV Node (exact value)
@@ -597,7 +599,8 @@ int zwSearch( Position* pos, int beta, char depth, char ply, Move* pvArray ) {
          #ifdef DEBUG
          debug[ZWS][NODE_PRUNED_FUTIL]++;
          #endif
-         goto next_zws_move;
+         *pos = prevPos; //Unmake Move
+         continue;
       }
       
       char search_depth = getSearchDepth(depth, i, pos->flags, LMR_allowed, ZWS);
@@ -606,10 +609,12 @@ int zwSearch( Position* pos, int beta, char depth, char ply, Move* pvArray ) {
       #endif
       int score = -zwSearch(pos, 1-beta, search_depth, ply + 1, pvArray);
 
+      *pos = prevPos; //Unmake Move
+
       if( score >= beta ){ //Beta Cutoff
-         storeTTEntry(prevPos.hash, depth, score, CUT_NODE, moveList[i]);
+         storeTTEntry(pos->hash, depth, score, CUT_NODE, moveList[i]);
          storeKillerMove(ply, moveList[i]);
-         storeHistoryMove(prevPos.flags, moveList[i], depth);
+         storeHistoryMove(pos->flags, moveList[i], depth);
          #ifdef DEBUG
          debug[ZWS][NODE_BETA_CUT]++;
          #endif
@@ -625,9 +630,6 @@ int zwSearch( Position* pos, int beta, char depth, char ply, Move* pvArray ) {
             return beta;
          }
       }
-
-next_zws_move:
-      *pos = prevPos;
    }
    return beta-1; // fail-hard, return alpha
 }
@@ -712,7 +714,10 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvA
       selectSortQ(i, moveList, moveVals, size); 
       if(!(GET_FLAGS(moveList[i]) & CAPTURE)) continue;
       makeMove(pos, moveList[i]);
+
       int score = -quiesce(pos,  -beta, -alpha, ply + 1, q_ply + 1, pvArray);
+
+      *pos = prevPos; //Unmake Move
 
       if( score >= beta ){
          storeKillerMove(ply, moveList[i]);
@@ -730,8 +735,6 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvA
          bestScore = score;
          bestMove = moveList[i];
       }
-
-      *pos = prevPos;
    }
    //Handle the case were there where no captures or checks
    if(bestScore == INT_MIN) bestScore = evaluate(*pos);

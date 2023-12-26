@@ -6,8 +6,15 @@
 #include "util.h"
 #include "hash.h"
 
+
 #ifdef __COMPILE_DEBUG
 #define DEBUG
+#endif
+
+#define DEBUG
+
+#ifdef DEBUG
+#include "transposition.h"
 #endif
 
 /*
@@ -95,6 +102,7 @@ static void removeCaptured(Position *pos, int square){
             //pos->king[!turn] = clearBit(pos->king[!turn], square);
             printf("WARNING ATTEMPTED TO CAPTURE A KING AT POS:\n");
             printPosition(*pos, TRUE);
+            while(TRUE){};
             break;
         case 'N':
             pos->knight[!turn] = clearBit(pos->knight[!turn], square);
@@ -240,7 +248,7 @@ int makeMove(Position *pos, Move move){
     if(to == 63 || from == 63) pos->flags &= ~B_SHORT_CASTLE;
 
     //King Moves
-    if(from == 4) pos->flags &= ~(W_LONG_CASTLE | W_SHORT_CASTLE);
+    if(from == 4)  pos->flags &= ~(W_LONG_CASTLE | W_SHORT_CASTLE);
     if(from == 60) pos->flags &= ~(B_LONG_CASTLE | B_SHORT_CASTLE);
 
 
@@ -276,6 +284,42 @@ int makeMove(Position *pos, Move move){
     if(pos->halfmove_clock == 0) hs->last_reset_idx = hs->current_idx;
     if(hs->size <= hs->current_idx) doubleHashStack(hs);
     hs->ptr[hs->current_idx] = pos->hash;
+
+
+    #ifdef DEBUG
+    
+    if(count_bits(pos->king[0]) != 1 || count_bits(pos->king[1]) != 1){
+        printf("ILLEGAL POSITION WITH TWO KINGS\n");
+        printPosition(*pos, TRUE);
+        printf("From move: ");
+        printMove(move);
+        printf(".\r\n");
+        uint64_t prevHash = pos->hashStack.ptr[pos->hashStack.current_idx-1];
+        uint64_t prevprevHash = pos->hashStack.ptr[pos->hashStack.current_idx-2];
+
+        printf("Prev Move: ");
+        TTEntry *prev = getTTEntry(prevHash);
+        if(prev){
+            printMove(prev->move);
+        }
+        else{
+            printf("n/a");
+        }
+        printf(" Prev-prev move: ");
+        prev = getTTEntry(prevprevHash);
+        if(prev){
+            printMove(prev->move);
+        }
+        else{
+            printf("n/a");
+        }
+        printf("\r\n");
+        
+        fflush(stdout);
+        while(TRUE){};
+    }
+
+    #endif
 
     return 0;
 }
@@ -319,7 +363,7 @@ static uint64_t generatePinnedPiecesColor(Position pos, int turn){
     //Make sure ep_pawn_square is the same row as the k_square
     //if white turn => king must be row 5
     //if black turn => king must be row 4
-    if((pos.en_passant != 0) && (turn) && (k_square / 8 == (turn ? 4 : 3))){ //If can capture en-passant
+    if((pos.en_passant != 0) && (k_square / 8 == (turn ? 4 : 3))){ //If can capture en-passant
         ep_pawn_square = turn ? southOne(pos.en_passant) : northOne(pos.en_passant);
     }
     

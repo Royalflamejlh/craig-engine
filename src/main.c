@@ -365,7 +365,9 @@ void processGoCommand(char* input) {
 
     token = strtok_r(input, " ", &saveptr);
     while (token != NULL) {
-        if (strcmp(token, "wtime") == 0) {
+        if (strcmp(token, "infinite") == 0) {
+            return;
+        } else if (strcmp(token, "wtime") == 0) {
             token = strtok_r(NULL, " ", &saveptr);
             if (token != NULL) {
                 searchParams.wtime = atol(token);
@@ -420,11 +422,15 @@ static int processInput(char* input){
     else if (strncmp(input, "go", 2) == 0) {
         startSearchThreads();
         processGoCommand(input + 3);
+        printf("went");
         fflush(stdout);
     }
     else if (strncmp(input, "stop", 4) == 0){
+        stopSearchThreads();
         stopTimerThread();
         printBestMove();
+        printf("stopped");
+        fflush(stdout);
     }
     else if (strncmp(input, "debug", 5) == 0){
         printPosition(global_position, TRUE);
