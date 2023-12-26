@@ -234,6 +234,7 @@ int main(void) {
     }
     #ifdef RUN_TEST
     testBB();
+    return 0;
     #endif
 
     #ifdef __PROFILE
@@ -300,6 +301,7 @@ void processMoves(char* str) {
     char* rest = str; 
     pch = strtok_r(str, " ", &rest);
     Position pos = fenToPosition(START_FEN);
+    
     while (pch != NULL) {
         char* moveStr = trimWhitespace(pch);
         if(isNullMove(moveStr)){

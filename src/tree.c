@@ -48,7 +48,7 @@
 
 #else
 
-#define MAX_QUIESCE_PLY 5 //How far q search can go 
+#define MAX_QUIESCE_PLY 100 //How far q search can go 
 #define MAX_PLY 255 //How far the total search can go
 
 #define LMR_DEPTH 3 //LMR not performed if depth < LMR_DEPTH

@@ -174,6 +174,39 @@ Stage calculateStage(Position pos){
     return stage;
 }
 
+/*
+*
+* Hash Stack Stuff
+*
+*/
+
+HashStack createHashStack(void){
+    uint64_t *ptr = malloc(sizeof(uint64_t) * MAX_MOVES);
+    if (ptr == NULL) {
+        printf("info Warning: Failed to allocate space for the Hash Stack.\n");
+    }
+    HashStack hashStack = {ptr, MAX_MOVES, 0, 0};
+    return hashStack;
+}
+
+void doubleHashStack(HashStack *hs){
+    hs->size *= 2;
+    hs->ptr = realloc(hs->ptr, hs->size);
+    if (hs->ptr == NULL) {
+        printf("info Warning: Failed to allocate space for the Hash Stack.\n");
+        return;
+    }
+}
+
+
+int removeHashStack(HashStack *hashStack){
+    if (hashStack && hashStack->ptr) {
+        free(hashStack->ptr);
+        hashStack->ptr = NULL;
+    }
+    return 0;
+}
+
 #ifdef PYTHON
 int python_init() {
     system("rm /tmp/chess_fifo_in");

@@ -36,5 +36,13 @@ static inline void movcpy (Move* pTarget, const Move* pSource, int n) {
    while (n-- && (*pTarget++ = *pSource++));
 }
 
+/*
+*
+* Hash Stack Stuff
+*
+*/
 
+HashStack createHashStack(void);
+int removeHashStack(HashStack *hashStack);
+void doubleHashStack(HashStack *hs);
 #endif

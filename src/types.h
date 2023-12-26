@@ -144,10 +144,11 @@ static const int pieceToIndex[128] = {
 };
 
 typedef struct {
-    uint64_t* hash_stack; //A stack of hashes of player positions
+    uint64_t* ptr; //A stack of hashes of player positions
+    int size; //Size of the hash stack
     int current_idx; //An index to the current hash
     int last_reset_idx; //An index to the last move which reset halfmove clock
-} GameState;
+} HashStack;
 
 #define EARLY_GAME_MOVES   8 //Moves that count as early game (fullmoves)
 #define END_GAME_PIECES   16 //Pieces left to count as late game
@@ -181,7 +182,7 @@ typedef struct {            //Each size of 2 array contains {Black, White}
 
     uint64_t hash; //Hash of the position
 
-    GameState* gameState; //Pointer to the gamestate position is in
+    HashStack hashStack; //Pointer to the gamestate position is in
 
     Stage stage; //The stage of the game
 

@@ -74,5 +74,3 @@ void storeTTEntry(uint64_t hash, char depth, int eval, char nodeType, Move move)
 }
 
     
-    
-    

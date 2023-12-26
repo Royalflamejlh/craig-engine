@@ -73,6 +73,8 @@ int testBB(void) {
                 break;
             }
         }
+
+        removeHashStack(&pos.hashStack);
     }
 
     fclose(file);
@@ -98,6 +100,7 @@ int testBB(void) {
             size = generateLegalMoves(pos, moveList);
             i++;
         }
+        removeHashStack(&pos.hashStack);
     }
     printf("Check Complete.\n");
 
@@ -113,6 +116,7 @@ int testBB(void) {
         uint64_t num_moves = perft(depth, pos);
         printf("Perft output is %lld for depth %d\n", (long long unsigned)num_moves, depth);
     }
+    removeHashStack(&pos.hashStack);
 
     printf("\nComplete, running perft suite.\n");
 
@@ -131,6 +135,7 @@ int testBB(void) {
             //int64_t num_moves = perft(depth, pos);
             //printf("D%d: %lld |", depth, (long long int)num_moves);
         }
+        removeHashStack(&pos.hashStack);
         //printf("\n\n");
     }
     printf("\nPerft Suite Complete\n");
@@ -163,6 +168,8 @@ int testBB(void) {
         printMove(moveListNode[i]);
     }
     printf("\n--------------------------------------------------------------------------\n");
+
+    removeHashStack(&pos.hashStack);
     
     pos = fenToPosition(START_FEN);
     Move best_move = getBestMove(pos);
@@ -176,6 +183,8 @@ int testBB(void) {
         printPosition(pos, FALSE);
         best_move = getBestMove(pos);
     }
+
+    removeHashStack(&pos.hashStack);
 
     printf("\n-----------------------------------------------------------------------------------\n\n");
     #endif
