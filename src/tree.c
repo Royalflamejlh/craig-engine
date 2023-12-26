@@ -238,10 +238,11 @@ int getBestMove(Position pos){
          printf("info Warning: failed to allocate space for pvArray");
          return -1;
       }
-
+      Position searchPos = pos;
       //printf("Running pv search at depth %d\n", i);
       if(i <= 2){
-         eval = pvSearch(&pos, INT_MIN+1, INT_MAX, i, 0, pvArray, 0);
+         eval = pvSearch(&searchPos, INT_MIN+1, INT_MAX, i, 0, pvArray, 0);
+         searchPos = pos;
       } else {
          //Calculate the Aspiration Window
          int asp_dif = (abs(eval_prev - eval) / 2) + ASP_EDGE;
@@ -263,6 +264,7 @@ int getBestMove(Position pos){
          }
          eval_prev = eval;
          eval = eval_tmp;
+         searchPos = pos;
       }
       
       #ifdef DEBUG
@@ -389,8 +391,7 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
                   return alpha;
                }
                break;
-            default: //Q Node
-               ttMove = NO_MOVE;
+            default:
                break;
          }
       }

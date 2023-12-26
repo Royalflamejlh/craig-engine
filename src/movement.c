@@ -5,6 +5,11 @@
 #include "./bitboard/bbutils.h"
 #include "util.h"
 #include "hash.h"
+
+#ifdef __COMPILE_DEBUG
+#define DEBUG
+#endif
+
 /*
 * Wow Cool! Totaly sensical move generation!
 */
@@ -110,6 +115,9 @@ static void removeCaptured(Position *pos, int square){
 }
 
 int makeMove(Position *pos, Move move){
+    #ifdef DEBUG
+    if(move == NO_MOVE) printf("WARNING ILLEGAL NO-MOVE IN MAKE MOVE\n");
+    #endif
     int turn = pos->flags & WHITE_TURN;
     int from = GET_FROM(move);
     int to   = GET_TO(move);
