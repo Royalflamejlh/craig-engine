@@ -12,6 +12,7 @@
 #include <time.h>
 #include "../bitboard/bitboard.h"
 #include "../bitboard/magic.h"
+#include "../tree.h"
 #include "../movement.h"
 #include "../util.h"
 #include "../hash.h"
@@ -21,8 +22,6 @@
 #define MOVE_GEN_TEST
 #define MOVE_MAKE_TEST
 #define PERF_TEST
-#define NODE_TEST
-
 
 int testBB(void) {
     #ifdef PYTHON
@@ -146,7 +145,7 @@ int testBB(void) {
     #endif
 
 
-    #ifdef NODE_TEST_OFF
+    #ifdef NODE_TEST
     printf("\n---------------------------------- Node TESTING ----------------------------------\n\n");
 
     pos = fenToPosition(START_FEN);
@@ -187,6 +186,37 @@ int testBB(void) {
     removeHashStack(&pos.hashStack);
 
     printf("\n-----------------------------------------------------------------------------------\n\n");
+    #endif
+
+    #ifdef HASH_TEST
+    printf("\n---------------------------------- HASH TESTING ----------------------------------\n\n");
+
+    pos = fenToPosition(START_FEN);
+    printf("Hash %d is: %" PRIu64 "\n", 0, pos.hash);
+    Move moveList_hash[MAX_MOVES];
+    int size_hash = 0;
+    int moveVals[MAX_MOVES] = {0};
+    
+
+    for (int i = 0; i < 100; i++)  {
+        size_hash = generateLegalMoves(pos, moveList_hash);
+        evalMoves(moveList_hash, moveVals, size_hash, NO_MOVE, NULL, 0, pos);
+        selectSort(0, moveList_hash, moveVals, size_hash);
+        makeMove(&pos, moveList_hash[0]);
+        printf("Hash %d is: %" PRIu64 "\n", i+1, pos.hash);
+    }
+
+    printf("Now going through Hash Table: (Size : %d) \n", pos.hashStack.current_idx);
+    for(int i = 0; i < pos.hashStack.current_idx; i++){
+        printf("HashTable[%d] : %" PRIu64 "\n", i, pos.hashStack.ptr[i]);
+    }
+
+    printf("Printing Hash Table Since Last Unique Move (at: %d): \n", pos.hashStack.last_reset_idx);
+    for(int i = pos.hashStack.last_reset_idx; i < pos.hashStack.current_idx; i++){
+        printf("HashTable[%d] : %" PRIu64 "\n", i, pos.hashStack.ptr[i]);
+    }
+
+    removeHashStack(&pos.hashStack);
     #endif
 
     #ifdef PYTHON

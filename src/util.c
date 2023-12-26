@@ -191,7 +191,7 @@ HashStack createHashStack(void){
 
 void doubleHashStack(HashStack *hs){
     hs->size *= 2;
-    hs->ptr = realloc(hs->ptr, hs->size);
+    hs->ptr = realloc(hs->ptr, sizeof(uint64_t) * hs->size);
     if (hs->ptr == NULL) {
         printf("info Warning: Failed to allocate space for the Hash Stack.\n");
         return;

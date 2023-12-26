@@ -160,6 +160,15 @@ void printTreeDebug(void){
 }
 #endif
 
+/*
+* Returns whether the position is a Repetition
+*/
+static inline int isRepetition(Position* pos){
+   for(int i = pos->hashStack.last_reset_idx; i < pos->hashStack.current_idx; i++){
+      if(pos->hashStack.ptr[i] == pos->hashStack.ptr[pos->hashStack.current_idx]) return 1;
+   }
+   return 0;
+}
 
 /*
 * Function pertaining to storage of killer moves 
@@ -333,6 +342,8 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
    debug[PVS][NODE_COUNT]++;
    #endif
 
+   if(isRepetition(pos)) return 0;
+
    Move moveList[MAX_MOVES];
    int moveVals[MAX_MOVES];
    int size = generateLegalMoves(*pos, moveList);
@@ -495,6 +506,8 @@ int zwSearch( Position* pos, int beta, char depth, char ply, Move* pvArray ) {
    debug[ZWS][NODE_COUNT]++;
    #endif
 
+   if(isRepetition(pos)) return 0;
+
    Move moveList[MAX_MOVES];
    int moveVals[MAX_MOVES];
    int size = generateLegalMoves(*pos, moveList);
@@ -636,6 +649,7 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvA
       else return 0;
    }
    if(pos->halfmove_clock >= 50) return 0;
+   
 
    int stand_pat = evaluate(*pos);
    if( stand_pat >= beta )
@@ -770,4 +784,6 @@ void selectSortQ(int i, Move *moveList, int *moveVals, int size) {
         moveList[maxIdx] = tempMove;
     }
 }
+
+
 

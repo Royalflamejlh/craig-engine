@@ -234,7 +234,6 @@ int main(void) {
     }
     #ifdef RUN_TEST
     testBB();
-    return 0;
     #endif
 
     #ifdef __PROFILE

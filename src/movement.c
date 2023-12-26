@@ -263,11 +263,11 @@ int makeMove(Position *pos, Move move){
 
 
     //Todo: make this make sense
-    HashStack hs = pos->hashStack;
-    hs.current_idx++;
-    if(pos->halfmove_clock == 0) hs.last_reset_idx = hs.current_idx;
-    if(hs.size == hs.current_idx) doubleHashStack(&hs);
-    hs.ptr[hs.current_idx] = pos->hash;
+    HashStack *hs = &pos->hashStack;
+    hs->current_idx++;
+    if(pos->halfmove_clock == 0) hs->last_reset_idx = hs->current_idx;
+    if(hs->size <= hs->current_idx) doubleHashStack(hs);
+    hs->ptr[hs->current_idx] = pos->hash;
 
     return 0;
 }
