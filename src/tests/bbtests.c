@@ -88,6 +88,8 @@ int testBB(void) {
 
     
     printf("Starting Quick Check\n");
+    Move threatMoveList[MAX_MOVES];
+    int threatSize;
     for(int j = 0; j < 1000; j++){
         char* FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         pos = fenToPosition(FEN);
@@ -97,6 +99,17 @@ int testBB(void) {
             int randMove = rand() % size;
             makeMove(&pos, moveList[randMove]);
             size = generateLegalMoves(pos, moveList);
+            threatSize = generateThreatMoves(pos, threatMoveList);
+            for(int j = 0; j < threatSize; j++){
+                char found = 0;
+                for(int k = 0; k < size; k++){
+                    if(threatMoveList[j] == moveList[k]) found = 1;
+                }
+                if(!found){
+                    printf("Move in threat moves, that is not in move list!\n");
+                    return -1;
+                }
+            }
             i++;
         }
         removeHashStack(&pos.hashStack);

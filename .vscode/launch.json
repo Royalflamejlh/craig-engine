@@ -4,7 +4,7 @@
       "name": "(lldb) Launch",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/bin/chess",
+      "program": "${workspaceFolder}/bin/chess_db",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",

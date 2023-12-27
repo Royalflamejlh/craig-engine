@@ -165,6 +165,10 @@ static uint64_t getBishopMovesCheckAppend(uint64_t bishops, uint64_t ownPieces, 
     return all_moves;
 }
 
+uint64_t getBishopThreatMovesAppend(uint64_t bishops, uint64_t ownPieces, uint64_t oppPieces, uint64_t checkSquares, Move* moveList, int* idx) {
+    return getBishopMovesCheckAppend(bishops, ownPieces, oppPieces, checkSquares | oppPieces, moveList, idx);
+}
+
 uint64_t getBishopMovesAppend(uint64_t bishops, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* idx) {
     return getBishopMovesCheckAppend(bishops, ownPieces, oppPieces, ~(0x0ULL), moveList, idx);
 }
@@ -207,6 +211,10 @@ static uint64_t getRookMovesCheckAppend(uint64_t rooks, uint64_t ownPieces, uint
         rooks &= rooks - 1;
     }
     return all_moves;
+}
+
+uint64_t getRookThreatMovesAppend(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces, uint64_t checkSquares, Move* moveList, int* idx) {
+    return getRookMovesCheckAppend(rooks, ownPieces, oppPieces, checkSquares | oppPieces, moveList, idx);
 }
 
 uint64_t getRookMovesAppend(uint64_t rooks, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* idx) {
@@ -333,6 +341,110 @@ uint64_t getPawnMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t oppPiec
     return all_moves;
 }
 
+uint64_t getPawnThreatMovesAppend(uint64_t pawns, uint64_t ownPieces, uint64_t oppPieces,  uint64_t enPassant, char flags, int opp_king_square, Move* moveList, int* idx) {
+    uint64_t all_moves = 0ULL;
+    uint64_t occ =  0ULL;
+    char turn = (flags & WHITE_TURN);
+    int pawn_mask_idx = turn ? 0 : 4;
+
+    int opp_pawn_mask_idx = turn ? 4 : 0;
+    uint64_t check_squares = pawnMoves[opp_king_square][opp_pawn_mask_idx + 2] | pawnMoves[opp_king_square][opp_pawn_mask_idx + 3];
+
+    while (pawns) {
+        uint64_t q_moves = 0ULL;         //Quiet
+        uint64_t dp_moves = 0ULL;        //Double Pawn
+        uint64_t cap_moves = 0ULL;       //Captures
+        uint64_t ep_moves = 0ULL;        //En Passants
+
+        int square = __builtin_ctzll(pawns);
+        int rank = square / 8;
+        char promotion = turn ? (rank == 6) : (rank == 1);
+        char can_double = turn ? (rank == 1) : (rank == 6);
+
+        //Single Step
+        occ = (oppPieces | ownPieces) & pawnMoves[square][pawn_mask_idx + 0];
+        if(!occ) q_moves |= (pawnMoves[square][pawn_mask_idx + 0] & check_squares);
+        
+        //Double Step
+        if(occ == 0 && can_double){
+            occ = (oppPieces | ownPieces) & pawnMoves[square][pawn_mask_idx + 1];
+            if(!occ) dp_moves |= (pawnMoves[square][pawn_mask_idx + 1] & check_squares);
+        }
+
+        //Capture Left
+        occ = (oppPieces) & pawnMoves[square][pawn_mask_idx + 2];
+        if(occ) cap_moves |= pawnMoves[square][pawn_mask_idx + 2];
+
+        occ = (enPassant) & pawnMoves[square][pawn_mask_idx + 2];
+        if(occ) ep_moves |= pawnMoves[square][pawn_mask_idx + 2];
+
+        //Capture Right
+        occ = (oppPieces) & pawnMoves[square][pawn_mask_idx + 3];
+        if(occ) cap_moves |= pawnMoves[square][pawn_mask_idx + 3];
+
+        occ = (enPassant) & pawnMoves[square][pawn_mask_idx + 3];
+        if(occ) ep_moves |= pawnMoves[square][pawn_mask_idx + 3];
+
+        all_moves |= q_moves | dp_moves | cap_moves | ep_moves;
+
+        while(q_moves){
+            int move_sq = __builtin_ctzll(q_moves);
+            if (promotion) {
+                Move baseMove = MAKE_MOVE(square, move_sq, QUIET);
+                moveList[*idx] = SET_QUEEN_PROMOTION(baseMove);
+                (*idx)++;
+                moveList[*idx] = SET_ROOK_PROMOTION(baseMove);
+                (*idx)++;
+                moveList[*idx] = SET_BISHOP_PROMOTION(baseMove);
+                (*idx)++;
+                moveList[*idx] = SET_KNIGHT_PROMOTION(baseMove);
+                (*idx)++;
+            } else {
+                moveList[*idx] = MAKE_MOVE(square, move_sq, QUIET);
+                (*idx)++;
+            }
+            q_moves &= q_moves - 1;
+        }
+
+        while(cap_moves){
+            int move_sq = __builtin_ctzll(cap_moves);
+            if (promotion) {
+                Move baseMove = MAKE_MOVE(square, move_sq, CAPTURE);
+                moveList[*idx] = SET_QUEEN_PROMO_CAPTURE(baseMove);
+                (*idx)++;
+                moveList[*idx] = SET_ROOK_PROMO_CAPTURE(baseMove);
+                (*idx)++;
+                moveList[*idx] = SET_BISHOP_PROMO_CAPTURE(baseMove);
+                (*idx)++;
+                moveList[*idx] = SET_KNIGHT_PROMO_CAPTURE(baseMove);
+                (*idx)++;
+            } else {
+                moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+                (*idx)++;
+            }
+            cap_moves &= cap_moves - 1;
+        }
+
+        while(dp_moves){
+            int move_sq = __builtin_ctzll(dp_moves);
+            moveList[*idx] = MAKE_MOVE(square, move_sq, DOUBLE_PAWN_PUSH);
+            (*idx)++;
+            dp_moves &= dp_moves - 1;
+        }
+
+        while(ep_moves){
+            int move_sq = __builtin_ctzll(ep_moves);
+            moveList[*idx] = MAKE_MOVE(square, move_sq, EP_CAPTURE);
+            (*idx)++;
+            ep_moves &= ep_moves - 1;
+        }
+
+        pawns &= pawns - 1;
+    }
+
+    return all_moves;
+}
+
 
 /*
 * Jumpity jump these bad boys are the easiest thing to implement in chess somehow
@@ -380,6 +492,39 @@ uint64_t getKnightMovesAppend(uint64_t knights, uint64_t ownPieces, uint64_t opp
     return all_moves;
 }
 
+uint64_t getKnightThreatMovesAppend(uint64_t knights, uint64_t ownPieces, uint64_t oppPieces, int opp_king_square, Move* moveList, int* idx) {
+    uint64_t all_moves = 0ULL;
+
+    uint64_t check_squares = knightMoves[opp_king_square];
+
+    while (knights) {
+        int square = __builtin_ctzll(knights);
+    
+        uint64_t all_moves = knightMoves[square] & ~ownPieces;
+
+        uint64_t check_moves = all_moves & check_squares;
+        uint64_t cap_moves = all_moves & oppPieces;
+        check_moves &= ~cap_moves;
+
+        while(check_moves){
+            int move_sq = __builtin_ctzll(check_moves);
+            moveList[*idx] = MAKE_MOVE(square, move_sq, QUIET);
+            (*idx)++;
+            check_moves &= check_moves - 1;
+        }
+        while(cap_moves){
+            int move_sq = __builtin_ctzll(cap_moves);
+            moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+            (*idx)++;
+            cap_moves &= cap_moves - 1;
+        }
+        
+        knights &= knights - 1;
+    }
+
+    return all_moves;
+}
+
 //King
 uint64_t getKingAttacks(uint64_t kings) {
     int square = __builtin_ctzll(kings);
@@ -402,6 +547,19 @@ uint64_t getKingMovesAppend(uint64_t kings, uint64_t ownPieces, uint64_t oppPiec
         (*idx)++;
         nocap_moves &= nocap_moves - 1;
     }
+    while(cap_moves){
+        int move_sq = __builtin_ctzll(cap_moves);
+        moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+        (*idx)++;
+        cap_moves &= cap_moves - 1;
+    }
+    return all_moves;
+}
+
+uint64_t getKingThreatMovesAppend(uint64_t kings, uint64_t ownPieces, uint64_t oppPieces, uint64_t oppAttackMask, Move* moveList, int* idx) {
+    int square = __builtin_ctzll(kings);
+    uint64_t all_moves = kingMoves[square] & ~ownPieces & ~oppAttackMask;
+    uint64_t cap_moves = all_moves & oppPieces;
     while(cap_moves){
         int move_sq = __builtin_ctzll(cap_moves);
         moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
@@ -541,6 +699,19 @@ static void getPinnedQueenMovesAppend(int king_rank, int king_file, uint64_t pin
     }
 }
 
+static void getPinnedQueenThreatMovesAppend(int king_rank, int king_file, uint64_t pinned_queens, uint64_t ownPieces, uint64_t oppPieces, uint64_t b_check_squares, uint64_t r_check_squares, Move* moveList, int* size) {
+    while(pinned_queens){ //Process Each Pinned Queen Individually
+        int queen_sq = __builtin_ctzll(pinned_queens);
+        int queen_rank = queen_sq / 8;
+        int queen_file = queen_sq % 8;
+        if(queen_rank == king_rank)                                getRookThreatMovesAppend(1ULL << queen_sq, ownPieces | fileMask[queen_sq], oppPieces, r_check_squares, moveList, size);
+        else if(queen_file == king_file)                           getRookThreatMovesAppend(1ULL << queen_sq, ownPieces | rankMask[queen_sq], oppPieces, r_check_squares, moveList, size);
+        else if(queen_rank - queen_file == king_rank - king_file)  getBishopThreatMovesAppend(1ULL << queen_sq, ownPieces | NWSEMask[queen_sq], oppPieces, b_check_squares, moveList, size);
+        else if(queen_rank + queen_file == king_rank + king_file)  getBishopThreatMovesAppend(1ULL << queen_sq, ownPieces | NESWMask[queen_sq], oppPieces, b_check_squares, moveList, size);
+        pinned_queens &= pinned_queens - 1;
+    }
+}
+
 static void getPinnedRookMovesAppend(int king_rank, int king_file, uint64_t pinned_rooks, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* size) {
     while(pinned_rooks){ //Process Each Pinned rook Individually
         int rook_sq = __builtin_ctzll(pinned_rooks);
@@ -551,6 +722,18 @@ static void getPinnedRookMovesAppend(int king_rank, int king_file, uint64_t pinn
         pinned_rooks &= pinned_rooks - 1;
     }
 }
+
+static void getPinnedRookThreatMovesAppend(int king_rank, int king_file, uint64_t pinned_rooks, uint64_t ownPieces, uint64_t oppPieces, uint64_t r_check_squares, Move* moveList, int* size) {
+    while(pinned_rooks){ //Process Each Pinned rook Individually
+        int rook_sq = __builtin_ctzll(pinned_rooks);
+        int rook_rank = rook_sq / 8;
+        int rook_file = rook_sq % 8;
+        if(rook_rank == king_rank)      getRookThreatMovesAppend(1ULL << rook_sq, ownPieces | fileMask[rook_sq], oppPieces, r_check_squares, moveList, size);
+        else if(rook_file == king_file) getRookThreatMovesAppend(1ULL << rook_sq, ownPieces | rankMask[rook_sq], oppPieces, r_check_squares, moveList, size);
+        pinned_rooks &= pinned_rooks - 1;
+    }
+}
+
 
 static void getPinnedBishopMovesAppend(int king_rank, int king_file, uint64_t pinned_bishops, uint64_t ownPieces, uint64_t oppPieces, Move* moveList, int* size) {
     while(pinned_bishops){ //Process Each Pinned bishop Individually
@@ -564,6 +747,23 @@ static void getPinnedBishopMovesAppend(int king_rank, int king_file, uint64_t pi
         
         else if(bishop_rank + bishop_file == king_rank + king_file){
             getBishopMovesAppend(1ULL << bishop_sq, ownPieces | NESWMask[bishop_sq], oppPieces, moveList, size);
+        }
+        pinned_bishops &= pinned_bishops - 1;
+    }
+}
+
+static void getPinnedBishopThreatMovesAppend(int king_rank, int king_file, uint64_t pinned_bishops, uint64_t ownPieces, uint64_t oppPieces, uint64_t b_check_squares, Move* moveList, int* size) {
+    while(pinned_bishops){ //Process Each Pinned bishop Individually
+        int bishop_sq = __builtin_ctzll(pinned_bishops);
+        int bishop_rank = bishop_sq / 8;
+        int bishop_file = bishop_sq % 8;
+
+        if(bishop_rank - bishop_file == king_rank - king_file){
+            getBishopThreatMovesAppend(1ULL << bishop_sq, ownPieces | NWSEMask[bishop_sq], oppPieces, b_check_squares, moveList, size);
+        }
+        
+        else if(bishop_rank + bishop_file == king_rank + king_file){
+            getBishopThreatMovesAppend(1ULL << bishop_sq, ownPieces | NESWMask[bishop_sq], oppPieces, b_check_squares, moveList, size);
         }
         pinned_bishops &= pinned_bishops - 1;
     }
@@ -603,6 +803,40 @@ static void getPinnedPawnMovesAppend(int king_rank, int king_file, uint64_t pinn
     }
 }
 
+static void getPinnedPawnThreatMovesAppend(int king_rank, int king_file, uint64_t pinned_pawns, uint64_t ownPieces, uint64_t oppPieces, uint64_t en_passant, char flags, int opp_king_square, Move* moveList, int* size) {
+    while(pinned_pawns){ //Process Each Pinned pawn Individually
+        int pawn_sq = __builtin_ctzll(pinned_pawns);
+        int pawn_rank = pawn_sq / 8;
+        int pawn_file = pawn_sq % 8;
+        char turn = (flags & WHITE_TURN);
+        int pawn_mask_idx = turn ? 0 : 4;
+
+        if(pawn_rank == king_rank){
+            if(en_passant && (pawn_rank == (turn ? 4 : 3))){
+                int ep_sq = __builtin_ctzll(pinned_pawns);
+                if(ep_sq % 8 == pawn_file){
+                    getPawnThreatMovesAppend(1ULL << pawn_sq, ownPieces, oppPieces, 0ULL, flags, opp_king_square, moveList, size);
+                    pinned_pawns &= pinned_pawns - 1;
+                    continue;
+                }
+            }
+        }
+
+        if(pawn_file == king_file) getPawnThreatMovesAppend(1ULL << pawn_sq, ownPieces, (oppPieces & ~pawnMoves[pawn_sq][pawn_mask_idx + 2] & ~pawnMoves[pawn_sq][pawn_mask_idx + 3]), 0ULL, flags, opp_king_square, moveList, size); //Hide black pieces that could be captured and no en-passant
+        else if(pawn_rank - pawn_file == king_rank - king_file){ //Up right
+            uint64_t dir = pawnMoves[pawn_sq][turn ? 3 : 6];
+            uint64_t occ = oppPieces & dir;
+            getPawnThreatMovesAppend(1ULL << pawn_sq, (ownPieces | ~occ), occ, en_passant & dir, flags, opp_king_square, moveList, size);
+        }
+        else if(pawn_rank + pawn_file == king_rank + king_file){ //Up Left
+            uint64_t dir = pawnMoves[pawn_sq][turn ? 2 : 7]; 
+            uint64_t occ = oppPieces & dir;
+            getPawnThreatMovesAppend(1ULL << pawn_sq, (ownPieces | ~occ), occ, en_passant & dir, flags, opp_king_square, moveList, size);
+        }
+        pinned_pawns &= pinned_pawns - 1;
+    }
+}
+
 void getPinnedMovesAppend(Position pos, Move* moveList, int* size){
     int turn = pos.flags & WHITE_TURN;
     uint64_t pinned = pos.pinned;
@@ -637,4 +871,39 @@ void getPinnedMovesAppend(Position pos, Move* moveList, int* size){
     uint64_t pinned_pawns = pos.pawn[turn] & pinned;
     getPawnMovesAppend(pos.pawn[turn] & ~pinned_pawns, pos.color[turn], pos.color[!turn], pos.en_passant, pos.flags, moveList, size);
     getPinnedPawnMovesAppend(king_rank, king_file, pinned_pawns, pos.color[turn], pos.color[!turn], pos.en_passant, pos.flags, moveList, size);
+}
+
+void getPinnedThreatMovesAppend(Position pos, uint64_t r_check_squares, uint64_t b_check_squares, int opp_king_sq, Move* moveList, int* size){
+    int turn = pos.flags & WHITE_TURN;
+    uint64_t pinned = pos.pinned;
+    int king_sq = __builtin_ctzll(pos.king[turn]);
+    int king_rank = king_sq / 8;
+    int king_file = king_sq % 8;
+
+    //King does his thang
+    getKingThreatMovesAppend(pos.king[turn], pos.color[turn],  pos.color[!turn], pos.attack_mask[!turn], moveList, size);
+
+    //Pinned Knights Cannot Move
+    uint64_t pinned_knights = pos.knight[turn] & pinned;
+    getKnightThreatMovesAppend(pos.knight[turn] & ~pinned_knights, pos.color[turn], pos.color[!turn], opp_king_sq, moveList, size);
+    
+    uint64_t pinned_queens = pos.queen[turn] & pinned;
+    getBishopThreatMovesAppend(pos.queen[turn] & ~pinned_queens, pos.color[turn], pos.color[!turn], b_check_squares, moveList, size);
+    getRookThreatMovesAppend(  pos.queen[turn] & ~pinned_queens, pos.color[turn], pos.color[!turn], r_check_squares, moveList, size);
+    getPinnedQueenThreatMovesAppend(king_rank, king_file, pinned_queens, pos.color[turn], pos.color[!turn], b_check_squares, r_check_squares,  moveList, size);
+    
+    uint64_t pinned_rooks = pos.rook[turn] & pinned;
+    getRookThreatMovesAppend(pos.rook[turn] & ~pinned_rooks, pos.color[turn], pos.color[!turn], r_check_squares, moveList, size);
+    getPinnedRookThreatMovesAppend(king_rank, king_file, pinned_rooks, pos.color[turn], pos.color[!turn], r_check_squares, moveList, size);
+
+    //Process Pinned Bishops
+    uint64_t pinned_bishops = pos.bishop[turn] & pinned;
+    getBishopThreatMovesAppend(pos.bishop[turn] & ~pinned_bishops, pos.color[turn], pos.color[!turn], b_check_squares, moveList, size);
+    getPinnedBishopThreatMovesAppend(king_rank, king_file, pinned_bishops, pos.color[turn], pos.color[!turn], b_check_squares, moveList, size);
+
+
+    //Process Pinned Pawns
+    uint64_t pinned_pawns = pos.pawn[turn] & pinned;
+    getPawnThreatMovesAppend(pos.pawn[turn] & ~pinned_pawns, pos.color[turn], pos.color[!turn], pos.en_passant, pos.flags, opp_king_sq, moveList, size);
+    getPinnedPawnThreatMovesAppend(king_rank, king_file, pinned_pawns, pos.color[turn], pos.color[!turn], pos.en_passant, pos.flags, opp_king_sq, moveList, size);
 }

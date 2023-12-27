@@ -52,6 +52,45 @@ uint16_t generateLegalMoves(Position position,  Move* moveList){
     return *size;
 }
 
+
+/*
+* Generate Moves that capture pieces, and put the opponents king in check
+*/
+uint16_t generateThreatMoves(Position position,  Move* moveList){
+    int size[] = {0};
+    int turn = position.flags & WHITE_TURN; //True for white false for black
+    uint64_t ownPos = position.color[turn];
+    uint64_t oppPos = position.color[!turn];
+    uint64_t oppAttackMask = position.attack_mask[!turn];
+
+    int kingSq = __builtin_ctzll(position.king[!turn]);
+    uint64_t r_check_squares = rookAttacks(  ownPos | oppPos, kingSq) & ~(ownPos | oppPos);
+    uint64_t b_check_squares = bishopAttacks(ownPos | oppPos, kingSq) & ~(ownPos | oppPos);
+
+    if(position.flags & IN_CHECK){
+        if(position.flags & IN_D_CHECK){
+            getKingMovesAppend(position.king[turn], ownPos, oppPos, oppAttackMask, moveList, size);
+        }
+        else{
+            getCheckMovesAppend(position, moveList, size);
+        }
+    }
+    else if(position.pinned & ownPos){
+        getPinnedThreatMovesAppend(position, r_check_squares, b_check_squares, kingSq, moveList, size);
+    }
+    else{
+        getBishopThreatMovesAppend(position.queen[turn],  ownPos, oppPos, b_check_squares, moveList, size);
+        getRookThreatMovesAppend(  position.queen[turn],  ownPos, oppPos, r_check_squares, moveList, size);
+        getRookThreatMovesAppend(  position.rook[turn],   ownPos, oppPos, r_check_squares, moveList, size);
+        getBishopThreatMovesAppend(position.bishop[turn], ownPos, oppPos, b_check_squares, moveList, size);
+        getKnightThreatMovesAppend(position.knight[turn], ownPos, oppPos, kingSq, moveList, size);
+        getKingThreatMovesAppend(  position.king[turn],   ownPos, oppPos, oppAttackMask, moveList, size);
+        getPawnThreatMovesAppend(  position.pawn[turn],   ownPos, oppPos, position.en_passant, position.flags, kingSq, moveList, size);
+    }
+    return *size;
+}
+
+
 static void movePiece(Position *pos, int turn, int from, int to){
     switch(toupper(pos->charBoard[from])){
         case 'Q':

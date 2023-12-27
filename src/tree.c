@@ -48,7 +48,7 @@
 
 #else
 
-#define MAX_QUIESCE_PLY 100 //How far q search can go 
+#define MAX_QUIESCE_PLY 5 //How far q search can go 
 #define MAX_PLY 255 //How far the total search can go
 
 #define LMR_DEPTH 3 //LMR not performed if depth < LMR_DEPTH
@@ -68,9 +68,9 @@
 
 //Set up the Depth sizes depending on mode
 #ifdef DEBUG
-#define MAX_DEPTH 12
+#define MAX_DEPTH 100
 #elif defined(__PROFILE)
-#define MAX_DEPTH 4
+#define MAX_DEPTH 6
 #endif
 
 //static void selectSort(int i, Move *moveList, int *moveVals, int size);
@@ -644,7 +644,16 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvA
    
    Move moveList[MAX_MOVES];
    int moveVals[MAX_MOVES];
-   int size = generateLegalMoves(*pos, moveList);
+
+   if(isRepetition(pos)) return 0;
+
+   int size;
+   if(pos->flags & IN_CHECK){
+      size = generateLegalMoves(*pos, moveList);
+   }
+   else{
+      size = generateThreatMoves(*pos, moveList);
+   }
 
    //Handle Draw or Mate
    if(size == 0){
@@ -711,8 +720,7 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvA
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
-      selectSortQ(i, moveList, moveVals, size); 
-      if(!(GET_FLAGS(moveList[i]) & CAPTURE)) continue;
+      selectSort(i, moveList, moveVals, size); 
       makeMove(pos, moveList[i]);
 
       int score = -quiesce(pos,  -beta, -alpha, ply + 1, q_ply + 1, pvArray);
@@ -769,25 +777,6 @@ void selectSort(int i, Move *moveList, int *moveVals, int size) {
     }
 }
 
-void selectSortQ(int i, Move *moveList, int *moveVals, int size) {
-    int maxIdx = i;
-
-    for (int j = i + 1; j < size; j++) {
-        if (moveVals[j] > moveVals[maxIdx] && (GET_FLAGS(moveList[j]) & CAPTURE)) {
-            maxIdx = j;
-        }
-    }
-
-    if (maxIdx != i) {
-        int tempVal = moveVals[i];
-        moveVals[i] = moveVals[maxIdx];
-        moveVals[maxIdx] = tempVal;
-
-        Move tempMove = moveList[i];
-        moveList[i] = moveList[maxIdx];
-        moveList[maxIdx] = tempMove;
-    }
-}
 
 
 

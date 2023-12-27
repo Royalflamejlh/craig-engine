@@ -422,14 +422,12 @@ static int processInput(char* input){
     else if (strncmp(input, "go", 2) == 0) {
         startSearchThreads();
         processGoCommand(input + 3);
-        printf("went");
         fflush(stdout);
     }
     else if (strncmp(input, "stop", 4) == 0){
         stopSearchThreads();
         stopTimerThread();
         printBestMove();
-        printf("stopped");
         fflush(stdout);
     }
     else if (strncmp(input, "debug", 5) == 0){
@@ -476,12 +474,14 @@ int searchLoop(){
     return 0;
 }
 
+
 #ifdef __PROFILE
 void playSelfInfinite(void){
     global_position = fenToPosition(START_FEN);
     global_best_move = NO_MOVE;
     run_get_best_move = TRUE;
-    while(true){
+    Move moveList[MAX_MOVES];
+    while(generateLegalMoves(global_position, moveList)){
         getBestMove(global_position);
         if(global_best_move != NO_MOVE){
             makeMove(&global_position, global_best_move);
