@@ -27,44 +27,21 @@
 
 #define KMV_CNT 3 //How many killer moves are stored for a pos 
 
-
-#ifdef __FAST_AS_POOP
-
-#define MAX_QUIESCE_PLY 4
-#define MAX_PLY 255 //How far the total search can go
-
-#define LMR_DEPTH 2
-
-#define MAX_ASP_START 100
-#define ASP_EDGE 1
-
-#define FUTIL_DEPTH 1 //Depth to start futility pruning
-#define FUTIL_MARGIN 100 //Score difference for a node to be futility pruned
-
-#define RAZOR_DEPTH 3 //Depth to start razoring
-#define RAZOR_MARGIN PAWN_VALUE*2 //Margin to start razoring
-
-#define NULL_PRUNE_R 3 //How much Null prunin' takes off
-
-#else
-
 #define MAX_QUIESCE_PLY 5 //How far q search can go 
 #define MAX_PLY 255 //How far the total search can go
 
 #define LMR_DEPTH 3 //LMR not performed if depth < LMR_DEPTH
 
 #define MAX_ASP_START PAWN_VALUE-100 //Maximum size of bounds for an aspiration window to start on
-#define ASP_EDGE 10  //Buffer size of aspiration window (fast: 1)
+#define ASP_EDGE 10  //Buffer size of aspiration window
 
 #define FUTIL_DEPTH 1 //Depth to start futility pruning
 #define FUTIL_MARGIN PAWN_VALUE-100 //Score difference for a node to be futility pruned
 
 #define RAZOR_DEPTH 3 //Depth to start razoring
-#define RAZOR_MARGIN PAWN_VALUE*3 //Margin to start razoring
+#define RAZOR_MARGIN PAWN_VALUE*3 - 100 //Margin to start razoring
 
-#define NULL_PRUNE_R 2 //How much Null prunin' takes off
-
-#endif
+#define NULL_PRUNE_R 3 //How much Null prunin' takes off
 
 //Set up the Depth sizes depending on mode
 #ifdef DEBUG
@@ -248,8 +225,12 @@ int getBestMove(Position pos){
          int asp_dif = (abs(eval_prev - eval) / 2) + ASP_EDGE;
          asp_upper = asp_lower = MIN(asp_dif, MAX_ASP_START);
          int q = (eval_prev + eval + eval + eval) / 4; //Weighted towards the most recent eval
+         #ifdef DEBUG
+         printf("Running with window: %d, %d (eval: %d, eval_prev: %d)\n", q-asp_lower, q+asp_upper, eval, eval_prev);
+         #endif
 
-         int eval_tmp = pvSearch(&pos, q-asp_lower, q+asp_upper, i, 0, pvArray, 0);
+         int eval_tmp = pvSearch(&searchPos, q-asp_lower, q+asp_upper, i, 0, pvArray, 0);
+         searchPos = pos;
          while(eval_tmp <= q-asp_lower || eval_tmp >= q+asp_upper || pvArray[0] == NO_MOVE){
             if(eval_tmp <= q-asp_lower){ asp_lower *= 2;}
             if(eval_tmp >= q+asp_upper){ asp_upper *= 2;}
@@ -258,13 +239,16 @@ int getBestMove(Position pos){
                asp_lower *= 2;
             }
             #ifdef DEBUG
-            printf("Running again with window: %d, %d\n", q-asp_lower, q+asp_upper);
+            printf("Running again with window: %d, %d (eval: %d, eval_prev: %d, move: ", q-asp_lower, q+asp_upper, eval, eval_prev);
+            printMove(pvArray[0]);
+            printf(")\n;");
             #endif
-            eval_tmp = pvSearch(&pos, q-asp_lower, q+asp_upper, i, 0, pvArray, 0);
+            
+            eval_tmp = pvSearch(&searchPos, q-asp_lower, q+asp_upper, i, 0, pvArray, 0);
+            searchPos = pos;
          }
          eval_prev = eval;
          eval = eval_tmp;
-         searchPos = pos;
       }
       
       #ifdef DEBUG
@@ -299,7 +283,7 @@ int getBestMove(Position pos){
 
 //Null Move Search
 static int pruneNullMoves(Position* pos, int beta, int depth, int ply, Move* pvArray){
-   if(!(pos->flags & IN_CHECK) && pos->stage != END_GAME){
+   if(pos->stage != END_GAME){
       Position prevPos = *pos;
       makeNullMove(pos);
       int score = -zwSearch(pos, 1-beta, depth - NULL_PRUNE_R - 1, ply + 1, pvArray);
@@ -559,18 +543,33 @@ int zwSearch( Position* pos, int beta, char depth, char ply, Move* pvArray ) {
       }
    }
 
+
+   //Set up prunability
+   char prunable = !(pos->flags & IN_CHECK);
+
    //Null move prunin'
-   if(pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
+   if(prunable && pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
       #ifdef DEBUG
       debug[ZWS][NODE_PRUNED_NULL]++;
       #endif
       return beta;
    }
 
+   //Razoring
+   if(prunable && (depth <= RAZOR_DEPTH) && (pos->eval + RAZOR_MARGIN < beta)){ 
+      int razor_score = quiesce(pos, beta-1, beta, ply, 0, pvArray);
+      if(razor_score < beta){
+         #ifdef DEBUG
+         debug[ZWS][NODE_PRUNED_RAZOR]++;
+         #endif
+         return beta-1;
+      }
+   }
+
+
    evalMoves(moveList, moveVals, size, ttMove, killerMoves[(int)ply], KMV_CNT, *pos);
 
-   //Set up prunability
-   char prunable = !(pos->flags & IN_CHECK);
+   
    if(abs(beta-1) >= (-CHECKMATE_VALUE) - 2*MAX_MOVES) prunable = FALSE;
 
    //Set up late move reduction rules
@@ -620,22 +619,11 @@ int zwSearch( Position* pos, int beta, char depth, char ply, Move* pvArray ) {
          #endif
          return beta;   // fail-hard beta-cutoff
       }
-
-      if(prunable && (depth <= RAZOR_DEPTH) && (score + RAZOR_MARGIN < beta)){ //Razoring
-         int razor_score = quiesce(pos, beta-1, beta, ply, 0, pvArray);
-         if(razor_score >= beta){
-            #ifdef DEBUG
-            debug[ZWS][NODE_PRUNED_RAZOR]++;
-            #endif
-            return beta;
-         }
-      }
    }
    return beta-1; // fail-hard, return alpha
 }
 
 //quisce search
-//TODO : MAKE A MOVE GENERATOR FOR THIS AND USE IT U REGARD
 int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvArray) {
    if(!run_get_best_move) exit_search(pvArray);
    #ifdef DEBUG
@@ -650,24 +638,35 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvA
    int size;
    if(pos->flags & IN_CHECK){
       size = generateLegalMoves(*pos, moveList);
+      if(size == 0){
+         if(pos->flags & IN_CHECK) return CHECKMATE_VALUE + ply;
+         else return 0;
+      }
    }
    else{
       size = generateThreatMoves(*pos, moveList);
+      if(size == 0){
+         size = generateLegalMoves(*pos, moveList);
+         if(size == 0){
+            return 0;
+         }
+         else{
+            return pos->eval;
+         }
+      }
    }
 
    //Handle Draw or Mate
-   if(size == 0){
-      if(pos->flags & IN_CHECK) return CHECKMATE_VALUE + ply;
-      else return 0;
-   }
+   
    if(pos->halfmove_clock >= 50) return 0;
    
 
-   int stand_pat = evaluate(*pos);
+   int stand_pat = pos->eval;
    if( stand_pat >= beta )
       return beta;
-   if( alpha < stand_pat )
+   if( alpha < stand_pat ){
       alpha = stand_pat;
+   }
    if(q_ply >= MAX_QUIESCE_PLY) return alpha;
 
    TTEntry* ttEntry = getTTEntry(pos->hash);
@@ -735,6 +734,20 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvA
          #endif
          return beta;
       }
+
+      //Delta Pruning
+      int delta = QUEEN_VALUE;
+      if (GET_FLAGS(moveList[i]) & PROMOTION) delta += (QUEEN_VALUE - PAWN_VALUE);
+      if ( stand_pat < alpha - delta && pos->stage != END_GAME) {
+         storeKillerMove(ply, moveList[i]);
+         //storeTTEntry(pos->hash, 0, bestScore, Q_ALL_NODE, moveList[i]);
+         #ifdef DEBUG
+         debug[QS][NODE_PRUNED_FUTIL]++;
+         #endif
+         return alpha;
+      }
+
+
       if( score > alpha ){
          alpha = score;
          exact = 1;
@@ -745,7 +758,7 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvA
       }
    }
    //Handle the case were there where no captures or checks
-   if(bestScore == INT_MIN) bestScore = evaluate(*pos);
+   if(bestScore == INT_MIN) bestScore = pos->eval;
 
    if(exact) storeTTEntry(pos->hash, 0, alpha, Q_EXACT_NODE, bestMove);
    else      storeTTEntry(pos->hash, 0, bestScore, Q_ALL_NODE, bestMove);

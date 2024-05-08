@@ -75,6 +75,9 @@ typedef uint16_t Move;
 #define ROOK_PROMO_CAPTURE      0xE
 #define QUEEN_PROMO_CAPTURE     0xF
 
+//For Compares
+#define PROMOTION               0x8
+
 // Flag setters using defined constants
 #define SET_QUIET(move)              SET_FLAGS(move, QUIET)
 #define SET_DOUBLE_PAWN_PUSH(move)   SET_FLAGS(move, DOUBLE_PAWN_PUSH)
@@ -185,6 +188,8 @@ typedef struct {            //Each size of 2 array contains {Black, White}
     HashStack hashStack; //Pointer to the gamestate position is in
 
     Stage stage; //The stage of the game
+
+    int eval; //Stored eval
 
     int halfmove_clock;
     int fullmove_number;

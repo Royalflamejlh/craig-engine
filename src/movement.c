@@ -3,6 +3,7 @@
 #include "./bitboard/magic.h"
 #include "./bitboard/bitboard.h"
 #include "./bitboard/bbutils.h"
+#include "evaluator.h"
 #include "util.h"
 #include "hash.h"
 
@@ -10,8 +11,6 @@
 #ifdef __COMPILE_DEBUG
 #define DEBUG
 #endif
-
-#define DEBUG
 
 #ifdef DEBUG
 #include "transposition.h"
@@ -139,9 +138,13 @@ static void removeCaptured(Position *pos, int square){
             break;
         case 'K':
             //pos->king[!turn] = clearBit(pos->king[!turn], square);
+            #ifdef DEBUG
             printf("WARNING ATTEMPTED TO CAPTURE A KING AT POS:\n");
             printPosition(*pos, TRUE);
             while(TRUE){};
+            #else
+            printf("info string Found illegal position during search - King Capture.\n");
+            #endif
             break;
         case 'N':
             pos->knight[!turn] = clearBit(pos->knight[!turn], square);
@@ -313,6 +316,8 @@ int makeMove(Position *pos, Move move){
     pos->pinned = generatePinnedPieces(*pos);
 
     pos->stage = calculateStage(*pos);
+
+    pos->eval = evaluate(*pos);
 
     pos->hash = hashPosition(*pos);
 

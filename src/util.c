@@ -118,12 +118,6 @@ Move moveStrToType(Position pos, char* str){
     int to = (str[2] - 'a') + ((str[3] - '1') * 8);
     char promo = str[4];
 
-    if(str[4] != '\0'){
-        while(TRUE){
-            printf("ERROR WILL SHIT SELF IMPLEMENT PROMO");
-        }
-    }
-
     for(int i = 0; i < size; i++){
         int fromCur = GET_FROM(moveList[i]);
         int toCur = GET_TO(moveList[i]);

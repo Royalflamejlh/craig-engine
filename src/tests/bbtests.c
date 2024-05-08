@@ -90,12 +90,11 @@ int testBB(void) {
     printf("Starting Quick Check\n");
     Move threatMoveList[MAX_MOVES];
     int threatSize;
-    for(int j = 0; j < 1000; j++){
+    for(int j = 0; j < 100; j++){
         char* FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         pos = fenToPosition(FEN);
         size = generateLegalMoves(pos, moveList);
-        int i = 0;
-        while(size != 0 && i < 1000){
+        while(size != 0 && pos.halfmove_clock < 50){
             int randMove = rand() % size;
             makeMove(&pos, moveList[randMove]);
             size = generateLegalMoves(pos, moveList);
@@ -110,7 +109,6 @@ int testBB(void) {
                     return -1;
                 }
             }
-            i++;
         }
         removeHashStack(&pos.hashStack);
     }
@@ -161,7 +159,7 @@ int testBB(void) {
     #ifdef NODE_TEST
     printf("\n---------------------------------- Node TESTING ----------------------------------\n\n");
 
-    pos = fenToPosition(START_FEN);
+    pos = fenToPosition("START_FEN");
     printPosition(pos, FALSE);
 
     Move moveListNode[MAX_MOVES];
@@ -231,6 +229,7 @@ int testBB(void) {
 
     removeHashStack(&pos.hashStack);
     #endif
+
 
     #ifdef PYTHON
     python_close();

@@ -352,6 +352,7 @@ static void printBestMove(){
     }
 
     printf("bestmove %s\r\n", str);
+    fflush(stdout);
     return;
 
 }
@@ -420,6 +421,7 @@ static int processInput(char* input){
         fflush(stdout);
     }
     else if (strncmp(input, "go", 2) == 0) {
+        printf("info string Processing go command\n\r");
         startSearchThreads();
         processGoCommand(input + 3);
         fflush(stdout);

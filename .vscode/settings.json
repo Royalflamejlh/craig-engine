@@ -13,7 +13,8 @@
     "string": "c",
     "string_view": "c",
     "unordered_map": "c",
-    "ios": "c"
+    "ios": "c",
+    "__bit_reference": "c"
   },
   "makefile.launchConfigurations": [
     {
