@@ -69,13 +69,13 @@ void* timerThreadFunction(void* durationPtr) {
 int startTimerThread(long durationInSeconds) {
     long *durationPtr = malloc(sizeof(long));
     if(!durationPtr){
-        printf("info Warning failed to allocate space for duration pointer.");
+        printf("info string Warning failed to allocate space for duration pointer.");
         return -1;
     }
     *durationPtr = durationInSeconds;
     runTimerThread = 1;
     if (pthread_create(&timerThread, NULL, timerThreadFunction, durationPtr)) {
-        perror("Failed to create timer thread");
+        perror("info string Failed to create timer thread");
         return 1;
     }
     return 0;
@@ -89,7 +89,7 @@ void stopTimerThread() {
 
 void *io_thread_entry(void *arg) {
     (void)arg;
-    printf("IO Thread running...\n");
+    printf("info string IO Thread running...\n");
     readInput();
     return NULL;
 }
@@ -120,7 +120,7 @@ void stopSearchThreads(){
 static int launch_threads(void){
     pthread_t io_thread;
     if (pthread_create(&io_thread, NULL, io_thread_entry, NULL)) {
-        fprintf(stderr, "Error creating IO thread\n");
+        fprintf(stderr, "info string Error creating IO thread\n");
         return 1;
     }
 
@@ -157,13 +157,13 @@ int startTimerThread(long durationInSeconds) {
     DWORD threadId;
     long *durationPtr = malloc(sizeof(long));
     if(!durationPtr){
-        printf("info Warning failed to allocate space for duration pointer.");
+        printf("info string Warning failed to allocate space for duration pointer.");
         return -1;
     }
     *durationPtr = durationInSeconds;
     timerThread = CreateThread(NULL, 0, timerThreadFunction, durationPtr, 0, &threadId);
     if (timerThread == NULL) {
-        printf("Failed to create timer thread\n");
+        printf("info string Failed to create timer thread\n");
         return -1;
     }
     return 0;
@@ -177,7 +177,7 @@ void stopTimerThread() {
 
 DWORD WINAPI io_thread_entry(LPVOID arg) {
     (void)arg;
-    printf("IO Thread running...\n");
+    printf("info string IO Thread running...\n");
     readInput();
     return 0;
 }
@@ -211,7 +211,7 @@ static int launch_threads(void){
     DWORD ioThreadId;
     io_thread = CreateThread(NULL, 0, io_thread_entry, NULL, 0, &ioThreadId);
     if (io_thread == NULL) {
-        fprintf(stderr, "Error creating IO thread\n");
+        fprintf(stderr, "info string Error creating IO thread\n");
         return 1;
     }
 
@@ -229,7 +229,7 @@ int main(void) {
     initZobrist();
     initPST();
     if(initTT()){
-        printf("WARNING FAILED TO ALLOCATED SPACE FOR TRANSPOSITION TABLE\n");
+        printf("info string WARNING FAILED TO ALLOCATED SPACE FOR TRANSPOSITION TABLE\n");
         return -1;
     }
     #ifdef RUN_TEST
@@ -237,7 +237,7 @@ int main(void) {
     #endif
 
     #ifdef __PROFILE
-    printf("In profile mode, running forever.\r\n");
+    printf("info string In profile mode, running forever.\r\n");
     fflush(stdout);
     playSelfInfinite();
     #endif  
@@ -249,7 +249,7 @@ int main(void) {
 
       
 
-    printf("All threads have finished.\n");
+    printf("info string All threads have finished.\n");
     return 0;
 }
 
@@ -263,7 +263,6 @@ static void processUCI(void) {
     printf("id name CraigEngine\r\n");
     printf("id author John\r\n");
     printf("uciok\r\n");
-    fflush(stdout);
 }
 
 static void processIsReady(void) {
@@ -351,7 +350,12 @@ static void printBestMove(){
             break;
     }
 
+    #if defined(_WIN32) || defined(_WIN64)
     printf("bestmove %s\r\n", str);
+    #else
+    printf("bestmove %s\n", str);
+    #endif
+
     fflush(stdout);
     return;
 
@@ -392,6 +396,8 @@ void processGoCommand(char* input) {
 
 static int processInput(char* input){
     if (strncmp(input, "uci", 3) == 0) {
+        input += 3;
+        if(strncmp(input, "newgame", 7) == 0) return 0;
         processUCI();
         fflush(stdout);
         return 0;
@@ -403,6 +409,7 @@ static int processInput(char* input){
     }
     else if (strncmp(input, "position", 8) == 0) {
         input += 9;
+        global_best_move = NO_MOVE; // Reset best move for current position
         stopSearchThreads();
         if (strncmp(input, "startpos", 8) == 0) {
             input += 9;
@@ -411,7 +418,7 @@ static int processInput(char* input){
                 processMoves(input);
             }
             else{
-                global_position = fenToPosition(START_FEN);
+                global_position = fenToPosition(START_FEN); 
             }
         }
         else if (strncmp(input, "fen", 3) == 0) {
@@ -421,7 +428,7 @@ static int processInput(char* input){
         fflush(stdout);
     }
     else if (strncmp(input, "go", 2) == 0) {
-        printf("info string Processing go command\n\r");
+        printf("info string Processing go command\r\n");
         startSearchThreads();
         processGoCommand(input + 3);
         fflush(stdout);

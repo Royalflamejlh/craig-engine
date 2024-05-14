@@ -225,7 +225,7 @@ int getBestMove(Position pos){
          int asp_dif = (abs(eval_prev - eval) / 2) + ASP_EDGE;
          asp_upper = asp_lower = MIN(asp_dif, MAX_ASP_START);
          int q = (eval_prev + eval + eval + eval) / 4; //Weighted towards the most recent eval
-         #ifdef DEBUG
+         #ifdef VERBOSE
          printf("Running with window: %d, %d (eval: %d, eval_prev: %d)\n", q-asp_lower, q+asp_upper, eval, eval_prev);
          #endif
 
@@ -238,10 +238,10 @@ int getBestMove(Position pos){
                asp_upper *= 2;
                asp_lower *= 2;
             }
-            #ifdef DEBUG
+            #ifdef VERBOSE
             printf("Running again with window: %d, %d (eval: %d, eval_prev: %d, move: ", q-asp_lower, q+asp_upper, eval, eval_prev);
             printMove(pvArray[0]);
-            printf(")\n;");
+            printf(")\n");
             #endif
             
             eval_tmp = pvSearch(&searchPos, q-asp_lower, q+asp_upper, i, 0, pvArray, 0);
@@ -251,17 +251,17 @@ int getBestMove(Position pos){
          eval = eval_tmp;
       }
       
-      #ifdef DEBUG
+      #ifdef VERBOSE
       printPV(pvArray, i);
       printf("found with score %d\n", eval);
-      #endif
       #ifdef DEBUG
       printTreeDebug();
       #ifdef TT_DEBUG
       printTTDebug();
-      #endif
+      #endif // TT_DEBUG
+      #endif // DEBUG
       printf("\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
-      #endif
+      #endif //VERBOSE
 
       global_best_move = pvArray[0];
       free(pvArray);

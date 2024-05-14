@@ -209,10 +209,9 @@ int generateMagics(void) {
     srand((unsigned) time(&t));
     #endif
 
-    printf("Generating Magics!\n");
+    printf("info string Generating Magics!\n");
     calculateAttackTableOffsets();
     int square;
-    printf("Rooks\n");
     for(square = 0; square < 64; square++){
         //uint64_t magic = find_magic(square, RBits[square], 0);
         mRookTbl[square].magic = rook_magics[square];
@@ -221,7 +220,7 @@ int generateMagics(void) {
         mRookTbl[square].ptr = &attack_table[attack_table_offsets[square]];
         //printf("0x%llxULL,\n", magic);
         
-        #ifdef DEBUG
+        #ifdef VERBOSE
         printf("Rook Square %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, AttackTableIdx = %d, Ptr = %p\n",
             square,
             mRookTbl[square].magic,
@@ -232,8 +231,7 @@ int generateMagics(void) {
         #endif
     }
 
-    printf("Finished generating rook magics, generating bishop magics.\n");
-    printf("Bishops:\n");
+    printf("info string Finished generating rook magics, generating bishop magics.\n");
     for(square = 0; square < 64; square++){
         //uint64_t magic = find_magic(square, BBits[square], 1);
         mBishopTbl[square].magic = bishop_magics[square];
@@ -242,7 +240,7 @@ int generateMagics(void) {
         mBishopTbl[square].ptr   = &attack_table[attack_table_offsets[square + 64]];
         //printf("0x%llxULL,\n", magic);
 
-        #ifdef DEBUG
+        #ifdef VERBOSE
         printf("Bishop Square %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, AttackTableIdx = %d, Ptr = %p\n",
             square,
             mBishopTbl[square].magic,
@@ -259,21 +257,21 @@ int generateMagics(void) {
 
     for (int square = 0; square < 64; ++square) {
         if (verifyMagic(square, 0)) {
-            printf("Verification failed for rook magic at square %d\n", square);
+            printf("info string Verification failed for rook magic at square %d\n", square);
             return -1;
         }
     }
 
-    printf("All rook magics verified successfully\n");
+    printf("info string All rook magics verified successfully\n");
 
     for (int square = 0; square < 64; ++square) {
         if (verifyMagic(square, 1)) {
-            printf("Verification failed for bishop magic at square %d\n", square);
+            printf("info string Verification failed for bishop magic at square %d\n", square);
             return -1;
         }
     }
 
-    printf("All bishop magics verified successfully\n");
+    printf("info string All bishop magics verified successfully\n");
 
     return 0;
 }
@@ -292,7 +290,7 @@ static int verifyMagic(int square, int isBishop) {
         #endif
 
         if (actual_attack != expected_attack) {
-            printf("Failed with expected attack: 0x%llx, actual attack was: 0x%llx\n",
+            printf("info string Failed with expected attack: 0x%llx, actual attack was: 0x%llx\n",
                 (unsigned long long)expected_attack,
                 (unsigned long long)actual_attack);
             return -1;
@@ -304,7 +302,7 @@ static int verifyMagic(int square, int isBishop) {
 
 
 static int initAttackTable() {
-    printf("Initializing the attack table!\n");
+    printf("info string Initializing the attack table!\n");
 
     // Rooks
     for (int sq = 0; sq < 64; ++sq) {
