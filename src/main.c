@@ -237,7 +237,7 @@ int main(void) {
     #endif
 
     #ifdef __PROFILE
-    printf("info string In profile mode, running forever.\r\n");
+    printf("info string In profile mode, playing forever.\r\n");
     fflush(stdout);
     playSelfInfinite();
     #endif  
