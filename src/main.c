@@ -27,19 +27,19 @@ void playSelfInfinite(void);
 #define NUM_SEARCH_THREADS 1
 
 //Fake Headers
-int readInput();
-int searchLoop();
+i32 readInput();
+i32 searchLoop();
 static void printBestMove();
 /*
 * Meet the Globals
 */
 Position global_position;
-int run_get_best_move;
+i32 run_get_best_move;
 Move global_best_move;
 
 typedef struct {
-    long wtime; 
-    long btime; 
+    i64 wtime; 
+    i64 btime; 
 } SearchParameters;
 
 #if defined(__unix__) || defined(__APPLE__)
@@ -50,12 +50,12 @@ typedef struct {
 static pthread_t search_threads[NUM_SEARCH_THREADS];
 
 // Global variable to control the timer thread
-volatile int runTimerThread = 1;
+volatile i32 runTimerThread = 1;
 static pthread_t timerThread;
 
 // Timer thread function
 void* timerThreadFunction(void* durationPtr) {
-    long duration = *(long*)durationPtr;
+    i64 duration = *(i64*)durationPtr;
     free(durationPtr);
     sleep(duration / 1000);  // Sleep for the specified duration
 
@@ -66,8 +66,8 @@ void* timerThreadFunction(void* durationPtr) {
     return NULL;
 }
 
-int startTimerThread(long durationInSeconds) {
-    long *durationPtr = malloc(sizeof(long));
+i32 startTimerThread(i64 durationInSeconds) {
+    i64 *durationPtr = malloc(sizeof(i64));
     if(!durationPtr){
         printf("info string Warning failed to allocate space for duration pointer.");
         return -1;
@@ -102,14 +102,14 @@ void *search_thread_entry(void *arg) {
 
 void startSearchThreads(){
     run_get_best_move = true;
-    for (int i = 0; i < NUM_SEARCH_THREADS; i++) {
+    for (i32 i = 0; i < NUM_SEARCH_THREADS; i++) {
         pthread_create(&search_threads[i], NULL, search_thread_entry, NULL);
     }
 }
 
 void stopSearchThreads(){
     run_get_best_move = false;
-    for (int i = 0; i < NUM_SEARCH_THREADS; i++) {
+    for (i32 i = 0; i < NUM_SEARCH_THREADS; i++) {
         if(search_threads[i]){
             pthread_join(search_threads[i], NULL);
         }
@@ -117,7 +117,7 @@ void stopSearchThreads(){
 }
 
 
-static int launch_threads(void){
+static i32 launch_threads(void){
     pthread_t io_thread;
     if (pthread_create(&io_thread, NULL, io_thread_entry, NULL)) {
         fprintf(stderr, "info string Error creating IO thread\n");
@@ -135,12 +135,12 @@ static int launch_threads(void){
 static HANDLE search_threads[NUM_SEARCH_THREADS];
 
 // Global variable to control the timer thread
-volatile int runTimerThread = 1;
+volatile i32 runTimerThread = 1;
 static HANDLE timerThread;
 
 // Timer thread function
 DWORD WINAPI timerThreadFunction(LPVOID durationPtr) {
-    long duration = *(long*)durationPtr;
+    i64 duration = *(i64*)durationPtr;
     free(durationPtr);
     Sleep((DWORD)(duration));  // Sleep for the specified duration, convert seconds to milliseconds
 
@@ -152,10 +152,10 @@ DWORD WINAPI timerThreadFunction(LPVOID durationPtr) {
     return 0;
 }
 
-int startTimerThread(long durationInSeconds) {
+i32 startTimerThread(i64 durationInSeconds) {
     runTimerThread = 1;
     DWORD threadId;
-    long *durationPtr = malloc(sizeof(long));
+    i64 *durationPtr = malloc(sizeof(i64));
     if(!durationPtr){
         printf("info string Warning failed to allocate space for duration pointer.");
         return -1;
@@ -191,14 +191,14 @@ DWORD WINAPI search_thread_entry(LPVOID arg) {
 void startSearchThreads(){
     run_get_best_move = true;
     DWORD threadId;
-    for (int i = 0; i < NUM_SEARCH_THREADS; i++) {
+    for (i32 i = 0; i < NUM_SEARCH_THREADS; i++) {
         search_threads[i] = CreateThread(NULL, 0, search_thread_entry, NULL, 0, &threadId);
     }
 }
 
 void stopSearchThreads(){
     run_get_best_move = false;
-    for (int i = 0; i < NUM_SEARCH_THREADS; i++) {
+    for (i32 i = 0; i < NUM_SEARCH_THREADS; i++) {
         if(search_threads[i]){
             WaitForSingleObject(search_threads[i], INFINITE);
             CloseHandle(search_threads[i]);
@@ -206,7 +206,7 @@ void stopSearchThreads(){
     }
 }
 
-static int launch_threads(void){
+static i32 launch_threads(void){
     HANDLE io_thread;
     DWORD ioThreadId;
     io_thread = CreateThread(NULL, 0, io_thread_entry, NULL, 0, &ioThreadId);
@@ -223,7 +223,7 @@ static int launch_threads(void){
 
 #endif
 
-int main(void) {
+i32 main(void) {
     generateMasks();
     generateMagics();
     initZobrist();
@@ -272,7 +272,7 @@ static void processIsReady(void) {
 
 static char isNullMove(char* move){
     if(move == NULL || strlen(move) < 4) return 0;
-    for(int i = 0; i < 4; i++){
+    for(i32 i = 0; i < 4; i++){
         if(move[i] != '0') return 0;
     }
     return 1;
@@ -394,7 +394,7 @@ void processGoCommand(char* input) {
     }
 }
 
-static int processInput(char* input){
+static i32 processInput(char* input){
     if (strncmp(input, "uci", 3) == 0) {
         input += 3;
         if(strncmp(input, "newgame", 7) == 0) return 0;
@@ -452,7 +452,7 @@ static int processInput(char* input){
 }
 
 
-int readInput(){
+i32 readInput(){
     char input[1024];
     input[1023] = '\0';
 
@@ -471,7 +471,7 @@ int readInput(){
 * Search thread stuff
 */
 
-int searchLoop(){
+i32 searchLoop(){
     while(TRUE){
         if(global_position.hash && run_get_best_move){
             if(getBestMove(global_position)){

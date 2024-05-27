@@ -23,7 +23,7 @@
 #define MOVE_MAKE_TEST
 #define PERF_TEST
 
-int testBB(void) {
+i32 testBB(void) {
     #ifdef PYTHON
     python_init();
     #endif
@@ -38,7 +38,7 @@ int testBB(void) {
     char line[1024];
     Position pos;
     Move moveList[MAX_MOVES];
-    int size, expectedMoves;
+    i32 size, expectedMoves;
     
     printf("\n---------------------------------- MOVE GEN TESTING ----------------------------------\n\n");
     
@@ -64,7 +64,7 @@ int testBB(void) {
                 if (size != expectedMoves) {
                     printf("Failed to get correct amount of moves for Position %s, correct: %d, found: %d\n", fen, expectedMoves, size);
                     printPosition(pos, TRUE);
-                    for (int i = 0; i < size; i++) {
+                    for (i32 i = 0; i < size; i++) {
                         printMove(moveList[i]);
                     }
                     return -1;
@@ -89,19 +89,19 @@ int testBB(void) {
     
     printf("Starting Quick Check\n");
     Move threatMoveList[MAX_MOVES];
-    int threatSize;
-    for(int j = 0; j < 100; j++){
+    i32 threatSize;
+    for(i32 j = 0; j < 100; j++){
         char* FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         pos = fenToPosition(FEN);
         size = generateLegalMoves(pos, moveList);
         while(size != 0 && pos.halfmove_clock < 50){
-            int randMove = rand() % size;
+            i32 randMove = rand() % size;
             makeMove(&pos, moveList[randMove]);
             size = generateLegalMoves(pos, moveList);
             threatSize = generateThreatMoves(pos, threatMoveList);
-            for(int j = 0; j < threatSize; j++){
+            for(i32 j = 0; j < threatSize; j++){
                 char found = 0;
-                for(int k = 0; k < size; k++){
+                for(i32 k = 0; k < size; k++){
                     if(threatMoveList[j] == moveList[k]) found = 1;
                 }
                 if(!found){
@@ -122,9 +122,9 @@ int testBB(void) {
 
     printf("Perft from default position:\n");
     pos = fenToPosition(START_FEN);
-    for(int depth = 1; depth < 4; depth++){
-        uint64_t num_moves = perft(depth, pos);
-        printf("Perft output is %lld for depth %d\n", (long long unsigned)num_moves, depth);
+    for(i32 depth = 1; depth < 4; depth++){
+        u64 num_moves = perft(depth, pos);
+        printf("Perft output is %ld for depth %d\n", (u64)num_moves, depth);
     }
     removeHashStack(&pos.hashStack);
 
@@ -140,10 +140,10 @@ int testBB(void) {
         char *fen = line;
         pos = fenToPosition(fen);
         //printf("Testing: %s", fen);
-        for(int depth = 1; depth < 2; depth++){
+        for(i32 depth = 1; depth < 2; depth++){
             perft(depth, pos);
-            //int64_t num_moves = perft(depth, pos);
-            //printf("D%d: %lld |", depth, (long long int)num_moves);
+            //i64 num_moves = perft(depth, pos);
+            //printf("D%d: %lld |", depth, (long long i32)num_moves);
         }
         removeHashStack(&pos.hashStack);
         //printf("\n\n");
@@ -163,16 +163,16 @@ int testBB(void) {
     printPosition(pos, FALSE);
 
     Move moveListNode[MAX_MOVES];
-    int sizeNode = 0;
-    int moveVals[MAX_MOVES] = {0};
+    i32 sizeNode = 0;
+    i32 moveVals[MAX_MOVES] = {0};
     sizeNode = generateLegalMoves(pos, moveListNode);
     evalMoves(moveListNode, moveVals, sizeNode, NO_MOVE, NULL, 0, pos);
-    for(int i = 0; i < sizeNode; i++){
+    for(i32 i = 0; i < sizeNode; i++){
         printf("Move found with move value of %d:\n", moveVals[i]);
         printMove(moveListNode[i]);
     }
     printf("\n---------------------------testing select sort----------------------------\n");
-    for (int i = 0; i < sizeNode; i++)  {
+    for (i32 i = 0; i < sizeNode; i++)  {
         selectSort(i, moveListNode, moveVals, sizeNode);
         printf("Move with value %d selected at pos %d\n", moveVals[i], i);
         printMove(moveListNode[i]);
@@ -205,11 +205,11 @@ int testBB(void) {
     pos = fenToPosition(START_FEN);
     printf("Hash %d is: %" PRIu64 "\n", 0, pos.hash);
     Move moveList_hash[MAX_MOVES];
-    int size_hash = 0;
-    int moveVals[MAX_MOVES] = {0};
+    i32 size_hash = 0;
+    i32 moveVals[MAX_MOVES] = {0};
     
 
-    for (int i = 0; i < 100; i++)  {
+    for (i32 i = 0; i < 100; i++)  {
         size_hash = generateLegalMoves(pos, moveList_hash);
         evalMoves(moveList_hash, moveVals, size_hash, NO_MOVE, NULL, 0, pos);
         selectSort(0, moveList_hash, moveVals, size_hash);
@@ -218,12 +218,12 @@ int testBB(void) {
     }
 
     printf("Now going through Hash Table: (Size : %d) \n", pos.hashStack.current_idx);
-    for(int i = 0; i < pos.hashStack.current_idx; i++){
+    for(i32 i = 0; i < pos.hashStack.current_idx; i++){
         printf("HashTable[%d] : %" PRIu64 "\n", i, pos.hashStack.ptr[i]);
     }
 
     printf("Printing Hash Table Since Last Unique Move (at: %d): \n", pos.hashStack.last_reset_idx);
-    for(int i = pos.hashStack.last_reset_idx; i < pos.hashStack.current_idx; i++){
+    for(i32 i = pos.hashStack.last_reset_idx; i < pos.hashStack.current_idx; i++){
         printf("HashTable[%d] : %" PRIu64 "\n", i, pos.hashStack.ptr[i]);
     }
 

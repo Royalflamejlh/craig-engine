@@ -2,9 +2,9 @@
 #define MOVEMENT_H
 
 #include "types.h"
-uint16_t generateLegalMoves(Position position,  Move* moveList);
-uint16_t generateThreatMoves(Position position,  Move* moveList);
-uint64_t generatePinnedPieces(Position pos);
-int makeMove(Position *pos, Move move);
-int makeNullMove(Position *pos);
+u16 generateLegalMoves(Position position,  Move* moveList);
+u16 generateThreatMoves(Position position,  Move* moveList);
+u64 generatePinnedPieces(Position pos);
+i32 makeMove(Position *pos, Move move);
+i32 makeNullMove(Position *pos);
 #endif

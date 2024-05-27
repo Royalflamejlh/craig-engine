@@ -2,11 +2,11 @@
 #define tree_h
 #include "types.h"
 
-uint32_t getHistoryScore(char pos_flags, Move move);
+u32 getHistoryScore(char pos_flags, Move move);
 
-int getBestMove(Position pos);
-int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pvArray, int pvIndex);
-int zwSearch( Position* pos, int beta, char depth, char ply, Move* pvArray );
-int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvArray);
-void selectSort(int i, Move *moveList, int *moveVals, int size, Move ttMove, Move *killerMoves, int kmv_size);
+i32 getBestMove(Position pos);
+i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pvArray, i32 pvIndex);
+i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray );
+i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvArray);
+void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size, Move ttMove, Move *killerMoves, i32 kmv_size);
 #endif

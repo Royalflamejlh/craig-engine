@@ -9,6 +9,7 @@
 #include "transposition.h"
 #include "globals.h"
 
+#define DEBUG
 
 #if defined(__unix__) || defined(__APPLE__)
 #include "pthread.h"
@@ -50,7 +51,7 @@
 #define MAX_DEPTH 6
 #endif
 
-//static void selectSort(int i, Move *moveList, int *moveVals, int size);
+//static void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size);
 
 typedef enum searchs{
    PVS,
@@ -88,11 +89,11 @@ typedef enum stats{
    DEBUG_STATS_COUNT
 } DebugStats;
 
-static int64_t debug[SEARCH_TYPE_COUNT][DEBUG_STATS_COUNT] = {0};
+static i64 debug[SEARCH_TYPE_COUNT][DEBUG_STATS_COUNT] = {0};
 
 static Move debug_moveList[5][MAX_MOVES] = {0};
-static int debug_moveVals[5][MAX_MOVES] = {0};
-static int debug_size[5] = {0};
+static i32 debug_moveVals[5][MAX_MOVES] = {0};
+static i32 debug_size[5] = {0};
 
 void startTreeDebug(void){
    #ifdef DEBUG_TIME
@@ -106,11 +107,11 @@ void printTreeDebug(void){
                      (end_time.tv_nsec - start_time.tv_nsec) / 1e9;
    #endif
 
-   int64_t total_count = 0;
-   int64_t pvs_count = 0, zws_count = 0, q_count = 0;
+   i64 total_count = 0;
+   i64 pvs_count = 0, zws_count = 0, q_count = 0;
 
-   for (int i = 0; i < SEARCH_TYPE_COUNT; i++) {
-      int64_t node_count = debug[i][NODE_COUNT];
+   for (i32 i = 0; i < SEARCH_TYPE_COUNT; i++) {
+      i64 node_count = debug[i][NODE_COUNT];
       total_count += node_count;
       char typestr[5];
       if (i == PVS){
@@ -134,14 +135,14 @@ void printTreeDebug(void){
    }
 
    printf("Move List:\n");
-   int max_list_size = 0;
-   for(int i = 0; i < 5; i++){
+   i32 max_list_size = 0;
+   for(i32 i = 0; i < 5; i++){
       if(debug_size[i] > max_list_size){
          max_list_size = debug_size[i];
       }
    }
-   for(int i = 0; i < max_list_size; i++){
-      for(int j = 0; j < 5; j++){
+   for(i32 i = 0; i < max_list_size; i++){
+      for(i32 j = 0; j < 5; j++){
          printMoveSpaced(debug_moveList[j][i]);
          printf(" - %8d", debug_moveVals[j][i]);
          printf(" | ");
@@ -160,8 +161,8 @@ void printTreeDebug(void){
 /*
 * Returns whether the position is a Repetition
 */
-static inline int isRepetition(Position* pos){
-   for(int i = pos->hashStack.last_reset_idx; i < pos->hashStack.current_idx; i++){
+static inline i32 isRepetition(Position* pos){
+   for(i32 i = pos->hashStack.last_reset_idx; i < pos->hashStack.current_idx; i++){
       if(pos->hashStack.ptr[i] == pos->hashStack.ptr[pos->hashStack.current_idx]) return 1;
    }
    return 0;
@@ -171,9 +172,9 @@ static inline int isRepetition(Position* pos){
 * Function pertaining to storage of killer moves 
 */
 static Move killerMoves[MAX_PLY][KMV_CNT] = {0};
-static unsigned int kmvIdx = 0;
+static u32 kmvIdx = 0;
 
-static inline void storeKillerMove(int ply, Move move){
+static inline void storeKillerMove(i32 ply, Move move){
    if(killerMoves[ply][kmvIdx] != move){
       killerMoves[ply][kmvIdx] = move;
       kmvIdx = (kmvIdx + 1) % KMV_CNT;
@@ -187,14 +188,14 @@ static inline void clearKillerMoves(void){
 /*
 * Functions pertaining to storage in the history table
 */
-static uint32_t historyTable[PLAYER_COUNT][BOARD_SIZE][BOARD_SIZE] = {0};
+static u32 historyTable[PLAYER_COUNT][BOARD_SIZE][BOARD_SIZE] = {0};
 
 static inline void storeHistoryMove(char pos_flags, Move move, char depth){
    if(GET_FLAGS(move) & CAPTURE) return;
    historyTable[pos_flags & WHITE_TURN][GET_FROM(move)][GET_TO(move)] += 1 << depth;
 }
 
-uint32_t getHistoryScore(char pos_flags, Move move){
+u32 getHistoryScore(char pos_flags, Move move){
    if(GET_FLAGS(move) & CAPTURE) return 0;
    return historyTable[pos_flags & WHITE_TURN][GET_FROM(move)][GET_TO(move)];
 }
@@ -212,11 +213,11 @@ static void exit_search(Move* pvArray){
 /*
 * Get that move son.
 */
-int getBestMove(Position pos){
+i32 getBestMove(Position pos){
 
    clearKillerMoves(); //TODO: make thread safe!
-   int i = 1;
-   int eval = 0, eval_prev = 0, asp_upper = 0, asp_lower = 0;
+   i32 i = 1;
+   i32 eval = 0, eval_prev = 0, asp_upper = 0, asp_lower = 0;
    while(run_get_best_move 
          #ifdef MAX_DEPTH
          && i <= MAX_DEPTH
@@ -243,14 +244,14 @@ int getBestMove(Position pos){
          #endif
       } else {
          //Calculate the Aspiration Window
-         int asp_dif = (abs(eval_prev - eval) / 2) + ASP_EDGE;
+         i32 asp_dif = (abs(eval_prev - eval) / 2) + ASP_EDGE;
          asp_upper = asp_lower = MIN(asp_dif, MAX_ASP_START);
-         int q = (eval_prev + eval + eval + eval) / 4; //Weighted towards the most recent eval
+         i32 q = (eval_prev + eval + eval + eval) / 4; //Weighted towards the most recent eval
          #ifdef DEBUG
          printf("Running with window: %d, %d (eval: %d, eval_prev: %d, i: %d)\n", q-asp_lower, q+asp_upper, eval, eval_prev, i);
          #endif
 
-         int eval_tmp = pvSearch(&searchPos, q-asp_lower, q+asp_upper, i, 0, pvArray, 0);
+         i32 eval_tmp = pvSearch(&searchPos, q-asp_lower, q+asp_upper, i, 0, pvArray, 0);
          searchPos = pos;
          while(eval_tmp <= q-asp_lower || eval_tmp >= q+asp_upper || pvArray[0] == NO_MOVE){
             if(eval_tmp <= q-asp_lower){ asp_lower *= 2;}
@@ -260,11 +261,10 @@ int getBestMove(Position pos){
                asp_lower *= 2;
             }
             #ifdef DEBUG
-            printf("Running again with window: %d, %d (eval: %d, eval_prev: %d, move: ", q-asp_lower, q+asp_upper, eval, eval_prev);
-            printMove(pvArray[0]);
-            printf(", i: %d", i);
-            printf(")\n");
-            while(1);
+            // printf("Running again with window: %d, %d (eval: %d, eval_prev: %d, move: ", q-asp_lower, q+asp_upper, eval, eval_prev);
+            // printMove(pvArray[0]);
+            // printf(", i: %d", i);
+            // printf(")\n");
             #endif
             
             eval_tmp = pvSearch(&searchPos, q-asp_lower, q+asp_upper, i, 0, pvArray, 0);
@@ -302,11 +302,11 @@ int getBestMove(Position pos){
 */
 
 //Null Move Search
-static int pruneNullMoves(Position* pos, int beta, int depth, int ply, Move* pvArray){
+static i32 pruneNullMoves(Position* pos, i32 beta, i32 depth, i32 ply, Move* pvArray){
    if(pos->stage != END_GAME){
       Position prevPos = *pos;
       makeNullMove(pos);
-      int score = -zwSearch(pos, 1-beta, depth - NULL_PRUNE_R - 1, ply + 1, pvArray);
+      i32 score = -zwSearch(pos, 1-beta, depth - NULL_PRUNE_R - 1, ply + 1, pvArray);
       *pos = prevPos;
       if( score >= beta ){
          return beta;
@@ -316,7 +316,7 @@ static int pruneNullMoves(Position* pos, int beta, int depth, int ply, Move* pvA
 }
 
 //Late move reduction
-static char getSearchDepth(char curDepth, int moveNum, char flags, int allowLMR, char searchType){
+static char getSearchDepth(char curDepth, i32 moveNum, char flags, i32 allowLMR, char searchType){
    if(flags & IN_CHECK) return curDepth - 1;
    if(curDepth < LMR_DEPTH) return curDepth - 1;
    if(!allowLMR) return curDepth - 1;
@@ -335,13 +335,13 @@ static char getSearchDepth(char curDepth, int moveNum, char flags, int allowLMR,
 *
 */
 
-int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pvArray, int pvIndex) {
-   printf("Depth = %d, Ply = %d, Depth+ply = %d\n", depth, ply, depth+ply);
+i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pvArray, i32 pvIndex) {
+   //printf("Depth = %d, Ply = %d, Depth+ply = %d\n", depth, ply, depth+ply);
    if(!run_get_best_move) exit_search(pvArray);
 
    if( depth <= 0 ) {
-      int q_eval = quiesce(pos, alpha, beta, ply, 0, pvArray);
-      printf("Returning q_eval: %d\n", q_eval);
+      i32 q_eval = quiesce(pos, alpha, beta, ply, 0, pvArray);
+      //printf("Returning q_eval: %d\n", q_eval);
       return q_eval;
    }
 
@@ -352,9 +352,9 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
    if(isRepetition(pos)) return 0;
 
    Move moveList[MAX_MOVES];
-   int moveVals[MAX_MOVES];
-   int size = generateLegalMoves(*pos, moveList);
-   for(int i = 0; i < size; i++){
+   i32 moveVals[MAX_MOVES];
+   i32 size = generateLegalMoves(*pos, moveList);
+   for(i32 i = 0; i < size; i++){
       moveVals[i] = 0;
    }
 
@@ -363,8 +363,8 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
    //Store the values at the starting time
    if(ply == 0){
       debug_size[0] = size;
-      memcpy(debug_moveList[0], moveList, size*sizeof(int));
-      memcpy(debug_moveVals[0], moveVals, size*sizeof(int));
+      memcpy(debug_moveList[0], moveList, size*sizeof(i32));
+      memcpy(debug_moveVals[0], moveVals, size*sizeof(i32));
    }
    #endif
 
@@ -377,7 +377,7 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
    if(pos->halfmove_clock >= 50) return 0;
 
    char bSearchPv = 1;  //Flag for if we are 
-   int pvNextIndex = pvIndex + depth;
+   i32 pvNextIndex = pvIndex + depth;
 
    //Test the TT table
    TTEntry* ttEntry = getTTEntry(pos->hash);
@@ -432,8 +432,8 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
    //Store the values at the starting time
    if(ply == 0){
       debug_size[1] = size;
-      memcpy(debug_moveList[1], moveList, size*sizeof(int));
-      memcpy(debug_moveVals[1], moveVals, size*sizeof(int));
+      memcpy(debug_moveList[1], moveList, size*sizeof(i32));
+      memcpy(debug_moveVals[1], moveVals, size*sizeof(i32));
    }
    #endif
 
@@ -450,17 +450,17 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
    #endif
 
    Move bestMove = NO_MOVE;
-   int bestScore = INT_MIN;
+   i32 bestScore = INT_MIN;
    Position prevPos = *pos;
-   for (int i = 0; i < size; i++)  {
+   for (i32 i = 0; i < size; i++)  {
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
-      selectSort(i, moveList, moveVals, size, ttMove, killerMoves[(int)ply], KMV_CNT);
+      selectSort(i, moveList, moveVals, size, ttMove, killerMoves[(i32)ply], KMV_CNT);
 
-      printf("Selected move: ");
-      printMove(moveList[i]);
-      printf("\n");
+      //printf("Selected move: ");
+      //printMove(moveList[i]);
+      //printf("\n");
 
       makeMove(pos, moveList[i]);
 
@@ -478,20 +478,20 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
          continue;
       }
 
-      int score;
+      i32 score;
       if ( bSearchPv ) {
          score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
-         printf("PV b search pv score = %d\n", score);
+         //printf("PV b search pv score = %d\n", score);
       } else {
-         int search_depth = getSearchDepth(depth, i, pos->flags, LMR_allowed, PVS);
+         i32 search_depth = getSearchDepth(depth, i, pos->flags, LMR_allowed, PVS);
          #ifdef DEBUG
          debug[PVS][NODE_LMR_REDUCTIONS] += MAX(((depth - 1) - search_depth), 0);
          #endif
          score = -zwSearch(pos, -alpha, search_depth, ply + 1, pvArray);
-         printf("zw search score = %d\n", score);
+         //printf("zw search score = %d\n", score);
          if ( score > alpha && score < beta){
             score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
-            printf("PV zw search pv score = %d\n", score);
+            //printf("PV zw search pv score = %d\n", score);
          }
       }
 
@@ -501,13 +501,14 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
          storeTTEntry(pos->hash, depth, score, CUT_NODE, moveList[i]);
          storeKillerMove(ply, moveList[i]);
          storeHistoryMove(pos->flags, moveList[i], depth);
-         printf("Returning beta cutoff: %d >= %d\n", score, beta);
+      
          #ifdef DEBUG
+         //printf("Returning beta cutoff: %d >= %d\n", score, beta);
          debug[PVS][NODE_BETA_CUT]++;
          if(ply == 0){
             debug_size[3] = size;
-            memcpy(debug_moveList[3], moveList, size*sizeof(int));
-            memcpy(debug_moveVals[3], moveVals, size*sizeof(int));
+            memcpy(debug_moveList[3], moveList, size*sizeof(i32));
+            memcpy(debug_moveVals[3], moveVals, size*sizeof(i32));
          }
          #endif
          return beta;
@@ -535,8 +536,8 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
 
    if(ply == 0){
       debug_size[4] = size;
-      memcpy(debug_moveList[4], moveList, size*sizeof(int));
-      memcpy(debug_moveVals[4], moveVals, size*sizeof(int));
+      memcpy(debug_moveList[4], moveList, size*sizeof(i32));
+      memcpy(debug_moveVals[4], moveVals, size*sizeof(i32));
    }
    #endif
    return alpha;
@@ -549,7 +550,7 @@ int pvSearch( Position* pos, int alpha, int beta, char depth, char ply, Move* pv
 *  ZERO WINDOW SEARCH
 *
 */
-int zwSearch( Position* pos, int beta, char depth, char ply, Move* pvArray ) {
+i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
    if(!run_get_best_move) exit_search(pvArray);
    // alpha == beta - 1
    // this is either a cut- or all-node
@@ -561,8 +562,8 @@ int zwSearch( Position* pos, int beta, char depth, char ply, Move* pvArray ) {
    if(isRepetition(pos)) return 0;
 
    Move moveList[MAX_MOVES];
-   int moveVals[MAX_MOVES];
-   int size = generateLegalMoves(*pos, moveList);
+   i32 moveVals[MAX_MOVES];
+   i32 size = generateLegalMoves(*pos, moveList);
    //Handle Draw or Mate
    if(size == 0){
       if(pos->flags & IN_CHECK) return CHECKMATE_VALUE + ply;
@@ -617,14 +618,14 @@ int zwSearch( Position* pos, int beta, char depth, char ply, Move* pvArray ) {
    if(prunable && pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
       #ifdef DEBUG
       debug[ZWS][NODE_PRUNED_NULL]++;
+      //printf("zws prune beta: %d\n", beta);
       #endif
-      printf("zws prune beta: %d\n", beta);
       return beta;
    }
 
    //Razoring
    if(prunable && (depth <= RAZOR_DEPTH) && (pos->eval + RAZOR_MARGIN < beta)){ 
-      int razor_score = quiesce(pos, beta-1, beta, ply, 0, pvArray);
+      i32 razor_score = quiesce(pos, beta-1, beta, ply, 0, pvArray);
       if(razor_score < beta){
          #ifdef DEBUG
          debug[ZWS][NODE_PRUNED_RAZOR]++;
@@ -649,15 +650,11 @@ int zwSearch( Position* pos, int beta, char depth, char ply, Move* pvArray ) {
    #endif
 
    Position prevPos = *pos;
-   for (int i = 0; i < size; i++)  {
+   for (i32 i = 0; i < size; i++)  {
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
-      selectSort(i, moveList, moveVals, size, ttMove, killerMoves[(int)ply], KMV_CNT);
-
-      printf("Selected zws move : ");
-      printMove(moveList[i]);
-      printf("\n");
+      selectSort(i, moveList, moveVals, size, ttMove, killerMoves[(i32)ply], KMV_CNT);
 
       makeMove(pos, moveList[i]);
 
@@ -678,9 +675,10 @@ int zwSearch( Position* pos, int beta, char depth, char ply, Move* pvArray ) {
       char search_depth = getSearchDepth(depth, i, pos->flags, LMR_allowed, ZWS);
       #ifdef DEBUG
       debug[ZWS][NODE_LMR_REDUCTIONS] += MAX(((depth - 1) - search_depth), 0);
+      //printf("zws further search score %d\n", score);
       #endif
-      int score = -zwSearch(pos, 1-beta, search_depth, ply + 1, pvArray);
-      printf("zws further search score %d\n", score);
+      i32 score = -zwSearch(pos, 1-beta, search_depth, ply + 1, pvArray);
+      
 
       *pos = prevPos; //Unmake Move
 
@@ -690,30 +688,30 @@ int zwSearch( Position* pos, int beta, char depth, char ply, Move* pvArray ) {
          storeHistoryMove(pos->flags, moveList[i], depth);
          #ifdef DEBUG
          debug[ZWS][NODE_BETA_CUT]++;
+         //printf("zws fail hard beta cut %d\n", beta);
          #endif
-         printf("zws fail hard beta cut %d\n", beta);
          return beta;   // fail-hard beta-cutoff
       }
    }
 
-   printf("zws fail %d\n", beta-1);
+   //printf("zws fail %d\n", beta-1);
    return beta-1; // fail-hard, return alpha
 }
 
 //quisce search
-int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvArray) {
+i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvArray) {
    if(!run_get_best_move) exit_search(pvArray);
    #ifdef DEBUG
    debug[QS][NODE_COUNT]++;
-   printf("Pos->Eval in q search: %d\n", pos->eval);
+   //printf("Pos->Eval in q search: %d\n", pos->eval);
    #endif
    
    Move moveList[MAX_MOVES];
-   int moveVals[MAX_MOVES];
+   i32 moveVals[MAX_MOVES];
 
    if(isRepetition(pos)) return 0;
 
-   int size;
+   i32 size;
    if(pos->flags & IN_CHECK){
       size = generateLegalMoves(*pos, moveList);
       if(size == 0){
@@ -739,7 +737,7 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvA
    if(pos->halfmove_clock >= 50) return 0;
    
 
-   int stand_pat = pos->eval;
+   i32 stand_pat = pos->eval;
    if( stand_pat >= beta )
       return beta;
    if( alpha < stand_pat ){
@@ -787,26 +785,21 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvA
    evalMoves(moveList, moveVals, size, *pos);
    
    Move bestMove = NO_MOVE;
-   int bestScore = INT_MIN;
+   i32 bestScore = INT_MIN;
    #ifdef DEBUG
    if(size > 0) debug[QS][NODE_LOOP_CHILDREN]++;
    #endif
-   int exact = 0;
+   i32 exact = 0;
    Position prevPos = *pos;
-   for (int i = 0; i < size; i++)  {
+   for (i32 i = 0; i < size; i++)  {
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
-      selectSort(i, moveList, moveVals, size, ttMove, killerMoves[(int)ply], KMV_CNT); 
-
-      printf("Selected move: ");
-      printMove(moveList[i]);
-      printf("\n");
-
+      selectSort(i, moveList, moveVals, size, ttMove, killerMoves[(i32)ply], KMV_CNT); 
 
       makeMove(pos, moveList[i]);
 
-      int score = -quiesce(pos,  -beta, -alpha, ply + 1, q_ply + 1, pvArray);
+      i32 score = -quiesce(pos,  -beta, -alpha, ply + 1, q_ply + 1, pvArray);
 
       *pos = prevPos; //Unmake Move
 
@@ -820,7 +813,7 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvA
       }
 
       //Delta Pruning
-      int delta = QUEEN_VALUE;
+      i32 delta = QUEEN_VALUE;
       if (GET_FLAGS(moveList[i]) & PROMOTION) delta += (QUEEN_VALUE - PAWN_VALUE);
       if ( stand_pat < alpha - delta && pos->stage != END_GAME) {
          storeKillerMove(ply, moveList[i]);
@@ -854,17 +847,17 @@ int quiesce( Position* pos, int alpha, int beta, char ply, char q_ply, Move* pvA
 }
 
 
-void selectSort(int i, Move *moveList, int *moveVals, int size, Move ttMove, Move *killerMoves, int kmv_size) {
-    int maxIdx = i;
+void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size, Move ttMove, Move *killerMoves, i32 kmv_size) {
+    i32 maxIdx = i;
 
-    for (int j = i + 1; j < size; j++) {
+    for (i32 j = i + 1; j < size; j++) {
         if (moveList[j] == ttMove){
             maxIdx = j;
             break;
         }
 
-        int found = 0;
-        for(int k = 0; k < kmv_size; k++){
+        i32 found = 0;
+        for(i32 k = 0; k < kmv_size; k++){
             if(moveList[j] == killerMoves[k]){
                 maxIdx = j;
                 found = 1;
@@ -879,7 +872,7 @@ void selectSort(int i, Move *moveList, int *moveVals, int size, Move ttMove, Mov
     }
    
     if (maxIdx != i) {
-        int tempVal = moveVals[i];
+        i32 tempVal = moveVals[i];
         moveVals[i] = moveVals[maxIdx];
         moveVals[maxIdx] = tempVal;
 

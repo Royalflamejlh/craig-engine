@@ -9,31 +9,31 @@
 #include "types.h"
 void printMove(Move move);
 void printMoveSpaced(Move move);
-uint64_t perft(int depth, Position pos);
-int checkMoveCount(Position pos);
-int python_init();
-int python_close();
+u64 perft(i32 depth, Position pos);
+i32 checkMoveCount(Position pos);
+i32 python_init();
+i32 python_close();
 
 Move moveStrToType(Position pos, char* str);
 Stage calculateStage(Position pos);
 
-void printPV(Move *pvArray, int depth);
-static inline int count_bits(uint64_t v){
-    unsigned int c;
+void printPV(Move *pvArray, i32 depth);
+static inline i32 count_bits(u64 v){
+    u32 c;
     for (c = 0; v; c++){
         v &= v - 1;
     }
     return c;
 }
 
-static inline uint64_t random_uint64() {
-  uint64_t u1, u2, u3, u4;
-  u1 = (uint64_t)(rand()) & 0xFFFF; u2 = (uint64_t)(rand()) & 0xFFFF;
-  u3 = (uint64_t)(rand()) & 0xFFFF; u4 = (uint64_t)(rand()) & 0xFFFF;
+static inline u64 random_uint64() {
+  u64 u1, u2, u3, u4;
+  u1 = (u64)(rand()) & 0xFFFF; u2 = (u64)(rand()) & 0xFFFF;
+  u3 = (u64)(rand()) & 0xFFFF; u4 = (u64)(rand()) & 0xFFFF;
   return u1 | (u2 << 16) | (u3 << 32) | (u4 << 48);
 }
 
-static inline void movcpy (Move* pTarget, const Move* pSource, int n) {
+static inline void movcpy (Move* pTarget, const Move* pSource, i32 n) {
    while (n-- && (*pTarget++ = *pSource++));
 }
 
@@ -44,6 +44,6 @@ static inline void movcpy (Move* pTarget, const Move* pSource, int n) {
 */
 
 HashStack createHashStack(void);
-int removeHashStack(HashStack *hashStack);
+i32 removeHashStack(HashStack *hashStack);
 void doubleHashStack(HashStack *hs);
 #endif

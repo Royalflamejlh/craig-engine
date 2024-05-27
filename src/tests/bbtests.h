@@ -9,6 +9,7 @@
 #define bbtests_h
 
 #include <stdio.h>
-int testBB(void);
+#include "../types.h"
+i32 testBB(void);
 
 #endif /* bbtests_h */

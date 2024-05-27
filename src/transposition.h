@@ -12,18 +12,18 @@ enum {
 };
 
 typedef struct {
-    int eval;
+    i32 eval;
     char depth;
     Move move;
     char nodeType;
-    uint64_t hash;
+    u64 hash;
 } TTEntry;
 
-int initTT();
+i32 initTT();
 
-TTEntry* getTTEntry(uint64_t hash);
+TTEntry* getTTEntry(u64 hash);
 
-void storeTTEntry(uint64_t hash, char depth, int eval, char nodeType, Move move);
+void storeTTEntry(u64 hash, char depth, i32 eval, char nodeType, Move move);
 
 #ifdef __COMPILE_DEBUG
 #define DEBUG

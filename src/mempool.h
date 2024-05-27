@@ -9,7 +9,7 @@
 
 struct DynamicNodePool {
     Node* nodes;
-    int* used;
+    i32* used;
     size_t size;
     size_t usedCount;
     size_t nextAvailable;

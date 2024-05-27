@@ -14,17 +14,17 @@
 #include <string.h>
 #include <stdlib.h>
 
-uint64_t betweenMask[64][64];
-uint64_t rankMask[64], fileMask[64], NESWMask[64], NWSEMask[64];
+u64 betweenMask[64][64];
+u64 rankMask[64], fileMask[64], NESWMask[64], NWSEMask[64];
 
-static void updateBit(uint64_t* bitboard, int square) {
+static void updateBit(u64* bitboard, i32 square) {
     *bitboard |= (1ULL << square);
 }
 
 Position fenToPosition(char* FEN) {
     Position pos = {0};
     memset(pos.charBoard, 0, sizeof(pos.charBoard));
-    int square = 56; // Start at A8
+    i32 square = 56; // Start at A8
 
     while (*FEN && *FEN != ' ') {
         if (*FEN == '/') {
@@ -79,9 +79,9 @@ Position fenToPosition(char* FEN) {
     // En passant target square
     pos.en_passant = 0;
     if (*FEN != '-') {
-        int file = *FEN - 'a'; // Convert file character to 0-7
-        int rank = *(FEN + 1) - '1'; // Convert rank character to 0-7
-        int en_passant_square = rank * 8 + file;
+        i32 file = *FEN - 'a'; // Convert file character to 0-7
+        i32 rank = *(FEN + 1) - '1'; // Convert rank character to 0-7
+        i32 en_passant_square = rank * 8 + file;
         updateBit(&pos.en_passant, en_passant_square);
     }
 
@@ -103,8 +103,8 @@ Position fenToPosition(char* FEN) {
 
     //Double Check Flag
     if(pos.flags & IN_CHECK){
-       int kign_sq = __builtin_ctzll(pos.king[1]);
-       uint64_t attackers = getAttackers(pos, kign_sq, 0);
+       i32 kign_sq = __builtin_ctzll(pos.king[1]);
+       u64 attackers = getAttackers(pos, kign_sq, 0);
        attackers &= attackers - 1;
        if(attackers) pos.flags |= IN_D_CHECK;
        
@@ -131,12 +131,12 @@ Position fenToPosition(char* FEN) {
     return pos;
 }
 
-int PositionToFen(Position pos, char* FEN) {
-    int index = 0;
-    for (int rank = 7; rank >= 0; rank--) {
-        int emptyCount = 0;
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
+i32 PositionToFen(Position pos, char* FEN) {
+    i32 index = 0;
+    for (i32 rank = 7; rank >= 0; rank--) {
+        i32 emptyCount = 0;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
             char piece = pos.charBoard[square];
             if (piece == 0) {
                 emptyCount++;
@@ -171,7 +171,7 @@ int PositionToFen(Position pos, char* FEN) {
     // En passant target square
     FEN[index++] = ' ';
     if (pos.en_passant) {
-        int square = __builtin_ctzll(pos.en_passant);
+        i32 square = __builtin_ctzll(pos.en_passant);
         FEN[index++] = 'a' + (square % 8);
         FEN[index++] = '1' + (square / 8);
     } else {
@@ -193,35 +193,35 @@ int PositionToFen(Position pos, char* FEN) {
 
 
 void generateBetweenMasks() {
-    for (int sq1 = 0; sq1 < 64; sq1++) {
-        int rank1 = sq1 / 8;
-        int file1 = sq1 % 8;
+    for (i32 sq1 = 0; sq1 < 64; sq1++) {
+        i32 rank1 = sq1 / 8;
+        i32 file1 = sq1 % 8;
 
-        for (int sq2 = 0; sq2 < 64; sq2++) {
-            int rank2 = sq2 / 8;
-            int file2 = sq2 % 8;
+        for (i32 sq2 = 0; sq2 < 64; sq2++) {
+            i32 rank2 = sq2 / 8;
+            i32 file2 = sq2 % 8;
 
             if (sq1 == sq2) {
                 betweenMask[sq1][sq2] = 0;
                 continue;
             }
 
-            uint64_t mask = 0;
+            u64 mask = 0;
             
             if (rank1 == rank2) {
-                for (int f = 1; f < abs(file2 - file1); f++) {
-                    int file = file1 + f * ((file2 > file1) ? 1 : -1);
+                for (i32 f = 1; f < abs(file2 - file1); f++) {
+                    i32 file = file1 + f * ((file2 > file1) ? 1 : -1);
                     mask |= 1ULL << (rank1 * 8 + file);
                 }
             } else if (file1 == file2) { 
-                for (int r = 1; r < abs(rank2 - rank1); r++) {
-                    int rank = rank1 + r * ((rank2 > rank1) ? 1 : -1);
+                for (i32 r = 1; r < abs(rank2 - rank1); r++) {
+                    i32 rank = rank1 + r * ((rank2 > rank1) ? 1 : -1);
                     mask |= 1ULL << (rank * 8 + file1);
                 }
             } else if (abs(rank1 - rank2) == abs(file1 - file2)) { 
-                for (int i = 1; i < abs(rank2 - rank1); i++) {
-                    int rank = rank1 + i * ((rank2 > rank1) ? 1 : -1);
-                    int file = file1 + i * ((file2 > file1) ? 1 : -1);
+                for (i32 i = 1; i < abs(rank2 - rank1); i++) {
+                    i32 rank = rank1 + i * ((rank2 > rank1) ? 1 : -1);
+                    i32 file = file1 + i * ((file2 > file1) ? 1 : -1);
                     mask |= 1ULL << (rank * 8 + file);
                 }
             }
@@ -232,36 +232,36 @@ void generateBetweenMasks() {
 }
 
 void generateRankMasks() {
-    for (int sq = 0; sq < 64; ++sq) {
-        int rank = sq / 8;
+    for (i32 sq = 0; sq < 64; ++sq) {
+        i32 rank = sq / 8;
         rankMask[sq] = 0xFFULL << (rank * 8);
     }
 }
 
 void generateFileMasks() {
-    for (int sq = 0; sq < 64; ++sq) {
-        int file = sq % 8;
+    for (i32 sq = 0; sq < 64; ++sq) {
+        i32 file = sq % 8;
         fileMask[sq] = 0x0101010101010101ULL << file;
     }
 }
 
 void generateDiagonalMasks() {
-    for (int sq = 0; sq < 64; ++sq) {
-        int rank = sq / 8;
-        int file = sq % 8;
+    for (i32 sq = 0; sq < 64; ++sq) {
+        i32 rank = sq / 8;
+        i32 file = sq % 8;
         NESWMask[sq] = 0;
         NWSEMask[sq] = 0;
 
         // Northeast-Southwest Diagonal
-        for (int r = rank, f = file; r < 8 && f < 8; ++r, ++f)
+        for (i32 r = rank, f = file; r < 8 && f < 8; ++r, ++f)
             NESWMask[sq] |= (1ULL << (r * 8 + f));
-        for (int r = rank, f = file; r >= 0 && f >= 0; --r, --f)
+        for (i32 r = rank, f = file; r >= 0 && f >= 0; --r, --f)
             NESWMask[sq] |= (1ULL << (r * 8 + f));
 
         // Northwest-Southeast Diagonal
-        for (int r = rank, f = file; r < 8 && f >= 0; ++r, --f)
+        for (i32 r = rank, f = file; r < 8 && f >= 0; ++r, --f)
             NWSEMask[sq] |= (1ULL << (r * 8 + f));
-        for (int r = rank, f = file; r >= 0 && f < 8; --r, ++f)
+        for (i32 r = rank, f = file; r >= 0 && f < 8; --r, ++f)
             NWSEMask[sq] |= (1ULL << (r * 8 + f));
     }
 }
@@ -280,11 +280,11 @@ void printPosition(Position position, char verbose){
     printf("\nFEN: %s \n\n", fen);
     printf("Hash: %" PRIu64 " \n\n", position.hash);
     printf("  A B C D E F G H\n");
-    for (int rank = 7; rank >= 0; rank--) {
+    for (i32 rank = 7; rank >= 0; rank--) {
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.pawn[1] & mask) printf("P ");
             else if (position.knight[1] & mask) printf("N ");
@@ -323,12 +323,12 @@ void printPosition(Position position, char verbose){
     if(!verbose) return;
     printf("  Color Bitboard   |      White Attack   |      Black Attack   |     Pinned Pieces   |         EP Board    |       Char Board    |\n");
     printf("  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |\n");
-    for (int rank = 7; rank >= 0; rank--) {
+    for (i32 rank = 7; rank >= 0; rank--) {
         //Color BB
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.color[1] & mask) printf("W ");
             else if (position.color[0] & mask) printf("b ");
@@ -339,9 +339,9 @@ void printPosition(Position position, char verbose){
 
         //White Attack
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.attack_mask[1] & mask) printf("A ");
             else printf(". ");
@@ -351,9 +351,9 @@ void printPosition(Position position, char verbose){
 
         //Black Attack
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.attack_mask[0] & mask) printf("a ");
             else printf(". ");
@@ -363,9 +363,9 @@ void printPosition(Position position, char verbose){
 
         //Pinned Pieces
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.pinned & mask) printf("X ");
             else printf(". ");
@@ -375,9 +375,9 @@ void printPosition(Position position, char verbose){
 
         //En-Passant Pieces
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.en_passant & mask) printf("E ");
             else printf(". ");
@@ -387,8 +387,8 @@ void printPosition(Position position, char verbose){
 
         //Char Board
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
 
             if (position.charBoard[square]) printf("%c ",position.charBoard[square]);
             else printf(". ");
@@ -401,12 +401,12 @@ void printPosition(Position position, char verbose){
     printf("--------------------------------------------------------------------------------------------------------------------------------------------------------\n");
     printf("        White      |     White Pawn      |      White Bishop   |     White Knight    |      White Rook     |      White Queen    |      White King     |\n");
     printf("  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |\n");
-    for (int rank = 7; rank >= 0; rank--) {
+    for (i32 rank = 7; rank >= 0; rank--) {
         //White BB
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.color[1] & mask) printf("W ");
             else printf(". ");
@@ -416,9 +416,9 @@ void printPosition(Position position, char verbose){
 
         //W Pawn BB
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.pawn[1] & mask) printf("P ");
             else printf(". ");
@@ -428,9 +428,9 @@ void printPosition(Position position, char verbose){
 
         //W Bishop BB
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.bishop[1] & mask) printf("B ");
             else printf(". ");
@@ -440,9 +440,9 @@ void printPosition(Position position, char verbose){
 
         //W Knight BB
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.knight[1] & mask) printf("N ");
             else printf(". ");
@@ -452,9 +452,9 @@ void printPosition(Position position, char verbose){
 
         //W Rook
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.rook[1] & mask) printf("R ");
             else printf(". ");
@@ -464,9 +464,9 @@ void printPosition(Position position, char verbose){
 
         //W Queen
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.queen[1] & mask) printf("Q ");
             else printf(". ");
@@ -476,9 +476,9 @@ void printPosition(Position position, char verbose){
 
         //White King
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.king[1] & mask) printf("K ");
             else printf(". ");
@@ -490,12 +490,12 @@ void printPosition(Position position, char verbose){
     printf("--------------------------------------------------------------------------------------------------------------------------------------------------------\n");
     printf("        Black      |       Black Pawn    |      Black Bishop   |     Black Knight    |      Black Rook     |      Black Queen    |      Black King     |\n");
     printf("  A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |    A B C D E F G H  |\n");
-    for (int rank = 7; rank >= 0; rank--) {
+    for (i32 rank = 7; rank >= 0; rank--) {
         //Black BB
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.color[0] & mask) printf("b ");
             else printf(". ");
@@ -505,9 +505,9 @@ void printPosition(Position position, char verbose){
 
         //Black Pawn BB
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.pawn[0] & mask) printf("p ");
             else printf(". ");
@@ -517,9 +517,9 @@ void printPosition(Position position, char verbose){
 
         //Black Bishop BB
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.bishop[0] & mask) printf("b ");
             else printf(". ");
@@ -529,9 +529,9 @@ void printPosition(Position position, char verbose){
 
         //Black Knight BB
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.knight[0] & mask) printf("n ");
             else printf(". ");
@@ -541,9 +541,9 @@ void printPosition(Position position, char verbose){
 
         //Black Rook
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.rook[0] & mask) printf("r ");
             else printf(". ");
@@ -553,9 +553,9 @@ void printPosition(Position position, char verbose){
 
         //Black Queen
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.queen[0] & mask) printf("q ");
             else printf(". ");
@@ -565,9 +565,9 @@ void printPosition(Position position, char verbose){
 
         //Black King
         printf("%d ", rank + 1);
-        for (int file = 0; file < 8; file++) {
-            int square = rank * 8 + file;
-            uint64_t mask = 1ULL << square;
+        for (i32 file = 0; file < 8; file++) {
+            i32 square = rank * 8 + file;
+            u64 mask = 1ULL << square;
 
             if (position.king[0] & mask) printf("k ");
             else printf(". ");
@@ -580,12 +580,12 @@ void printPosition(Position position, char verbose){
 }
 
 
-void printBB(uint64_t BB) {
+void printBB(u64 BB) {
     printf("  A B C D E F G H\n");
-    for (int rank = 8; rank >= 1; rank--) {
+    for (i32 rank = 8; rank >= 1; rank--) {
         printf("%d ", rank);
-        for (int file = 0; file < 8; file++) {
-            int bitPosition = (rank - 1) * 8 + file;
+        for (i32 file = 0; file < 8; file++) {
+            i32 bitPosition = (rank - 1) * 8 + file;
             if (BB & (1ULL << bitPosition)) {
                 printf("1 ");
             } else {
@@ -596,15 +596,15 @@ void printBB(uint64_t BB) {
     }
 }
 
-uint64_t northOne(uint64_t bb) { return bb << 8;  }
-uint64_t northTwo(uint64_t bb) { return bb << 16; }
-uint64_t noEaOne (uint64_t bb) { return (bb & ~0x8080808080808080ULL) << 9; }
-uint64_t noWeOne (uint64_t bb) { return (bb & ~0x0101010101010101ULL) << 7; }
+u64 northOne(u64 bb) { return bb << 8;  }
+u64 northTwo(u64 bb) { return bb << 16; }
+u64 noEaOne (u64 bb) { return (bb & ~0x8080808080808080ULL) << 9; }
+u64 noWeOne (u64 bb) { return (bb & ~0x0101010101010101ULL) << 7; }
 
-uint64_t southOne(uint64_t bb) { return bb >> 8; }
-uint64_t southTwo(uint64_t bb) { return bb >> 16; }
-uint64_t soEaOne(uint64_t bb) { return (bb & ~0x8080808080808080ULL) >> 7; } 
-uint64_t soWeOne(uint64_t bb) { return (bb & ~0x0101010101010101ULL) >> 9; }
+u64 southOne(u64 bb) { return bb >> 8; }
+u64 southTwo(u64 bb) { return bb >> 16; }
+u64 soEaOne(u64 bb) { return (bb & ~0x8080808080808080ULL) >> 7; } 
+u64 soWeOne(u64 bb) { return (bb & ~0x0101010101010101ULL) >> 9; }
 
 
 

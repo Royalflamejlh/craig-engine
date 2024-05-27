@@ -4,12 +4,12 @@
 #include <time.h>
 #include <stdlib.h>
 
-static uint64_t zobristTable[64][12];
-static uint64_t zobristEnPassant[8];
-static uint64_t zobristCastle[4];
-static uint64_t zobristTurn;
+static u64 zobristTable[64][12];
+static u64 zobristEnPassant[8];
+static u64 zobristCastle[4];
+static u64 zobristTurn;
 
-static int convertPieceToIndex(char piece);
+static i32 convertPieceToIndex(char piece);
 
 void initZobrist(void) {
     
@@ -22,30 +22,30 @@ void initZobrist(void) {
     #endif
     
 
-    for (int square = 0; square < 64; square++) {
-        for (int piece = 0; piece < 12; piece++) {
+    for (i32 square = 0; square < 64; square++) {
+        for (i32 piece = 0; piece < 12; piece++) {
             zobristTable[square][piece] = random_uint64();
         }
     }
 
-    for(int i = 0; i < 8; i++){
+    for(i32 i = 0; i < 8; i++){
         zobristEnPassant[i] = random_uint64();
     }
 
-    for(int i = 0; i < 4; i++){
+    for(i32 i = 0; i < 4; i++){
         zobristCastle[i] = random_uint64();
     }
 
     zobristTurn = random_uint64();
 }
 
-uint64_t hashPosition(Position pos){
-    uint64_t hash = 0;
+u64 hashPosition(Position pos){
+    u64 hash = 0;
 
     //Hash the board
-    for (int i = 0; i < 64; i++) { 
+    for (i32 i = 0; i < 64; i++) { 
         if (pos.charBoard[i] != 0) { 
-            int piece = convertPieceToIndex(pos.charBoard[i]);
+            i32 piece = convertPieceToIndex(pos.charBoard[i]);
             hash ^= zobristTable[i][piece];
         }
     }
@@ -65,7 +65,7 @@ uint64_t hashPosition(Position pos){
     return hash;
 }
 
-static int convertPieceToIndex(char piece) {
+static i32 convertPieceToIndex(char piece) {
     switch (piece) {
         case 'P': return 0;  // White Pawn
         case 'N': return 1;  // White Knight

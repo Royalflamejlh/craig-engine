@@ -1,8 +1,8 @@
 ##
 # Linux Vars
 ##
-CC = gcc
-ASAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer -Wno-format-security
+CC = clang
+ASAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer -Wno-format-security -fsanitize=undefined -fsanitize=nullability -fsanitize=integer
 CFLAGS = -Wall -Wextra 
 DEBUG_FLAGS = -g $(ASAN_FLAGS) -D __COMPILE_DEBUG=1 -D __RAND_SEED=287091847 -D VERBOSE
 RELEASE_FLAGS = -O3 -Ofast -funroll-loops -flto -finline-functions -fexpensive-optimizations -fomit-frame-pointer -D __FAST_AS_POOP=1

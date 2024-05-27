@@ -8,7 +8,7 @@ void initializeNodePool(void) {
     nodePool.usedCount = 0;
     nodePool.nextAvailable = 0;
     nodePool.nodes = (Node*)malloc(nodePool.size * sizeof(Node));
-    nodePool.used = (int*)malloc(nodePool.size * sizeof(int));
+    nodePool.used = (i32*)malloc(nodePool.size * sizeof(i32));
     
     for (size_t i = 0; i < nodePool.size; i++) {
         nodePool.used[i] = 0;
@@ -19,7 +19,7 @@ void initializeNodePool(void) {
 static void resizeNodePool(void) {
     size_t newSize = nodePool.size * 2;
     nodePool.nodes = (Node*)realloc(nodePool.nodes, newSize * sizeof(Node));
-    nodePool.used = (int*)realloc(nodePool.used, newSize * sizeof(int));
+    nodePool.used = (i32*)realloc(nodePool.used, newSize * sizeof(i32));
 
     for (size_t i = nodePool.size; i < newSize; i++) {
         nodePool.used[i] = 0;

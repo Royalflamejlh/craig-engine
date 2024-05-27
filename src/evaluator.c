@@ -29,9 +29,9 @@
 
 
 
-static int PST[12][64];
+static i32 PST[12][64];
 
-static const int pieceValues[] = {
+static const i32 pieceValues[] = {
     [WHITE_PAWN] = PAWN_VALUE,
     [WHITE_KNIGHT] = KNIGHT_VALUE,
     [WHITE_BISHOP] = BISHOP_VALUE,
@@ -46,9 +46,9 @@ static const int pieceValues[] = {
     [BLACK_KING] = KING_VALUE
 };
 
-int quickEval(Position pos){
-    int eval_val = 0;
-    int turn = pos.flags & WHITE_TURN;
+i32 quickEval(Position pos){
+    i32 eval_val = 0;
+    i32 turn = pos.flags & WHITE_TURN;
     eval_val += KING_VALUE * count_bits(pos.king[turn]);
     eval_val += QUEEN_VALUE * count_bits(pos.queen[turn]);
     eval_val += ROOK_VALUE * count_bits(pos.rook[turn]);
@@ -65,12 +65,12 @@ int quickEval(Position pos){
     return eval_val;
 }
 
-int evaluate(Position pos){
-    int eval_val = 0;
-    int turn = pos.flags & WHITE_TURN;
+i32 evaluate(Position pos){
+    i32 eval_val = 0;
+    i32 turn = pos.flags & WHITE_TURN;
 
     //Get the stage
-    int stage = pos.stage;
+    i32 stage = pos.stage;
     (void) stage;
     
     #ifdef DEBUG
@@ -129,8 +129,8 @@ int evaluate(Position pos){
     //if()
 
     //Pawn Stuff
-    for(int i = 0; i < 8; i++){ //Double Pawn Check
-        int double_pawns = count_bits(pos.pawn[turn] & fileMask[i]) - 1;
+    for(i32 i = 0; i < 8; i++){ //Double Pawn Check
+        i32 double_pawns = count_bits(pos.pawn[turn] & fileMask[i]) - 1;
         if(double_pawns > 1){
             eval_val -= DOUBLE_PAWN_PEN * double_pawns;
         }
@@ -147,17 +147,17 @@ int evaluate(Position pos){
 
     //PST
     //Pawns
-    int index = turn ? WHITE_PAWN : BLACK_PAWN;
-    int index_op = turn ? BLACK_PAWN : WHITE_PAWN;
-    uint64_t pieces = pos.pawn[turn];
+    i32 index = turn ? WHITE_PAWN : BLACK_PAWN;
+    i32 index_op = turn ? BLACK_PAWN : WHITE_PAWN;
+    u64 pieces = pos.pawn[turn];
     while (pieces) {
-        int square = __builtin_ctzll(pieces);
+        i32 square = __builtin_ctzll(pieces);
         eval_val += PST_PAWN_MULT * PST[index][square];
         pieces &= pieces - 1;
     }
     pieces = pos.pawn[!turn];
     while (pieces) {
-        int square = __builtin_ctzll(pieces);
+        i32 square = __builtin_ctzll(pieces);
         eval_val -= PST_PAWN_MULT * PST[index_op][square];
         pieces &= pieces - 1;
     }
@@ -170,13 +170,13 @@ int evaluate(Position pos){
     index_op = turn ? BLACK_KNIGHT : WHITE_KNIGHT;
     pieces = pos.knight[turn];
     while (pieces) {
-        int square = __builtin_ctzll(pieces);
+        i32 square = __builtin_ctzll(pieces);
         eval_val += PST_KNIGHT_MULT * PST[index][square];
         pieces &= pieces - 1;
     }
     pieces = pos.knight[!turn];
     while (pieces) {
-        int square = __builtin_ctzll(pieces);
+        i32 square = __builtin_ctzll(pieces);
         eval_val -= PST_KNIGHT_MULT * PST[index_op][square];
         pieces &= pieces - 1;
     }
@@ -189,13 +189,13 @@ int evaluate(Position pos){
     index_op = turn ? BLACK_BISHOP : WHITE_BISHOP;
     pieces = pos.bishop[turn];
     while (pieces) {
-        int square = __builtin_ctzll(pieces);
+        i32 square = __builtin_ctzll(pieces);
         eval_val += PST_BISHOP_MULT * PST[index][square];
         pieces &= pieces - 1;
     }
     pieces = pos.bishop[!turn];
     while (pieces) {
-        int square = __builtin_ctzll(pieces);
+        i32 square = __builtin_ctzll(pieces);
         eval_val -= PST_BISHOP_MULT * PST[index_op][square];
         pieces &= pieces - 1;
     }
@@ -208,13 +208,13 @@ int evaluate(Position pos){
     index_op = turn ? BLACK_ROOK : WHITE_ROOK;
     pieces = pos.rook[turn];
     while (pieces) {
-        int square = __builtin_ctzll(pieces);
+        i32 square = __builtin_ctzll(pieces);
         eval_val += PST_ROOK_MULT * PST[index][square];
         pieces &= pieces - 1;
     }
     pieces = pos.rook[!turn];
     while (pieces) {
-        int square = __builtin_ctzll(pieces);
+        i32 square = __builtin_ctzll(pieces);
         eval_val -= PST_ROOK_MULT * PST[index_op][square];
         pieces &= pieces - 1;
     }
@@ -227,13 +227,13 @@ int evaluate(Position pos){
     index_op = turn ? BLACK_QUEEN : WHITE_QUEEN;
     pieces = pos.queen[turn];
     while (pieces) {
-        int square = __builtin_ctzll(pieces);
+        i32 square = __builtin_ctzll(pieces);
         eval_val += PST_QUEEN_MULT * PST[index][square];
         pieces &= pieces - 1;
     }
     pieces = pos.queen[!turn];
     while (pieces) {
-        int square = __builtin_ctzll(pieces);
+        i32 square = __builtin_ctzll(pieces);
         eval_val -= PST_QUEEN_MULT * PST[index_op][square];
         pieces &= pieces - 1;
     }
@@ -246,13 +246,13 @@ int evaluate(Position pos){
     index_op = turn ? BLACK_KING : WHITE_KING;
     pieces = pos.king[turn];
     while (pieces) {
-        int square = __builtin_ctzll(pieces);
+        i32 square = __builtin_ctzll(pieces);
         eval_val += PST_KING_MULT * PST[index][square];
         pieces &= pieces - 1;
     }
     pieces = pos.king[!turn];
     while (pieces) {
-        int square = __builtin_ctzll(pieces);
+        i32 square = __builtin_ctzll(pieces);
         eval_val -= PST_KING_MULT * PST[index_op][square];
         pieces &= pieces - 1;
     }
@@ -276,7 +276,7 @@ int evaluate(Position pos){
 
 void initPST(){
 
-    int PST_PAWN[64] = {
+    i32 PST_PAWN[64] = {
         0,  0,  0,  0,  0,  0,  0,  0,
         1,  1,  1,  0,  0,  1,  1,  1,
         0,  1,  1, -1, -1,  1,  1,  0,
@@ -287,7 +287,7 @@ void initPST(){
         0,  0,  0,  0,  0,  0,  0,  0
     };
 
-    int PST_KNIGHT[64] = {
+    i32 PST_KNIGHT[64] = {
         -5, -4, -3, -3, -3, -3, -4, -5,
         -4, -2,  0,  0,  0,  0, -2, -4,
         -3,  0,  1,  1,  1,  1,  0, -3,
@@ -298,7 +298,7 @@ void initPST(){
         -5, -4, -3, -3, -3, -3, -4, -5
     };
 
-    int PST_BISHOP[64] = {
+    i32 PST_BISHOP[64] = {
         -2, -1, -1, -1, -1, -1, -1, -2,
         -1,  1,  0,  0,  0,  0,  1, -1,
         -1,  0,  1,  1,  1,  1,  0, -1,
@@ -309,7 +309,7 @@ void initPST(){
         -2, -1, -1, -1, -1, -1, -1, -2
     };
 
-    int PST_ROOK[64] = {
+    i32 PST_ROOK[64] = {
         0,  0,  3,  4,  4,  3,  0,  0,
         0,  0,  0,  0,  0,  0,  0,  0,
         0,  0,  0,  0,  0,  0,  0,  0,
@@ -320,7 +320,7 @@ void initPST(){
        10, 10, 10, 10, 10, 10, 10, 10
     };
 
-    int PST_QUEEN[64] = {
+    i32 PST_QUEEN[64] = {
         -2, -1, -1, -1, -1, -1, -1, -2,
         -1,  0,  0,  0,  0,  0,  0, -1,
         -1,  0,  1,  1,  1,  1,  0, -1,
@@ -331,7 +331,7 @@ void initPST(){
         -2, -1, -1, -1, -1, -1, -1, -2
     };
 
-    int PST_KING[64] = {
+    i32 PST_KING[64] = {
         3,  4,  4, -2, -2,  4,  4,  3,
         2,  2,  0,  0,  0,  0,  2,  2,
         -1, -2, -2, -2, -2, -2, -2, -1,
@@ -344,7 +344,7 @@ void initPST(){
 
 
     // Initialize PST for white pieces
-    for (int i = 0; i < 64; i++) {
+    for (i32 i = 0; i < 64; i++) {
         PST[WHITE_PAWN][i] = PST_PAWN[i];
         PST[WHITE_KNIGHT][i] = PST_KNIGHT[i];
         PST[WHITE_BISHOP][i] = PST_BISHOP[i];
@@ -375,18 +375,28 @@ void initPST(){
 #define K_MOVE_SCORE MAX_EVAL - 2*QUEEN_VALUE
 
 
-void evalMoves(Move* moveList, int* moveVals, int size, Position pos){
-    for(int i = 0; i < size; i++){
+void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
+    for(i32 i = 0; i < size; i++){
         Move move = moveList[i];
 
-        int from_piece = (int)pos.charBoard[GET_FROM(move)];
-        int to_piece = (int)pos.charBoard[GET_TO(move)];
+        i32 from_piece = (i32)pos.charBoard[GET_FROM(move)];
+        
+        i32 to_piece = (i32)pos.charBoard[GET_TO(move)];
+
+        #ifdef DEBUG
+        if(from_piece >= 12 || to_piece >= 12){
+            printf("Warning illegal piece found at:");
+            printPosition(pos, TRUE);
+            printf("from piece: %d", pos.charBoard[GET_FROM(move)]);
+            printf(" to piece: %d", pos.charBoard[GET_TO(move)]);
+        }
+        #endif
 
         //Add on the PST values
-        moveVals[i] += PST[pieceToIndex[(int)from_piece]][GET_TO(move)];
+        moveVals[i] += PST[pieceToIndex[(i32)from_piece]][GET_TO(move)];
         
         //Add on the flag values
-        int histScore;
+        i32 histScore;
         switch(GET_FLAGS(move)){
             case QUEEN_PROMO_CAPTURE:
                 moveVals[i] += ((pieceValues[to_piece] + QUEEN_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
@@ -405,6 +415,16 @@ void evalMoves(Move* moveList, int* moveVals, int size, Position pos){
                 moveVals[i] += ((PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
                 break;
             case CAPTURE:
+                if(from_piece >= 12 || to_piece >= 12){
+                    printf("Warning illegal piece found at:\n");
+                    printPosition(pos, TRUE);
+                    printf("\n");
+                    printf("from piece: %c / %c", pos.charBoard[GET_FROM(move)], from_piece);
+                    printf(" to piece: %c / %c \n", pos.charBoard[GET_TO(move)], to_piece);
+                    printf("With the move: ");
+                    printMove(move);
+                     printf("\n");
+                }
                 moveVals[i] += ((pieceValues[to_piece])+QUEEN_VALUE) - pieceValues[from_piece];
                 break;
 

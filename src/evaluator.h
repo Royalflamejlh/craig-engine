@@ -12,10 +12,10 @@
 #define KNIGHT_VALUE     3500
 #define PAWN_VALUE       1000
 
-int evaluate(Position pos);
-int quickEval(Position pos);
+i32 evaluate(Position pos);
+i32 quickEval(Position pos);
 void initPST(void);
-void evalMoves(Move* moveList, int* moveVals, int size, Position pos);
+void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos);
 
 
 #endif

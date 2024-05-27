@@ -65,34 +65,34 @@
 
 #endif
 
-extern uint64_t betweenMask[64][64];
-extern uint64_t rankMask[64], fileMask[64], NESWMask[64], NWSEMask[64];
+extern u64 betweenMask[64][64];
+extern u64 rankMask[64], fileMask[64], NESWMask[64], NWSEMask[64];
 
 void generateBetweenMasks();
 void generateRankMasks();
 void generateFileMasks();
 void generateDiagonalMasks();
 
-void printBB(uint64_t BB);
+void printBB(u64 BB);
 Position fenToPosition(char* FEN);
-int PositionToFen(Position pos, char* FEN);
+i32 PositionToFen(Position pos, char* FEN);
 void printPosition(Position position, char verbose);
 void printDebug(Position position);
-uint64_t northOne(uint64_t bb);
-uint64_t northTwo(uint64_t bb);
-uint64_t noEaOne(uint64_t bb);
-uint64_t noWeOne(uint64_t bb);
+u64 northOne(u64 bb);
+u64 northTwo(u64 bb);
+u64 noEaOne(u64 bb);
+u64 noWeOne(u64 bb);
 
-uint64_t southOne(uint64_t bb);
-uint64_t southTwo(uint64_t bb);
-uint64_t soEaOne(uint64_t bb);
-uint64_t soWeOne(uint64_t bb);
+u64 southOne(u64 bb);
+u64 southTwo(u64 bb);
+u64 soEaOne(u64 bb);
+u64 soWeOne(u64 bb);
 
-static inline uint64_t setBit(uint64_t bb, int square) {
+static inline u64 setBit(u64 bb, i32 square) {
     return bb | (1ULL << square);
 }
 
-static inline uint64_t clearBit(uint64_t bb, int square) {
+static inline u64 clearBit(u64 bb, i32 square) {
     return bb & ~(1ULL << square);
 }
 
@@ -102,7 +102,7 @@ static inline uint64_t clearBit(uint64_t bb, int square) {
  * @param board any bitboard
  * @return bitboard x flipped vertically
  */
-static inline uint64_t flipVertical(uint64_t board) {
+static inline u64 flipVertical(u64 board) {
    return bswap_64(board);
 }
 

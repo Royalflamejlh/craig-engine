@@ -10,25 +10,25 @@
 #include <signal.h>
 
 #ifdef PYTHON
-static int fifo_fd_in, fifo_fd_out;
+static i32 fifo_fd_in, fifo_fd_out;
 static pid_t pid;
 #endif
 
 void printMove(Move move){
-    int from = GET_FROM(move);
-    int to = GET_TO(move);
+    i32 from = GET_FROM(move);
+    i32 to = GET_TO(move);
 
-    int rank_from = from / 8;
-    int file_from = from % 8;
+    i32 rank_from = from / 8;
+    i32 file_from = from % 8;
 
-    int rank_to = to / 8;
-    int file_to = to % 8;
+    i32 rank_to = to / 8;
+    i32 file_to = to % 8;
 
     char file_char_from = 'a' + file_from;
     char file_char_to = 'a' + file_to;
 
-    int rank_num_from = rank_from + 1;
-    int rank_num_to = rank_to + 1;
+    i32 rank_num_from = rank_from + 1;
+    i32 rank_num_to = rank_to + 1;
 
     printf("%c%d%c%d", file_char_from, rank_num_from, file_char_to, rank_num_to);
 
@@ -100,10 +100,10 @@ void printMoveSpaced(Move move){
 
 
 
-uint64_t perft(int depth, Position pos){
+u64 perft(i32 depth, Position pos){
   Move move_list[256];
-  int n_moves, i;
-  uint64_t nodes = 0;
+  i32 n_moves, i;
+  u64 nodes = 0;
 
   if (depth == 0) 
     return 1ULL;
@@ -125,21 +125,21 @@ uint64_t perft(int depth, Position pos){
   return nodes;
 }
 
-char getPiece(Position pos, int square){
+char getPiece(Position pos, i32 square){
     return pos.charBoard[square];
 }
 
 Move moveStrToType(Position pos, char* str){
     Move moveList[MAX_MOVES] = {0};
-    int size = generateLegalMoves(pos, moveList);
+    i32 size = generateLegalMoves(pos, moveList);
 
-    int from  = (str[0] - 'a') + ((str[1] - '1') * 8);
-    int to = (str[2] - 'a') + ((str[3] - '1') * 8);
+    i32 from  = (str[0] - 'a') + ((str[1] - '1') * 8);
+    i32 to = (str[2] - 'a') + ((str[3] - '1') * 8);
     char promo = str[4];
 
-    for(int i = 0; i < size; i++){
-        int fromCur = GET_FROM(moveList[i]);
-        int toCur = GET_TO(moveList[i]);
+    for(i32 i = 0; i < size; i++){
+        i32 fromCur = GET_FROM(moveList[i]);
+        i32 toCur = GET_TO(moveList[i]);
         char promoCur;
         switch(GET_FLAGS(moveList[i])){
             case QUEEN_PROMO_CAPTURE:
@@ -170,9 +170,9 @@ Move moveStrToType(Position pos, char* str){
     return NO_MOVE;
 }
 
-void printPV(Move *pvArray, int depth) {
+void printPV(Move *pvArray, i32 depth) {
     printf("Principal Variation at depth %d: ", depth);
-    for (int i = 0; i < depth; i++) {
+    for (i32 i = 0; i < depth; i++) {
         if(pvArray[i] != NO_MOVE){ 
             printMove(pvArray[i]);
             printf(" ");
@@ -194,7 +194,7 @@ Stage calculateStage(Position pos){
 */
 
 HashStack createHashStack(void){
-    uint64_t *ptr = malloc(sizeof(uint64_t) * MAX_MOVES);
+    u64 *ptr = malloc(sizeof(u64) * MAX_MOVES);
     if (ptr == NULL) {
         printf("info Warning: Failed to allocate space for the Hash Stack.\n");
     }
@@ -204,7 +204,7 @@ HashStack createHashStack(void){
 
 void doubleHashStack(HashStack *hs){
     hs->size *= 2;
-    hs->ptr = realloc(hs->ptr, sizeof(uint64_t) * hs->size);
+    hs->ptr = realloc(hs->ptr, sizeof(u64) * hs->size);
     if (hs->ptr == NULL) {
         printf("info Warning: Failed to allocate space for the Hash Stack.\n");
         return;
@@ -212,7 +212,7 @@ void doubleHashStack(HashStack *hs){
 }
 
 
-int removeHashStack(HashStack *hashStack){
+i32 removeHashStack(HashStack *hashStack){
     if (hashStack && hashStack->ptr) {
         free(hashStack->ptr);
         hashStack->ptr = NULL;
@@ -221,7 +221,7 @@ int removeHashStack(HashStack *hashStack){
 }
 
 #ifdef PYTHON
-int python_init() {
+i32 python_init() {
     system("rm /tmp/chess_fifo_in");
     system("rm /tmp/chess_fifo_out");
     system("mkfifo /tmp/chess_fifo_in");
@@ -252,7 +252,7 @@ int python_init() {
 }
 
 
-static int python_movecount(char* fen) {
+static i32 python_movecount(char* fen) {
     char buffer[256];
     ssize_t bytes_read;
     size_t total_bytes_read = 0;
@@ -273,11 +273,11 @@ static int python_movecount(char* fen) {
 
     buffer[total_bytes_read] = '\0';
 
-    int move_count = atoi(buffer);
+    i32 move_count = atoi(buffer);
     return move_count;
 }
 
-int python_close() {
+i32 python_close() {
     close(fifo_fd_in);
     close(fifo_fd_out);
     kill(pid, SIGKILL);
@@ -286,16 +286,16 @@ int python_close() {
     return 0;
 }
 
-int checkMoveCount(Position pos){
+i32 checkMoveCount(Position pos){
     Move moveList[MAX_MOVES];
-    int num_moves = generateLegalMoves(pos, moveList);
+    i32 num_moves = generateLegalMoves(pos, moveList);
     char fen[128];
     PositionToFen(pos, fen);
-    int correct_num_moves = python_movecount(fen);
+    i32 correct_num_moves = python_movecount(fen);
     if(num_moves != correct_num_moves){
         printf("Incorrect amount of moves found (%d/%d) at pos:\n", num_moves, correct_num_moves);
         printPosition(pos, TRUE);
-        for (int i = 0; i < num_moves; i++) {
+        for (i32 i = 0; i < num_moves; i++) {
             printMove(moveList[i]);
         }
         return -1;

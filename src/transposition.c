@@ -13,7 +13,7 @@
 
 #ifdef DEBUG
 #include <stdio.h>
-static uint64_t get_suc, get_rej, store_cnt, store_rej;
+static u64 get_suc, get_rej, store_cnt, store_rej;
 void startTTDebug(void){
     get_suc = 0;
     get_rej = 0;
@@ -27,15 +27,15 @@ void printTTDebug(void){
 
 static TTEntry* table;
 
-int initTT(){
+i32 initTT(){
     table = (TTEntry*)calloc((KEY_MASK + 1), sizeof(TTEntry));
     if(!table) return -1;
     return 0;
 }
 
-TTEntry* getTTEntry(uint64_t hash){
-    for(int i = 0; i < ROTATION; i++){
-        uint64_t key = (hash + i) & KEY_MASK; // Ensure wrapping around
+TTEntry* getTTEntry(u64 hash){
+    for(i32 i = 0; i < ROTATION; i++){
+        u64 key = (hash + i) & KEY_MASK; // Ensure wrapping around
         if(table[key].hash == hash){
             #ifdef DEBUG
             get_suc++;
@@ -49,9 +49,9 @@ TTEntry* getTTEntry(uint64_t hash){
     return NULL;
 }
 
-void storeTTEntry(uint64_t hash, char depth, int eval, char nodeType, Move move){
-    for(int i = 0; i < ROTATION; i++){
-        uint64_t key = (hash + i) & KEY_MASK; // Ensure wrapping around
+void storeTTEntry(u64 hash, char depth, i32 eval, char nodeType, Move move){
+    for(i32 i = 0; i < ROTATION; i++){
+        u64 key = (hash + i) & KEY_MASK; // Ensure wrapping around
         if(nodeType != PV_NODE && table[key].nodeType == PV_NODE){
             continue;
         }

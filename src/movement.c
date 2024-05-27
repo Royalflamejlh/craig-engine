@@ -19,12 +19,12 @@
 /*
 * Wow Cool! Totaly sensical move generation!
 */
-uint16_t generateLegalMoves(Position position,  Move* moveList){
-    int size[] = {0};
-    int turn = position.flags & WHITE_TURN; //True for white false for black
-    uint64_t ownPos = position.color[turn];
-    uint64_t oppPos = position.color[!turn];
-    uint64_t oppAttackMask = position.attack_mask[!turn];
+u16 generateLegalMoves(Position position,  Move* moveList){
+    i32 size[] = {0};
+    i32 turn = position.flags & WHITE_TURN; //True for white false for black
+    u64 ownPos = position.color[turn];
+    u64 oppPos = position.color[!turn];
+    u64 oppAttackMask = position.attack_mask[!turn];
 
     if(position.flags & IN_CHECK){
         if(position.flags & IN_D_CHECK){
@@ -55,16 +55,16 @@ uint16_t generateLegalMoves(Position position,  Move* moveList){
 /*
 * Generate Moves that capture pieces, and put the opponents king in check
 */
-uint16_t generateThreatMoves(Position position,  Move* moveList){
-    int size[] = {0};
-    int turn = position.flags & WHITE_TURN; //True for white false for black
-    uint64_t ownPos = position.color[turn];
-    uint64_t oppPos = position.color[!turn];
-    uint64_t oppAttackMask = position.attack_mask[!turn];
+u16 generateThreatMoves(Position position,  Move* moveList){
+    i32 size[] = {0};
+    i32 turn = position.flags & WHITE_TURN; //True for white false for black
+    u64 ownPos = position.color[turn];
+    u64 oppPos = position.color[!turn];
+    u64 oppAttackMask = position.attack_mask[!turn];
 
-    int kingSq = __builtin_ctzll(position.king[!turn]);
-    uint64_t r_check_squares = rookAttacks(  ownPos | oppPos, kingSq) & ~(ownPos | oppPos);
-    uint64_t b_check_squares = bishopAttacks(ownPos | oppPos, kingSq) & ~(ownPos | oppPos);
+    i32 kingSq = __builtin_ctzll(position.king[!turn]);
+    u64 r_check_squares = rookAttacks(  ownPos | oppPos, kingSq) & ~(ownPos | oppPos);
+    u64 b_check_squares = bishopAttacks(ownPos | oppPos, kingSq) & ~(ownPos | oppPos);
 
     if(position.flags & IN_CHECK){
         if(position.flags & IN_D_CHECK){
@@ -90,7 +90,7 @@ uint16_t generateThreatMoves(Position position,  Move* moveList){
 }
 
 
-static void movePiece(Position *pos, int turn, int from, int to){
+static void movePiece(Position *pos, i32 turn, i32 from, i32 to){
     switch(toupper(pos->charBoard[from])){
         case 'Q':
             pos->queen[turn] = clearBit(pos->queen[turn], from);
@@ -130,8 +130,8 @@ static void movePiece(Position *pos, int turn, int from, int to){
 /*
 * Used to remove the captured piece
 */
-static void removeCaptured(Position *pos, int square){
-    int turn = pos->flags & WHITE_TURN;
+static void removeCaptured(Position *pos, i32 square){
+    i32 turn = pos->flags & WHITE_TURN;
     switch(toupper(pos->charBoard[square])){
         case 'Q':
             pos->queen[!turn] = clearBit(pos->queen[!turn], square);
@@ -164,13 +164,13 @@ static void removeCaptured(Position *pos, int square){
     pos->halfmove_clock = 0;
 }
 
-int makeMove(Position *pos, Move move){
+i32 makeMove(Position *pos, Move move){
     #ifdef DEBUG
     if(move == NO_MOVE) printf("WARNING ILLEGAL NO-MOVE IN MAKE MOVE\n");
     #endif
-    int turn = pos->flags & WHITE_TURN;
-    int from = GET_FROM(move);
-    int to   = GET_TO(move);
+    i32 turn = pos->flags & WHITE_TURN;
+    i32 from = GET_FROM(move);
+    i32 to   = GET_TO(move);
     
     pos->halfmove_clock++;
     pos->en_passant = 0ULL;
@@ -304,8 +304,8 @@ int makeMove(Position *pos, Move move){
 
     //Double Check Flag
     if(pos->flags & IN_CHECK){
-       int king_sq = __builtin_ctzll(pos->king[!turn]);
-       uint64_t attackers = getAttackers(*pos, king_sq, turn);
+       i32 king_sq = __builtin_ctzll(pos->king[!turn]);
+       u64 attackers = getAttackers(*pos, king_sq, turn);
        attackers &= attackers - 1;
        if(attackers) pos->flags |= IN_D_CHECK;
     }
@@ -338,8 +338,8 @@ int makeMove(Position *pos, Move move){
         printf("From move: ");
         printMove(move);
         printf(".\r\n");
-        uint64_t prevHash = pos->hashStack.ptr[pos->hashStack.current_idx-1];
-        uint64_t prevprevHash = pos->hashStack.ptr[pos->hashStack.current_idx-2];
+        u64 prevHash = pos->hashStack.ptr[pos->hashStack.current_idx-1];
+        u64 prevprevHash = pos->hashStack.ptr[pos->hashStack.current_idx-2];
 
         printf("Prev Move: ");
         TTEntry *prev = getTTEntry(prevHash);
@@ -368,14 +368,14 @@ int makeMove(Position *pos, Move move){
     return 0;
 }
 
-int makeNullMove(Position *pos){
+i32 makeNullMove(Position *pos){
 
-    int turn = pos->flags & WHITE_TURN;
+    i32 turn = pos->flags & WHITE_TURN;
 
     pos->halfmove_clock++;
     if(!turn) pos->fullmove_number++;
 
-    int regen_pinned = pos->en_passant != 0;
+    i32 regen_pinned = pos->en_passant != 0;
     pos->en_passant = 0ULL;
 
     pos->flags ^= WHITE_TURN;
@@ -394,16 +394,16 @@ void unmakeMove(Position *position, Move move){
 }
 
 
-static uint64_t generatePinnedPiecesColor(Position pos, int turn){
-    int k_square = __builtin_ctzll(pos.king[turn]);
+static u64 generatePinnedPiecesColor(Position pos, i32 turn){
+    i32 k_square = __builtin_ctzll(pos.king[turn]);
     //Lets do white first!
-    uint64_t pos_pinners;
-    uint64_t all_pieces = pos.color[0] | pos.color[1];  //Contains all the initial pieces
-    uint64_t pinned = pos.color[turn];  //The peices belonging to white which become pinnged
-    uint64_t d_attack_mask, h_attack_mask, attack_mask = 0ULL;  // A attack masks
-    uint64_t pin_directions = 0ULL;
+    u64 pos_pinners;
+    u64 all_pieces = pos.color[0] | pos.color[1];  //Contains all the initial pieces
+    u64 pinned = pos.color[turn];  //The peices belonging to white which become pinnged
+    u64 d_attack_mask, h_attack_mask, attack_mask = 0ULL;  // A attack masks
+    u64 pin_directions = 0ULL;
 
-    uint64_t ep_pawn_square = 0ULL;
+    u64 ep_pawn_square = 0ULL;
     //Make sure ep_pawn_square is the same row as the k_square
     //if white turn => king must be row 5
     //if black turn => king must be row 4
@@ -420,7 +420,7 @@ static uint64_t generatePinnedPiecesColor(Position pos, int turn){
     h_attack_mask = rookAttacks(all_pieces & ~pinned & ~ep_pawn_square, k_square);
     pos_pinners = h_attack_mask & (pos.queen[!turn] | pos.rook[!turn]);
     while(pos_pinners){
-        int pinner_sq = __builtin_ctzll(pos_pinners);
+        i32 pinner_sq = __builtin_ctzll(pos_pinners);
         pin_directions |= betweenMask[k_square][pinner_sq];
         pos_pinners &= pos_pinners - 1;
     }
@@ -428,7 +428,7 @@ static uint64_t generatePinnedPiecesColor(Position pos, int turn){
     d_attack_mask = bishopAttacks(all_pieces & ~pinned, k_square);
     pos_pinners = d_attack_mask & (pos.queen[!turn] | pos.bishop[!turn]);
     while(pos_pinners){
-        int pinner_sq = __builtin_ctzll(pos_pinners);
+        i32 pinner_sq = __builtin_ctzll(pos_pinners);
         pin_directions |= betweenMask[k_square][pinner_sq];
         pos_pinners &= pos_pinners - 1;
     }
@@ -437,7 +437,7 @@ static uint64_t generatePinnedPiecesColor(Position pos, int turn){
     return pinned;
 }
 
-uint64_t generatePinnedPieces(Position pos){
+u64 generatePinnedPieces(Position pos){
     return generatePinnedPiecesColor(pos, 0) | generatePinnedPiecesColor(pos, 1);
 }
 

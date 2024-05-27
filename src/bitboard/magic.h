@@ -2,8 +2,9 @@
 #define magic_h
 
 #include <stdint.h>
+#include "../types.h"
 
-int generateMagics(void);
-uint64_t bishopAttacks(uint64_t occ, int sq);
-uint64_t rookAttacks(uint64_t occ, int sq);
+i32 generateMagics(void);
+u64 bishopAttacks(u64 occ, i32 sq);
+u64 rookAttacks(u64 occ, i32 sq);
 #endif

@@ -11,6 +11,25 @@
 #include <stddef.h>
 #include <inttypes.h>
 
+typedef uint8_t   u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+
+typedef int8_t   i8;
+typedef int16_t i16;
+typedef int32_t i32;
+typedef int64_t i64;
+
+typedef int32_t bool32;
+typedef bool32 b32;
+
+typedef float real32;
+typedef double real64;
+
+typedef real32 f32;
+typedef real64 d64;
+
 #define TRUE 1
 #define FALSE 0
 
@@ -48,7 +67,7 @@
     1	1	1	1	queen-promo capture
 */
 
-typedef uint16_t Move;
+typedef u16 Move;
 
 #define GET_FROM(move) ((move) & MOVE_FROM_MASK)
 #define GET_TO(move) (((move) & MOVE_TO_MASK) >> 6)
@@ -95,22 +114,22 @@ typedef uint16_t Move;
 #define SET_QUEEN_PROMO_CAPTURE(move) SET_FLAGS(move, QUEEN_PROMO_CAPTURE)
 
 // Flag getters
-inline int IS_QUIET(Move move) { return GET_FLAGS(move) == QUIET; }
-inline int IS_DOUBLE_PAWN_PUSH(Move move) { return GET_FLAGS(move) == DOUBLE_PAWN_PUSH; }
-inline int IS_KING_CASTLE(Move move) { return GET_FLAGS(move) == KING_CASTLE; }
-inline int IS_QUEEN_CASTLE(Move move) { return GET_FLAGS(move) == QUEEN_CASTLE; }
-inline int IS_CAPTURE(Move move) { return GET_FLAGS(move) == CAPTURE; }
-inline int IS_EP_CAPTURE(Move move) { return GET_FLAGS(move) == EP_CAPTURE; }
-inline int IS_KNIGHT_PROMOTION(Move move) { return GET_FLAGS(move) == KNIGHT_PROMOTION; }
-inline int IS_BISHOP_PROMOTION(Move move) { return GET_FLAGS(move) == BISHOP_PROMOTION; }
-inline int IS_ROOK_PROMOTION(Move move) { return GET_FLAGS(move) == ROOK_PROMOTION; }
-inline int IS_QUEEN_PROMOTION(Move move) { return GET_FLAGS(move) == QUEEN_PROMOTION; }
-inline int IS_KNIGHT_PROMO_CAPTURE(Move move) { return GET_FLAGS(move) == KNIGHT_PROMO_CAPTURE; }
-inline int IS_BISHOP_PROMO_CAPTURE(Move move) { return GET_FLAGS(move) == BISHOP_PROMO_CAPTURE; }
-inline int IS_ROOK_PROMO_CAPTURE(Move move) { return GET_FLAGS(move) == ROOK_PROMO_CAPTURE; }
-inline int IS_QUEEN_PROMO_CAPTURE(Move move) { return GET_FLAGS(move) == QUEEN_PROMO_CAPTURE; }
+inline i32 IS_QUIET(Move move) { return GET_FLAGS(move) == QUIET; }
+inline i32 IS_DOUBLE_PAWN_PUSH(Move move) { return GET_FLAGS(move) == DOUBLE_PAWN_PUSH; }
+inline i32 IS_KING_CASTLE(Move move) { return GET_FLAGS(move) == KING_CASTLE; }
+inline i32 IS_QUEEN_CASTLE(Move move) { return GET_FLAGS(move) == QUEEN_CASTLE; }
+inline i32 IS_CAPTURE(Move move) { return GET_FLAGS(move) == CAPTURE; }
+inline i32 IS_EP_CAPTURE(Move move) { return GET_FLAGS(move) == EP_CAPTURE; }
+inline i32 IS_KNIGHT_PROMOTION(Move move) { return GET_FLAGS(move) == KNIGHT_PROMOTION; }
+inline i32 IS_BISHOP_PROMOTION(Move move) { return GET_FLAGS(move) == BISHOP_PROMOTION; }
+inline i32 IS_ROOK_PROMOTION(Move move) { return GET_FLAGS(move) == ROOK_PROMOTION; }
+inline i32 IS_QUEEN_PROMOTION(Move move) { return GET_FLAGS(move) == QUEEN_PROMOTION; }
+inline i32 IS_KNIGHT_PROMO_CAPTURE(Move move) { return GET_FLAGS(move) == KNIGHT_PROMO_CAPTURE; }
+inline i32 IS_BISHOP_PROMO_CAPTURE(Move move) { return GET_FLAGS(move) == BISHOP_PROMO_CAPTURE; }
+inline i32 IS_ROOK_PROMO_CAPTURE(Move move) { return GET_FLAGS(move) == ROOK_PROMO_CAPTURE; }
+inline i32 IS_QUEEN_PROMO_CAPTURE(Move move) { return GET_FLAGS(move) == QUEEN_PROMO_CAPTURE; }
 
-static inline Move MAKE_MOVE(int from, int to, int flags) {
+static inline Move MAKE_MOVE(i32 from, i32 to, i32 flags) {
     Move move = 0;
     SET_FROM(move, from);
     SET_TO(move, to);
@@ -131,7 +150,7 @@ typedef enum {
     BLACK_PAWN, BLACK_KNIGHT, BLACK_BISHOP, BLACK_ROOK, BLACK_QUEEN, BLACK_KING
 } PieceIndex;
 
-static const int pieceToIndex[128] = {
+static const i32 pieceToIndex[128] = {
     ['P'] = WHITE_PAWN,
     ['N'] = WHITE_KNIGHT,
     ['B'] = WHITE_BISHOP,
@@ -147,10 +166,10 @@ static const int pieceToIndex[128] = {
 };
 
 typedef struct {
-    uint64_t* ptr; //A stack of hashes of player positions
-    int size; //Size of the hash stack
-    int current_idx; //An index to the current hash
-    int last_reset_idx; //An index to the last move which reset halfmove clock
+    u64* ptr; //A stack of hashes of player positions
+    i32 size; //Size of the hash stack
+    i32 current_idx; //An index to the current hash
+    i32 last_reset_idx; //An index to the last move which reset halfmove clock
 } HashStack;
 
 #define EARLY_GAME_MOVES   8 //Moves that count as early game (fullmoves)
@@ -163,42 +182,42 @@ typedef enum {
 } Stage;
 
 typedef struct {            //Each size of 2 array contains {Black, White}
-    uint64_t pawn[2];     
-    uint64_t bishop[2];
-    uint64_t knight[2];
-    uint64_t rook[2];
-    uint64_t queen[2];
-    uint64_t king[2];
+    u64 pawn[2];     
+    u64 bishop[2];
+    u64 knight[2];
+    u64 rook[2];
+    u64 queen[2];
+    u64 king[2];
 
-    uint64_t attack_mask[2]; // {Attacked by Black, Attacked by White}
+    u64 attack_mask[2]; // {Attacked by Black, Attacked by White}
 
 
-    uint64_t color[2];  // {White Pieces, Black Pieces}
+    u64 color[2];  // {White Pieces, Black Pieces}
 
-    uint64_t en_passant;  //En Passant squares
+    u64 en_passant;  //En Passant squares
     char flags;  //Castle aval as bit flags, in order : w_long_castle | w_short_castle | b_long_castle | b_short_castle | turn | in_check | in_double_check
     //1 means avaliable / white's turn
 
     char charBoard[64];  //Character Board
 
-    uint64_t pinned; //Absolutely pinned pieces
+    u64 pinned; //Absolutely pinned pieces
 
-    uint64_t hash; //Hash of the position
+    u64 hash; //Hash of the position
 
     HashStack hashStack; //Pointer to the gamestate position is in
 
     Stage stage; //The stage of the game
 
-    int eval; //Stored eval
+    i32 eval; //Stored eval
 
-    int halfmove_clock;
-    int fullmove_number;
+    i32 halfmove_clock;
+    i32 fullmove_number;
 } Position;
 
 
 typedef struct {
-    uint16_t move;
-    uint64_t hash;
+    u16 move;
+    u64 hash;
 } Node;
 
 
