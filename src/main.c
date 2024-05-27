@@ -439,13 +439,12 @@ static int processInput(char* input){
         printBestMove();
         fflush(stdout);
     }
+    #ifdef DEBUG
     else if (strncmp(input, "debug", 5) == 0){
-        printPosition(global_position, TRUE);
-        printf("Best move is: ");
-        printMove(global_best_move);
-        printf("\r\n");
+        printf("Entering Debug Mode");
         fflush(stdout);
     }
+    #endif
     else if (strncmp(input, "quit", 4) == 0) {
         return -1; 
     }

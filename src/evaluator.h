@@ -15,8 +15,7 @@
 int evaluate(Position pos);
 int quickEval(Position pos);
 void initPST(void);
-void evalMoves(Move* moveList, int* moveVals, int size, 
-               Move ttMove, Move *killerMoves, int kmv_size, Position pos);
+void evalMoves(Move* moveList, int* moveVals, int size, Position pos);
 
 
 #endif

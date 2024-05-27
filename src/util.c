@@ -37,42 +37,61 @@ void printMove(Move move){
             printf(" (DPP)");
             break;
         case KING_CASTLE:
-            printf(" (KCstl)");
+            printf(" (KCl)");
             break;
         case QUEEN_CASTLE:
-            printf(" (QCstl)");
+            printf(" (QCl)");
             break;
         case CAPTURE:
-            printf(" (Cap)");
+            printf(" (C)");
             break;
         case EP_CAPTURE:
-            printf(" (EPCap)");
+            printf(" (EpC)");
             break;
         case KNIGHT_PROMOTION:
-            printf(" (NPro)");
+            printf(" (NP)");
             break;
         case BISHOP_PROMOTION:
-            printf(" (BPro)");
+            printf(" (BP)");
             break;
         case ROOK_PROMOTION:
-            printf(" (RPro)");
+            printf(" (RP)");
             break;
         case QUEEN_PROMOTION:
-            printf(" (QPro)");
+            printf(" (QP)");
             break;
         case KNIGHT_PROMO_CAPTURE:
-            printf(" (NProCap)");
+            printf(" (NPC)");
             break;
         case BISHOP_PROMO_CAPTURE:
-            printf(" (BProCap)");
+            printf(" (BPC)");
             break;
         case ROOK_PROMO_CAPTURE:
-            printf(" (RProCap)");
+            printf(" (RPC)");
             break;
         case QUEEN_PROMO_CAPTURE:
-            printf(" (QProCap)");
+            printf(" (QPC)");
             break;
         case QUIET:
+        default:
+            break;
+    }
+}
+
+void printMoveSpaced(Move move){
+    printMove(move);
+    switch(GET_FLAGS(move)){
+        case CAPTURE:
+            printf("  ");
+            break;
+        case KNIGHT_PROMOTION:
+        case BISHOP_PROMOTION:
+        case ROOK_PROMOTION:
+        case QUEEN_PROMOTION:
+            printf(" ");
+            break;
+        case QUIET:
+            printf("      ");
         default:
             break;
     }

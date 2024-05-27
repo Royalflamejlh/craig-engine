@@ -1,4 +1,6 @@
 import chess.engine
+import logging
+                    
 def play_chess(db_engine_path, engine_path, time_limit=0.1):
     # Initialize the engines
     engine1 = chess.engine.SimpleEngine.popen_uci(db_engine_path)
@@ -10,8 +12,6 @@ def play_chess(db_engine_path, engine_path, time_limit=0.1):
     while not board.is_game_over():
         if board.turn == chess.WHITE:
             result = engine1.play(board, chess.engine.Limit(time=time_limit))
-            engine1.communicate(engine1.protocol, "position debug")
-            
             print(engine1.id.get('name') + " found move " + str(result.move))
         else:
             result = engine2.play(board, chess.engine.Limit(time=time_limit))

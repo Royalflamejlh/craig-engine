@@ -375,30 +375,15 @@ void initPST(){
 #define K_MOVE_SCORE MAX_EVAL - 2*QUEEN_VALUE
 
 
-void evalMoves(Move* moveList, int* moveVals, int size, Move ttMove, Move *killerMoves, int kmv_size, Position pos){
+void evalMoves(Move* moveList, int* moveVals, int size, Position pos){
     for(int i = 0; i < size; i++){
         Move move = moveList[i];
-        //Score the TT move
-        if(move == ttMove){
-            moveVals[i] = TT_SCORE;
-            continue;
-        }
-
-        int found = 0;
-        for(int j = 0; j < kmv_size; j++){
-            if(move == killerMoves[j]){
-                moveVals[i] = K_MOVE_SCORE;
-                break;
-            }
-        }
-        if(found) continue;
 
         int from_piece = (int)pos.charBoard[GET_FROM(move)];
         int to_piece = (int)pos.charBoard[GET_TO(move)];
 
         //Add on the PST values
         moveVals[i] += PST[pieceToIndex[(int)from_piece]][GET_TO(move)];
-
         
         //Add on the flag values
         int histScore;

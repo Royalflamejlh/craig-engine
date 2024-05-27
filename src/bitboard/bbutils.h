@@ -77,6 +77,7 @@ void printBB(uint64_t BB);
 Position fenToPosition(char* FEN);
 int PositionToFen(Position pos, char* FEN);
 void printPosition(Position position, char verbose);
+void printDebug(Position position);
 uint64_t northOne(uint64_t bb);
 uint64_t northTwo(uint64_t bb);
 uint64_t noEaOne(uint64_t bb);

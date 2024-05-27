@@ -220,7 +220,7 @@ int generateMagics(void) {
         mRookTbl[square].ptr = &attack_table[attack_table_offsets[square]];
         //printf("0x%llxULL,\n", magic);
         
-        #ifdef VERBOSE
+        #ifdef DEBUG
         printf("Rook Square %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, AttackTableIdx = %d, Ptr = %p\n",
             square,
             mRookTbl[square].magic,
@@ -240,7 +240,7 @@ int generateMagics(void) {
         mBishopTbl[square].ptr   = &attack_table[attack_table_offsets[square + 64]];
         //printf("0x%llxULL,\n", magic);
 
-        #ifdef VERBOSE
+        #ifdef DEBUG
         printf("Bishop Square %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, AttackTableIdx = %d, Ptr = %p\n",
             square,
             mBishopTbl[square].magic,

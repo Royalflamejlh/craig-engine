@@ -11,7 +11,7 @@
 
 #define ROTATION 3 //How many slots to rotate to try to insert / find
 
-#ifdef TT_DEBUG
+#ifdef DEBUG
 #include <stdio.h>
 static uint64_t get_suc, get_rej, store_cnt, store_rej;
 void startTTDebug(void){
@@ -37,13 +37,13 @@ TTEntry* getTTEntry(uint64_t hash){
     for(int i = 0; i < ROTATION; i++){
         uint64_t key = (hash + i) & KEY_MASK; // Ensure wrapping around
         if(table[key].hash == hash){
-            #ifdef TT_DEBUG
+            #ifdef DEBUG
             get_suc++;
             #endif
             return &table[key];
         }   
     }
-    #ifdef TT_DEBUG
+    #ifdef DEBUG
     get_rej++;
     #endif
     return NULL;
@@ -58,7 +58,7 @@ void storeTTEntry(uint64_t hash, char depth, int eval, char nodeType, Move move)
         if(depth < table[key].depth){
             continue;
         }
-        #ifdef TT_DEBUG
+        #ifdef DEBUG
         store_cnt++;
         #endif
         table[key].eval = eval;
@@ -68,7 +68,7 @@ void storeTTEntry(uint64_t hash, char depth, int eval, char nodeType, Move move)
         table[key].hash = hash;
         return;
     }
-    #ifdef TT_DEBUG
+    #ifdef DEBUG
     store_rej++;
     #endif
 }

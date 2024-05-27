@@ -266,6 +266,12 @@ void generateDiagonalMasks() {
     }
 }
 
+void printDebug(Position position){
+    char fen[128];
+    PositionToFen(position, fen);
+    printf("\nFEN: %s \n\n", fen);
+    printf("Hash: %" PRIu64 " \n\n", position.hash);
+}
 
 void printPosition(Position position, char verbose){
     char fen[128];
