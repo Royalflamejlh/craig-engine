@@ -379,12 +379,14 @@ void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
     for(i32 i = 0; i < size; i++){
         Move move = moveList[i];
 
-        i32 from_piece = (i32)pos.charBoard[GET_FROM(move)];
-        
+        i32 fr_piece = (i32)pos.charBoard[GET_FROM(move)];
         i32 to_piece = (i32)pos.charBoard[GET_TO(move)];
+        
+        i32 fr_piece_i = pieceToIndex[fr_piece];
+        i32 to_piece_i = pieceToIndex[to_piece];
 
         #ifdef DEBUG
-        if(from_piece >= 12 || to_piece >= 12){
+        if(from_piece_i >= 12 || to_piece_i >= 12){
             printf("Warning illegal piece found at:");
             printPosition(pos, TRUE);
             printf("from piece: %d", pos.charBoard[GET_FROM(move)]);
@@ -393,39 +395,29 @@ void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
         #endif
 
         //Add on the PST values
-        moveVals[i] += PST[pieceToIndex[(i32)from_piece]][GET_TO(move)];
+        moveVals[i] += PST[fr_piece_i][GET_TO(move)];
         
         //Add on the flag values
         i32 histScore;
         switch(GET_FLAGS(move)){
             case QUEEN_PROMO_CAPTURE:
-                moveVals[i] += ((pieceValues[to_piece] + QUEEN_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
+                moveVals[i] += ((pieceValues[to_piece_i] + QUEEN_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
                 break;
             case ROOK_PROMO_CAPTURE:
-                moveVals[i] += ((pieceValues[to_piece] + ROOK_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
+                moveVals[i] += ((pieceValues[to_piece_i] + ROOK_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
                 break;
             case BISHOP_PROMO_CAPTURE:
-                moveVals[i] += ((pieceValues[to_piece] + BISHOP_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
+                moveVals[i] += ((pieceValues[to_piece_i] + BISHOP_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
                 break;
             case KNIGHT_PROMO_CAPTURE:
-                moveVals[i] += ((pieceValues[to_piece] + KNIGHT_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
+                moveVals[i] += ((pieceValues[to_piece_i] + KNIGHT_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
                 break;
                 
             case EP_CAPTURE:
                 moveVals[i] += ((PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
                 break;
             case CAPTURE:
-                if(from_piece >= 12 || to_piece >= 12){
-                    printf("Warning illegal piece found at:\n");
-                    printPosition(pos, TRUE);
-                    printf("\n");
-                    printf("from piece: %c / %c", pos.charBoard[GET_FROM(move)], from_piece);
-                    printf(" to piece: %c / %c \n", pos.charBoard[GET_TO(move)], to_piece);
-                    printf("With the move: ");
-                    printMove(move);
-                     printf("\n");
-                }
-                moveVals[i] += ((pieceValues[to_piece])+QUEEN_VALUE) - pieceValues[from_piece];
+                moveVals[i] += ((pieceValues[to_piece_i])+QUEEN_VALUE) - pieceValues[fr_piece_i];
                 break;
 
             case QUEEN_PROMOTION:

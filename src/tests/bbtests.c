@@ -124,7 +124,7 @@ i32 testBB(void) {
     pos = fenToPosition(START_FEN);
     for(i32 depth = 1; depth < 4; depth++){
         u64 num_moves = perft(depth, pos);
-        printf("Perft output is %ld for depth %d\n", (u64)num_moves, depth);
+        printf("Perft output is %ld for depth %d\n", (long)num_moves, depth);
     }
     removeHashStack(&pos.hashStack);
 

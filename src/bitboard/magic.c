@@ -290,9 +290,9 @@ static i32 verifyMagic(i32 square, i32 isBishop) {
         #endif
 
         if (actual_attack != expected_attack) {
-            printf("info string Failed with expected attack: 0x%lx, actual attack was: 0x%lx\n",
-                (u64)expected_attack,
-                (u64)actual_attack);
+            printf("info string Failed with expected attack: 0x%llx, actual attack was: 0x%llx\n",
+                (long long)expected_attack,
+                (long long)actual_attack);
             return -1;
         }
     }

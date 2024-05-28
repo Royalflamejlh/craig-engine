@@ -3,8 +3,6 @@
 
 #include "types.h"
 
-#define MAX_EVAL      9999999
-
 #define KING_VALUE     100000
 #define QUEEN_VALUE     10000
 #define ROOK_VALUE       5000

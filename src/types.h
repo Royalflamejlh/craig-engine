@@ -33,6 +33,9 @@ typedef real64 d64;
 #define TRUE 1
 #define FALSE 0
 
+#define MAX_EVAL       9999999
+#define MIN_EVAL      -9999999
+
 #define PLAYER_COUNT 2
 
 #define BOARD_SIZE 64

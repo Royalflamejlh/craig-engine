@@ -237,10 +237,10 @@ i32 getBestMove(Position pos){
       Position searchPos = pos;
       //printf("Running pv search at depth %d\n", i);
       if(i <= 2){
-         eval = pvSearch(&searchPos, INT_MIN+1, INT_MAX, i, 0, pvArray, 0);
+         eval = pvSearch(&searchPos, MIN_EVAL+1, MAX_EVAL, i, 0, pvArray, 0);
          searchPos = pos;
          #ifdef DEBUG
-         printf("Result from depth window: %d, %d i: %d eval: %d\n", INT_MIN+1, INT_MAX, i, eval);
+         printf("Result from depth window: %d, %d i: %d eval: %d\n", MIN_EVAL+1, MAX_EVAL, i, eval);
          #endif
       } else {
          //Calculate the Aspiration Window
@@ -450,7 +450,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
    #endif
 
    Move bestMove = NO_MOVE;
-   i32 bestScore = INT_MIN;
+   i32 bestScore = MIN_EVAL;
    Position prevPos = *pos;
    for (i32 i = 0; i < size; i++)  {
       #ifdef DEBUG
@@ -579,7 +579,6 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
       #endif
       ttMove = ttEntry->move;
       if(ttEntry->depth >= depth){
-         printf("zws TT eval: %d\n", ttEntry->eval);
          switch (ttEntry->nodeType) {
             case PV_NODE: // Exact value
                #ifdef DEBUG
@@ -629,8 +628,8 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
       if(razor_score < beta){
          #ifdef DEBUG
          debug[ZWS][NODE_PRUNED_RAZOR]++;
+         //printf("zws prune razor: %d\n", beta-1);
          #endif
-         printf("zws prune razor: %d\n", beta-1);
          return beta-1;
       }
    }
@@ -785,7 +784,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
    evalMoves(moveList, moveVals, size, *pos);
    
    Move bestMove = NO_MOVE;
-   i32 bestScore = INT_MIN;
+   i32 bestScore = MIN_EVAL;
    #ifdef DEBUG
    if(size > 0) debug[QS][NODE_LOOP_CHILDREN]++;
    #endif
@@ -835,7 +834,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
       }
    }
    //Handle the case were there where no captures or checks
-   if(bestScore == INT_MIN) bestScore = pos->eval;
+   if(bestScore == MIN_EVAL) bestScore = pos->eval;
 
    if(exact) storeTTEntry(pos->hash, 0, alpha, Q_EXACT_NODE, bestMove);
    else      storeTTEntry(pos->hash, 0, bestScore, Q_ALL_NODE, bestMove);
