@@ -1,21 +1,26 @@
 import chess.engine
 import logging
-                    
-def play_chess(db_engine_path, engine_path, time_limit=0.1):
+
+craig_time = 10
+fish_time = .05
+
+#logging.basicConfig(level=logging.DEBUG)
+         
+def play_chess(db_engine_path, engine_path):
     # Initialize the engines
-    engine1 = chess.engine.SimpleEngine.popen_uci(db_engine_path)
-    engine2 = chess.engine.SimpleEngine.popen_uci(engine_path)
+    craig = chess.engine.SimpleEngine.popen_uci(db_engine_path)
+    fish = chess.engine.SimpleEngine.popen_uci(engine_path)
 
     board = chess.Board()
     print(board)
     
     while not board.is_game_over():
         if board.turn == chess.WHITE:
-            result = engine1.play(board, chess.engine.Limit(time=time_limit))
-            print(engine1.id.get('name') + " found move " + str(result.move))
+            result = craig.play(board, chess.engine.Limit(time=craig_time))
+            print(craig.id.get('name') + " found move " + str(result.move))
         else:
-            result = engine2.play(board, chess.engine.Limit(time=time_limit))
-            print(engine2.id.get('name') + " found move " + str(result.move))
+            result = fish.play(board, chess.engine.Limit(time=fish_time))
+            print(fish.id.get('name') + " found move " + str(result.move))
         
         print("Press enter to play move, or type in different move")
         move_str = input()
@@ -34,11 +39,11 @@ def play_chess(db_engine_path, engine_path, time_limit=0.1):
     print("Fen: " + fen)
 
     # Close the engines
-    engine1.quit()
-    engine2.quit()
+    craig.quit()
+    fish.quit()
 
 if __name__ == "__main__":
-    engine1_path = "./bin/chess_db"
+    engine1_path = "./bin/chess"
     engine2_path = "stockfish"
     
     play_chess(engine1_path, engine2_path)

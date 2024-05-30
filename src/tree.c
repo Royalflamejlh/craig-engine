@@ -9,8 +9,6 @@
 #include "transposition.h"
 #include "globals.h"
 
-#define DEBUG
-
 #if defined(__unix__) || defined(__APPLE__)
 #include "pthread.h"
 #elif defined(_WIN32) || defined(_WIN64)
@@ -418,12 +416,12 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
    }
 
    //Null move prunin'
-   if(pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
-      #ifdef DEBUG
-      debug[PVS][NODE_PRUNED_NULL]++;
-      #endif
-      return beta;
-   }
+   // if(pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
+   //    #ifdef DEBUG
+   //    debug[PVS][NODE_PRUNED_NULL]++;
+   //    #endif
+   //    return beta;
+   // }
 
    evalMoves(moveList, moveVals, size, *pos);
 
@@ -470,8 +468,9 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
 
       if( prunable   && 
           depth == 1 && 
-          quickEval(*pos) + moveVals[i] < beta-1 + FUTIL_MARGIN){ //Futility Pruning (Just prune the nodes that are expect to be poop)
+          quickEval(*pos) + moveVals[i] < alpha - FUTIL_MARGIN){ //Futility Pruning (Just prune the nodes that are expect to be poop)
          #ifdef DEBUG
+         //printf("PVS Futil Prune (qe=%d) + (moveVal=%d) < %d\n", quickEval(*pos), moveVals[i], beta-1 + FUTIL_MARGIN);
          debug[PVS][NODE_PRUNED_FUTIL]++;
          #endif
          *pos = prevPos; //Unmake Move
@@ -614,13 +613,13 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
    char prunable = !(pos->flags & IN_CHECK);
 
    //Null move prunin'
-   if(prunable && pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
-      #ifdef DEBUG
-      debug[ZWS][NODE_PRUNED_NULL]++;
-      //printf("zws prune beta: %d\n", beta);
-      #endif
-      return beta;
-   }
+   // if(prunable && pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
+   //    #ifdef DEBUG
+   //    debug[ZWS][NODE_PRUNED_NULL]++;
+   //    //printf("zws prune beta: %d\n", beta);
+   //    #endif
+   //    return beta;
+   // }
 
    //Razoring
    if(prunable && (depth <= RAZOR_DEPTH) && (pos->eval + RAZOR_MARGIN < beta)){ 
@@ -694,6 +693,9 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
    }
 
    //printf("zws fail %d\n", beta-1);
+   #ifdef DEBUG
+   debug[ZWS][NODE_ALPHA_RET]++;
+   #endif
    return beta-1; // fail-hard, return alpha
 }
 

@@ -377,6 +377,8 @@ void initPST(){
 
 void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
     for(i32 i = 0; i < size; i++){
+        moveVals[i] = 0;
+        
         Move move = moveList[i];
 
         i32 fr_piece = (i32)pos.charBoard[GET_FROM(move)];
@@ -398,7 +400,7 @@ void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
         moveVals[i] += PST[fr_piece_i][GET_TO(move)];
         
         //Add on the flag values
-        i32 histScore;
+        //i32 histScore;
         switch(GET_FLAGS(move)){
             case QUEEN_PROMO_CAPTURE:
                 moveVals[i] += ((pieceValues[to_piece_i] + QUEEN_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
@@ -440,8 +442,8 @@ void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
 
             case DOUBLE_PAWN_PUSH:
             case QUIET:
-                histScore = getHistoryScore(pos.flags, moveList[i]) >> HIST_SCORE_SHIFT;
-                moveVals[i] += MIN(histScore, HIST_MAX_SCORE);
+                //histScore = getHistoryScore(pos.flags, moveList[i]) >> HIST_SCORE_SHIFT;
+                //moveVals[i] += MIN(histScore, HIST_MAX_SCORE);
             default:
                 break;
         }

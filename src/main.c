@@ -26,16 +26,19 @@ void playSelfInfinite(void);
 
 #define NUM_SEARCH_THREADS 1
 
-//Fake Headers
+//Function Headers
 i32 readInput();
 i32 searchLoop();
+
 static void printBestMove();
+
 /*
 * Meet the Globals
 */
-Position global_position;
-i32 run_get_best_move;
-Move global_best_move;
+volatile Position global_position;
+volatile i32 run_get_best_move;
+volatile Move global_best_move;
+volatile u8 is_searching;
 
 typedef struct {
     i64 wtime; 
@@ -46,61 +49,123 @@ typedef struct {
 
 #include <pthread.h>
 #include <unistd.h>
+#include <errno.h>
 
 static pthread_t search_threads[NUM_SEARCH_THREADS];
 
 // Global variable to control the timer thread
-volatile i32 runTimerThread = 1;
+pthread_mutex_t timer_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t timer_cond = PTHREAD_COND_INITIALIZER;
 static pthread_t timerThread;
 
 // Timer thread function
 void* timerThreadFunction(void* durationPtr) {
+    #ifdef DEBUG
+    printf("info string Running timer thread function\n");
+    fflush(stdout);
+    #endif
+
     i64 duration = *(i64*)durationPtr;
     free(durationPtr);
-    sleep(duration / 1000);  // Sleep for the specified duration
 
-    if (runTimerThread) {
-        printBestMove();  // Call the function after waking up
+    //Set up time to wait to
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    ts.tv_sec += duration;
+
+    pthread_mutex_lock(&timer_mutex);
+    int result = pthread_cond_timedwait(&timer_cond, &timer_mutex, &ts);
+    #ifdef DEBUG
+    if (result == ETIMEDOUT) {
+        printf("info string Timer expired\n");
+        fflush(stdout);
+    } else {
+        printf("info string Timer triggered early\n");
+        fflush(stdout);
     }
+    #endif
+    pthread_mutex_unlock(&timer_mutex);
+    
+    printBestMove();  // Call the function after waking up
+    fflush(stdout);
 
-    return NULL;
+    #ifdef DEBUG
+    printf("info string timer thread function finished\n");
+    fflush(stdout);
+    #endif
+
+    return (void*)(i64)result;
 }
 
 i32 startTimerThread(i64 durationInSeconds) {
     i64 *durationPtr = malloc(sizeof(i64));
+    #ifdef DEBUG
+    printf("info string Starting timer thread\n");
+    fflush(stdout);
+    #endif
+
     if(!durationPtr){
-        printf("info string Warning failed to allocate space for duration pointer.");
+        printf("info string Warning failed to allocate space for duration pointer.\n");
         return -1;
     }
-    *durationPtr = durationInSeconds;
-    runTimerThread = 1;
+    *durationPtr = (durationInSeconds / 1000);
+    
     if (pthread_create(&timerThread, NULL, timerThreadFunction, durationPtr)) {
-        perror("info string Failed to create timer thread");
+        perror("info string Failed to create timer thread\n");
         return 1;
     }
+    #ifdef DEBUG
+    printf("info string Timer thread started\n");
+    fflush(stdout);
+    #endif
     return 0;
 }
 
 void stopTimerThread() {
-    runTimerThread = 0;
-    pthread_join(timerThread, NULL); 
+    #ifdef DEBUG
+    printf("info string Stopping timer thread\n");
+    fflush(stdout);
+    #endif
+
+    pthread_mutex_lock(&timer_mutex);
+    pthread_cond_signal(&timer_cond);
+    pthread_mutex_unlock(&timer_mutex);
+
+    #ifdef DEBUG
+    printf("info string Timer thread stopped\n");
+    fflush(stdout);
+    #endif
 }
 
 
 void *io_thread_entry(void *arg) {
     (void)arg;
+
+    #ifdef DEBUG
     printf("info string IO Thread running...\n");
+    #endif
+
     readInput();
     return NULL;
 }
 
 void *search_thread_entry(void *arg) {
     (void)arg;
+
+    #ifdef DEBUG
+    printf("info string Search Thread Starting\n");
+    fflush(stdout);
+    #endif
+
     searchLoop();
     return NULL;
 }
 
 void startSearchThreads(){
+    #ifdef DEBUG
+    printf("info string starting search threads\n");
+    #endif
+
     run_get_best_move = true;
     for (i32 i = 0; i < NUM_SEARCH_THREADS; i++) {
         pthread_create(&search_threads[i], NULL, search_thread_entry, NULL);
@@ -108,6 +173,10 @@ void startSearchThreads(){
 }
 
 void stopSearchThreads(){
+    #ifdef DEBUG
+    printf("info string stopping search threads\n");
+    #endif
+
     run_get_best_move = false;
     for (i32 i = 0; i < NUM_SEARCH_THREADS; i++) {
         if(search_threads[i]){
@@ -157,7 +226,7 @@ i32 startTimerThread(i64 durationInSeconds) {
     DWORD threadId;
     i64 *durationPtr = malloc(sizeof(i64));
     if(!durationPtr){
-        printf("info string Warning failed to allocate space for duration pointer.");
+        printf("info string Warning failed to allocate space for duration pointer.\n");
         return -1;
     }
     *durationPtr = durationInSeconds;
@@ -177,7 +246,9 @@ void stopTimerThread() {
 
 DWORD WINAPI io_thread_entry(LPVOID arg) {
     (void)arg;
+    #ifdef DEBUG
     printf("info string IO Thread running...\n");
+    #endif
     readInput();
     return 0;
 }
@@ -232,6 +303,7 @@ i32 main(void) {
         printf("info string WARNING FAILED TO ALLOCATED SPACE FOR TRANSPOSITION TABLE\n");
         return -1;
     }
+    is_searching = FALSE;
     #ifdef RUN_TEST
     testBB();
     #endif
@@ -247,8 +319,7 @@ i32 main(void) {
     global_best_move = NO_MOVE;
     launch_threads();
 
-      
-
+    
     printf("info string All threads have finished.\n");
     return 0;
 }
@@ -313,9 +384,22 @@ get_next_token:
     global_position = pos;
 }
 
+static void search(u32 time){
+    startSearchThreads();
+    if(time != 0){
+        while(!is_searching); // Wait for search to begin
+        startTimerThread(time);
+    }
+}
+static void stopSearch(){
+    stopTimerThread();
+    stopSearchThreads();
+    is_searching = FALSE;
+}
+
 static void printBestMove(){
     char str[6];
-    Move bestMove = global_best_move;
+    volatile Move bestMove = global_best_move;
     while(bestMove == NO_MOVE){
         bestMove = global_best_move;
     }
@@ -371,6 +455,7 @@ void processGoCommand(char* input) {
     token = strtok_r(input, " ", &saveptr);
     while (token != NULL) {
         if (strcmp(token, "infinite") == 0) {
+            search(0);
             return;
         } else if (strcmp(token, "wtime") == 0) {
             token = strtok_r(NULL, " ", &saveptr);
@@ -382,15 +467,21 @@ void processGoCommand(char* input) {
             if (token != NULL) {
                 searchParams.btime = atol(token);
             }
+        } else if (strcmp(token, "movetime") == 0) {
+            token = strtok_r(NULL, " ", &saveptr);
+            if (token != NULL) {
+                search(atol(token));
+                return;
+            }
         }
         token = strtok_r(NULL, " ", &saveptr);
     }
 
     if(global_position.flags & WHITE_TURN){
-        startTimerThread(searchParams.wtime / 20);
+        search((searchParams.wtime / 20)+1);
     }
     else{
-        startTimerThread(searchParams.btime / 20);
+        search((searchParams.btime / 20)+1);
     }
 }
 
@@ -428,16 +519,14 @@ static i32 processInput(char* input){
         fflush(stdout);
     }
     else if (strncmp(input, "go", 2) == 0) {
-        printf("info string Processing go command\r\n");
-        startSearchThreads();
         processGoCommand(input + 3);
-        fflush(stdout);
     }
     else if (strncmp(input, "stop", 4) == 0){
-        stopSearchThreads();
-        stopTimerThread();
+        #ifdef DEBUG
+        printf("info string Stopping\n");
+        #endif
         printBestMove();
-        fflush(stdout);
+        stopSearch();
     }
     #ifdef DEBUG
     else if (strncmp(input, "debug", 5) == 0){
@@ -472,6 +561,7 @@ i32 readInput(){
 */
 
 i32 searchLoop(){
+    is_searching = TRUE;
     while(TRUE){
         if(global_position.hash && run_get_best_move){
             if(getBestMove(global_position)){
