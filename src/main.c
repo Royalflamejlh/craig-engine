@@ -73,21 +73,27 @@ void* timerThreadFunction(void* durationPtr) {
     clock_gettime(CLOCK_REALTIME, &ts);
     ts.tv_sec += duration;
 
+    u8 print; // Whether or not to print after completion
+
     pthread_mutex_lock(&timer_mutex);
     int result = pthread_cond_timedwait(&timer_cond, &timer_mutex, &ts);
-    #ifdef DEBUG
+    
     if (result == ETIMEDOUT) {
+        print = TRUE;
+        #ifdef DEBUG
         printf("info string Timer expired\n");
         fflush(stdout);
+        #endif
     } else {
+        print = FALSE; // We dont want to print if manually stopped
+        #ifdef DEBUG
         printf("info string Timer triggered early\n");
         fflush(stdout);
+        #endif
     }
-    #endif
     pthread_mutex_unlock(&timer_mutex);
     
-    printBestMove();  // Call the function after waking up
-    fflush(stdout);
+    if(print) printBestMove();  // Call the function after waking up
 
     #ifdef DEBUG
     printf("info string timer thread function finished\n");
@@ -294,39 +300,6 @@ static i32 launch_threads(void){
 
 #endif
 
-i32 main(void) {
-    generateMasks();
-    generateMagics();
-    initZobrist();
-    initPST();
-    if(initTT()){
-        printf("info string WARNING FAILED TO ALLOCATED SPACE FOR TRANSPOSITION TABLE\n");
-        return -1;
-    }
-    is_searching = FALSE;
-    #ifdef RUN_TEST
-    testBB();
-    #endif
-
-    #ifdef __PROFILE
-    printf("info string In profile mode, playing forever.\r\n");
-    fflush(stdout);
-    playSelfInfinite();
-    #endif  
-
-    // Create IO thread
-    global_position = fenToPosition(START_FEN);
-    global_best_move = NO_MOVE;
-    launch_threads();
-
-    
-    printf("info string All threads have finished.\n");
-    return 0;
-}
-
-
- 
-
 /*
 * Search function stuff
 */
@@ -387,12 +360,17 @@ get_next_token:
 static void search(u32 time){
     startSearchThreads();
     if(time != 0){
+        #ifdef DEBUG
+        printf("info string Search time is: %d\n", time);
+        #endif
         while(!is_searching); // Wait for search to begin
         startTimerThread(time);
     }
 }
+
 static void stopSearch(){
     stopTimerThread();
+    printBestMove();
     stopSearchThreads();
     is_searching = FALSE;
 }
@@ -448,41 +426,41 @@ static void printBestMove(){
 void processGoCommand(char* input) {
     char* token;
     char* saveptr;
-    SearchParameters searchParams;
-    searchParams.wtime = -1; // Initialize with default values
-    searchParams.btime = -1;
+    u32 wtime = 0; // Initialize with default values
+    u32 btime = 0;
+    u32 time = 0;
 
     token = strtok_r(input, " ", &saveptr);
     while (token != NULL) {
         if (strcmp(token, "infinite") == 0) {
-            search(0);
-            return;
+            time = 0;
         } else if (strcmp(token, "wtime") == 0) {
             token = strtok_r(NULL, " ", &saveptr);
             if (token != NULL) {
-                searchParams.wtime = atol(token);
+                wtime = atol(token);
             }
         } else if (strcmp(token, "btime") == 0) {
             token = strtok_r(NULL, " ", &saveptr);
             if (token != NULL) {
-                searchParams.btime = atol(token);
+                btime = atol(token);
             }
         } else if (strcmp(token, "movetime") == 0) {
             token = strtok_r(NULL, " ", &saveptr);
             if (token != NULL) {
-                search(atol(token));
-                return;
+                time = atol(token);
             }
         }
         token = strtok_r(NULL, " ", &saveptr);
     }
 
     if(global_position.flags & WHITE_TURN){
-        search((searchParams.wtime / 20)+1);
+        time += (wtime / 20);
     }
     else{
-        search((searchParams.btime / 20)+1);
+        time += (btime / 20);
     }
+
+    search(time);
 }
 
 static i32 processInput(char* input){
@@ -525,13 +503,30 @@ static i32 processInput(char* input){
         #ifdef DEBUG
         printf("info string Stopping\n");
         #endif
-        printBestMove();
+        //printBestMove();
         stopSearch();
     }
     #ifdef DEBUG
     else if (strncmp(input, "debug", 5) == 0){
-        printf("Entering Debug Mode");
-        fflush(stdout);
+        input += 6;
+        if (strncmp(input, "position", 10) == 0) {
+            printPosition(global_position, TRUE);
+        }
+        else if (strncmp(input, "bestmove", 8) == 0) {
+            printf("Current bestmove is: ");
+            printMove(global_best_move);
+            printf("\n");
+        }
+        else if (strncmp(input, "list moves", 10) == 0) {
+            Move debug_moves[MAX_MOVES];
+            u32 size = generateLegalMoves(global_position, debug_moves);
+            printf("Moves: \n");
+            for(u32 i = 0; i < size; i++){
+                printMove(debug_moves[i]);
+                printf("\n");
+            }
+        }
+
     }
     #endif
     else if (strncmp(input, "quit", 4) == 0) {
@@ -564,14 +559,17 @@ i32 searchLoop(){
     is_searching = TRUE;
     while(TRUE){
         if(global_position.hash && run_get_best_move){
-            if(getBestMove(global_position)){
+            if(getBestMove(global_position 
+            #ifdef MAX_DEPTH
+            , MAX_DEPTH
+            #endif
+            )){
                 return -1;
             }
         }
     }
     return 0;
 }
-
 
 #ifdef __PROFILE
 void playSelfInfinite(void){
@@ -588,3 +586,36 @@ void playSelfInfinite(void){
     }
 }
 #endif
+
+/*
+* Behold the main function
+*/
+i32 main(void) {
+    generateMasks();
+    generateMagics();
+    initZobrist();
+    initPST();
+    if(initTT()){
+        printf("info string WARNING FAILED TO ALLOCATED SPACE FOR TRANSPOSITION TABLE\n");
+        return -1;
+    }
+    is_searching = FALSE;
+    #ifdef RUN_TEST
+    testBB();
+    #endif
+
+    #ifdef __PROFILE
+    printf("info string In profile mode, playing forever.\r\n");
+    fflush(stdout);
+    playSelfInfinite();
+    #endif  
+
+    // Create IO thread
+    global_position = fenToPosition(START_FEN);
+    global_best_move = NO_MOVE;
+    launch_threads();
+
+    
+    printf("info string All threads have finished.\n");
+    return 0;
+}

@@ -18,20 +18,20 @@
 #include "../hash.h"
 #include "../transposition.h"
 #include "../evaluator.h"
+#include "../globals.h"
 
 #define MOVE_GEN_TEST
 #define MOVE_MAKE_TEST
 #define PERF_TEST
+//#define PUZZLE_TEST
+
+volatile Move global_best_move;
+volatile i32 run_get_best_move;
 
 i32 testBB(void) {
     #ifdef PYTHON
     python_init();
     #endif
-    
-    
-
-    
-
 
     #ifdef MOVE_GEN_TEST
     FILE *file;
@@ -151,13 +151,11 @@ i32 testBB(void) {
     printf("\nPerft Suite Complete\n");
 
     fclose(file);
-
-    printf("\n-----------------------------------------------------------------------------------\n\n");
     #endif
 
 
     #ifdef NODE_TEST
-    printf("\n---------------------------------- Node TESTING ----------------------------------\n\n");
+    printf("\n---------------------------------- NODE TESTING ----------------------------------\n\n");
 
     pos = fenToPosition("START_FEN");
     printPosition(pos, FALSE);
@@ -171,7 +169,7 @@ i32 testBB(void) {
         printf("Move found with move value of %d:\n", moveVals[i]);
         printMove(moveListNode[i]);
     }
-    printf("\n---------------------------testing select sort----------------------------\n");
+    printf("\n----------------------------- SELECT SORT TESTING ------------------------------\n\n");
     for (i32 i = 0; i < sizeNode; i++)  {
         selectSort(i, moveListNode, moveVals, sizeNode);
         printf("Move with value %d selected at pos %d\n", moveVals[i], i);
@@ -195,8 +193,6 @@ i32 testBB(void) {
     }
 
     removeHashStack(&pos.hashStack);
-
-    printf("\n-----------------------------------------------------------------------------------\n\n");
     #endif
 
     #ifdef HASH_TEST
@@ -230,6 +226,44 @@ i32 testBB(void) {
     removeHashStack(&pos.hashStack);
     #endif
 
+    #ifdef PUZZLE_TEST
+    #ifdef DEBUG
+    printf("\n--------------------------------- PUZZLE TESTING ----------------------------------\n\n");
+
+    printf("\nRunning ERET puzzles.\n");
+
+    file = fopen("puzzles/ERET.epd", "r");
+    if (file == NULL) {
+        perror("Error opening file");
+        return -1;
+    }
+    run_get_best_move = TRUE;
+
+    while (fgets(line, sizeof(line), file)) {
+        char *fen = line;
+        pos = fenToPosition(fen);
+        getBestMove(pos, 5);
+        Move best_move = global_best_move;
+        removeHashStack(&pos.hashStack);
+
+
+        printPosition(pos, FALSE);
+        printf(fen);
+        printf("\nBest move is: ");
+        printMove(best_move);
+        printf("\n");
+        printf("Press Enter to Continue\n");
+        while( getchar() != '\n' && getchar() != '\r');
+    }
+
+    run_get_best_move = FALSE;
+    global_best_move = NO_MOVE;
+    printf("\nPuzzle Tests Complete\n");
+
+    fclose(file);
+
+    #endif //Debug
+    #endif //Puzzle Test
 
     #ifdef PYTHON
     python_close();

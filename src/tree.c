@@ -43,9 +43,7 @@
 #define NULL_PRUNE_R 3 //How much Null prunin' takes off
 
 //Set up the Depth sizes depending on mode
-#ifdef DEBUG
-#define MAX_DEPTH 100
-#elif defined(__PROFILE)
+#if defined(__PROFILE)
 #define MAX_DEPTH 6
 #endif
 
@@ -211,14 +209,18 @@ static void exit_search(Move* pvArray){
 /*
 * Get that move son.
 */
-i32 getBestMove(Position pos){
+i32 getBestMove(Position pos
+#ifdef MAX_DEPTH
+, u32 depth
+#endif
+){
 
    clearKillerMoves(); //TODO: make thread safe!
-   i32 i = 1;
+   u32 i = 1;
    i32 eval = 0, eval_prev = 0, asp_upper = 0, asp_lower = 0;
    while(run_get_best_move 
          #ifdef MAX_DEPTH
-         && i <= MAX_DEPTH
+         && i <= depth
          #endif
          ){
       #ifdef DEBUG
@@ -347,7 +349,10 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
    debug[PVS][NODE_COUNT]++;
    #endif
 
-   if(isRepetition(pos)) return 0;
+   if(isRepetition(pos) && ply != 0){
+      //printf("is Repetition\n");
+      return 0;
+   }
 
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES];

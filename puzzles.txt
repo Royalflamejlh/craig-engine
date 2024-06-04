@@ -1,5 +1,0 @@
-One of the moves in:
-
-FEN: r1bqkbnr/pppp1ppp/4p3/1B2P3/8/2N5/1PPP1PPP/Q3K1NR b Kkq - 1 9
-
-Dont work
