@@ -25,9 +25,6 @@
 #define PERF_TEST
 //#define PUZZLE_TEST
 
-volatile Move global_best_move;
-volatile i32 run_get_best_move;
-
 i32 testBB(void) {
     #ifdef PYTHON
     python_init();

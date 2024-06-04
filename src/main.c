@@ -298,7 +298,7 @@ static i32 launch_threads(void){
     return 0;
 }
 
-#endif
+#endif // Windows
 
 /*
 * Search function stuff
@@ -356,6 +356,7 @@ get_next_token:
     }
     global_position = pos;
 }
+
 
 static void search(u32 time){
     startSearchThreads();
