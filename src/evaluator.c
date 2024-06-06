@@ -27,12 +27,29 @@
 #define ROOK_MOB      10  // Mobility bonus for Rook in Eval
 #define KING_MOB      50  // Mobility bonus for King in Eval
 
-#define PST_PAWN_MULT      10  // PST Mult Pawns in Eval
-#define PST_KNIGHT_MULT    50  // PST Mult Knights in Eval
-#define PST_BISHOP_MULT    50  // PST Mult Bishop in Eval
-#define PST_QUEEN_MULT     20  // PST Mult Queen in Eval
-#define PST_ROOK_MULT      20  // PST Mult Rook in Eval
-#define PST_KING_MULT     100  // PST Mult King in Eval
+#define PST_PAWN_MULT_OPN      13  // PST Mult Pawns in Eval
+#define PST_PAWN_MULT_MID      10  // PST Mult Pawns in Eval
+#define PST_PAWN_MULT_END       7  // PST Mult Pawns in Eval
+
+#define PST_KNIGHT_MULT_OPN   100  // PST Mult Knights in Eval
+#define PST_KNIGHT_MULT_MID    50  // PST Mult Knights in Eval
+#define PST_KNIGHT_MULT_END    25  // PST Mult Knights in Eval
+
+#define PST_BISHOP_MULT_OPN   100  // PST Mult Bishop in Eval
+#define PST_BISHOP_MULT_MID    50  // PST Mult Bishop in Eval
+#define PST_BISHOP_MULT_END    25  // PST Mult Bishop in Eval
+
+#define PST_QUEEN_MULT_OPN     10  // PST Mult Queen in Eval
+#define PST_QUEEN_MULT_MID     30  // PST Mult Queen in Eval
+#define PST_QUEEN_MULT_END     20  // PST Mult Queen in Eval
+
+#define PST_ROOK_MULT_OPN      10  // PST Mult Rook in Eval
+#define PST_ROOK_MULT_MID      40  // PST Mult Rook in Eval
+#define PST_ROOK_MULT_END      20  // PST Mult Rook in Eval
+
+#define PST_KING_MULT_OPN      20  // PST Mult King in Eval
+#define PST_KING_MULT_MID     100  // PST Mult King in Eval
+#define PST_KING_MULT_END      80  // PST Mult King in Eval
 
 // Defines for Movement Eval
 
@@ -341,9 +358,9 @@ void initPST(){
     // Pawns
     i32 PST_PAWN_OPN[64] = {
          0,   0,   0,   0,   0,   0,   0,   0,
-        20,   0,   0, -50, -50,   0,   0,  20,
-         0,  20,  20,  10,  10,  20,  20,   0,
-         0,   0,   0,  30,  30,   0,   0,   0,
+        10,   0,   0, -50, -50,   0,   0,  10,
+         0,  30,  30,  10,  10,  30,  30,   0,
+         0,   0,   0,  40,  40,   0,   0,   0,
          0,   0,   0,   2,   2,   0,   0,   0,
          1,   1,   2,   3,   3,   2,   1,   1,
          5,   5,   5,   5,   5,   5,   5,   5,
@@ -376,8 +393,8 @@ void initPST(){
     // Knights
     i32 PST_KNIGHT_OPN[64] = {
         -5, -4, -3, -3, -3, -3, -4, -5,
-        -4, -2,  0,  0,  0,  0, -2, -4,
-        -3,  0,  1,  1,  1,  1,  0, -3,
+        -4, -2,  0,  2,  2,  0, -2, -4,
+        -3,  0,  3,  3,  3,  3,  0, -3,
         -3,  0,  1,  2,  2,  1,  0, -3,
         -3,  0,  1,  2,  2,  1,  0, -3,
         -3,  0,  1,  1,  1,  1,  0, -3,
@@ -410,8 +427,8 @@ void initPST(){
     // Bishops
     i32 PST_BISHOP_OPN[64] = {
          1, -1, -1, -1, -1, -1, -1,  1,
-        -1,  2,  0,  0,  0,  0,  2, -1,
-        -1,  0,  1,  2,  2,  1,  0, -1,
+        -1,  4,  0,  0,  0,  0,  4, -1,
+        -1,  0,  2,  4,  4,  2,  0, -1,
         -1,  0,  1,  1,  1,  1,  0, -1,
         -1,  0,  1,  1,  1,  1,  0, -1,
         -1,  0,  1,  1,  1,  1,  0, -1,
@@ -550,58 +567,58 @@ void initPST(){
     // Initialize PST for white pieces
     for (i32 i = 0; i < 64; i++) {
         // Pawns
-        PST[OPN_GAME][WHITE_PAWN][i] = PST_PAWN_OPN[i] * PST_PAWN_MULT;
-        PST[MID_GAME][WHITE_PAWN][i] = PST_PAWN_MID[i] * PST_PAWN_MULT;
-        PST[END_GAME][WHITE_PAWN][i] = PST_PAWN_END[i] * PST_PAWN_MULT;
+        PST[OPN_GAME][WHITE_PAWN][i] = PST_PAWN_OPN[i] * PST_PAWN_MULT_OPN;
+        PST[MID_GAME][WHITE_PAWN][i] = PST_PAWN_MID[i] * PST_PAWN_MULT_MID;
+        PST[END_GAME][WHITE_PAWN][i] = PST_PAWN_END[i] * PST_PAWN_MULT_END;
 
-        PST[OPN_GAME][BLACK_PAWN][63 - i] = PST_PAWN_OPN[i] * PST_PAWN_MULT;
-        PST[MID_GAME][BLACK_PAWN][63 - i] = PST_PAWN_MID[i] * PST_PAWN_MULT;
-        PST[END_GAME][BLACK_PAWN][63 - i] = PST_PAWN_END[i] * PST_PAWN_MULT;
+        PST[OPN_GAME][BLACK_PAWN][63 - i] = PST_PAWN_OPN[i] * PST_PAWN_MULT_OPN;
+        PST[MID_GAME][BLACK_PAWN][63 - i] = PST_PAWN_MID[i] * PST_PAWN_MULT_MID;
+        PST[END_GAME][BLACK_PAWN][63 - i] = PST_PAWN_END[i] * PST_PAWN_MULT_END;
 
         // Knights
-        PST[OPN_GAME][WHITE_KNIGHT][i] = PST_KNIGHT_OPN[i] * PST_KNIGHT_MULT;
-        PST[MID_GAME][WHITE_KNIGHT][i] = PST_KNIGHT_MID[i] * PST_KNIGHT_MULT;
-        PST[END_GAME][WHITE_KNIGHT][i] = PST_KNIGHT_END[i] * PST_KNIGHT_MULT;
+        PST[OPN_GAME][WHITE_KNIGHT][i] = PST_KNIGHT_OPN[i] * PST_KNIGHT_MULT_OPN;
+        PST[MID_GAME][WHITE_KNIGHT][i] = PST_KNIGHT_MID[i] * PST_KNIGHT_MULT_MID;
+        PST[END_GAME][WHITE_KNIGHT][i] = PST_KNIGHT_END[i] * PST_KNIGHT_MULT_END;
 
-        PST[OPN_GAME][BLACK_KNIGHT][63 - i] = PST_KNIGHT_OPN[i] * PST_KNIGHT_MULT;
-        PST[MID_GAME][BLACK_KNIGHT][63 - i] = PST_KNIGHT_MID[i] * PST_KNIGHT_MULT;
-        PST[END_GAME][BLACK_KNIGHT][63 - i] = PST_KNIGHT_END[i] * PST_KNIGHT_MULT;
+        PST[OPN_GAME][BLACK_KNIGHT][63 - i] = PST_KNIGHT_OPN[i] * PST_KNIGHT_MULT_OPN;
+        PST[MID_GAME][BLACK_KNIGHT][63 - i] = PST_KNIGHT_MID[i] * PST_KNIGHT_MULT_MID;
+        PST[END_GAME][BLACK_KNIGHT][63 - i] = PST_KNIGHT_END[i] * PST_KNIGHT_MULT_END;
 
         // Bishops
-        PST[OPN_GAME][WHITE_BISHOP][i] = PST_BISHOP_OPN[i] * PST_BISHOP_MULT;
-        PST[MID_GAME][WHITE_BISHOP][i] = PST_BISHOP_MID[i] * PST_BISHOP_MULT;
-        PST[END_GAME][WHITE_BISHOP][i] = PST_BISHOP_END[i] * PST_BISHOP_MULT;
+        PST[OPN_GAME][WHITE_BISHOP][i] = PST_BISHOP_OPN[i] * PST_BISHOP_MULT_OPN;
+        PST[MID_GAME][WHITE_BISHOP][i] = PST_BISHOP_MID[i] * PST_BISHOP_MULT_MID;
+        PST[END_GAME][WHITE_BISHOP][i] = PST_BISHOP_END[i] * PST_BISHOP_MULT_END;
 
-        PST[OPN_GAME][BLACK_BISHOP][63 - i] = PST_BISHOP_OPN[i] * PST_BISHOP_MULT;
-        PST[MID_GAME][BLACK_BISHOP][63 - i] = PST_BISHOP_MID[i] * PST_BISHOP_MULT;
-        PST[END_GAME][BLACK_BISHOP][63 - i] = PST_BISHOP_END[i] * PST_BISHOP_MULT;
+        PST[OPN_GAME][BLACK_BISHOP][63 - i] = PST_BISHOP_OPN[i] * PST_BISHOP_MULT_OPN;
+        PST[MID_GAME][BLACK_BISHOP][63 - i] = PST_BISHOP_MID[i] * PST_BISHOP_MULT_MID;
+        PST[END_GAME][BLACK_BISHOP][63 - i] = PST_BISHOP_END[i] * PST_BISHOP_MULT_END;
 
         // Rooks
-        PST[OPN_GAME][WHITE_ROOK][i] = PST_ROOK_OPN[i] * PST_ROOK_MULT;
-        PST[MID_GAME][WHITE_ROOK][i] = PST_ROOK_MID[i] * PST_ROOK_MULT;
-        PST[END_GAME][WHITE_ROOK][i] = PST_ROOK_END[i] * PST_ROOK_MULT;
+        PST[OPN_GAME][WHITE_ROOK][i] = PST_ROOK_OPN[i] * PST_ROOK_MULT_OPN;
+        PST[MID_GAME][WHITE_ROOK][i] = PST_ROOK_MID[i] * PST_ROOK_MULT_MID;
+        PST[END_GAME][WHITE_ROOK][i] = PST_ROOK_END[i] * PST_ROOK_MULT_END;
 
-        PST[OPN_GAME][BLACK_ROOK][63 - i] = PST_ROOK_OPN[i] * PST_ROOK_MULT;
-        PST[MID_GAME][BLACK_ROOK][63 - i] = PST_ROOK_MID[i] * PST_ROOK_MULT;
-        PST[END_GAME][BLACK_ROOK][63 - i] = PST_ROOK_END[i] * PST_ROOK_MULT;
+        PST[OPN_GAME][BLACK_ROOK][63 - i] = PST_ROOK_OPN[i] * PST_ROOK_MULT_OPN;
+        PST[MID_GAME][BLACK_ROOK][63 - i] = PST_ROOK_MID[i] * PST_ROOK_MULT_MID;
+        PST[END_GAME][BLACK_ROOK][63 - i] = PST_ROOK_END[i] * PST_ROOK_MULT_END;
 
         // Queens
-        PST[OPN_GAME][WHITE_QUEEN][i] = PST_QUEEN_OPN[i] * PST_QUEEN_MULT;
-        PST[MID_GAME][WHITE_QUEEN][i] = PST_QUEEN_MID[i] * PST_QUEEN_MULT;
-        PST[END_GAME][WHITE_QUEEN][i] = PST_QUEEN_END[i] * PST_QUEEN_MULT;
+        PST[OPN_GAME][WHITE_QUEEN][i] = PST_QUEEN_OPN[i] * PST_QUEEN_MULT_OPN;
+        PST[MID_GAME][WHITE_QUEEN][i] = PST_QUEEN_MID[i] * PST_QUEEN_MULT_MID;
+        PST[END_GAME][WHITE_QUEEN][i] = PST_QUEEN_END[i] * PST_QUEEN_MULT_END;
 
-        PST[OPN_GAME][BLACK_QUEEN][63 - i] = PST_QUEEN_OPN[i] * PST_QUEEN_MULT;
-        PST[MID_GAME][BLACK_QUEEN][63 - i] = PST_QUEEN_MID[i] * PST_QUEEN_MULT;
-        PST[END_GAME][BLACK_QUEEN][63 - i] = PST_QUEEN_END[i] * PST_QUEEN_MULT;
+        PST[OPN_GAME][BLACK_QUEEN][63 - i] = PST_QUEEN_OPN[i] * PST_QUEEN_MULT_OPN;
+        PST[MID_GAME][BLACK_QUEEN][63 - i] = PST_QUEEN_MID[i] * PST_QUEEN_MULT_MID;
+        PST[END_GAME][BLACK_QUEEN][63 - i] = PST_QUEEN_END[i] * PST_QUEEN_MULT_END;
 
         // King
-        PST[OPN_GAME][WHITE_KING][i] = PST_KING_OPN[i] * PST_KING_MULT;
-        PST[MID_GAME][WHITE_KING][i] = PST_KING_MID[i] * PST_KING_MULT;
-        PST[END_GAME][WHITE_KING][i] = PST_KING_END[i] * PST_KING_MULT;
+        PST[OPN_GAME][WHITE_KING][i] = PST_KING_OPN[i] * PST_KING_MULT_OPN;
+        PST[MID_GAME][WHITE_KING][i] = PST_KING_MID[i] * PST_KING_MULT_MID;
+        PST[END_GAME][WHITE_KING][i] = PST_KING_END[i] * PST_KING_MULT_END;
 
-        PST[OPN_GAME][BLACK_KING][63 - i] = PST_KING_OPN[i] * PST_KING_MULT;
-        PST[MID_GAME][BLACK_KING][63 - i] = PST_KING_MID[i] * PST_KING_MULT;
-        PST[END_GAME][BLACK_KING][63 - i] = PST_KING_END[i] * PST_KING_MULT;
+        PST[OPN_GAME][BLACK_KING][63 - i] = PST_KING_OPN[i] * PST_KING_MULT_OPN;
+        PST[MID_GAME][BLACK_KING][63 - i] = PST_KING_MID[i] * PST_KING_MULT_MID;
+        PST[END_GAME][BLACK_KING][63 - i] = PST_KING_END[i] * PST_KING_MULT_END;
 
     }
 
@@ -644,29 +661,35 @@ void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
         #endif
 
         //Add on the PST values
-        moveVals[i] += PST[pos.stage][fr_piece_i][GET_TO(move)];
+        moveVals[i] += PST[pos.stage][fr_piece_i][GET_TO(move)] - PST[pos.stage][fr_piece_i][GET_FROM(move)];
         
         //Add on the flag values
         //i32 histScore;
         switch(GET_FLAGS(move)){
             case QUEEN_PROMO_CAPTURE:
                 moveVals[i] += (pieceValues[to_piece_i] + QUEEN_VALUE - PAWN_VALUE);
+                moveVals[i] += PST[pos.stage][to_piece_i][GET_TO(move)];
                 break;
             case ROOK_PROMO_CAPTURE:
                 moveVals[i] += (pieceValues[to_piece_i] + ROOK_VALUE - PAWN_VALUE);
+                moveVals[i] += PST[pos.stage][to_piece_i][GET_TO(move)];
                 break;
             case BISHOP_PROMO_CAPTURE:
                 moveVals[i] += (pieceValues[to_piece_i] + BISHOP_VALUE - PAWN_VALUE);
+                moveVals[i] += PST[pos.stage][to_piece_i][GET_TO(move)];
                 break;
             case KNIGHT_PROMO_CAPTURE:
                 moveVals[i] += (pieceValues[to_piece_i] + KNIGHT_VALUE - PAWN_VALUE);
+                moveVals[i] += PST[pos.stage][to_piece_i][GET_TO(move)];
                 break;
                 
             case EP_CAPTURE:
                 moveVals[i] += PAWN_VALUE;
+                moveVals[i] += PST[pos.stage][to_piece_i][GET_TO(move)];
                 break;
             case CAPTURE:
                 moveVals[i] += pieceValues[to_piece_i];
+                moveVals[i] += PST[pos.stage][to_piece_i][GET_TO(move)];
                 break;
 
             case QUEEN_PROMOTION:
