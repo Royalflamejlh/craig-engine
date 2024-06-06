@@ -31,7 +31,7 @@
 #define PST_PAWN_MULT_MID      10  // PST Mult Pawns in Eval
 #define PST_PAWN_MULT_END       7  // PST Mult Pawns in Eval
 
-#define PST_KNIGHT_MULT_OPN   100  // PST Mult Knights in Eval
+#define PST_KNIGHT_MULT_OPN    60  // PST Mult Knights in Eval
 #define PST_KNIGHT_MULT_MID    50  // PST Mult Knights in Eval
 #define PST_KNIGHT_MULT_END    25  // PST Mult Knights in Eval
 
