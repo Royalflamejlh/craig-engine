@@ -342,7 +342,6 @@ void processMoves(char* str) {
     char* pch;
     char* rest = str; 
     pch = strtok_r(str, " ", &rest);
-    Position pos = fenToPosition(START_FEN);
     
     while (pch != NULL) {
         char* moveStr = trimWhitespace(pch);
@@ -350,11 +349,10 @@ void processMoves(char* str) {
             goto get_next_token;
         }
         //printf("Move String found: %s", moveStr);
-        makeMove(&pos, moveStrToType(pos, moveStr));
+        makeMove(&global_position, moveStrToType(global_position, moveStr));
 get_next_token:
         pch = strtok_r(NULL, " ", &rest);
     }
-    global_position = pos;
 }
 
 
@@ -483,17 +481,18 @@ static i32 processInput(char* input){
         stopSearchThreads();
         if (strncmp(input, "startpos", 8) == 0) {
             input += 9;
-            if (strncmp(input, "moves", 5) == 0) {
-                input += 6;
-                processMoves(input);
-            }
-            else{
-                global_position = fenToPosition(START_FEN); 
-            }
+            global_position = fenToPosition(START_FEN);
         }
         else if (strncmp(input, "fen", 3) == 0) {
             input += 4;
             global_position = fenToPosition(input);
+            while (*input != 'm' && *input != '\n' && *input != '\0') {
+                input++;
+            }
+        }
+        if (strncmp(input, "moves", 5) == 0) {
+            input += 6;
+            processMoves(input);
         }
         fflush(stdout);
     }

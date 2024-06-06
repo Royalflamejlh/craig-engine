@@ -3,28 +3,41 @@
 #include "types.h"
 #include "util.h"
 #include "tree.h"
+#include "movement.h"
 #include "bitboard/bbutils.h"
+#include "bitboard/bitboard.h"
 
 
 //Piece values defined in header
 
-#define BASE_ATTACK_BONUS  10  //Eval for each enemy piece under attack
-#define BASE_DEFEND_BONUS  10  //Eval for each defended piece
-#define BASE_HANGING_PEN   10  //Eval lost for hanging a piece
+#define BASE_ATTACK_BONUS  10  // Eval for each enemy piece under attack
+#define BASE_DEFEND_BONUS  10  // Eval for each defended piece
+#define BASE_HANGING_PEN   10  // Eval lost for hanging a piece
 
-#define MOBILITY_BONUS     10  //Eval bonus for possible move
+#define CHECK_PEN         100  // Eval lost under check
 
-#define CHECK_PEN         100  //Eval lost under check
+#define LOW_PAWN_PEN      500  // Eval lost for having 2 or less pawns
+#define DOUBLE_PAWN_PEN   200  // Eval lost for double pawns
+#define ISO_PAWN_PEN      100  // Eval lost for isolated pawns
 
-#define DOUBLE_PAWN_PEN   200  //Eval lost for double pawns
-#define ISO_PAWN_PEN      100  //Eval lost for isolated pawns
+#define PAWN_MOB      15  // Mobility bonus for Pawns in Eval
+#define KNIGHT_MOB    30  // Mobility bonus for Knights in Eval
+#define BISHOP_MOB    30  // Mobility bonus for Bishop in Eval
+#define QUEEN_MOB     40  // Mobility bonus for Queen in Eval
+#define ROOK_MOB      35  // Mobility bonus for Rook in Eval
+#define KING_MOB     100  // Mobility bonus for King in Eval
 
-#define PST_PAWN_MULT      10  //Multiplier Pawns in Eval
-#define PST_KNIGHT_MULT   100  //Mult Knights in Eval
-#define PST_BISHOP_MULT   100  //Mult Bishop in Eval
-#define PST_QUEEN_MULT    100  //Mult Queen in Eval
-#define PST_ROOK_MULT     100  //Mult Rook in Eval
-#define PST_KING_MULT     100  //Mult King in Eval
+#define PST_PAWN_MULT      10  // PST Mult Pawns in Eval
+#define PST_KNIGHT_MULT   100  // PST Mult Knights in Eval
+#define PST_BISHOP_MULT   100  // PST Mult Bishop in Eval
+#define PST_QUEEN_MULT    100  // PST Mult Queen in Eval
+#define PST_ROOK_MULT     100  // PST Mult Rook in Eval
+#define PST_KING_MULT     100  // PST Mult King in Eval
+
+// Defines for Movement Eval
+
+#define MOVE_CASTLE_BONUS  100  // Eval bonus for castling
+#define MOVE_OPN_QUEEN_PEN  50  // Pen for moving queen in the opening
 
 
 static i32 PST[3][12][64];
@@ -56,7 +69,45 @@ inline i32 quickEval(Position pos){
     return eval_val;
 }
 
+i32 eval_mobility(Position position){
+    i32 score = 0;
+    i32 size[] = {0};
+    i32 turn = position.flags & WHITE_TURN; //True for white false for black
+    u64 ownPos = position.color[turn];
+    u64 oppPos = position.color[!turn];
+    u64 oppAttackMask = position.attack_mask[!turn];
+    Move moveList[MAX_MOVES] = {};
 
+
+    if(!(position.flags & IN_CHECK) && !(position.pinned & ownPos)){
+        getBishopMovesAppend(position.queen[turn],  ownPos, oppPos, moveList, size);
+        getRookMovesAppend(  position.queen[turn],  ownPos, oppPos, moveList, size);
+        score += QUEEN_MOB * *size;
+        *size = 0;
+
+        getRookMovesAppend(  position.rook[turn],   ownPos, oppPos, moveList, size);
+        score += ROOK_MOB * *size;
+        *size = 0;
+
+        getBishopMovesAppend(position.bishop[turn], ownPos, oppPos, moveList, size);
+        score += BISHOP_MOB * *size;
+        *size = 0;
+
+        getKnightMovesAppend(position.knight[turn], ownPos, oppPos, moveList, size);
+        score += KNIGHT_MOB * *size;
+        *size = 0;
+
+        getKingMovesAppend(  position.king[turn],   ownPos, oppPos, oppAttackMask, moveList, size);
+        score += KING_MOB * *size;
+        *size = 0;
+
+        getPawnMovesAppend(  position.pawn[turn],   ownPos, oppPos, position.en_passant, position.flags, moveList, size);
+        score += PAWN_MOB * *size;
+        *size = 0;
+    }
+
+    return score;
+}
 
 //
 // Evaluation Function
@@ -79,7 +130,11 @@ i32 evaluate(Position pos
     //
     // Mobility
     //
-    
+    Position tempPos = pos;
+    eval_val += eval_mobility(pos);
+    makeNullMove(&pos);
+    eval_val -= eval_mobility(pos);
+    pos = tempPos;
     #ifdef DEBUG
     if(verbose) printf("After Mobility Bonus: %d\n", eval_val);
     #endif
@@ -87,9 +142,11 @@ i32 evaluate(Position pos
     //
     // Penalities
     //
-    if(pos.flags & IN_CHECK) eval_val -= CHECK_PEN;
+
+    if(pos.flags & IN_CHECK) eval_val -= CHECK_PEN; // Penalty for being in check
+
     #ifdef DEBUG
-    if(verbose) printf("After Check Penalty: %d\n", eval_val);
+    if(verbose) printf("After Penalties: %d\n", eval_val);
     #endif
 
 
@@ -114,7 +171,7 @@ i32 evaluate(Position pos
     //
     // Hanging
     //
-    eval_val -= BASE_HANGING_PEN * count_bits((pos.color[turn] & ~pos.attack_mask[turn]) & pos.attack_mask[!turn]);
+    eval_val -= BASE_HANGING_PEN * count_bits((pos.color[turn]  & ~pos.attack_mask[turn])  & pos.attack_mask[!turn]);
     eval_val += BASE_HANGING_PEN * count_bits((pos.color[!turn] & ~pos.attack_mask[!turn]) & pos.attack_mask[turn]);
     #ifdef DEBUG
     if(verbose) printf("After Hanging Penalty: %d\n", eval_val);
@@ -122,8 +179,10 @@ i32 evaluate(Position pos
 
 
     //
-    // Pawn Structure
+    // Pawn Evals
     //
+    if(count_bits(pos.pawn[turn])  <= 2) eval_val -= LOW_PAWN_PEN; // Penalty for two or less pawns
+    if(count_bits(pos.pawn[!turn]) <= 2) eval_val += LOW_PAWN_PEN;
     for(i32 i = 0; i < 8; i++){ //Double Pawn Check
         i32 double_pawns = count_bits(pos.pawn[turn] & fileMask[i]) - 1;
         if(double_pawns >= 1){
@@ -569,7 +628,9 @@ void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
 
         i32 fr_piece = (i32)pos.charBoard[GET_FROM(move)];
         i32 to_piece = (i32)pos.charBoard[GET_TO(move)];
-        
+
+        if(pos.stage == OPN_GAME && (fr_piece == WHITE_QUEEN || fr_piece == BLACK_QUEEN)) moveVals[i] -= MOVE_OPN_QUEEN_PEN;
+
         i32 fr_piece_i = pieceToIndex[fr_piece];
         i32 to_piece_i = pieceToIndex[to_piece];
 
@@ -589,23 +650,23 @@ void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
         //i32 histScore;
         switch(GET_FLAGS(move)){
             case QUEEN_PROMO_CAPTURE:
-                moveVals[i] += ((pieceValues[to_piece_i] + QUEEN_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
+                moveVals[i] += (pieceValues[to_piece_i] + QUEEN_VALUE - PAWN_VALUE);
                 break;
             case ROOK_PROMO_CAPTURE:
-                moveVals[i] += ((pieceValues[to_piece_i] + ROOK_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
+                moveVals[i] += (pieceValues[to_piece_i] + ROOK_VALUE - PAWN_VALUE);
                 break;
             case BISHOP_PROMO_CAPTURE:
-                moveVals[i] += ((pieceValues[to_piece_i] + BISHOP_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
+                moveVals[i] += (pieceValues[to_piece_i] + BISHOP_VALUE - PAWN_VALUE);
                 break;
             case KNIGHT_PROMO_CAPTURE:
-                moveVals[i] += ((pieceValues[to_piece_i] + KNIGHT_VALUE - PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
+                moveVals[i] += (pieceValues[to_piece_i] + KNIGHT_VALUE - PAWN_VALUE);
                 break;
                 
             case EP_CAPTURE:
-                moveVals[i] += ((PAWN_VALUE)+QUEEN_VALUE) - PAWN_VALUE;
+                moveVals[i] += PAWN_VALUE;
                 break;
             case CAPTURE:
-                moveVals[i] += ((pieceValues[to_piece_i])+QUEEN_VALUE) - pieceValues[fr_piece_i];
+                moveVals[i] += ((pieceValues[to_piece_i])) - pieceValues[fr_piece_i];
                 break;
 
             case QUEEN_PROMOTION:
@@ -623,7 +684,7 @@ void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
                 
             case QUEEN_CASTLE:
             case KING_CASTLE:
-                moveVals[i] += CASTLE_BONUS;
+                moveVals[i] += MOVE_CASTLE_BONUS;
                 break;
 
             case DOUBLE_PAWN_PUSH:
