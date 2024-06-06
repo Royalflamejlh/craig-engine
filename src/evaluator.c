@@ -16,9 +16,7 @@
 
 #define CHECK_PEN         100  //Eval lost under check
 
-#define CASTLE_BONUS       10  //Eval gained in castled position
-
-#define DOUBLE_PAWN_PEN   100  //Eval lost for double pawns
+#define DOUBLE_PAWN_PEN   200  //Eval lost for double pawns
 #define ISO_PAWN_PEN      100  //Eval lost for isolated pawns
 
 #define PST_PAWN_MULT      10  //Multiplier Pawns in Eval
@@ -77,38 +75,45 @@ i32 evaluate(Position pos
         printf("\nEval for stage: %d, Starting at: %d\n", stage, eval_val);
     }
     #endif
-
-    // Material Value
-    #ifdef DEBUG
-    if(verbose) printf("After Material: %d\n", eval_val);
-    #endif
-
+ 
+    //
     // Mobility
+    //
+    
     #ifdef DEBUG
     if(verbose) printf("After Mobility Bonus: %d\n", eval_val);
     #endif
 
+    //
     // Penalities
+    //
     if(pos.flags & IN_CHECK) eval_val -= CHECK_PEN;
-
     #ifdef DEBUG
     if(verbose) printf("After Check Penalty: %d\n", eval_val);
     #endif
 
 
-    //Overall attack map bonus
+    //
+    // Defense
+    //
     eval_val += BASE_DEFEND_BONUS * count_bits(pos.color[turn] &  pos.attack_mask[turn]);
     eval_val -= BASE_DEFEND_BONUS * count_bits(pos.color[!turn] &  pos.attack_mask[!turn]);
     #ifdef DEBUG
     if(verbose) printf("After Defend Bonus: %d\n", eval_val);
     #endif
 
+    //
+    // Attack
+    //
     eval_val += BASE_ATTACK_BONUS * count_bits(pos.color[!turn] &  pos.attack_mask[turn]);
     eval_val -= BASE_ATTACK_BONUS * count_bits(pos.color[turn] &  pos.attack_mask[!turn]);
     #ifdef DEBUG
     if(verbose) printf("After Attack Bonus: %d\n", eval_val);
     #endif
     
+    //
+    // Hanging
+    //
     eval_val -= BASE_HANGING_PEN * count_bits((pos.color[turn] & ~pos.attack_mask[turn]) & pos.attack_mask[!turn]);
     eval_val += BASE_HANGING_PEN * count_bits((pos.color[!turn] & ~pos.attack_mask[!turn]) & pos.attack_mask[turn]);
     #ifdef DEBUG
@@ -116,7 +121,9 @@ i32 evaluate(Position pos
     #endif
 
 
-    //Pawn Stuff
+    //
+    // Pawn Structure
+    //
     for(i32 i = 0; i < 8; i++){ //Double Pawn Check
         i32 double_pawns = count_bits(pos.pawn[turn] & fileMask[i]) - 1;
         if(double_pawns >= 1){
@@ -127,13 +134,14 @@ i32 evaluate(Position pos
             eval_val += DOUBLE_PAWN_PEN * double_pawns;
         }
     }
-
     #ifdef DEBUG
-    if(verbose) printf("After Doubled Pawn Penalty: %d\n", eval_val);
+    if(verbose) printf("After Pawn Structure: %d\n", eval_val);
     #endif
 
 
-    //PST
+    //
+    // Piece Square Tables (PST)
+    //
     //Pawns
     i32 index = turn ? WHITE_PAWN : BLACK_PAWN;
     i32 index_op = turn ? BLACK_PAWN : WHITE_PAWN;
@@ -197,70 +205,68 @@ i32 evaluate(Position pos
     }
     #endif
 
-    // //Rooks
-    // index = turn ? WHITE_ROOK : BLACK_ROOK;
-    // index_op = turn ? BLACK_ROOK : WHITE_ROOK;
-    // pieces = pos.rook[turn];
-    // while (pieces) {
-    //     i32 square = __builtin_ctzll(pieces);
-    //     eval_val += PST[stage][index][square];
-    //     pieces &= pieces - 1;
-    // }
-    // pieces = pos.rook[!turn];
-    // while (pieces) {
-    //     i32 square = __builtin_ctzll(pieces);
-    //     eval_val -= PST[stage][index_op][square];
-    //     pieces &= pieces - 1;
-    // }
-    // #ifdef DEBUG
-    // if(verbose){
-    //     printf("After Rook PST: %d\n", eval_val);
-    // }
-    // #endif
+    //Rooks
+    index = turn ? WHITE_ROOK : BLACK_ROOK;
+    index_op = turn ? BLACK_ROOK : WHITE_ROOK;
+    pieces = pos.rook[turn];
+    while (pieces) {
+        i32 square = __builtin_ctzll(pieces);
+        eval_val += PST[stage][index][square];
+        pieces &= pieces - 1;
+    }
+    pieces = pos.rook[!turn];
+    while (pieces) {
+        i32 square = __builtin_ctzll(pieces);
+        eval_val -= PST[stage][index_op][square];
+        pieces &= pieces - 1;
+    }
+    #ifdef DEBUG
+    if(verbose){
+        printf("After Rook PST: %d\n", eval_val);
+    }
+    #endif
 
-    // //Queens
-    // index = turn ? WHITE_QUEEN : BLACK_QUEEN;
-    // index_op = turn ? BLACK_QUEEN : WHITE_QUEEN;
-    // pieces = pos.queen[turn];
-    // while (pieces) {
-    //     i32 square = __builtin_ctzll(pieces);
-    //     eval_val += PST[stage][index][square];
-    //     pieces &= pieces - 1;
-    // }
-    // pieces = pos.queen[!turn];
-    // while (pieces) {
-    //     i32 square = __builtin_ctzll(pieces);
-    //     eval_val -= PST[stage][index_op][square];
-    //     pieces &= pieces - 1;
-    // }
-    // #ifdef DEBUG
-    // if(verbose){
-    //     printf("After Queen PST: %d\n", eval_val);
-    // }
-    // #endif
+    //Queens
+    index = turn ? WHITE_QUEEN : BLACK_QUEEN;
+    index_op = turn ? BLACK_QUEEN : WHITE_QUEEN;
+    pieces = pos.queen[turn];
+    while (pieces) {
+        i32 square = __builtin_ctzll(pieces);
+        eval_val += PST[stage][index][square];
+        pieces &= pieces - 1;
+    }
+    pieces = pos.queen[!turn];
+    while (pieces) {
+        i32 square = __builtin_ctzll(pieces);
+        eval_val -= PST[stage][index_op][square];
+        pieces &= pieces - 1;
+    }
+    #ifdef DEBUG
+    if(verbose){
+        printf("After Queen PST: %d\n", eval_val);
+    }
+    #endif
 
-    // //King
-    // index = turn ? WHITE_KING : BLACK_KING; // 5 : 11
-    // index_op = turn ? BLACK_KING : WHITE_KING;
-    // pieces = pos.king[turn];
-    // while (pieces) {
-    //     i32 square = __builtin_ctzll(pieces);
-    //     eval_val += PST[stage][index][square];
-    //     pieces &= pieces - 1;
-    // }
-    // pieces = pos.king[!turn];
-    // while (pieces) {
-    //     i32 square = __builtin_ctzll(pieces);
-    //     eval_val -= PST[stage][index_op][square];
-    //     pieces &= pieces - 1;
-    // }
-    // #ifdef DEBUG
-    // if(verbose){
-    //     printf("After King PST: %d\n", eval_val);
-    // }
-    // #endif
-
-
+    //King
+    index = turn ? WHITE_KING : BLACK_KING; // 5 : 11
+    index_op = turn ? BLACK_KING : WHITE_KING;
+    pieces = pos.king[turn];
+    while (pieces) {
+        i32 square = __builtin_ctzll(pieces);
+        eval_val += PST[stage][index][square];
+        pieces &= pieces - 1;
+    }
+    pieces = pos.king[!turn];
+    while (pieces) {
+        i32 square = __builtin_ctzll(pieces);
+        eval_val -= PST[stage][index_op][square];
+        pieces &= pieces - 1;
+    }
+    #ifdef DEBUG
+    if(verbose){
+        printf("After King PST: %d\n", eval_val);
+    }
+    #endif
 
     return eval_val;
 }

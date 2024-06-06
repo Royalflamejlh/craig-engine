@@ -47,7 +47,6 @@ u16 generateLegalMoves(Position position,  Move* moveList){
     return *size;
 }
 
-
 /*
 * Generate Moves that capture pieces, and put the opponents king in check
 */
