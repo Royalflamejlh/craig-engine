@@ -2,6 +2,10 @@
 #define tree_h
 #include "types.h"
 
+#if defined(__PROFILE)
+#define MAX_DEPTH 6
+#endif
+
 u32 getHistoryScore(char pos_flags, Move move);
 
 i32 getBestMove(Position pos

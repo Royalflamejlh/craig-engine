@@ -27,7 +27,7 @@
 #define LMR_DEPTH 3 //LMR not performed if depth < LMR_DEPTH
 
 #define MAX_ASP_START PAWN_VALUE-100 //Maximum size of bounds for an aspiration window to start on
-#define ASP_EDGE 10  //Buffer size of aspiration window
+#define ASP_EDGE PAWN_VALUE/4  //Buffer size of aspiration window
 
 #define FUTIL_DEPTH 1 //Depth to start futility pruning
 #define FUTIL_MARGIN PAWN_VALUE-100 //Score difference for a node to be futility pruned
@@ -37,10 +37,6 @@
 
 #define NULL_PRUNE_R 3 //How much Null prunin' takes off
 
-//Set up the Depth sizes depending on mode
-#if defined(__PROFILE)
-#define MAX_DEPTH 6
-#endif
 
 //static void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size);
 

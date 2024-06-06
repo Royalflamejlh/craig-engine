@@ -175,11 +175,11 @@ typedef struct {
     i32 last_reset_idx; //An index to the last move which reset halfmove clock
 } HashStack;
 
-#define EARLY_GAME_MOVES   8 //Moves that count as early game (fullmoves)
+#define OPN_GAME_MOVES     8 //Moves that count as early game (fullmoves)
 #define END_GAME_PIECES   16 //Pieces left to count as late game
 
 typedef enum {
-    EARLY_GAME,
+    OPN_GAME,
     MID_GAME,
     END_GAME
 } Stage;

@@ -588,7 +588,7 @@ void playSelfInfinite(void){
     run_get_best_move = TRUE;
     Move moveList[MAX_MOVES];
     while(generateLegalMoves(global_position, moveList)){
-        getBestMove(global_position);
+        getBestMove(global_position, MAX_DEPTH);
         if(global_best_move != NO_MOVE){
             makeMove(&global_position, global_best_move);
             printPosition(global_position, FALSE);
