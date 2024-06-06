@@ -119,7 +119,7 @@ Position fenToPosition(char* FEN) {
 
     pos.stage = calculateStage(pos);
 
-    pos.eval = evaluate(pos);
+    pos.quick_eval = quickEval(pos);
 
     pos.hash = hashPosition(pos);
 
@@ -304,7 +304,7 @@ void printPosition(Position position, char verbose){
             
             if (file == 7){
                 printf("%d   |  ", rank + 1);
-                if(rank == 7) printf("Current Turn: %s -- Evaluation: %d", ((position.flags & WHITE_TURN) ? "White" : "Black"), position.eval);
+                if(rank == 7) printf("Current Turn: %s -- Quick Evaluation: %d", ((position.flags & WHITE_TURN) ? "White" : "Black"), position.quick_eval);
                 if(rank == 5) printf("Halfmove Clock: %d -- Fullmove Number: %d -- Game Stage: %d", position.halfmove_clock, position.fullmove_number, position.stage);
                 if(rank == 3) printf("In Check: %s -- In Double-Check: %s", (position.flags & IN_CHECK) ? "Yes" : "No", (position.flags & IN_D_CHECK) ? "Yes" : "No");
                 if(rank == 1) printf("Castling Availability: ");

@@ -194,7 +194,6 @@ typedef struct {            //Each size of 2 array contains {Black, White}
 
     u64 attack_mask[2]; // {Attacked by Black, Attacked by White}
 
-
     u64 color[2];  // {White Pieces, Black Pieces}
 
     u64 en_passant;  //En Passant squares
@@ -207,11 +206,11 @@ typedef struct {            //Each size of 2 array contains {Black, White}
 
     u64 hash; //Hash of the position
 
+    i32 quick_eval;
+
     HashStack hashStack; //Pointer to the gamestate position is in
 
     Stage stage; //The stage of the game
-
-    i32 eval; //Stored eval
 
     i32 halfmove_clock;
     i32 fullmove_number;

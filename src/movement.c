@@ -8,10 +8,6 @@
 #include "hash.h"
 
 
-#ifdef __COMPILE_DEBUG
-#define DEBUG
-#endif
-
 #ifdef DEBUG
 #include "transposition.h"
 #endif
@@ -294,7 +290,6 @@ i32 makeMove(Position *pos, Move move){
     if(from == 60) pos->flags &= ~(B_LONG_CASTLE | B_SHORT_CASTLE);
 
 
-
     if(!turn) pos->fullmove_number++;
 
     setAttackMasks(pos);
@@ -317,7 +312,7 @@ i32 makeMove(Position *pos, Move move){
 
     pos->stage = calculateStage(*pos);
 
-    pos->eval = evaluate(*pos);
+    pos->quick_eval = quickEval(*pos);
 
     pos->hash = hashPosition(*pos);
 

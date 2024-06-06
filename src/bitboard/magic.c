@@ -19,9 +19,9 @@ static i32 initAttackTable(void);
 static void calculateAttackTableOffsets();
 static i32 transform(u64 b, u64 magic, i32 bits);
 
-#ifdef DEBUG
-static u64 debug_bishopAttacks(u64 occ, i32 sq);
-static u64 debug_rookAttacks(u64 occ, i32 sq);
+#ifdef DEBUG_MAGIC
+static u64 DEBUG_MAGIC_bishopAttacks(u64 occ, i32 sq);
+static u64 DEBUG_MAGIC_rookAttacks(u64 occ, i32 sq);
 #endif
 
 static u64 attack_table[108000];
@@ -220,7 +220,7 @@ i32 generateMagics(void) {
         mRookTbl[square].ptr = &attack_table[attack_table_offsets[square]];
         //printf("0x%llxULL,\n", magic);
         
-        #ifdef DEBUG
+        #ifdef DEBUG_MAGIC
         printf("Rook Square %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, AttackTableIdx = %d, Ptr = %p\n",
             square,
             mRookTbl[square].magic,
@@ -240,7 +240,7 @@ i32 generateMagics(void) {
         mBishopTbl[square].ptr   = &attack_table[attack_table_offsets[square + 64]];
         //printf("0x%llxULL,\n", magic);
 
-        #ifdef DEBUG
+        #ifdef DEBUG_MAGIC
         printf("Bishop Square %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, AttackTableIdx = %d, Ptr = %p\n",
             square,
             mBishopTbl[square].magic,
@@ -283,8 +283,8 @@ static i32 verifyMagic(i32 square, i32 isBishop) {
     for (i32 blockers = 0; blockers < num_blocker_configs; ++blockers) {
         u64 blocker_bits = index_to_uint64(blockers, count_1s(mask), mask);
         u64 expected_attack = isBishop ? batt(square, blocker_bits) : ratt(square, blocker_bits);
-        #ifdef DEBUG
-        u64 actual_attack = isBishop ? debug_bishopAttacks(blocker_bits, square) : debug_rookAttacks(blocker_bits, square);
+        #ifdef DEBUG_MAGIC
+        u64 actual_attack = isBishop ? DEBUG_MAGIC_bishopAttacks(blocker_bits, square) : DEBUG_MAGIC_rookAttacks(blocker_bits, square);
         #else
         u64 actual_attack = isBishop ? bishopAttacks(blocker_bits, square) : rookAttacks(blocker_bits, square);
         #endif
@@ -363,8 +363,8 @@ u64 rookAttacks(u64 occ, i32 sq) {
    return aptr[occ];
 }
 
-#ifdef DEBUG
-static u64 debug_bishopAttacks(u64 occ, i32 sq) {
+#ifdef DEBUG_MAGIC
+static u64 DEBUG_MAGIC_bishopAttacks(u64 occ, i32 sq) {
     u64* aptr = mBishopTbl[sq].ptr;
     u64 original_occ = occ;
     occ &= mBishopTbl[sq].mask;
@@ -374,7 +374,7 @@ static u64 debug_bishopAttacks(u64 occ, i32 sq) {
     occ >>= mBishopTbl[sq].shift;
     u64 index = occ;
 
-    printf("Bishop Debug: %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, Ptr = %p, Original Occupancy: 0x%" PRIx64 ", Masked Occupancy: 0x%" PRIx64 ", Multiplied Occupancy: 0x%" PRIx64 ", Index: 0x%" PRIx64 "\n",
+    printf("Bishop DEBUG_MAGIC: %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, Ptr = %p, Original Occupancy: 0x%" PRIx64 ", Masked Occupancy: 0x%" PRIx64 ", Multiplied Occupancy: 0x%" PRIx64 ", Index: 0x%" PRIx64 "\n",
             sq,
             mBishopTbl[sq].magic,
             mBishopTbl[sq].mask,
@@ -387,7 +387,7 @@ static u64 debug_bishopAttacks(u64 occ, i32 sq) {
     return aptr[index];
 }
 
-static u64 debug_rookAttacks(u64 occ, i32 sq) {
+static u64 DEBUG_MAGIC_rookAttacks(u64 occ, i32 sq) {
     u64* aptr = mRookTbl[sq].ptr;
     u64 original_occ = occ;
     occ &= mRookTbl[sq].mask;
@@ -397,7 +397,7 @@ static u64 debug_rookAttacks(u64 occ, i32 sq) {
     occ >>= mRookTbl[sq].shift;
     u64 index = occ;
 
-    printf("Rook Debug: %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, Ptr = %p, Original Occupancy: 0x%" PRIx64 ", Masked Occupancy: 0x%" PRIx64 ", Multiplied Occupancy: 0x%" PRIx64 ", Index: 0x%" PRIx64 "\n",
+    printf("Rook DEBUG_MAGIC: %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, Ptr = %p, Original Occupancy: 0x%" PRIx64 ", Masked Occupancy: 0x%" PRIx64 ", Multiplied Occupancy: 0x%" PRIx64 ", Index: 0x%" PRIx64 "\n",
             sq,
             mRookTbl[sq].magic,
             mRookTbl[sq].mask,

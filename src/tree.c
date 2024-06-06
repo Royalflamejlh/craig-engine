@@ -15,11 +15,6 @@
 #include <windows.h>
 #endif
 
-#ifdef __COMPILE_DEBUG
-#define DEBUG
-#endif
-
-
 #define ID_STEP 1 //Changing this may break Aspiration windows (it will)
 
 #define CHECKMATE_VALUE -MAX_EVAL + 1000
@@ -420,13 +415,18 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
       }
    }
 
+   //Set up prunability
+   char prunable = !(pos->flags & IN_CHECK);
+   if(abs(beta-1) >= (-CHECKMATE_VALUE) - 2*MAX_MOVES) prunable = FALSE;
+   if(pos->stage == END_GAME) prunable = FALSE;
+
    //Null move prunin'
-   // if(pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
-   //    #ifdef DEBUG
-   //    debug[PVS][NODE_PRUNED_NULL]++;
-   //    #endif
-   //    return beta;
-   // }
+   if(prunable && pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
+      #ifdef DEBUG
+      debug[PVS][NODE_PRUNED_NULL]++;
+      #endif
+      return beta;
+   }
 
    evalMoves(moveList, moveVals, size, *pos);
 
@@ -439,10 +439,6 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
       memcpy(debug_moveVals[1], moveVals, size*sizeof(i32));
    }
    #endif
-
-   //Set up prunability
-   char prunable = !(pos->flags & IN_CHECK);
-   if(abs(beta-1) >= (-CHECKMATE_VALUE) - 2*MAX_MOVES) prunable = FALSE;
 
    //Set up late move reduction rules
    char LMR_allowed = TRUE;
@@ -613,21 +609,13 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
       }
    }
 
-
    //Set up prunability
    char prunable = !(pos->flags & IN_CHECK);
-
-   //Null move prunin'
-   // if(prunable && pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
-   //    #ifdef DEBUG
-   //    debug[ZWS][NODE_PRUNED_NULL]++;
-   //    //printf("zws prune beta: %d\n", beta);
-   //    #endif
-   //    return beta;
-   // }
+   if(abs(beta-1) >= (-CHECKMATE_VALUE) - 2*MAX_MOVES) prunable = FALSE;
+   if(pos->stage == END_GAME) prunable = FALSE;
 
    //Razoring
-   if(prunable && (depth <= RAZOR_DEPTH) && (pos->eval + RAZOR_MARGIN < beta)){ 
+   if(prunable && (depth <= RAZOR_DEPTH) && (pos->quick_eval + RAZOR_MARGIN < beta)){ 
       i32 razor_score = quiesce(pos, beta-1, beta, ply, 0, pvArray);
       if(razor_score < beta){
          #ifdef DEBUG
@@ -638,11 +626,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
       }
    }
 
-
    evalMoves(moveList, moveVals, size, *pos);
-
-   
-   if(abs(beta-1) >= (-CHECKMATE_VALUE) - 2*MAX_MOVES) prunable = FALSE;
 
    //Set up late move reduction rules
    char LMR_allowed = TRUE;
@@ -721,29 +705,32 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
    if(pos->flags & IN_CHECK){
       size = generateLegalMoves(*pos, moveList);
       if(size == 0){
-         if(pos->flags & IN_CHECK) return CHECKMATE_VALUE + ply;
-         else return 0;
+         return CHECKMATE_VALUE + ply;
       }
    }
-   else{
-      size = generateThreatMoves(*pos, moveList);
-      if(size == 0){
-         size = generateLegalMoves(*pos, moveList);
-         if(size == 0){
-            return 0;
-         }
-         else{
-            return pos->eval;
-         }
+   
+   size = generateThreatMoves(*pos, moveList);
+   if(size == 0){
+      size = generateLegalMoves(*pos, moveList);
+      if(size == 0){ // Stalemate
+         return 0;
+      }
+      else{
+         return evaluate(*pos
+         #ifdef DEBUG
+         , FALSE
+         #endif
+         );
       }
    }
 
-   //Handle Draw or Mate
+   // Handle Draw or Mate
    
    if(pos->halfmove_clock >= 50) return 0;
    
 
-   i32 stand_pat = pos->eval;
+   i32 stand_pat = pos->quick_eval;
+   
    if( stand_pat >= beta )
       return beta;
    if( alpha < stand_pat ){
@@ -841,7 +828,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
       }
    }
    //Handle the case were there where no captures or checks
-   if(bestScore == MIN_EVAL) bestScore = pos->eval;
+   if(bestScore == MIN_EVAL) bestScore = pos->quick_eval;
 
    if(exact) storeTTEntry(pos->hash, 0, alpha, Q_EXACT_NODE, bestMove);
    else      storeTTEntry(pos->hash, 0, bestScore, Q_ALL_NODE, bestMove);

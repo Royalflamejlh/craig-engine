@@ -510,7 +510,7 @@ static i32 processInput(char* input){
     #ifdef DEBUG
     else if (strncmp(input, "debug", 5) == 0){
         input += 6;
-        if (strncmp(input, "position", 10) == 0) {
+        if (strncmp(input, "pos", 3) == 0) {
             printPosition(global_position, TRUE);
         }
         else if (strncmp(input, "bestmove", 8) == 0) {
@@ -526,6 +526,15 @@ static i32 processInput(char* input){
                 printMove(debug_moves[i]);
                 printf("\n");
             }
+        }
+        else if (strncmp(input, "eval", 4) == 0){
+            printf("Eval: %d\n", evaluate(global_position, TRUE));
+        }
+        else if (strncmp(input, "play move", 4) == 0){
+            printf("Making move: ");
+            printMove(global_best_move);
+            printf("\n");
+            makeMove(&global_position, global_best_move);
         }
 
     }
