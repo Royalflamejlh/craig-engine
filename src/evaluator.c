@@ -10,8 +10,8 @@
 
 //Piece values defined in header
 
-#define BASE_ATTACK_BONUS  10  // Eval for each enemy piece under attack
-#define BASE_DEFEND_BONUS  10  // Eval for each defended piece
+#define BASE_ATTACK_BONUS   3  // Eval for each enemy piece under attack
+#define BASE_DEFEND_BONUS   3  // Eval for each defended piece
 #define BASE_HANGING_PEN   10  // Eval lost for hanging a piece
 
 #define CHECK_PEN         100  // Eval lost under check
@@ -23,21 +23,21 @@
 #define PAWN_MOB      15  // Mobility bonus for Pawns in Eval
 #define KNIGHT_MOB    30  // Mobility bonus for Knights in Eval
 #define BISHOP_MOB    30  // Mobility bonus for Bishop in Eval
-#define QUEEN_MOB     40  // Mobility bonus for Queen in Eval
-#define ROOK_MOB      35  // Mobility bonus for Rook in Eval
-#define KING_MOB     100  // Mobility bonus for King in Eval
+#define QUEEN_MOB     10  // Mobility bonus for Queen in Eval
+#define ROOK_MOB      10  // Mobility bonus for Rook in Eval
+#define KING_MOB      50  // Mobility bonus for King in Eval
 
 #define PST_PAWN_MULT      10  // PST Mult Pawns in Eval
-#define PST_KNIGHT_MULT   100  // PST Mult Knights in Eval
-#define PST_BISHOP_MULT   100  // PST Mult Bishop in Eval
-#define PST_QUEEN_MULT    100  // PST Mult Queen in Eval
-#define PST_ROOK_MULT     100  // PST Mult Rook in Eval
+#define PST_KNIGHT_MULT    50  // PST Mult Knights in Eval
+#define PST_BISHOP_MULT    50  // PST Mult Bishop in Eval
+#define PST_QUEEN_MULT     20  // PST Mult Queen in Eval
+#define PST_ROOK_MULT      20  // PST Mult Rook in Eval
 #define PST_KING_MULT     100  // PST Mult King in Eval
 
 // Defines for Movement Eval
 
-#define MOVE_CASTLE_BONUS  100  // Eval bonus for castling
-#define MOVE_OPN_QUEEN_PEN  50  // Pen for moving queen in the opening
+#define MOVE_CASTLE_BONUS   5  // Eval bonus for castling
+#define MOVE_OPN_QUEEN_PEN  5  // Pen for moving queen in the opening
 
 
 static i32 PST[3][12][64];
@@ -666,7 +666,7 @@ void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
                 moveVals[i] += PAWN_VALUE;
                 break;
             case CAPTURE:
-                moveVals[i] += ((pieceValues[to_piece_i])) - pieceValues[fr_piece_i];
+                moveVals[i] += pieceValues[to_piece_i];
                 break;
 
             case QUEEN_PROMOTION:

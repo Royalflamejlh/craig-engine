@@ -70,7 +70,6 @@ typedef enum stats{
    NODE_PRUNED_FUTIL,
    NODE_LMR_REDUCTIONS,
 
-
    NODE_BETA_CUT,
    NODE_ALPHA_RET,
    DEBUG_STATS_COUNT
@@ -340,7 +339,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
    debug[PVS][NODE_COUNT]++;
    #endif
 
-   if(isRepetition(pos) && ply != 0){
+   if(ply != 0 && isRepetition(pos)){
       //printf("is Repetition\n");
       return 0;
    }
@@ -368,9 +367,9 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
       if(pos->flags & IN_CHECK) return CHECKMATE_VALUE - ply;
       else return 0;
    }
-   if(pos->halfmove_clock >= 50) return 0;
+   if(pos->halfmove_clock >= 100) return 0;
 
-   char bSearchPv = 1;  //Flag for if we are 
+   char bSearchPv = 1;  //Flag for if we are principled
    i32 pvNextIndex = pvIndex + depth;
 
    //Test the TT table
@@ -565,7 +564,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
       if(pos->flags & IN_CHECK) return CHECKMATE_VALUE + ply;
       else return 0;
    }
-   if(pos->halfmove_clock >= 50) return 0;
+   if(pos->halfmove_clock >= 100) return 0;
 
    TTEntry* ttEntry = getTTEntry(pos->hash);
    Move ttMove = NO_MOVE;
@@ -722,7 +721,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
 
    // Handle Draw or Mate
    
-   if(pos->halfmove_clock >= 50) return 0;
+   if(pos->halfmove_clock >= 100) return 0;
    
 
    i32 stand_pat = pos->quick_eval;
