@@ -546,8 +546,8 @@ static i32 processInput(char* input){
 
 
 i32 readInput(){
-    char input[1024];
-    input[1023] = '\0';
+    char input[4096];
+    input[4095] = '\0';
 
     while (true) {
         if (fgets(input, sizeof(input), stdin) == NULL) {

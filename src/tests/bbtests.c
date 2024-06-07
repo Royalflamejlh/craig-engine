@@ -23,6 +23,7 @@
 #define MOVE_GEN_TEST
 #define MOVE_MAKE_TEST
 #define PERF_TEST
+#define SEE_TEST
 //#define PUZZLE_TEST
 
 i32 testBB(void) {
@@ -243,7 +244,6 @@ i32 testBB(void) {
         Move best_move = global_best_move;
         removeHashStack(&pos.hashStack);
 
-
         printPosition(pos, FALSE);
         printf(fen);
         printf("\nBest move is: ");
@@ -261,6 +261,26 @@ i32 testBB(void) {
 
     #endif //Debug
     #endif //Puzzle Test
+
+    #ifdef SEE_TEST
+    printf("\n---------------------------------- SEE TESTING ------------------------------------\n\n");
+    Position testpos = fenToPosition("1k1r4/1pp4p/p7/4p3/8/P5P1/1PP4P/2K1R3 w - -");
+    i32 val = see(testpos, E5, BLACK_PAWN, E1, WHITE_ROOK);
+    printf("See val: %d\n", val);
+
+    testpos = fenToPosition("1k1r3q/1ppn3p/p4b2/4p3/8/P2N2P1/1PP1R1BP/2K1Q3 w - -");
+    val = see(testpos, E5, BLACK_PAWN, D3, WHITE_KNIGHT);
+    printf("See val: %d\n", val);
+
+    testpos = fenToPosition("1k1r3q/1ppn3p/p4b2/4P3/8/P2N2P1/1PP1R1BP/2K1Q3 b - -");
+    val = see(testpos, E5, WHITE_PAWN, D7, BLACK_KNIGHT);
+    printf("See val: %d\n", val);
+
+    
+
+    printf("Press Enter to Continue\n");
+    while( getchar() != '\n' && getchar() != '\r');
+    #endif //SEE_TEST
 
     #ifdef PYTHON
     python_close();

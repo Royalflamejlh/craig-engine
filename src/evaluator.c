@@ -14,7 +14,7 @@
 #define BASE_DEFEND_BONUS  10  // Eval for each defended piece
 #define BASE_HANGING_PEN   90  // Eval lost for hanging a piece
 
-#define TO_MOVE_BONUS      50  // Eval bonus for being your turn
+#define TO_MOVE_BONUS      0  // Eval bonus for being your turn
 
 #define CHECK_PEN         100  // Eval lost under check
 
@@ -90,6 +90,73 @@ inline i32 quickEval(Position pos){
     eval_val += PAWN_VALUE   * (count_bits(pos.pawn[turn])   - count_bits(pos.pawn[!turn]));
     return eval_val;
 }
+
+u64 getLeastValuablePiece(Position pos, u64 attadef, u8 turn, PieceIndex* piece){
+    u64 subset = attadef & pos.pawn[turn]; // Pawn
+    if (subset){
+        *piece = WHITE_PAWN + 6*turn;
+        return subset & -subset;
+    }
+
+    subset = attadef & pos.knight[turn]; // Knight
+    if (subset){
+        *piece = WHITE_KNIGHT + 6*turn;
+        return subset & -subset;
+    }
+
+    subset = attadef & pos.bishop[turn]; // Bishops
+    if (subset){
+        *piece = WHITE_BISHOP + 6*turn;
+        return subset & -subset;
+    }
+
+    subset = attadef & pos.rook[turn]; // Rooks
+    if (subset){
+        *piece = WHITE_ROOK + 6*turn;
+        return subset & -subset;
+    }
+
+    subset = attadef & pos.queen[turn]; // Queens
+    if (subset){
+        *piece = WHITE_QUEEN + 6*turn;
+        return subset & -subset;
+    }
+
+    subset = attadef & pos.king[turn]; // Kings
+    if (subset){
+        *piece = WHITE_KING + 6*turn;
+        return subset & -subset;
+    }
+
+   return 0; // empty set
+}
+
+
+// Here be the static exchange evaluator
+i32 see ( Position pos, u32 toSq, PieceIndex target, u32 frSq, PieceIndex aPiece){
+    i32 gain[32], d = 0;
+    i32 turn = pos.flags & WHITE_TURN;
+    u64 mayXray = pos.pawn[0] | pos.pawn[1] | pos.bishop[0] | pos.bishop[1] | pos.rook[0] | pos.rook[1] | pos.queen[0] | pos.queen[1];
+    u64 removed = 0;
+    u64 fromSet = 1ULL << frSq;
+    u64 attadef = getAttackers( pos, toSq, 0) | getAttackers( pos, toSq, 1);
+    gain[d]     = pieceValues[target];
+    while (fromSet) {
+        d++; // next depth and side
+        gain[d]  = pieceValues[aPiece] - gain[d-1]; // Speculative store
+        if (-gain[d-1] < 0 && gain[d] < 0) break; // Pruning
+        attadef ^= fromSet; // reset bit in set to traverse
+        removed |= fromSet; // Update bitboard storing removed pieces
+        if ( fromSet & mayXray ){ // If the piece was possibly xrayed through
+            attadef |= getXRayAttackers( pos, toSq, 0, removed) | getXRayAttackers( pos, toSq, 1, removed);
+        }
+        fromSet  = getLeastValuablePiece (pos, attadef, (turn + d) & 1, &aPiece);
+    }
+    while (--d){
+        if(gain[d] >= -gain[d-1]) gain[d-1] = -gain[d];
+    }
+    return gain[0];
+}   
 
 i32 eval_mobility(Position position){
     i32 score = 0;

@@ -19,5 +19,6 @@ i32 quickEval(Position pos);
 void initPST(void);
 void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos);
 
+i32 see ( Position pos, u32 toSq, PieceIndex target, u32 frSq, PieceIndex aPiece);
 
 #endif

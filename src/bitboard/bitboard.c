@@ -625,6 +625,20 @@ u64 getAttackers(Position pos, i32 square, i32 attackerColor){
     return attackers;
 }
 
+u64 getXRayAttackers(Position pos, i32 square, i32 attackerColor, u64 removed){
+    u64 attackers = 0ULL;
+    u64 all_pieces = (pos.color[0] | pos.color[1]) & ~removed;
+    u64 attack_mask;
+
+    attack_mask = rookAttacks(all_pieces, square);
+    attackers |= (attack_mask & (pos.queen[attackerColor] | pos.rook[attackerColor]));
+
+    attack_mask = bishopAttacks(all_pieces, square);
+    attackers |= (attack_mask & (pos.queen[attackerColor] | pos.bishop[attackerColor]));
+
+    return attackers & ~removed;
+}
+
 /*
 * Here be ye function to get moves for white when they are in check!
 */
