@@ -32,8 +32,8 @@
 #define DOUBLE_BISHOP_BONUS   700  // Bonus for having both bishops
 #define DOUBLE_ROOK_PEN       100  // Penality for having both rooks
 
-#define PST_PAWN_MULT_OPN      15  // PST Mult Pawns in Eval
-#define PST_PAWN_MULT_MID      10  // PST Mult Pawns in Eval
+#define PST_PAWN_MULT_OPN      10  // PST Mult Pawns in Eval
+#define PST_PAWN_MULT_MID       8  // PST Mult Pawns in Eval
 #define PST_PAWN_MULT_END       7  // PST Mult Pawns in Eval
 
 #define PST_KNIGHT_MULT_OPN   100  // PST Mult Knights in Eval
@@ -53,13 +53,13 @@
 #define PST_ROOK_MULT_END      20  // PST Mult Rook in Eval
 
 #define PST_KING_MULT_OPN      20  // PST Mult King in Eval
-#define PST_KING_MULT_MID     100  // PST Mult King in Eval
-#define PST_KING_MULT_END      80  // PST Mult King in Eval
+#define PST_KING_MULT_MID      75  // PST Mult King in Eval
+#define PST_KING_MULT_END      30  // PST Mult King in Eval
 
 // Defines for Movement Eval
 
-#define MOVE_CASTLE_BONUS   5  // Eval bonus for castling
-#define MOVE_OPN_QUEEN_PEN  5  // Pen for moving queen in the opening
+#define MOVE_CASTLE_BONUS  100  // Eval bonus for castling
+#define MOVE_OPN_QUEEN_PEN   5  // Pen for moving queen in the opening
 
 
 static i32 PST[3][12][64];

@@ -9,6 +9,8 @@
 #include <fcntl.h>
 #include <signal.h>
 
+#define HASHSTACK_INIT_SIZE 256
+
 #ifdef PYTHON
 static i32 fifo_fd_in, fifo_fd_out;
 static pid_t pid;
@@ -203,19 +205,20 @@ Stage calculateStage(Position pos){
 */
 
 HashStack createHashStack(void){
-    u64 *ptr = malloc(sizeof(u64) * MAX_MOVES);
+    u64 *ptr = malloc(sizeof(u64) * GAME_MOVES);
     if (ptr == NULL) {
         printf("info Warning: Failed to allocate space for the Hash Stack.\n");
     }
-    HashStack hashStack = {ptr, MAX_MOVES, 0, 0};
+    HashStack hashStack = {ptr, GAME_MOVES, 0, 0};
     return hashStack;
 }
 
 void doubleHashStack(HashStack *hs){
     hs->size *= 2;
     hs->ptr = realloc(hs->ptr, sizeof(u64) * hs->size);
+    printf("info string growing hash stack\n");
     if (hs->ptr == NULL) {
-        printf("info Warning: Failed to allocate space for the Hash Stack.\n");
+        printf("info string Warning: Failed to allocate space for the Hash Stack.\n");
         return;
     }
 }

@@ -318,10 +318,11 @@ i32 makeMove(Position *pos, Move move){
 
     //Todo: make this make sense
     HashStack *hs = &pos->hashStack;
+    if(hs->current_idx + 1 >= hs->size) doubleHashStack(hs);
     hs->current_idx++;
     if(pos->halfmove_clock == 0) hs->last_reset_idx = hs->current_idx;
-    if(hs->size <= hs->current_idx) doubleHashStack(hs);
-    hs->ptr[hs->current_idx] = pos->hash;
+    hs->ptr[hs->current_idx] = pos->hash;    
+
 
 
     #ifdef DEBUG

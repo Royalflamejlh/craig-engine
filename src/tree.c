@@ -376,7 +376,6 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
    }
    if(pos->halfmove_clock >= 100) return 0;
 
-   char bSearchPv = TRUE;  // Flag looking for move better than alpha
    i32 pvNextIndex = pvIndex + depth;
 
    //Test the TT table
@@ -440,16 +439,13 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
 
    Move bestMove = NO_MOVE;
    i32 bestScore = MIN_EVAL;
+   char bSearchPv = TRUE;  // Flag looking for move better than alpha
    Position prevPos = *pos;
    for (i32 i = 0; i < size; i++)  {
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
       selectSort(i, moveList, moveVals, size, ttMove, killerMoves[(i32)ply], KMV_CNT);
-
-      //printf("Selected move: ");
-      //printMove(moveList[i]);
-      //printf("\n");
 
       makeMove(pos, moveList[i]);
 
@@ -459,7 +455,6 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
       if(pos->flags & IN_CHECK) prunable_move = FALSE; // If in check
       if(GET_FLAGS(moveList[i]) & ~DOUBLE_PAWN_PUSH) prunable_move = FALSE; // If the move is anything but dpp / queit
       if(pos->stage == END_GAME) prunable_move = FALSE; // If its the endgame
-      if ( bSearchPv ) prunable_move = FALSE;
 
       if( prunable_move && 
           depth == 1 && 
@@ -482,10 +477,8 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
          debug[PVS][NODE_LMR_REDUCTIONS] += MAX(((depth - 1) - search_depth), 0);
          #endif
          score = -zwSearch(pos, -alpha, search_depth, ply + 1, pvArray);
-         //printf("zw search score = %d\n", score);
-         if ( score > alpha && score < beta){
+         if ( score > alpha ){
             score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
-            //printf("PV zw search pv score = %d\n", score);
          }
       }
 
@@ -609,7 +602,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
    if(pos->stage == END_GAME) prunable = FALSE;
 
    //Null move prunin'
-   if(prunable && depth > 2 && pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
+   if(prunable && depth > (NULL_PRUNE_R + 1) && pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
       #ifdef DEBUG
       debug[ZWS][NODE_PRUNED_NULL]++;
       #endif
@@ -795,7 +788,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
 
       if( score >= beta ){
          storeKillerMove(ply, moveList[i]);
-         //storeTTEntry(prevPos.hash, 0, score, CUT_NODE, moveList[i]);
+         storeTTEntry(prevPos.hash, 0, score, CUT_NODE, moveList[i]);
          #ifdef DEBUG
          debug[QS][NODE_BETA_CUT]++;
          #endif
