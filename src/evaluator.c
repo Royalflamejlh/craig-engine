@@ -32,15 +32,15 @@
 #define DOUBLE_BISHOP_BONUS   700  // Bonus for having both bishops
 #define DOUBLE_ROOK_PEN       100  // Penality for having both rooks
 
-#define PST_PAWN_MULT_OPN      10  // PST Mult Pawns in Eval
-#define PST_PAWN_MULT_MID       8  // PST Mult Pawns in Eval
-#define PST_PAWN_MULT_END       7  // PST Mult Pawns in Eval
+#define PST_PAWN_MULT_OPN       7  // PST Mult Pawns in Eval
+#define PST_PAWN_MULT_MID       5  // PST Mult Pawns in Eval
+#define PST_PAWN_MULT_END       4  // PST Mult Pawns in Eval
 
-#define PST_KNIGHT_MULT_OPN   100  // PST Mult Knights in Eval
+#define PST_KNIGHT_MULT_OPN    70  // PST Mult Knights in Eval
 #define PST_KNIGHT_MULT_MID    50  // PST Mult Knights in Eval
 #define PST_KNIGHT_MULT_END    25  // PST Mult Knights in Eval
 
-#define PST_BISHOP_MULT_OPN   100  // PST Mult Bishop in Eval
+#define PST_BISHOP_MULT_OPN    70  // PST Mult Bishop in Eval
 #define PST_BISHOP_MULT_MID    50  // PST Mult Bishop in Eval
 #define PST_BISHOP_MULT_END    25  // PST Mult Bishop in Eval
 
@@ -53,7 +53,7 @@
 #define PST_ROOK_MULT_END      20  // PST Mult Rook in Eval
 
 #define PST_KING_MULT_OPN      20  // PST Mult King in Eval
-#define PST_KING_MULT_MID      75  // PST Mult King in Eval
+#define PST_KING_MULT_MID      40  // PST Mult King in Eval
 #define PST_KING_MULT_END      30  // PST Mult King in Eval
 
 // Defines for Movement Eval
@@ -144,7 +144,7 @@ i32 see ( Position pos, u32 toSq, PieceIndex target, u32 frSq, PieceIndex aPiece
     while (fromSet) {
         d++; // next depth and side
         gain[d]  = pieceValues[aPiece] - gain[d-1]; // Speculative store
-        if (-gain[d-1] < 0 && gain[d] < 0) break; // Pruning
+        //if (-gain[d-1] < 0 && gain[d] < 0) break; // Pruning
         attadef ^= fromSet; // reset bit in set to traverse
         removed |= fromSet; // Update bitboard storing removed pieces
         if ( fromSet & mayXray ){ // If the piece was possibly xrayed through

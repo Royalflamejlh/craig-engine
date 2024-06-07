@@ -598,12 +598,12 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
    if(pos->stage == END_GAME) prunable = FALSE;
 
    //Null move prunin'
-   if(prunable && depth > (NULL_PRUNE_R + 1) && pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
-      #ifdef DEBUG
-      debug[ZWS][NODE_PRUNED_NULL]++;
-      #endif
-      return beta;
-   }
+   // if(prunable && depth > (NULL_PRUNE_R + 1) && pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
+   //    #ifdef DEBUG
+   //    debug[ZWS][NODE_PRUNED_NULL]++;
+   //    #endif
+   //    return beta;
+   // }
 
    evalMoves(moveList, moveVals, size, *pos);
 
@@ -627,13 +627,18 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
       if(GET_FLAGS(moveList[i]) & ~DOUBLE_PAWN_PUSH) prunable_move = FALSE; // If the move is anything but dpp
       if(pos->stage == END_GAME) prunable_move = FALSE; // If its the endgame
 
-      if( prunable_move && depth == 1){
-         if(pos->quick_eval + moveVals[i] < beta-1 - FUTIL_MARGIN){ // Futility Pruning
-            #ifdef DEBUG
-            debug[ZWS][NODE_PRUNED_FUTIL]++;
-            #endif
-            *pos = prevPos; // Unmake Move
-            continue;
+      if( prunable_move && depth == 1){ // Futility Pruning
+         i32 eval = evaluate(prevPos 
+                              #ifdef DEBUG
+                              , FALSE
+                              #endif
+                              );
+         if(eval + moveVals[i] < beta-1 - FUTIL_MARGIN){ 
+         #ifdef DEBUG
+         debug[ZWS][NODE_PRUNED_FUTIL]++;
+         #endif // Unmake Move
+         *pos = prevPos;
+         continue;
          }
       }
       

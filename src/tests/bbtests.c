@@ -276,6 +276,10 @@ i32 testBB(void) {
     val = see(testpos, E5, WHITE_PAWN, D7, BLACK_KNIGHT);
     printf("See val: %d\n", val);
 
+    testpos = fenToPosition("rnkr3b/6pp/2p1b3/p3p1N1/2q1N3/1R3Q2/P1PPPP1P/2BKR3 w - -");
+    val = see(testpos, E6, BLACK_BISHOP, G5, WHITE_KNIGHT);
+    printf("See val: %d\n", val);
+
     
 
     printf("Press Enter to Continue\n");
