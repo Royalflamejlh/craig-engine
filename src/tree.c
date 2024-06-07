@@ -21,7 +21,7 @@
 
 #define KMV_CNT 3 //How many killer moves are stored for a pos 
 
-#define MAX_QUIESCE_PLY 5 //How far q search can go 
+#define MAX_QUIESCE_PLY 10 //How far q search can go 
 #define MAX_PLY 255 //How far the total search can go
 
 #define LMR_DEPTH 3 //LMR not performed if depth < LMR_DEPTH
@@ -439,10 +439,6 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
    }
    #endif
 
-   //Set up late move reduction rules
-   char LMR_allowed = TRUE;
-   if(pos->flags & IN_CHECK) LMR_allowed = FALSE;
-
    #ifdef DEBUG
    if(size > 0) debug[PVS][NODE_LOOP_CHILDREN]++;
    #endif
@@ -482,7 +478,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
          score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
          //printf("PV b search pv score = %d\n", score);
       } else {
-         i32 search_depth = getSearchDepth(depth, i, pos->flags, LMR_allowed, PVS);
+         i32 search_depth = getSearchDepth(depth, i, pos->flags, prunable, PVS);
          #ifdef DEBUG
          debug[PVS][NODE_LMR_REDUCTIONS] += MAX(((depth - 1) - search_depth), 0);
          #endif
@@ -627,10 +623,6 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
 
    evalMoves(moveList, moveVals, size, *pos);
 
-   //Set up late move reduction rules
-   char LMR_allowed = TRUE;
-   if(pos->flags & IN_CHECK) LMR_allowed = FALSE;
-
    #ifdef DEBUG
    if(size > 0) debug[ZWS][NODE_LOOP_CHILDREN]++;
    #endif
@@ -658,7 +650,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
          continue;
       }
       
-      char search_depth = getSearchDepth(depth, i, pos->flags, LMR_allowed, ZWS);
+      char search_depth = getSearchDepth(depth, i, pos->flags, prunable, ZWS);
       #ifdef DEBUG
       debug[ZWS][NODE_LMR_REDUCTIONS] += MAX(((depth - 1) - search_depth), 0);
       //printf("zws further search score %d\n", score);
