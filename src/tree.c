@@ -17,6 +17,9 @@
 
 #define ID_STEP 1 //Changing this may break Aspiration windows (it will)
 
+#define PV_PRUNE_MOVE_IDX     5 // Move to start pruning on in pv
+#define PRUNE_MOVE_IDX        2 // Move to start pruning on otherwise
+
 #define CHECKMATE_VALUE -MAX_EVAL + 1000
 
 #define KMV_CNT 3 //How many killer moves are stored for a pos 
@@ -35,7 +38,9 @@
 #define RAZOR_DEPTH 3 //Depth to start razoring
 #define RAZOR_MARGIN PAWN_VALUE*3 - 100 //Margin to start razoring
 
-#define NULL_PRUNE_R 2 //How much Null prunin' takes off
+#define NULL_PRUNE_R 3 //How much Null prunin' takes off
+
+#define DELTA_VALUE 2000
 
 
 //static void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size);
@@ -450,9 +455,9 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
 
       // Update prunability PVS
       u8 prunable_move = prunable;
-      if(i <= 2) prunable_move = FALSE;
+      if(i <= PV_PRUNE_MOVE_IDX) prunable_move = FALSE;
       if(pos->flags & IN_CHECK) prunable_move = FALSE; // If in check
-      if(GET_FLAGS(moveList[i]) & ~DOUBLE_PAWN_PUSH) prunable_move = FALSE; // If the move is anything but dpp
+      if(GET_FLAGS(moveList[i]) & ~DOUBLE_PAWN_PUSH) prunable_move = FALSE; // If the move is anything but dpp / queit
       if(pos->stage == END_GAME) prunable_move = FALSE; // If its the endgame
       if ( bSearchPv ) prunable_move = FALSE;
 
@@ -640,7 +645,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
 
       // Set Move prunability prunability ZWS
       u8 prunable_move = prunable;
-      if(i <= 2) prunable_move = FALSE;
+      if(i <= PRUNE_MOVE_IDX) prunable_move = FALSE;
       if(pos->flags & IN_CHECK) prunable_move = FALSE; // If in check
       if(GET_FLAGS(moveList[i]) & ~DOUBLE_PAWN_PUSH) prunable_move = FALSE; // If the move is anything but dpp
       if(pos->stage == END_GAME) prunable_move = FALSE; // If its the endgame
@@ -780,6 +785,8 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
       #endif
       selectSort(i, moveList, moveVals, size, ttMove, killerMoves[(i32)ply], KMV_CNT); 
 
+      if(moveVals[i] < 0) break;
+
       makeMove(pos, moveList[i]);
 
       i32 score = -quiesce(pos,  -beta, -alpha, ply + 1, q_ply + 1, pvArray);
@@ -796,7 +803,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
       }
 
       //Delta Pruning
-      i32 delta = QUEEN_VALUE;
+      i32 delta = DELTA_VALUE;
       if (GET_FLAGS(moveList[i]) & PROMOTION) delta += (QUEEN_VALUE - PAWN_VALUE);
       if ( score < alpha - delta && pos->stage != END_GAME) {
          storeKillerMove(ply, moveList[i]);
