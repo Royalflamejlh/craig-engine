@@ -35,9 +35,6 @@
 #define FUTIL_DEPTH 2 //Depth to start futility pruning
 #define FUTIL_MARGIN PAWN_VALUE-100 //Score difference for a node to be futility pruned
 
-#define RAZOR_DEPTH 3 //Depth to start razoring
-#define RAZOR_MARGIN PAWN_VALUE*3 - 100 //Margin to start razoring
-
 #define NULL_PRUNE_R 3 //How much Null prunin' takes off
 
 #define DELTA_VALUE 2000
@@ -71,7 +68,6 @@ typedef enum stats{
    NODE_TT_ALPHA_RET,
    
    NODE_PRUNED_NULL,
-   NODE_PRUNED_RAZOR,
    NODE_PRUNED_FUTIL,
    NODE_LMR_REDUCTIONS,
 
@@ -119,8 +115,8 @@ void printTreeDebug(void){
       }
       printf("%s: Called: %" PRIu64 ", Entered Move Loop: %" PRIu64 ", Beta Cuts: %" PRIu64 ", Alpha Returns: %" PRIu64 "\n",
             typestr, debug[i][NODE_COUNT], debug[i][NODE_LOOP_CHILDREN], debug[i][NODE_BETA_CUT], debug[i][NODE_ALPHA_RET]);
-      printf("     Null Prunes: %" PRIu64 ", Razor Prunes: %" PRIu64 ", Futil Prunes: %" PRIu64 ", LMR: %" PRIu64 " \n",
-            debug[i][NODE_PRUNED_NULL], debug[i][NODE_PRUNED_RAZOR], debug[i][NODE_PRUNED_FUTIL], debug[i][NODE_LMR_REDUCTIONS]);
+      printf("     Null Prunes: %" PRIu64 ", Futil Prunes: %" PRIu64 ", LMR: %" PRIu64 " \n",
+            debug[i][NODE_PRUNED_NULL], debug[i][NODE_PRUNED_FUTIL], debug[i][NODE_LMR_REDUCTIONS]);
       printf("     TT Hits: %" PRIu64 ", TT PVS Returns: %" PRIu64 ", TT Beta Returns: %" PRIu64 ", TT Alpha Returns: %" PRIu64 " \n\n",
             debug[i][NODE_TT_HIT], debug[i][NODE_TT_PVS_RET], debug[i][NODE_TT_BETA_RET], debug[i][NODE_TT_ALPHA_RET]);
    }
@@ -609,18 +605,6 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
       return beta;
    }
 
-   //Razoring
-   if(prunable && (depth <= RAZOR_DEPTH) && (pos->quick_eval + RAZOR_MARGIN < beta)){ 
-      i32 razor_score = quiesce(pos, beta-1, beta, ply, 0, pvArray);
-      if(razor_score < beta){
-         #ifdef DEBUG
-         debug[ZWS][NODE_PRUNED_RAZOR]++;
-         //printf("zws prune razor: %d\n", beta-1);
-         #endif
-         return beta-1;
-      }
-   }
-
    evalMoves(moveList, moveVals, size, *pos);
 
    #ifdef DEBUG
@@ -643,14 +627,14 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
       if(GET_FLAGS(moveList[i]) & ~DOUBLE_PAWN_PUSH) prunable_move = FALSE; // If the move is anything but dpp
       if(pos->stage == END_GAME) prunable_move = FALSE; // If its the endgame
 
-      if( prunable_move   && 
-          depth == 1 && 
-          pos->quick_eval + moveVals[i] < beta-1 - FUTIL_MARGIN){ // Futility Pruning
-         #ifdef DEBUG
-         debug[ZWS][NODE_PRUNED_FUTIL]++;
-         #endif
-         *pos = prevPos; // Unmake Move
-         continue;
+      if( prunable_move && depth == 1){
+         if(pos->quick_eval + moveVals[i] < beta-1 - FUTIL_MARGIN){ // Futility Pruning
+            #ifdef DEBUG
+            debug[ZWS][NODE_PRUNED_FUTIL]++;
+            #endif
+            *pos = prevPos; // Unmake Move
+            continue;
+         }
       }
       
       char search_depth = getSearchDepth(depth, moveList[i], prunable_move, ZWS);

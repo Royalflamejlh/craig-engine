@@ -1,1 +1,2 @@
-position startpos moves e2e4 e7e5 g1f3 b8c6 f1b5 g8f6 e1g1 a7a6 b5c6 d7c6 f3e5
+doesnt see the fork
+position fen rnkr3b/6pp/2p1b3/p3p1N1/2q1N3/1R3Q2/P1PPPP1P/2BKR3 w - a6 0 16 
