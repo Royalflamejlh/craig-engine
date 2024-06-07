@@ -10,9 +10,11 @@
 
 //Piece values defined in header
 
-#define BASE_ATTACK_BONUS   3  // Eval for each enemy piece under attack
-#define BASE_DEFEND_BONUS   3  // Eval for each defended piece
-#define BASE_HANGING_PEN   10  // Eval lost for hanging a piece
+#define BASE_ATTACK_BONUS   5  // Eval for each enemy piece under attack
+#define BASE_DEFEND_BONUS  10  // Eval for each defended piece
+#define BASE_HANGING_PEN   90  // Eval lost for hanging a piece
+
+#define TO_MOVE_BONUS      50  // Eval bonus for being your turn
 
 #define CHECK_PEN         100  // Eval lost under check
 
@@ -21,11 +23,14 @@
 #define ISO_PAWN_PEN      100  // Eval lost for isolated pawns
 
 #define PAWN_MOB      15  // Mobility bonus for Pawns in Eval
-#define KNIGHT_MOB    30  // Mobility bonus for Knights in Eval
+#define KNIGHT_MOB    35  // Mobility bonus for Knights in Eval
 #define BISHOP_MOB    30  // Mobility bonus for Bishop in Eval
 #define QUEEN_MOB     10  // Mobility bonus for Queen in Eval
 #define ROOK_MOB      10  // Mobility bonus for Rook in Eval
 #define KING_MOB      50  // Mobility bonus for King in Eval
+
+#define DOUBLE_BISHOP_BONUS   700  // Bonus for having both bishops
+#define DOUBLE_ROOK_PEN       100  // Penality for having both rooks
 
 #define PST_PAWN_MULT_OPN      15  // PST Mult Pawns in Eval
 #define PST_PAWN_MULT_MID      10  // PST Mult Pawns in Eval
@@ -89,7 +94,7 @@ inline i32 quickEval(Position pos){
 i32 eval_mobility(Position position){
     i32 score = 0;
     i32 size[] = {0};
-    i32 turn = position.flags & WHITE_TURN; //True for white false for black
+    i32 turn = position.flags & WHITE_TURN; // True for white false for black
     u64 ownPos = position.color[turn];
     u64 oppPos = position.color[!turn];
     u64 oppAttackMask = position.attack_mask[!turn];
@@ -151,13 +156,22 @@ i32 evaluate(Position pos
     if(piece_count_w <= 2 && piece_count_b <= 2){
         if((pos.knight[0] | pos.bishop[0]) && (pos.knight[1] | pos.bishop[1])) return 0;
     }
-   
     
 
     #ifdef DEBUG
     if(verbose){
         printf("\nEval for stage: %d, Starting at: %d\n", stage, eval_val);
     }
+    #endif
+
+    //
+    // TURN
+    //
+    if(turn) eval_val += TO_MOVE_BONUS;
+    else     eval_val -= TO_MOVE_BONUS;
+
+    #ifdef DEBUG
+    if(verbose) printf("After To Move Bonus: %d\n", eval_val);
     #endif
  
     //
@@ -175,13 +189,20 @@ i32 evaluate(Position pos
     //
     // Penalities
     //
-
     if(pos.flags & IN_CHECK) eval_val -= CHECK_PEN; // Penalty for being in check
 
     #ifdef DEBUG
     if(verbose) printf("After Penalties: %d\n", eval_val);
     #endif
 
+    //
+    // Pairing
+    //
+    if (count_bits(pos.bishop[turn]) == 2)  eval_val += DOUBLE_BISHOP_BONUS;
+    if (count_bits(pos.bishop[!turn]) == 2) eval_val -= DOUBLE_BISHOP_BONUS;
+
+    if (count_bits(pos.rook[turn])  == 2) eval_val -= DOUBLE_ROOK_PEN;
+    if (count_bits(pos.rook[!turn]) == 2) eval_val += DOUBLE_ROOK_PEN;
 
     //
     // Defense
