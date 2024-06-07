@@ -25,15 +25,15 @@
 #define KMV_CNT 3 //How many killer moves are stored for a pos 
 
 #define MAX_QUIESCE_PLY 10 //How far q search can go 
-#define MAX_PLY 255 //How far the total search can go
+#define MAX_PLY 255 // How far the total search can go
 
-#define LMR_DEPTH 3 //LMR not performed if depth < LMR_DEPTH
+#define LMR_DEPTH 3 // LMR not performed if depth < LMR_DEPTH
 
-#define MAX_ASP_START PAWN_VALUE-100 //Maximum size of bounds for an aspiration window to start on
-#define ASP_EDGE PAWN_VALUE/4  //Buffer size of aspiration window
+#define MAX_ASP_START PAWN_VALUE-100 // Maximum size of bounds for an aspiration window to start on
+#define ASP_EDGE PAWN_VALUE/4  // Buffer size of aspiration window
 
-#define FUTIL_DEPTH 2 //Depth to start futility pruning
-#define FUTIL_MARGIN PAWN_VALUE-100 //Score difference for a node to be futility pruned
+#define FUTIL_DEPTH 2 // Depth to start futility pruning
+#define FUTIL_MARGIN PAWN_VALUE-100 // Score difference for a node to be futility pruned
 
 #define NULL_PRUNE_R 3 //How much Null prunin' takes off
 
@@ -299,7 +299,7 @@ i32 getBestMove(Position pos
 * Pruning Methods
 */
 
-//Null Move Search
+// Null Move Search
 static i32 pruneNullMoves(Position* pos, i32 beta, i32 depth, i32 ply, Move* pvArray){
    Position prevPos = *pos;
    makeNullMove(pos);
@@ -308,18 +308,14 @@ static i32 pruneNullMoves(Position* pos, i32 beta, i32 depth, i32 ply, Move* pvA
    return score;
 }
 
-//Late move reduction
-static u8 getSearchDepth(char curDepth, Move move, i32 allowLMR, char searchType){
+// Late move reduction
+static u8 getSearchDepth(u8 curDepth, u8 moveIdx, u8 moveCount, Move move, i32 allowLMR){
    if(curDepth < LMR_DEPTH) return curDepth - 1;
    if(!allowLMR) return curDepth - 1;
    if(GET_FLAGS(move) & ~DOUBLE_PAWN_PUSH) return curDepth - 1; // If anything but double pawn push
-   if(searchType == PVS){
-      return curDepth/3;
-   }
-   else{
-      return curDepth/3;
-   }
-   return curDepth - 1;
+   if(moveIdx < moveCount / 4) return curDepth - 1;
+   if(moveIdx < moveCount / 2) return curDepth/2;
+   return curDepth/3;
 }
 
 /*
@@ -445,22 +441,22 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
 
       makeMove(pos, moveList[i]);
 
-      // Update prunability PVS
+      // Update Prunability PVS
       u8 prunable_move = prunable;
       if(i <= PV_PRUNE_MOVE_IDX) prunable_move = FALSE;
       if(pos->flags & IN_CHECK) prunable_move = FALSE; // If in check
       if(GET_FLAGS(moveList[i]) & ~DOUBLE_PAWN_PUSH) prunable_move = FALSE; // If the move is anything but dpp / queit
       if(pos->stage == END_GAME) prunable_move = FALSE; // If its the endgame
 
-      if( prunable_move && 
-          depth == 1 && 
-          pos->quick_eval + moveVals[i] < alpha - FUTIL_MARGIN){ //Futility Pruning (Just prune the nodes that are expect to be poop)
-         #ifdef DEBUG
-         //printf("PVS Futil Prune (qe=%d) + (moveVal=%d) < %d\n", quickEval(*pos), moveVals[i], beta-1 + FUTIL_MARGIN);
-         debug[PVS][NODE_PRUNED_FUTIL]++;
-         #endif
-         *pos = prevPos; //Unmake Move
-         continue;
+      if( prunable_move && depth == 1){ //Futility Pruning
+         if(prevPos.quick_eval + moveVals[i] < alpha - FUTIL_MARGIN){ 
+            #ifdef DEBUG
+            //printf("PVS Futil Prune (qe=%d) + (moveVal=%d) < %d\n", quickEval(*pos), moveVals[i], beta-1 + FUTIL_MARGIN);
+            debug[PVS][NODE_PRUNED_FUTIL]++;
+            #endif
+            *pos = prevPos; //Unmake Move
+            continue;
+         }
       }
 
       i32 score;
@@ -468,11 +464,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
          score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
          //printf("PV b search pv score = %d\n", score);
       } else {
-         i32 search_depth = getSearchDepth(depth, moveList[i], prunable_move, PVS);
-         #ifdef DEBUG
-         debug[PVS][NODE_LMR_REDUCTIONS] += MAX(((depth - 1) - search_depth), 0);
-         #endif
-         score = -zwSearch(pos, -alpha, search_depth, ply + 1, pvArray);
+         score = -zwSearch(pos, -alpha, depth - 1, ply + 1, pvArray);
          if ( score > alpha ){
             score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
          }
@@ -598,12 +590,12 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
    if(pos->stage == END_GAME) prunable = FALSE;
 
    //Null move prunin'
-   // if(prunable && depth > (NULL_PRUNE_R + 1) && pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
-   //    #ifdef DEBUG
-   //    debug[ZWS][NODE_PRUNED_NULL]++;
-   //    #endif
-   //    return beta;
-   // }
+   if(prunable && depth > (NULL_PRUNE_R + 1) && pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
+      #ifdef DEBUG
+      debug[ZWS][NODE_PRUNED_NULL]++;
+      #endif
+      return beta;
+   }
 
    evalMoves(moveList, moveVals, size, *pos);
 
@@ -628,12 +620,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
       if(pos->stage == END_GAME) prunable_move = FALSE; // If its the endgame
 
       if( prunable_move && depth == 1){ // Futility Pruning
-         i32 eval = evaluate(prevPos 
-                              #ifdef DEBUG
-                              , FALSE
-                              #endif
-                              );
-         if(eval + moveVals[i] < beta-1 - FUTIL_MARGIN){ 
+         if(prevPos.quick_eval + moveVals[i] < beta-1 - FUTIL_MARGIN){ 
          #ifdef DEBUG
          debug[ZWS][NODE_PRUNED_FUTIL]++;
          #endif // Unmake Move
@@ -642,7 +629,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
          }
       }
       
-      char search_depth = getSearchDepth(depth, moveList[i], prunable_move, ZWS);
+      char search_depth = getSearchDepth(depth, i, size, moveList[i], prunable_move);
       #ifdef DEBUG
       debug[ZWS][NODE_LMR_REDUCTIONS] += MAX(((depth - 1) - search_depth), 0);
       //printf("zws further search score %d\n", score);
