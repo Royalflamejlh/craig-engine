@@ -373,7 +373,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
    }
    if(pos->halfmove_clock >= 100) return 0;
 
-   char bSearchPv = 1;  //Flag for if we are principled
+   char bSearchPv = TRUE;  // Flag looking for move better than alpha
    i32 pvNextIndex = pvIndex + depth;
 
    //Test the TT table
@@ -512,7 +512,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
          alpha = score;
          pvArray[pvIndex] = moveList[i];
          movcpy(pvArray + pvIndex + 1, pvArray + pvNextIndex, depth - 1);
-         bSearchPv = 0; 
+         bSearchPv = FALSE; 
       }
       if( score > bestScore ){ //Improved best move
          bestMove = moveList[i];

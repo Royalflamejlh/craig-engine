@@ -138,6 +138,22 @@ i32 evaluate(Position pos
     i32 turn = pos.flags & WHITE_TURN;
     i32 stage = pos.stage;
     
+    // Insufficient Material Stuff
+    u32 piece_count_w = count_bits(pos.color[0]);
+    u32 piece_count_b = count_bits(pos.color[1]);
+    if(piece_count_w == 1 && piece_count_b == 1) return 0;
+    if(piece_count_w <= 2 && piece_count_b == 1){
+        if((pos.knight[0] | pos.bishop[0])) return 0; 
+    }
+    if(piece_count_w == 1 && piece_count_b <= 2){
+        if((pos.knight[1] | pos.bishop[1])) return 0;
+    }
+    if(piece_count_w <= 2 && piece_count_b <= 2){
+        if((pos.knight[0] | pos.bishop[0]) && (pos.knight[1] | pos.bishop[1])) return 0;
+    }
+   
+    
+
     #ifdef DEBUG
     if(verbose){
         printf("\nEval for stage: %d, Starting at: %d\n", stage, eval_val);
