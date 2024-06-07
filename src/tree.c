@@ -439,7 +439,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
 
    Move bestMove = NO_MOVE;
    i32 bestScore = MIN_EVAL;
-   char bSearchPv = TRUE;  // Flag looking for move better than alpha
+   u8 exact = FALSE;
    Position prevPos = *pos;
    for (i32 i = 0; i < size; i++)  {
       #ifdef DEBUG
@@ -468,7 +468,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
       }
 
       i32 score;
-      if ( bSearchPv ) {
+      if ( i == 0 ) { // Only do full PV on the first move
          score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
          //printf("PV b search pv score = %d\n", score);
       } else {
@@ -502,16 +502,16 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
       }
       if( score > alpha ) {  //Improved alpha
          alpha = score;
+         exact = TRUE;
          pvArray[pvIndex] = moveList[i];
          movcpy(pvArray + pvIndex + 1, pvArray + pvNextIndex, depth - 1);
-         bSearchPv = FALSE; 
       }
       if( score > bestScore ){ //Improved best move
          bestMove = moveList[i];
          bestScore = moveVals[i];
       }
    }
-   if (!bSearchPv) {
+   if (exact) {
       // PV Node (exact value)
       storeTTEntry(pos->hash, depth, alpha, PV_NODE, pvArray[pvIndex]);
    } else {
