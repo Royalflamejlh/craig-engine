@@ -171,13 +171,22 @@ Move moveStrToType(Position pos, char* str){
 }
 
 void printPV(Move *pvArray, i32 depth) {
-    printf("Principal Variation at depth %d: ", depth);
     for (i32 i = 0; i < depth; i++) {
         if(pvArray[i] != NO_MOVE){ 
             printMove(pvArray[i]);
             printf(" ");
         }
     }
+}
+
+void printPVInfo(i32 depth, i32 score, Move *pvArray){
+    printf("info ");
+    printf("depth %d ", depth);
+    printf("score cp %d ", score/10);
+    printf("pv ");
+    printPV(pvArray, depth);
+    printf("\n");
+    fflush(stdout);
 }
 
 Stage calculateStage(Position pos){

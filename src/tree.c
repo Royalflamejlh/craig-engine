@@ -266,12 +266,16 @@ i32 getBestMove(Position pos
       
 
       #ifdef DEBUG
+      printf("Principal Variation at depth %d: ", depth);
       printPV(pvArray, i);
       printf("found with score %d\n", eval);
       printTreeDebug();
       printTTDebug();
       printf("\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
       #endif // DEBUG
+
+      //TODO: move to a different thread
+      printPVInfo(i, eval, pvArray);
 
       global_best_move = pvArray[0];
       free(pvArray);
