@@ -8,6 +8,7 @@
 
 #include "types.h"
 void printMove(Move move);
+void printBestMove(Move move);
 void printMoveShort(Move move);
 void printMoveSpaced(Move move);
 u64 perft(i32 depth, Position pos);

@@ -80,6 +80,50 @@ void printMove(Move move){
     }
 }
 
+void printBestMove(Move move){
+    char str[6];
+    str[0] = (GET_FROM(move) % 8) + 'a';
+    str[1] = (GET_FROM(move) / 8) + '1';
+    str[2] = (GET_TO(move) % 8) + 'a';
+    str[3] = (GET_TO(move) / 8) + '1';
+    str[4] = '\0';
+
+    switch(GET_FLAGS(move)){
+        case QUEEN_PROMO_CAPTURE:
+        case QUEEN_PROMOTION:
+            str[4] = 'q';
+            str[5] = '\0';
+            break;
+        case ROOK_PROMO_CAPTURE:
+        case ROOK_PROMOTION:
+            str[4] = 'r';
+            str[5] = '\0';
+            break;
+        case BISHOP_PROMO_CAPTURE:
+        case BISHOP_PROMOTION:
+            str[4] = 'b';
+            str[5] = '\0';
+            break;
+        case KNIGHT_PROMO_CAPTURE:
+        case KNIGHT_PROMOTION:
+            str[4] = 'n';
+            str[5] = '\0';
+            break;
+        default:
+            break;
+    }
+
+    #if defined(_WIN32) || defined(_WIN64)
+    printf("bestmove %s\r\n", str);
+    #else
+    printf("bestmove %s\n", str);
+    #endif
+
+    fflush(stdout);
+    return;
+
+}
+
 void printMoveShort(Move move){
     i32 from = GET_FROM(move);
     i32 to = GET_TO(move);
@@ -118,9 +162,6 @@ void printMoveSpaced(Move move){
     }
 }
 
-
-
-
 u64 perft(i32 depth, Position pos){
   Move move_list[256];
   i32 n_moves, i;
@@ -128,7 +169,6 @@ u64 perft(i32 depth, Position pos){
 
   if (depth == 0) 
     return 1ULL;
-
 
   n_moves = generateLegalMoves(pos, move_list);
 

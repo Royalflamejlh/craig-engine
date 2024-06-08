@@ -263,11 +263,7 @@ static void exit_search(Move* pvArray){
 /*
 * Get that move son.
 */
-i32 getBestMove(Position pos
-#ifdef MAX_DEPTH
-, u32 depth
-#endif
-){
+i32 getBestMove(Position pos, u32 depth){
    clearKillerMoves(); //TODO: make thread safe!
    #ifdef DEBUG
    clearDebug();
@@ -277,11 +273,7 @@ i32 getBestMove(Position pos
    u32 i = 1;
    i32 eval = 0, eval_prev = 0, asp_upper = 0, asp_lower = 0;
 
-   while(run_get_best_move 
-         #ifdef MAX_DEPTH
-         && i <= depth
-         #endif
-         ){
+   while(run_get_best_move && i <= depth){
       #ifdef DEBUG
       startTreeDebug();
       startTTDebug();

@@ -33,6 +33,16 @@ typedef real64 d64;
 #define TRUE 1
 #define FALSE 0
 
+#define MAX_SEARCH_DEPTH 256 // Total max search depth (always)
+
+#if defined(__PROFILE)
+#define MAX_DEPTH 6
+#endif
+
+#ifndef MAX_DEPTH
+#define MAX_DEPTH MAX_SEARCH_DEPTH
+#endif
+
 #define MAX_EVAL       9999999
 #define MIN_EVAL      -9999999
 
@@ -45,7 +55,6 @@ typedef real64 d64;
 #define MAX_MOVES 256 // Most moves possible in a single position
 #define MAX_FEN_LEN 100 // Max length of a fen string
 #define GAME_MOVES 12288 // Most moves possible in a game
-
 
 #define NO_MOVE 0
 

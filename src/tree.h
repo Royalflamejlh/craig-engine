@@ -2,19 +2,9 @@
 #define tree_h
 #include "types.h"
 
-#define MAX_SEARCH_DEPTH 256 // Total max search depth (always)
-
-#if defined(__PROFILE)
-#define MAX_DEPTH 6
-#endif
-
 u32 getHistoryScore(char pos_flags, Move move);
 
-i32 getBestMove(Position pos
-#ifdef MAX_DEPTH
-, u32 depth
-#endif
-);
+i32 getBestMove(Position pos, u32 depth);
 
 i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pvArray, i32 pvIndex);
 i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray );
