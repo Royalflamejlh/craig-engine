@@ -18,7 +18,7 @@ Move moveStrToType(Position pos, char* str);
 Stage calculateStage(Position pos);
 
 void printPV(Move *pvArray, i32 depth);
-void printPVInfo(i32 depth, i32 score, Move *pvArray);
+void printPVInfo(i32 depth, i32 score, Move *pvArray, u64 nodes, double time);
 
 static inline i32 count_bits(u64 v){
     u32 c;

@@ -39,6 +39,7 @@
 
 #define DELTA_VALUE 2000
 
+#define STORE_STATS
 
 //static void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size);
 
@@ -49,6 +50,24 @@ typedef enum searchs{
    SEARCH_TYPE_COUNT
 } SearchType;
 
+#ifdef STORE_STATS
+#include <time.h>
+static struct timespec stat_start_time, stat_end_time;
+double stat_elap_time;
+static u64 node_count;
+void startStats(void){
+   clock_gettime(CLOCK_MONOTONIC, &stat_start_time);
+   node_count = 0;
+   stat_elap_time = 0;
+}
+
+void stopStats(void){
+   clock_gettime(CLOCK_MONOTONIC, &stat_end_time);
+   stat_elap_time = (stat_end_time.tv_sec - stat_start_time.tv_sec) +
+                   (stat_end_time.tv_nsec - stat_start_time.tv_nsec) / 1e9;
+}
+#endif
+
 #ifdef DEBUG
 #include <assert.h>
 #if defined(__unix__) || defined(__APPLE__)
@@ -56,7 +75,6 @@ typedef enum searchs{
 #include <time.h>
 static struct timespec start_time, end_time;
 #endif
-
 
 typedef enum stats{
    NODE_COUNT,
@@ -209,6 +227,8 @@ i32 getBestMove(Position pos
       startTTDebug();
       #endif
 
+      startStats();
+
       if(!pvArray){
          printf("info Warning: failed to allocate space for pvArray");
          return -1;
@@ -264,9 +284,12 @@ i32 getBestMove(Position pos
       printf("\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
       #endif // DEBUG
 
+      stopStats();
+      
+      
       //TODO: move to a different thread
       #ifndef DEBUG
-      printPVInfo(i, eval, pvArray);
+      printPVInfo(i, eval, pvArray, node_count, stat_elap_time);
       #endif
 
       global_best_move = pvArray[0];

@@ -181,10 +181,13 @@ void printPV(Move *pvArray, i32 depth) {
     }
 }
 
-void printPVInfo(i32 depth, i32 score, Move *pvArray){
+void printPVInfo(i32 depth, i32 score, Move *pvArray, u64 nodes, double time){
     printf("info ");
     printf("depth %d ", depth);
     printf("score cp %d ", score/10);
+    printf("time %d ", (int)(time * 1000));
+    printf("nodes %lld ", (long long)nodes);
+    printf("nps %lld ", (long long)((double)nodes / time));
     printf("pv ");
     printPV(pvArray, depth);
     printf("\n");

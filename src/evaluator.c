@@ -29,6 +29,10 @@
 #define ROOK_MOB      10  // Mobility bonus for Rook in Eval
 #define KING_MOB      50  // Mobility bonus for King in Eval
 
+#define KING_SAFTEY_FRIEND 4 // Eval for each friendly piece next to king
+
+#define CONNECTED_ROOK_BONUS  100 // Eval for rooks being connected
+
 #define DOUBLE_BISHOP_BONUS   700  // Bonus for having both bishops
 #define DOUBLE_ROOK_PEN       100  // Penality for having both rooks
 
@@ -259,6 +263,13 @@ i32 evaluate(Position pos
     if (count_bits(pos.rook[turn])  == 2) eval_val -= DOUBLE_ROOK_PEN;
     if (count_bits(pos.rook[!turn]) == 2) eval_val += DOUBLE_ROOK_PEN;
 
+    if(pos.stage != END_GAME){
+        u64 rook1 = pos.rook[turn] & -pos.rook[turn];
+        if(getRookAttacks(rook1, pos.color[turn], pos.color[!turn]) & (pos.rook[turn] & ~rook1))  eval_val += CONNECTED_ROOK_BONUS;
+        rook1 = pos.rook[!turn] & -pos.rook[!turn];
+        if(getRookAttacks(rook1, pos.color[!turn], pos.color[turn]) & (pos.rook[!turn] & ~rook1)) eval_val -= CONNECTED_ROOK_BONUS;
+    }
+
     //
     // Defense
     //
@@ -306,6 +317,13 @@ i32 evaluate(Position pos
     if(verbose) printf("After Pawn Structure: %d\n", eval_val);
     #endif
 
+    // 
+    // King Safety
+    //
+    if(pos.stage != END_GAME){
+        eval_val += count_bits(getKingAttacks(pos.king[turn])  | pos.color[turn])  * KING_SAFTEY_FRIEND;
+        eval_val -= count_bits(getKingAttacks(pos.king[!turn]) | pos.color[!turn]) * KING_SAFTEY_FRIEND;
+    }
 
     //
     // Piece Square Tables (PST)
