@@ -1,5 +1,4 @@
 #include "hash.h"
-#include <stdint.h>
 #include "util.h"
 #include <time.h>
 #include <stdlib.h>

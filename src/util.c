@@ -1,5 +1,4 @@
 #include "util.h"
-#include "./bitboard/bbutils.h"
 #include "movement.h"
 #include "types.h"
 #include <stdio.h>
@@ -7,7 +6,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <signal.h>
 
 #define HASHSTACK_INIT_SIZE 256
 
@@ -80,6 +78,9 @@ void printMove(Move move){
     }
 }
 
+/*
+ * Prints the provided move as the best move in the UCI format
+ */
 void printBestMove(Move move){
     char str[6];
     str[0] = (GET_FROM(move) % 8) + 'a';
@@ -121,7 +122,6 @@ void printBestMove(Move move){
 
     fflush(stdout);
     return;
-
 }
 
 void printMoveShort(Move move){
@@ -240,15 +240,15 @@ void printPV(Move *pvArray, i32 depth) {
     }
 }
 
-void printPVInfo(i32 depth, i32 score, Move *pvArray, u64 nodes, double time){
+void printPVInfo(SearchData data){
     printf("info ");
-    printf("depth %d ", depth);
-    printf("score cp %d ", score/10);
-    printf("time %d ", (int)(time * 1000));
-    printf("nodes %lld ", (long long)nodes);
-    printf("nps %lld ", (long long)((double)nodes / time));
+    printf("depth %d ", data.depth);
+    printf("score cp %d ", data.eval/10);
+    printf("time %d ", (int)(data.stats.elap_time * 1000));
+    printf("nodes %lld ", (long long)data.stats.node_count);
+    printf("nps %lld ", (long long)((double)data.stats.node_count / data.stats.elap_time));
     printf("pv ");
-    printPV(pvArray, depth);
+    printPV(data.PVArray, data.depth);
     printf("\n");
     fflush(stdout);
 }

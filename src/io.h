@@ -1,2 +1,3 @@
 #include "types.h"
-i32 ioLoop();
+i32 inputLoop();
+i32 outputLoop();

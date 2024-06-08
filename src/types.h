@@ -5,8 +5,8 @@
 //  Created by John Howard on 11/21/23.
 //
 
-#ifndef types_h
-#define types_h
+#ifndef TYPES_H
+#define TYPES_H
 #include <stdint.h>
 #include <stddef.h>
 #include <inttypes.h>
@@ -232,8 +232,6 @@ typedef struct {
     u64 hash;
 } Node;
 
-
-
 typedef enum {
     A1, B1, C1, D1, E1, F1, G1, H1,
     A2, B2, C2, D2, E2, F2, G2, H2,
@@ -245,4 +243,32 @@ typedef enum {
     A8, B8, C8, D8, E8, F8, G8, H8
 } Square;
 
-#endif /* types_h */
+
+#if defined(__unix__) || defined(__APPLE__) // UNIX
+#include <time.h>
+typedef struct{
+    struct timespec start_time;
+    struct timespec end_time;
+    double elap_time;
+    u64 node_count;
+} SearchStats;
+#elif defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+typedef struct{
+    LARGE_INTEGER start_time;
+    LARGE_INTEGER end_time;
+    double elap_time;
+    u64 node_count;
+    double freq_inv;
+} SearchStats;
+#endif // Windows
+
+typedef struct{
+    Move* PVArray;
+    Move best_move;
+    u32 depth;
+    i32 eval;
+    SearchStats stats;
+} SearchData;
+
+#endif // TYPES_H

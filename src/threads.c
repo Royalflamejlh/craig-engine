@@ -1,5 +1,6 @@
 
 #include "threads.h"
+#include "types.h"
 #include "util.h"
 #include <stdio.h>
 #include <stdbool.h>
@@ -11,7 +12,7 @@
 #include "search.h"
 #include "io.h"
 
-#define NUM_SEARCH_THREADS 1
+#define NUM_SEARCH_THREADS 5
 
 #if defined(__unix__) || defined(__APPLE__)
 
@@ -41,19 +42,19 @@ void* timerThreadFunction(void* durationPtr) {
     clock_gettime(CLOCK_REALTIME, &ts);
     ts.tv_sec += duration;
 
-    u8 print; // Whether or not to print after completion
+    u8 timed_out; // Whether or not to print after completion
 
     pthread_mutex_lock(&timer_mutex);
     int result = pthread_cond_timedwait(&timer_cond, &timer_mutex, &ts);
     
     if (result == ETIMEDOUT) {
-        print = TRUE;
+        timed_out = TRUE;
         #ifdef DEBUG
         printf("info string Timer expired\n");
         fflush(stdout);
         #endif
     } else {
-        print = FALSE; // We dont want to print if manually stopped
+        timed_out = FALSE; // We dont want to print if manually stopped
         #ifdef DEBUG
         printf("info string Timer triggered early\n");
         fflush(stdout);
@@ -61,7 +62,12 @@ void* timerThreadFunction(void* durationPtr) {
     }
     pthread_mutex_unlock(&timer_mutex);
     
-    if(print) printBestMove(global_best_move);  // Call the function after waking up
+    
+    if(timed_out){ // Call the print function after waking up
+        while(best_move_found == FALSE);
+        printBestMove(get_global_best_move());
+        stopSearchThreads();
+    }
 
     #ifdef DEBUG
     printf("info string timer thread function finished\n");
@@ -112,14 +118,25 @@ void stopTimerThread() {
 }
 
 
-void *io_thread_entry(void *arg) {
+void *input_thread_entry(void *arg) {
     (void)arg;
 
     #ifdef DEBUG
-    printf("info string IO Thread running...\n");
+    printf("info string Input Thread running...\n");
     #endif
 
-    ioLoop();
+    inputLoop();
+    return NULL;
+}
+
+void *output_thread_entry(void *arg) {
+    (void)arg;
+
+    #ifdef DEBUG
+    printf("info string Output Thread running...\n");
+    #endif
+
+    outputLoop();
     return NULL;
 }
 
@@ -160,14 +177,17 @@ void stopSearchThreads(){
 }
 
 i32 launch_threads(void){
-    pthread_t io_thread;
-    if (pthread_create(&io_thread, NULL, io_thread_entry, NULL)) {
-        fprintf(stderr, "info string Error creating IO thread\n");
+    pthread_t input_thread, output_thread;
+    if (pthread_create(&input_thread, NULL, input_thread_entry, NULL)) {
+        fprintf(stderr, "info string Error creating Input thread\n");
         return 1;
     }
-
-    pthread_join(io_thread, NULL);
-    
+    if (pthread_create(&output_thread, NULL, output_thread_entry, NULL)) {
+        fprintf(stderr, "info string Error creating Output thread\n");
+        return 1;
+    }
+    pthread_join(input_thread, NULL);
+    pthread_join(output_thread, NULL);
     return 0;
 }
 
@@ -187,10 +207,11 @@ DWORD WINAPI timerThreadFunction(LPVOID durationPtr) {
     Sleep((DWORD)(duration));  // Sleep for the specified duration, convert seconds to milliseconds
 
     if (runTimerThread) {
-        printBestMove(global_best_move);  // Call the function after waking up
+        while(best_move_found == FALSE);
+        printBestMove(get_global_best_move());  // Call the function after waking up
+        stopSearchThreads();
     }
 
-    fflush(stdout);
     return 0;
 }
 
@@ -212,17 +233,26 @@ i32 startTimerThread(i64 durationInSeconds) {
 }
 
 void stopTimerThread() {
-    runTimerThread = 0;
+    runTimerThread = FALSE;
     WaitForSingleObject(timerThread, INFINITE);
     CloseHandle(timerThread);
 }
 
-DWORD WINAPI io_thread_entry(LPVOID arg) {
+DWORD WINAPI input_thread_entry(LPVOID arg) {
     (void)arg;
     #ifdef DEBUG
-    printf("info string IO Thread running...\n");
+    printf("info string Input Thread running...\n");
     #endif
-    ioLoop();
+    inputLoop();
+    return 0;
+}
+
+DWORD WINAPI output_thread_entry(LPVOID arg) {
+    (void)arg;
+    #ifdef DEBUG
+    printf("info string Output Thread running...\n");
+    #endif
+    outputLoop();
     return 0;
 }
 
@@ -251,16 +281,25 @@ void stopSearchThreads(){
 }
 
 i32 launch_threads(void){
-    HANDLE io_thread;
-    DWORD ioThreadId;
-    io_thread = CreateThread(NULL, 0, io_thread_entry, NULL, 0, &ioThreadId);
-    if (io_thread == NULL) {
-        fprintf(stderr, "info string Error creating IO thread\n");
+    HANDLE input_thread, output_thread;
+    DWORD inputThreadId, outputThreadId;
+    input_thread = CreateThread(NULL, 0, input_thread_entry, NULL, 0, &inputThreadId);
+    if (input_thread == NULL) {
+        fprintf(stderr, "info string Error creating Input thread\n");
         return 1;
     }
 
-    WaitForSingleObject(io_thread, INFINITE);
-    CloseHandle(io_thread);
+    output_thread = CreateThread(NULL, 0, output_thread_entry, NULL, 0, &outputThreadId);
+    if (output_thread == NULL) {
+        fprintf(stderr, "info string Error creating Output thread\n");
+        return 1;
+    }
+
+    WaitForSingleObject(input_thread, INFINITE);
+    CloseHandle(input_thread);
+
+    WaitForSingleObject(output_thread, INFINITE);
+    CloseHandle(output_thread);
 
     return 0;
 }

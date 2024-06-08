@@ -1,4 +1,3 @@
-#include "bitboard/bbutils.h"
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -13,17 +12,11 @@
 
 #ifdef __COMPILE_DEBUG
 #define RUN_TEST
+#include "tests/bbtests.h"
 #elif defined(__PROFILE)
 void playSelfInfinite(void);
 #endif
 
-
-/*
-* Meet the Globals
-*/
-volatile Position global_position;
-volatile i32 run_get_best_move;
-volatile Move global_best_move;
 
 #ifdef __PROFILE
 void playSelfInfinite(void){
@@ -53,6 +46,7 @@ i32 main(void) {
         printf("info string WARNING FAILED TO ALLOCATED SPACE FOR TRANSPOSITION TABLE\n");
         return -1;
     }
+    init_globals();
     #ifdef RUN_TEST
     testBB();
     #endif
@@ -63,12 +57,9 @@ i32 main(void) {
     playSelfInfinite();
     #endif  
 
-    // Create IO thread
-    global_position = fenToPosition(START_FEN);
-    global_best_move = NO_MOVE;
     launch_threads();
 
-    
     printf("info string All threads have finished.\n");
+    free_globals();
     return 0;
 }

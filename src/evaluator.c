@@ -1,8 +1,6 @@
 #include "evaluator.h"
-#include <limits.h>
 #include "types.h"
 #include "util.h"
-#include "tree.h"
 #include "movement.h"
 #include "bitboard/bbutils.h"
 #include "bitboard/bitboard.h"

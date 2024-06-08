@@ -6,10 +6,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "types.h"
 #include "util.h"
 #include "globals.h"
 #include "movement.h"
 #include "search.h"
+
+#ifdef DEBUG
+#include "evaluator.h"
+#endif
 
 static char isNullMove(char* moveStr){
     if(moveStr == NULL || strlen(moveStr) < 4) return 0;
@@ -51,7 +56,9 @@ static void processMoves(char* str) {
             goto get_next_token;
         }
         //printf("Move String found: %s", moveStr);
-        makeMove(&global_position, moveStrToType(global_position, moveStr));
+        Position cur = get_global_position();
+        makeMove(&cur, moveStrToType(cur, moveStr));
+        set_global_position(cur);
 get_next_token:
         pch = strtok_r(NULL, " ", &rest);
     }
@@ -87,7 +94,7 @@ void processGoCommand(char* input) {
         token = strtok_r(NULL, " ", &saveptr);
     }
 
-    if(global_position.flags & WHITE_TURN){
+    if(get_global_position().flags & WHITE_TURN){
         time += (wtime / 20);
     }
     else{
@@ -112,15 +119,14 @@ static i32 processInput(char* input){
     }
     else if (strncmp(input, "position", 8) == 0) {
         input += 9;
-        global_best_move = NO_MOVE; // Reset best move for current position
         stopSearch();
         if (strncmp(input, "startpos", 8) == 0) {
             input += 9;
-            global_position = fenToPosition(START_FEN);
+            set_global_position(fenToPosition(START_FEN));
         }
         else if (strncmp(input, "fen", 3) == 0) {
             input += 4;
-            global_position = fenToPosition(input);
+            set_global_position(fenToPosition(input));
             while (*input != 'm' && *input != '\n' && *input != '\0') {
                 input++;
             }
@@ -138,23 +144,23 @@ static i32 processInput(char* input){
         #ifdef DEBUG
         printf("info string Stopping\n");
         #endif
-        //printBestMove();
+        printBestMove(get_global_best_move());
         stopSearch();
     }
     #ifdef DEBUG
     else if (strncmp(input, "debug", 5) == 0){
         input += 6;
         if (strncmp(input, "pos", 3) == 0) {
-            printPosition(global_position, TRUE);
+            printPosition(get_global_position(), TRUE);
         }
         else if (strncmp(input, "bestmove", 8) == 0) {
             printf("Current bestmove is: ");
-            printMove(global_best_move);
+            printMove(get_global_best_move());
             printf("\n");
         }
         else if (strncmp(input, "list moves", 10) == 0) {
             Move debug_moves[MAX_MOVES];
-            u32 size = generateLegalMoves(global_position, debug_moves);
+            u32 size = generateLegalMoves(get_global_position(), debug_moves);
             printf("Moves: \n");
             for(u32 i = 0; i < size; i++){
                 printMove(debug_moves[i]);
@@ -162,13 +168,15 @@ static i32 processInput(char* input){
             }
         }
         else if (strncmp(input, "eval", 4) == 0){
-            printf("Eval: %d\n", evaluate(global_position, TRUE));
+            printf("Eval: %d\n", evaluate(get_global_position(), TRUE));
         }
         else if (strncmp(input, "play move", 4) == 0){
             printf("Making move: ");
-            printMove(global_best_move);
+            printMove(get_global_best_move());
             printf("\n");
-            makeMove(&global_position, global_best_move);
+            Position tempPos = get_global_position();
+            makeMove(&tempPos, get_global_best_move());
+            set_global_position(tempPos);
         }
 
     }
@@ -179,11 +187,11 @@ static i32 processInput(char* input){
     return 0;
 }
 
-i32 ioLoop(){
+i32 inputLoop(){
     char input[4096];
     input[4095] = '\0';
 
-    while (true) {
+    while (TRUE) {
         if (fgets(input, sizeof(input), stdin) == NULL) {
             break; 
         }
@@ -192,4 +200,15 @@ i32 ioLoop(){
         }
     }
     return 0;
+}
+
+i32 outputLoop(){
+    while(TRUE){
+        if(print_pv_info){
+            SearchData data = get_global_pv_data();
+            printPVInfo(data);
+            print_pv_info = FALSE;
+            free(data.PVArray);
+        }
+    }
 }

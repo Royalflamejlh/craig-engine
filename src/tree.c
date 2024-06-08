@@ -1,6 +1,5 @@
 #include "tree.h"
 #include <stdio.h>
-#include <limits.h>
 #include <string.h>
 #include "movement.h"
 #include "types.h"
@@ -8,6 +7,7 @@
 #include "evaluator.h"
 #include "transposition.h"
 #include "globals.h"
+#include "tables.h"
 
 #if defined(__unix__) || defined(__APPLE__)
 #include "pthread.h"
@@ -23,10 +23,7 @@
 
 #define CHECKMATE_VALUE -MAX_EVAL + 1000
 
-#define KMV_CNT 3 //How many killer moves are stored for a pos 
-
 #define MAX_QUIESCE_PLY 10 //How far q search can go 
-#define MAX_PLY 255 // How far the total search can go
 
 #define LMR_DEPTH 3 // LMR not performed if depth < LMR_DEPTH
 
@@ -52,40 +49,33 @@ typedef enum searchs{
 
 // UNIX Functions
 #if defined(__unix__) || defined(__APPLE__) // UNIX
-static struct timespec stat_start_time, stat_end_time;
-double stat_elap_time;
-static u64 node_count;
-void startStats(void){
-   clock_gettime(CLOCK_MONOTONIC, &stat_start_time);
-   node_count = 0;
-   stat_elap_time = 0;
+
+void startStats(SearchStats* stats){
+   clock_gettime(CLOCK_MONOTONIC, &stats->start_time);
+   stats->node_count = 0;
+   stats->elap_time = 0;
 }
 
-void stopStats(void){
-   clock_gettime(CLOCK_MONOTONIC, &stat_end_time);
-   stat_elap_time = (stat_end_time.tv_sec - stat_start_time.tv_sec) +
-                   (stat_end_time.tv_nsec - stat_start_time.tv_nsec) / 1e9;
+void stopStats(SearchStats* stats){
+   clock_gettime(CLOCK_MONOTONIC, &stats->end_time);
+   stats->elap_time = (stats->end_time.tv_sec - stats->start_time.tv_sec) +
+                     (stats->end_time.tv_nsec - stats->start_time.tv_nsec) / 1e9;
 }
+
 #elif defined(_WIN32) || defined(_WIN64)
-#include <windows.h>
 
-static LARGE_INTEGER stat_start_time, stat_end_time;
-static double stat_elap_time;
-static uint64_t node_count;
-static double freq_inv;
-
-void startStats(void){
-    LARGE_INTEGER freq;
-    QueryPerformanceFrequency(&freq);
-    freq_inv = 1.0 / freq.QuadPart;
-    QueryPerformanceCounter(&stat_start_time);
-    node_count = 0;
-    stat_elap_time = 0;
+void startStats(SearchStats* stats){
+   LARGE_INTEGER freq;
+   QueryPerformanceFrequency(&freq);
+   stats->freq_inv = 1.0 / freq.QuadPart;
+   QueryPerformanceCounter(&stats->start_time);
+   stats->node_count = 0;
+   stats->elap_time = 0;
 }
 
-void stopStats(void){
-    QueryPerformanceCounter(&stat_end_time);
-    stat_elap_time = (stat_end_time.QuadPart - stat_start_time.QuadPart) * freq_inv;
+void stopStats(SearchStats* stats){
+   QueryPerformanceCounter(&stats->end_time);
+   stats->elap_time = (stats->end_time.QuadPart - stats->start_time.QuadPart) * stats->freq_inv;
 }
 #endif // Windows
 
@@ -218,41 +208,9 @@ static double calculateEBF(){
 }
 #endif
 
-/*
-* Function pertaining to storage of killer moves 
-*/
-static Move killerMoves[MAX_PLY][KMV_CNT] = {0};
-static u32 kmvIdx = 0;
-
-static inline void storeKillerMove(i32 ply, Move move){
-   if(killerMoves[ply][kmvIdx] != move){
-      killerMoves[ply][kmvIdx] = move;
-      kmvIdx = (kmvIdx + 1) % KMV_CNT;
-   }
-}
-
-static inline void clearKillerMoves(void){
-   memset(killerMoves, 0, sizeof(killerMoves));
-}
-
-/*
-* Functions pertaining to storage in the history table
-*/
-static u32 historyTable[PLAYER_COUNT][BOARD_SIZE][BOARD_SIZE] = {0};
-
-static inline void storeHistoryMove(char pos_flags, Move move, char depth){
-   if(GET_FLAGS(move) & CAPTURE) return;
-   historyTable[pos_flags & WHITE_TURN][GET_FROM(move)][GET_TO(move)] += 1 << depth;
-}
-
-u32 getHistoryScore(char pos_flags, Move move){
-   if(GET_FLAGS(move) & CAPTURE) return 0;
-   return historyTable[pos_flags & WHITE_TURN][GET_FROM(move)][GET_TO(move)];
-}
 
 //exit thread function
-static void exit_search(Move* pvArray){
-   free(pvArray);
+static void exit_search(){
    #if defined(__unix__) || defined(__APPLE__)
    pthread_exit(NULL);
    #elif defined(_WIN32) || defined(_WIN64)
@@ -263,97 +221,68 @@ static void exit_search(Move* pvArray){
 /*
 * Get that move son.
 */
-i32 getBestMove(Position pos, u32 depth){
-   clearKillerMoves(); //TODO: make thread safe!
-   #ifdef DEBUG
-   clearDebug();
-   #endif
-
-   Move *pvArray = calloc((MAX_SEARCH_DEPTH*MAX_SEARCH_DEPTH + MAX_SEARCH_DEPTH)/2, sizeof(Move));
-   u32 i = 1;
-   i32 eval = 0, eval_prev = 0, asp_upper = 0, asp_lower = 0;
-
-   while(run_get_best_move && i <= depth){
-      #ifdef DEBUG
-      startTreeDebug();
-      startTTDebug();
-      #endif
-
-      startStats();
-
-      if(!pvArray){
-         printf("info Warning: failed to allocate space for pvArray");
-         return -1;
-      }
-      Position searchPos = pos;
-      //printf("Running pv search at depth %d\n", i);
-      if(i <= 2){
-         eval = pvSearch(&searchPos, MIN_EVAL+1, MAX_EVAL, i, 0, pvArray, 0);
-         searchPos = pos;
-         eval_prev = eval;
-         #ifdef DEBUG
-         printf("Result from depth window: %d, %d i: %d eval: %d\n", MIN_EVAL+1, MAX_EVAL, i, eval);
-         #endif
-      } else {
-         //Calculate the Aspiration Window
-         i32 asp_dif = (abs(eval_prev - eval) / 2) + ASP_EDGE;
-         asp_upper = asp_lower = MIN(asp_dif, MAX_ASP_START);
-         i32 q = (eval_prev + eval + eval + eval) / 4; //Weighted towards the most recent eval
-         #ifdef DEBUG
-         printf("Running with window: %d, %d (eval: %d, eval_prev: %d, i: %d)\n", q-asp_lower, q+asp_upper, eval, eval_prev, i);
-         #endif
-
-         i32 eval_tmp = pvSearch(&searchPos, q-asp_lower, q+asp_upper, i, 0, pvArray, 0);
-         searchPos = pos;
-         while(eval_tmp <= q-asp_lower || eval_tmp >= q+asp_upper || pvArray[0] == NO_MOVE){
-            if(eval_tmp <= q-asp_lower){ asp_lower += PAWN_VALUE/2;}
-            if(eval_tmp >= q+asp_upper){ asp_upper += PAWN_VALUE/2;}
-            if(pvArray[0] == NO_MOVE){
-               asp_upper *= 2;
-               asp_lower *= 2;
-            }
-            #ifdef DEBUG
-            printf("Running again with window: %d, %d (eval: %d, eval_prev: %d, move: ", q-asp_lower, q+asp_upper, eval, eval_prev);
-            printMove(pvArray[0]);
-            printf(", i: %d", i);
-            printf(")\n");
-            #endif
-            
-            eval_tmp = pvSearch(&searchPos, q-asp_lower, q+asp_upper, i, 0, pvArray, 0);
-            searchPos = pos;
-         }
-         eval_prev = eval;
-         eval = eval_tmp;
-      }
-      
-
-      #ifdef DEBUG
-      printf("Principal Variation at depth %d: ", i);
-      printPV(pvArray, i);
-      printf("found with score %d\n", eval);
-      printTreeDebug();
-      printTTDebug();
-      printf("\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
-      #endif // DEBUG
-
-      stopStats();
-      
-      
-      //TODO: move to a different thread
-      #ifndef DEBUG
-      printPVInfo(i, eval, pvArray, node_count, stat_elap_time);
-      #endif
-
-      global_best_move = pvArray[0];
-      i+=ID_STEP;
+i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval_prev, SearchStats* stats){
+   if(!pvArray){
+      printf("info string Warning: No PV Array found!\n");
+      return 0;
    }
-   free(pvArray);
-
-   #ifdef MAX_DEPTH
-   return 1;
+   #ifdef DEBUG
+   startTreeDebug();
+   startTTDebug();
    #endif
 
-   return 0;
+   startStats(stats);
+
+   Position searchPos = pos;
+   i32 eval;
+   //printf("Running pv search at depth %d\n", i);
+   if(depth <= 2){
+      eval = pvSearch(&searchPos, MIN_EVAL+1, MAX_EVAL, depth, 0, pvArray, 0, stats);
+      searchPos = pos;
+      #ifdef DEBUG
+      printf("Result from depth window: %d, %d i: %d eval: %d\n", MIN_EVAL+1, MAX_EVAL, depth, eval);
+      #endif
+   } else {
+      i32 asp_lower, asp_upper;
+      //Calculate the Aspiration Window
+      asp_upper = asp_lower = ASP_EDGE;
+      i32 q = eval_prev;
+      #ifdef DEBUG
+      printf("Running with window: %d, %d (eval_prev: %d, depth: %d)\n", q-asp_lower, q+asp_upper, eval_prev, depth);
+      #endif
+
+      eval = pvSearch(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pvArray, 0, stats);
+      searchPos = pos;
+      while(eval <= q-asp_lower || eval >= q+asp_upper || pvArray[0] == NO_MOVE){
+         if(eval <= q-asp_lower){ asp_lower += PAWN_VALUE/2;}
+         if(eval >= q+asp_upper){ asp_upper += PAWN_VALUE/2;}
+         if(pvArray[0] == NO_MOVE){
+            asp_upper *= 2;
+            asp_lower *= 2;
+         }
+         #ifdef DEBUG
+         printf("Running again with window: %d, %d (eval: %d, eval_prev: %d, move: ", q-asp_lower, q+asp_upper, eval, eval_prev);
+         printMove(pvArray[0]);
+         printf(", depth: %d", depth);
+         printf(")\n");
+         #endif
+         
+         eval = pvSearch(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pvArray, 0, stats);
+         searchPos = pos;
+      }
+   }
+
+   #ifdef DEBUG
+   printf("Principal Variation at depth %d: ", depth);
+   printPV(pvArray, depth);
+   printf("found with score %d\n", eval);
+   printTreeDebug();
+   printTTDebug();
+   printf("\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
+   #endif // DEBUG
+
+   stopStats(stats);
+   return eval;
 }
 
 /*
@@ -361,10 +290,10 @@ i32 getBestMove(Position pos, u32 depth){
 */
 
 // Null Move Search
-static i32 pruneNullMoves(Position* pos, i32 beta, i32 depth, i32 ply, Move* pvArray){
+static i32 pruneNullMoves(Position* pos, i32 beta, i32 depth, i32 ply, Move* pvArray, SearchStats* stats){
    Position prevPos = *pos;
    makeNullMove(pos);
-   i32 score = -zwSearch(pos, 1-beta, depth - NULL_PRUNE_R - 1, ply + 1, pvArray);
+   i32 score = -zwSearch(pos, 1-beta, depth - NULL_PRUNE_R - 1, ply + 1, pvArray, stats);
    *pos = prevPos;
    return score;
 }
@@ -385,17 +314,17 @@ static u8 getLMRDepth(u8 curDepth, u8 moveIdx, u8 moveCount, Move move, i32 allo
 *
 */
 
-i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pvArray, i32 pvIndex) {
+i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pvArray, i32 pvIndex, SearchStats* stats) {
    //printf("Depth = %d, Ply = %d, Depth+ply = %d\n", depth, ply, depth+ply);
-   if(!run_get_best_move) exit_search(pvArray);
+   if(!run_get_best_move) exit_search();
 
    if( depth <= 0 ) {
-      i32 q_eval = quiesce(pos, alpha, beta, ply, 0, pvArray);
+      i32 q_eval = quiesce(pos, alpha, beta, ply, 0, pvArray, stats);
       //printf("Returning q_eval: %d\n", q_eval);
       return q_eval;
    }
 
-   node_count++;
+   stats->node_count++;
    #ifdef DEBUG
    debug[PVS][NODE_COUNT]++;
    #endif
@@ -496,7 +425,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
-      selectSort(i, moveList, moveVals, size, ttMove, killerMoves[(i32)ply], KMV_CNT);
+      selectSort(i, moveList, moveVals, size, ttMove, getKillerMoves(ply));
 
       makeMove(pos, moveList[i]);
 
@@ -520,12 +449,12 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
 
       i32 score;
       if ( i == 0 ) { // Only do full PV on the first move
-         score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
+         score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex, stats);
          //printf("PV b search pv score = %d\n", score);
       } else {
-         score = -zwSearch(pos, -alpha, depth - 1, ply + 1, pvArray);
+         score = -zwSearch(pos, -alpha, depth - 1, ply + 1, pvArray, stats);
          if ( score > alpha ){
-            score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
+            score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex, stats);
          }
       }
 
@@ -584,13 +513,13 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
 *  ZERO WINDOW SEARCH
 *
 */
-i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
-   if(!run_get_best_move) exit_search(pvArray);
+i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray, SearchStats* stats) {
+   if(!run_get_best_move) exit_search();
    // alpha == beta - 1
    // this is either a cut- or all-node
-   if( depth <= 0 ) return quiesce(pos, beta-1, beta, ply, 0, pvArray);
+   if( depth <= 0 ) return quiesce(pos, beta-1, beta, ply, 0, pvArray, stats);
 
-   node_count++;
+   stats->node_count++;
    #ifdef DEBUG
    debug[ZWS][NODE_COUNT]++;
    #endif
@@ -652,7 +581,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
    if(pos->stage == END_GAME) prunable = FALSE;
 
    //Null move prunin'
-   if(prunable && depth > (NULL_PRUNE_R + 1) && pruneNullMoves(pos, beta, depth, ply, pvArray) >= beta){
+   if(prunable && depth > (NULL_PRUNE_R + 1) && pruneNullMoves(pos, beta, depth, ply, pvArray, stats) >= beta){
       #ifdef DEBUG
       debug[ZWS][NODE_PRUNED_NULL]++;
       #endif
@@ -670,7 +599,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
-      selectSort(i, moveList, moveVals, size, ttMove, killerMoves[(i32)ply], KMV_CNT);
+      selectSort(i, moveList, moveVals, size, ttMove, getKillerMoves(ply));
 
       makeMove(pos, moveList[i]);
 
@@ -696,7 +625,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
       debug[ZWS][NODE_LMR_REDUCTIONS] += MAX(((depth - 1) - search_depth), 0);
       //printf("zws further search score %d\n", score);
       #endif
-      i32 score = -zwSearch(pos, 1-beta, search_depth, ply + 1, pvArray);
+      i32 score = -zwSearch(pos, 1-beta, search_depth, ply + 1, pvArray, stats);
       
       *pos = prevPos; // Unmake Move
 
@@ -720,9 +649,9 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
 }
 
 //quisce search
-i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvArray) {
-   if(!run_get_best_move) exit_search(pvArray);
-   node_count++;
+i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvArray, SearchStats* stats) {
+   if(!run_get_best_move) exit_search();
+   stats->node_count++;
    #ifdef DEBUG
    debug[QS][NODE_COUNT]++;
    //printf("Pos->Eval in q search: %d\n", pos->eval);
@@ -816,13 +745,13 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
-      selectSort(i, moveList, moveVals, size, ttMove, killerMoves[(i32)ply], KMV_CNT); 
+      selectSort(i, moveList, moveVals, size, ttMove, getKillerMoves(ply)); 
 
       if(moveVals[i] < 0) break;
 
       makeMove(pos, moveList[i]);
 
-      i32 score = -quiesce(pos,  -beta, -alpha, ply + 1, q_ply + 1, pvArray);
+      i32 score = -quiesce(pos,  -beta, -alpha, ply + 1, q_ply + 1, pvArray, stats);
 
       *pos = prevPos; //Unmake Move
 
@@ -868,7 +797,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
 }
 
 
-void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size, Move ttMove, Move *killerMoves, i32 kmv_size) {
+void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size, Move ttMove, Move *killerMoves) {
     i32 maxIdx = i;
 
     for (i32 j = i + 1; j < size; j++) {
@@ -878,7 +807,7 @@ void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size, Move ttMove, Mov
         }
 
         i32 found = 0;
-        for(i32 k = 0; k < kmv_size; k++){
+        for(i32 k = 0; k < KMV_CNT; k++){
             if(moveList[j] == killerMoves[k]){
                 maxIdx = j;
                 found = 1;

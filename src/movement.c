@@ -315,8 +315,6 @@ i32 makeMove(Position *pos, Move move){
 
     pos->hash = hashPosition(*pos);
 
-
-    //Todo: make this make sense
     HashStack *hs = &pos->hashStack;
     if(hs->current_idx + 1 >= hs->size) doubleHashStack(hs);
     hs->current_idx++;
