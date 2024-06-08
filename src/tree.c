@@ -309,13 +309,13 @@ static i32 pruneNullMoves(Position* pos, i32 beta, i32 depth, i32 ply, Move* pvA
 }
 
 // Late move reduction
-static u8 getSearchDepth(u8 curDepth, u8 moveIdx, u8 moveCount, Move move, i32 allowLMR){
+static u8 getLMRDepth(u8 curDepth, u8 moveIdx, u8 moveCount, Move move, i32 allowLMR){
    if(curDepth < LMR_DEPTH) return curDepth - 1;
    if(!allowLMR) return curDepth - 1;
    if(GET_FLAGS(move) & ~DOUBLE_PAWN_PUSH) return curDepth - 1; // If anything but double pawn push
    if(moveIdx < moveCount / 4) return curDepth - 1;
-   if(moveIdx < moveCount / 2) return curDepth/2;
-   return curDepth/3;
+   if(moveIdx < moveCount / 2) return curDepth / 3;
+   return curDepth/4;
 }
 
 /*
@@ -441,12 +441,15 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
 
       makeMove(pos, moveList[i]);
 
-      // Update Prunability PVS
+      // Update Prunability and Extension PVS
+      u8 ext = prunable;
       u8 prunable_move = prunable;
       if(i <= PV_PRUNE_MOVE_IDX) prunable_move = FALSE;
-      if(pos->flags & IN_CHECK) prunable_move = FALSE; // If in check
       if(GET_FLAGS(moveList[i]) & ~DOUBLE_PAWN_PUSH) prunable_move = FALSE; // If the move is anything but dpp / queit
       if(pos->stage == END_GAME) prunable_move = FALSE; // If its the endgame
+      
+      if(pos->flags & IN_CHECK) prunable_move = FALSE; // If in check
+      else ext = 1;
 
       if( prunable_move && depth == 1){ //Futility Pruning
          if(prevPos.quick_eval + moveVals[i] < alpha - FUTIL_MARGIN){ 
@@ -461,12 +464,12 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
 
       i32 score;
       if ( i == 0 ) { // Only do full PV on the first move
-         score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
+         score = -pvSearch(pos, -beta, -alpha, depth + ext - 1, ply + 1, pvArray, pvNextIndex);
          //printf("PV b search pv score = %d\n", score);
       } else {
-         score = -zwSearch(pos, -alpha, depth - 1, ply + 1, pvArray);
+         score = -zwSearch(pos, -alpha, depth + ext - 1, ply + 1, pvArray);
          if ( score > alpha ){
-            score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
+            score = -pvSearch(pos, -beta, -alpha, depth + ext - 1, ply + 1, pvArray, pvNextIndex);
          }
       }
 
@@ -629,7 +632,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
          }
       }
       
-      char search_depth = getSearchDepth(depth, i, size, moveList[i], prunable_move);
+      char search_depth = getLMRDepth(depth, i, size, moveList[i], prunable_move);
       #ifdef DEBUG
       debug[ZWS][NODE_LMR_REDUCTIONS] += MAX(((depth - 1) - search_depth), 0);
       //printf("zws further search score %d\n", score);

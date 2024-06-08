@@ -58,7 +58,7 @@
 
 // Defines for Movement Eval
 
-#define MOVE_CASTLE_BONUS  100  // Eval bonus for castling
+#define MOVE_CASTLE_BONUS  300  // Eval bonus for castling
 #define MOVE_OPN_QUEEN_PEN   5  // Pen for moving queen in the opening
 
 
@@ -635,8 +635,8 @@ void initPST(){
 
     //King
     i32 PST_KING_OPN[64] = {
-        3,  4,  4, -2, -2,  4,  4,  3,
-        2,  2,  0,  0,  0,  0,  2,  2,
+         4,  4,  0, -2, -2,  0,  4,  4,
+         2,  2,  0,  0,  0,  0,  2,  2,
         -1, -2, -2, -2, -2, -2, -2, -1,
         -2, -3, -3, -4, -4, -3, -3, -2,
         -3, -4, -4, -5, -5, -4, -4, -3,
@@ -646,7 +646,7 @@ void initPST(){
     };
 
     i32 PST_KING_MID[64] = {
-        3,  4,  4,  0,  0,  4,   4,  3,
+        3,  4,  3,  0,  0,  3,   4,  3,
         2,  2,  0,  0,  0,  0,   2,  2,
         -1, -2, -2, -2, -2, -2, -2, -1,
         -2, -3, -3, -4, -4, -3, -3, -2,
