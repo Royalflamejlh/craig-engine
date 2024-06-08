@@ -40,6 +40,36 @@ static inline void movcpy (Move* pTarget, const Move* pSource, i32 n) {
 }
 
 /*
+* Returns whether the position has Insufficient material / Drawn
+*/
+static inline u8 isInsufficient(Position pos){
+   if(pos.stage != END_GAME) return FALSE;
+   u32 piece_count_w = count_bits(pos.color[0]);
+   u32 piece_count_b = count_bits(pos.color[1]);
+   if(piece_count_w == 1 && piece_count_b == 1) return TRUE;
+   if(piece_count_w <= 2 && piece_count_b == 1){
+      if((pos.knight[0] | pos.bishop[0])) return TRUE; 
+   }
+   if(piece_count_w == 1 && piece_count_b <= 2){
+      if((pos.knight[1] | pos.bishop[1])) return TRUE;
+   }
+   if(piece_count_w <= 2 && piece_count_b <= 2){
+      if((pos.knight[0] | pos.bishop[0]) && (pos.knight[1] | pos.bishop[1])) return TRUE;
+   }
+   return FALSE;
+}
+
+/*
+* Returns whether the position is a Repetition
+*/
+static inline i32 isRepetition(Position* pos){
+   for(i32 i = pos->hashStack.last_reset_idx; i < pos->hashStack.current_idx; i++){
+      if(pos->hashStack.ptr[i] == pos->hashStack.ptr[pos->hashStack.current_idx]) return 1;
+   }
+   return 0;
+}
+
+/*
 *
 * Hash Stack Stuff
 *
@@ -48,4 +78,8 @@ static inline void movcpy (Move* pTarget, const Move* pSource, i32 n) {
 HashStack createHashStack(void);
 i32 removeHashStack(HashStack *hashStack);
 void doubleHashStack(HashStack *hs);
+
+
+
+
 #endif

@@ -223,7 +223,6 @@ void doubleHashStack(HashStack *hs){
     }
 }
 
-
 i32 removeHashStack(HashStack *hashStack){
     if (hashStack && hashStack->ptr) {
         free(hashStack->ptr);

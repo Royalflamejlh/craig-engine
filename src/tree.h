@@ -2,6 +2,8 @@
 #define tree_h
 #include "types.h"
 
+#define MAX_SEARCH_DEPTH 256 // Total max search depth (always)
+
 #if defined(__PROFILE)
 #define MAX_DEPTH 6
 #endif

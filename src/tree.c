@@ -146,16 +146,6 @@ void printTreeDebug(void){
 #endif
 
 /*
-* Returns whether the position is a Repetition
-*/
-static inline i32 isRepetition(Position* pos){
-   for(i32 i = pos->hashStack.last_reset_idx; i < pos->hashStack.current_idx; i++){
-      if(pos->hashStack.ptr[i] == pos->hashStack.ptr[pos->hashStack.current_idx]) return 1;
-   }
-   return 0;
-}
-
-/*
 * Function pertaining to storage of killer moves 
 */
 static Move killerMoves[MAX_PLY][KMV_CNT] = {0};
@@ -205,8 +195,8 @@ i32 getBestMove(Position pos
 , u32 depth
 #endif
 ){
-
    clearKillerMoves(); //TODO: make thread safe!
+   Move *pvArray = calloc((MAX_SEARCH_DEPTH*MAX_SEARCH_DEPTH + MAX_SEARCH_DEPTH)/2, sizeof(Move));
    u32 i = 1;
    i32 eval = 0, eval_prev = 0, asp_upper = 0, asp_lower = 0;
    while(run_get_best_move 
@@ -219,8 +209,6 @@ i32 getBestMove(Position pos
       startTTDebug();
       #endif
 
-      Move *pvArray = malloc(sizeof(Move) * (i*i + i)/2);
-      memset(pvArray, 0, sizeof(Move) * (i*i + i)/2);
       if(!pvArray){
          printf("info Warning: failed to allocate space for pvArray");
          return -1;
@@ -282,11 +270,9 @@ i32 getBestMove(Position pos
       #endif
 
       global_best_move = pvArray[0];
-      free(pvArray);
       i+=ID_STEP;
    }
-
-   
+   free(pvArray);
 
    #ifdef MAX_DEPTH
    return 1;
@@ -338,10 +324,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
    debug[PVS][NODE_COUNT]++;
    #endif
 
-   if(ply != 0 && isRepetition(pos)){
-      //printf("is Repetition\n");
-      return 0;
-   }
+   if(ply != 0 && (isRepetition(pos) || isInsufficient(*pos))) return 0;
 
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES];
@@ -441,15 +424,12 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
 
       makeMove(pos, moveList[i]);
 
-      // Update Prunability and Extension PVS
-      u8 ext = prunable;
+      // Update Prunability PVS
       u8 prunable_move = prunable;
       if(i <= PV_PRUNE_MOVE_IDX) prunable_move = FALSE;
+      if(pos->flags & IN_CHECK) prunable_move = FALSE; // If in check
       if(GET_FLAGS(moveList[i]) & ~DOUBLE_PAWN_PUSH) prunable_move = FALSE; // If the move is anything but dpp / queit
       if(pos->stage == END_GAME) prunable_move = FALSE; // If its the endgame
-      
-      if(pos->flags & IN_CHECK) prunable_move = FALSE; // If in check
-      else ext = 1;
 
       if( prunable_move && depth == 1){ //Futility Pruning
          if(prevPos.quick_eval + moveVals[i] < alpha - FUTIL_MARGIN){ 
@@ -464,12 +444,12 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
 
       i32 score;
       if ( i == 0 ) { // Only do full PV on the first move
-         score = -pvSearch(pos, -beta, -alpha, depth + ext - 1, ply + 1, pvArray, pvNextIndex);
+         score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
          //printf("PV b search pv score = %d\n", score);
       } else {
-         score = -zwSearch(pos, -alpha, depth + ext - 1, ply + 1, pvArray);
+         score = -zwSearch(pos, -alpha, depth - 1, ply + 1, pvArray);
          if ( score > alpha ){
-            score = -pvSearch(pos, -beta, -alpha, depth + ext - 1, ply + 1, pvArray, pvNextIndex);
+            score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, pvNextIndex);
          }
       }
 
@@ -538,6 +518,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
    #endif
 
    if(isRepetition(pos)) return 0;
+   if(isInsufficient(*pos)) return 0;
 
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES];
@@ -670,6 +651,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
    // Handle Draw or Mate
    if(pos->halfmove_clock >= 100) return 0;
    if(isRepetition(pos)) return 0;
+   if(isInsufficient(*pos)) return 0;
    
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES];
