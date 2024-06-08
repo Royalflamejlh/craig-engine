@@ -80,6 +80,25 @@ void printMove(Move move){
     }
 }
 
+void printMoveShort(Move move){
+    i32 from = GET_FROM(move);
+    i32 to = GET_TO(move);
+
+    i32 rank_from = from / 8;
+    i32 file_from = from % 8;
+
+    i32 rank_to = to / 8;
+    i32 file_to = to % 8;
+
+    char file_char_from = 'a' + file_from;
+    char file_char_to = 'a' + file_to;
+
+    i32 rank_num_from = rank_from + 1;
+    i32 rank_num_to = rank_to + 1;
+
+    printf("%c%d%c%d", file_char_from, rank_num_from, file_char_to, rank_num_to);
+}
+
 void printMoveSpaced(Move move){
     printMove(move);
     switch(GET_FLAGS(move)){
@@ -175,7 +194,7 @@ Move moveStrToType(Position pos, char* str){
 void printPV(Move *pvArray, i32 depth) {
     for (i32 i = 0; i < depth; i++) {
         if(pvArray[i] != NO_MOVE){ 
-            printMove(pvArray[i]);
+            printMoveShort(pvArray[i]);
             printf(" ");
         }
     }

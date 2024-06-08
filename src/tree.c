@@ -11,6 +11,7 @@
 
 #if defined(__unix__) || defined(__APPLE__)
 #include "pthread.h"
+#include <time.h>
 #elif defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 #endif
@@ -39,7 +40,6 @@
 
 #define DELTA_VALUE 2000
 
-#define STORE_STATS
 
 //static void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size);
 
@@ -50,8 +50,8 @@ typedef enum searchs{
    SEARCH_TYPE_COUNT
 } SearchType;
 
-#ifdef STORE_STATS
-#include <time.h>
+// UNIX Functions
+#if defined(__unix__) || defined(__APPLE__) // UNIX
 static struct timespec stat_start_time, stat_end_time;
 double stat_elap_time;
 static u64 node_count;
@@ -66,15 +66,39 @@ void stopStats(void){
    stat_elap_time = (stat_end_time.tv_sec - stat_start_time.tv_sec) +
                    (stat_end_time.tv_nsec - stat_start_time.tv_nsec) / 1e9;
 }
-#endif
+#elif defined(_WIN32) || defined(_WIN64)
+#include <windows.h>
+
+static LARGE_INTEGER stat_start_time, stat_end_time;
+static double stat_elap_time;
+static uint64_t node_count;
+static double freq_inv;
+
+void startStats(void){
+    LARGE_INTEGER freq;
+    QueryPerformanceFrequency(&freq);
+    freq_inv = 1.0 / freq.QuadPart;
+    QueryPerformanceCounter(&stat_start_time);
+    node_count = 0;
+    stat_elap_time = 0;
+}
+
+void stopStats(void){
+    QueryPerformanceCounter(&stat_end_time);
+    stat_elap_time = (stat_end_time.QuadPart - stat_start_time.QuadPart) * freq_inv;
+}
+#endif // Windows
 
 #ifdef DEBUG
-#include <assert.h>
 #if defined(__unix__) || defined(__APPLE__)
+#include <assert.h>
+#include <math.h>
 #define DEBUG_TIME
 #include <time.h>
 static struct timespec start_time, end_time;
 #endif
+
+static double calculateEBF();
 
 typedef enum stats{
    NODE_COUNT,
@@ -96,9 +120,23 @@ typedef enum stats{
 
 static i64 debug[SEARCH_TYPE_COUNT][DEBUG_STATS_COUNT] = {0};
 
+static u64 debug_node_counts[MAX_SEARCH_DEPTH] = {0};
+static u32 debug_current_depth = 0;
+
 static Move debug_moveList[5][MAX_MOVES] = {0};
 static i32 debug_moveVals[5][MAX_MOVES] = {0};
 static i32 debug_size[5] = {0};
+
+void clearDebug() {
+    memset(debug, 0, sizeof(debug));
+    memset(debug_node_counts, 0, sizeof(debug_node_counts));
+    debug_current_depth = 0;
+    for (int i = 0; i < 5; i++) {
+        memset(debug_moveList[i], 0, sizeof(debug_moveList[i]));
+        memset(debug_moveVals[i], 0, sizeof(debug_moveVals[i]));
+    }
+    memset(debug_size, 0, sizeof(debug_size));
+}
 
 void startTreeDebug(void){
    #ifdef DEBUG_TIME
@@ -160,6 +198,23 @@ void printTreeDebug(void){
    #ifdef DEBUG_TIME
    printf("\nTook %lf seconds, with %lf eval/sec\n", elap_time, ((double)total_count) / elap_time);
    #endif
+
+   // EBF Calculating Code
+   debug_node_counts[debug_current_depth] = total_count;
+   double ebf = calculateEBF();
+   printf("EBF found to be: %f\n", ebf);
+   debug_current_depth++;
+}
+
+static double calculateEBF(){
+   if(debug_current_depth < 2) return 0;
+   double cntCurr = debug_node_counts[debug_current_depth];
+   double cntPrev = debug_node_counts[debug_current_depth - 2];
+   if(cntPrev == 0) return 0;
+   if(cntCurr <= debug_current_depth + 1) return 0;
+   if(cntPrev <= debug_current_depth + 1) return 0;
+   return sqrt(cntCurr / cntPrev);
+
 }
 #endif
 
@@ -214,9 +269,14 @@ i32 getBestMove(Position pos
 #endif
 ){
    clearKillerMoves(); //TODO: make thread safe!
+   #ifdef DEBUG
+   clearDebug();
+   #endif
+
    Move *pvArray = calloc((MAX_SEARCH_DEPTH*MAX_SEARCH_DEPTH + MAX_SEARCH_DEPTH)/2, sizeof(Move));
    u32 i = 1;
    i32 eval = 0, eval_prev = 0, asp_upper = 0, asp_lower = 0;
+
    while(run_get_best_move 
          #ifdef MAX_DEPTH
          && i <= depth
@@ -343,6 +403,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
       return q_eval;
    }
 
+   node_count++;
    #ifdef DEBUG
    debug[PVS][NODE_COUNT]++;
    #endif
@@ -536,6 +597,8 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
    // alpha == beta - 1
    // this is either a cut- or all-node
    if( depth <= 0 ) return quiesce(pos, beta-1, beta, ply, 0, pvArray);
+
+   node_count++;
    #ifdef DEBUG
    debug[ZWS][NODE_COUNT]++;
    #endif
@@ -667,6 +730,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray ) {
 //quisce search
 i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvArray) {
    if(!run_get_best_move) exit_search(pvArray);
+   node_count++;
    #ifdef DEBUG
    debug[QS][NODE_COUNT]++;
    //printf("Pos->Eval in q search: %d\n", pos->eval);
