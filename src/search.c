@@ -60,7 +60,6 @@ i32 searchLoop(){
         eval = searchTree(searchPosition, cur_depth, pvArray, eval_prev, &stats);
         update_global_pv(cur_depth, pvArray, eval, stats);
 
-
         // Update for next iteration
         eval_prev = eval;
         cur_depth++;

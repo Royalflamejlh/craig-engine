@@ -12,7 +12,7 @@
 #include "search.h"
 #include "io.h"
 
-#define NUM_SEARCH_THREADS 5
+#define NUM_SEARCH_THREADS 8
 
 #if defined(__unix__) || defined(__APPLE__)
 

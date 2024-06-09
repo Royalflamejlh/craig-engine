@@ -11,13 +11,17 @@ enum {
     Q_EXACT_NODE
 };
 
-typedef struct {
-    i32 eval;
-    char depth;
+#pragma pack(1)
+struct TTEntry{
+    u8 depth;
     Move move;
-    char nodeType;
-    u64 hash;
-} TTEntry;
+    u8 nodeType;
+    u32 hash;
+    i32 eval;
+};
+#pragma pack()
+
+typedef struct TTEntry TTEntry;
 
 i32 initTT();
 

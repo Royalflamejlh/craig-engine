@@ -21,8 +21,6 @@
 #define PV_PRUNE_MOVE_IDX     5 // Move to start pruning on in pv
 #define PRUNE_MOVE_IDX        2 // Move to start pruning on otherwise
 
-#define CHECKMATE_VALUE -MAX_EVAL + 1000
-
 #define MAX_QUIESCE_PLY 10 //How far q search can go 
 
 #define LMR_DEPTH 3 // LMR not performed if depth < LMR_DEPTH
@@ -254,11 +252,11 @@ i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval_prev, SearchStat
       eval = pvSearch(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pvArray, 0, stats);
       searchPos = pos;
       while(eval <= q-asp_lower || eval >= q+asp_upper || pvArray[0] == NO_MOVE){
-         if(eval <= q-asp_lower){ asp_lower += PAWN_VALUE/2;}
-         if(eval >= q+asp_upper){ asp_upper += PAWN_VALUE/2;}
+         if(eval <= q-asp_lower){ asp_lower *= 2;}
+         if(eval >= q+asp_upper){ asp_upper *= 2;}
          if(pvArray[0] == NO_MOVE){
-            asp_upper *= 2;
-            asp_lower *= 2;
+            asp_upper += PAWN_VALUE/2;
+            asp_lower += PAWN_VALUE/2;
          }
          #ifdef DEBUG
          printf("Running again with window: %d, %d (eval: %d, eval_prev: %d, move: ", q-asp_lower, q+asp_upper, eval, eval_prev);
@@ -351,7 +349,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
 
    //Handle Draw or Mate
    if(size == 0){
-      if(pos->flags & IN_CHECK) return CHECKMATE_VALUE - ply;
+      if(pos->flags & IN_CHECK) return CHECKMATE_VALUE + ply;
       else return 0;
    }
    if(pos->halfmove_clock >= 100) return 0;
@@ -398,7 +396,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
 
    //Set up prunability
    char prunable = !(pos->flags & IN_CHECK);
-   if(abs(beta-1) >= (-CHECKMATE_VALUE) - 2*MAX_MOVES) prunable = FALSE;
+   if(abs(beta-1) >= CHECKMATE_VALUE) prunable = FALSE;
    if(pos->stage == END_GAME) prunable = FALSE;
 
    evalMoves(moveList, moveVals, size, *pos);
@@ -577,7 +575,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray, Sear
 
    //Set up prunability
    char prunable = !(pos->flags & IN_CHECK);
-   if(abs(beta-1) >= (-CHECKMATE_VALUE) - 2*MAX_MOVES) prunable = FALSE;
+   if(abs(beta-1) >= (CHECKMATE_VALUE)) prunable = FALSE; // TODO : check
    if(pos->stage == END_GAME) prunable = FALSE;
 
    //Null move prunin'
@@ -668,7 +666,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
       size = generateLegalMoves(*pos, moveList);
       if(size == 0){ // Check for end game
          if(pos->flags & IN_CHECK){
-            return CHECKMATE_VALUE + ply; // Check Mate
+            return -(CHECKMATE_VALUE + ply); // Check Mate
          }
          else{
             return 0; // Stalemate

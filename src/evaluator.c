@@ -27,6 +27,8 @@
 #define ROOK_MOB      10  // Mobility bonus for Rook in Eval
 #define KING_MOB      50  // Mobility bonus for King in Eval
 
+#define CAN_CASTLE_BONUS 10 // Bonus for being able to Castle
+
 #define KING_SAFTEY_FRIEND 4 // Eval for each friendly piece next to king
 
 #define CONNECTED_ROOK_BONUS  100 // Eval for rooks being connected
@@ -241,6 +243,17 @@ i32 evaluate(Position pos
     pos = tempPos;
     #ifdef DEBUG
     if(verbose) printf("After Mobility Bonus: %d\n", eval_val);
+    #endif
+
+    //
+    // Can Castle
+    //
+    if (pos.flags & W_SHORT_CASTLE) eval_val += CAN_CASTLE_BONUS;
+    if (pos.flags & W_LONG_CASTLE ) eval_val += CAN_CASTLE_BONUS;
+    if (pos.flags & B_SHORT_CASTLE) eval_val -= CAN_CASTLE_BONUS;
+    if (pos.flags & B_LONG_CASTLE ) eval_val -= CAN_CASTLE_BONUS;
+    #ifdef DEBUG
+    if(verbose) printf("After Can Castle Bonus: %d\n", eval_val);
     #endif
 
     //
@@ -739,10 +752,7 @@ void initPST(){
 //Selection sort remaining moves
 
 #define HIST_SCORE_SHIFT 16
-#define HIST_MAX_SCORE   PAWN_VALUE - 100
-
-#define TT_SCORE     MAX_EVAL - QUEEN_VALUE
-#define K_MOVE_SCORE MAX_EVAL - 2*QUEEN_VALUE
+#define HIST_MAX_SCORE  PAWN_VALUE - 100
 
 
 void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
