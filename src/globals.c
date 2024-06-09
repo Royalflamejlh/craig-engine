@@ -10,6 +10,7 @@
 #include <windows.h>
 #endif
 
+volatile i32 run_program;
 volatile i32 run_get_best_move;
 volatile i32 best_move_found;
 volatile i32 print_pv_info;
@@ -32,6 +33,7 @@ static CRITICAL_SECTION mutex_global_PV;
  * Sets up Initial Global Data Values
  */
 void init_globals(){
+    run_program = TRUE;
     run_get_best_move = FALSE;
     best_move_found = FALSE;
     print_pv_info = FALSE;

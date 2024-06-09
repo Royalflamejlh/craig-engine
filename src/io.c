@@ -68,8 +68,13 @@ void processGoCommand(char* input) {
     char* token;
     char* saveptr;
     u32 wtime = 0; // Initialize with default values
+    u32 winc = 0;
     u32 btime = 0;
+    u32 binc = 0;
+    u32 movetime = 0;
+
     u32 time = 0;
+    u32 depth = MAX_DEPTH;
 
     token = strtok_r(input, " ", &saveptr);
     while (token != NULL) {
@@ -80,28 +85,41 @@ void processGoCommand(char* input) {
             if (token != NULL) {
                 wtime = atol(token);
             }
+        } else if (strcmp(token, "winc") == 0) {
+            token = strtok_r(NULL, " ", &saveptr);
+            if (token != NULL) {
+                winc = atol(token);
+            }
         } else if (strcmp(token, "btime") == 0) {
             token = strtok_r(NULL, " ", &saveptr);
             if (token != NULL) {
                 btime = atol(token);
             }
+        } else if (strcmp(token, "binc") == 0) {
+            token = strtok_r(NULL, " ", &saveptr);
+            if (token != NULL) {
+                binc = atol(token);
+            }
         } else if (strcmp(token, "movetime") == 0) {
             token = strtok_r(NULL, " ", &saveptr);
             if (token != NULL) {
-                time = atol(token);
+                movetime = atol(token);
+            }
+        } else if (strcmp(token, "depth") == 0) {
+            token = strtok_r(NULL, " ", &saveptr);
+            if (token != NULL) {
+                depth = atol(token);
             }
         }
         token = strtok_r(NULL, " ", &saveptr);
     }
 
-    if(get_global_position().flags & WHITE_TURN){
-        time += (wtime / 20);
+    if(movetime != 0) time = movetime;
+    else{ 
+        time = calculate_search_time(wtime, winc, btime, binc, get_global_position().flags & WHITE_TURN);
     }
-    else{
-        time += (btime / 20);
-    }
-
-    startSearch(time);
+    
+    startSearch(time, depth);
 }
 
 static i32 processInput(char* input){
@@ -147,6 +165,13 @@ static i32 processInput(char* input){
         printBestMove(get_global_best_move());
         stopSearch();
     }
+    else if (strncmp(input, "quit", 4) == 0){
+        printf("info string Closing Engine\n");
+        fflush(stdout);
+        stopSearch();
+        run_program = FALSE;
+        return 0;
+    }
     #ifdef DEBUG
     else if (strncmp(input, "debug", 5) == 0){
         input += 6;
@@ -181,9 +206,6 @@ static i32 processInput(char* input){
 
     }
     #endif
-    else if (strncmp(input, "quit", 4) == 0) {
-        return -1; 
-    }
     return 0;
 }
 
@@ -191,7 +213,7 @@ i32 inputLoop(){
     char input[4096];
     input[4095] = '\0';
 
-    while (TRUE) {
+    while (run_program) {
         if (fgets(input, sizeof(input), stdin) == NULL) {
             break; 
         }
@@ -203,7 +225,7 @@ i32 inputLoop(){
 }
 
 i32 outputLoop(){
-    while(TRUE){
+    while(run_program){
         if(print_pv_info){
             SearchData data = get_global_pv_data();
             printPVInfo(data);
@@ -211,4 +233,5 @@ i32 outputLoop(){
             free(data.PVArray);
         }
     }
+    return 0;
 }

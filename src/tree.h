@@ -11,4 +11,5 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray, Sear
 i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvArray, SearchStats* stats);
 
 void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size, Move ttMove, Move *killerMoves);
+void q_selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size, Move ttMove);
 #endif

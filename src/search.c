@@ -12,21 +12,33 @@
 #endif
 
 volatile u8 is_searching; // Flag for if search loop is running
+
+// Search Parameters
+volatile u32 search_depth;
+volatile u8 print_on_depth;
+
 /*
 * Starts the search threads
+* Passed the max time and the max depth for the search
 * Called from the IO Thread
 */
-void startSearch(u32 time){
+void startSearch(u32 time, u32 depth){
     is_searching = FALSE; // Set up new search
+    print_on_depth = FALSE;
     clearKillerMoves();
+    search_depth = depth;
     
     startSearchThreads(); // Launch Threads
-    if(time){
+
+    if(time){ // If a time has been set setup the timer
         #ifdef DEBUG
         printf("info string Search time is: %d\n", time);
         #endif
         while(!is_searching); // Wait for search to begin in at least one thread
         startTimerThread(time);
+    }
+    else if (depth != MAX_DEPTH){ // If we are in a depth based search we want to setup to print move 
+        print_on_depth = TRUE;
     }
 }
 
@@ -55,7 +67,7 @@ i32 searchLoop(){
     u32 cur_depth = 1;
     i32 eval = 0, eval_prev = 0;
 
-    while(run_get_best_move && cur_depth <= MAX_DEPTH){
+    while(run_get_best_move && cur_depth <= search_depth){
         SearchStats stats;
         eval = searchTree(searchPosition, cur_depth, pvArray, eval_prev, &stats);
         update_global_pv(cur_depth, pvArray, eval, stats);
@@ -63,6 +75,12 @@ i32 searchLoop(){
         // Update for next iteration
         eval_prev = eval;
         cur_depth++;
+    }
+
+    if(cur_depth > search_depth && print_on_depth){ // Print best move in the case we reached max depth
+        print_on_depth = FALSE;
+        Move move = get_global_best_move();
+        if(move != NO_MOVE) printBestMove(move);
     }
 
     // Free Thread Data

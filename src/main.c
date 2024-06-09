@@ -61,5 +61,8 @@ i32 main(void) {
 
     printf("info string All threads have finished.\n");
     free_globals();
+    freeTT();
+    printf("info string All memory freed\n");
+    printf("info string Goodbye! :)\n");
     return 0;
 }

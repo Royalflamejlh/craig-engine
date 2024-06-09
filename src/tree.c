@@ -255,15 +255,15 @@ i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval_prev, SearchStat
          if(abs(eval) == CHECKMATE_VALUE) break;
          if(eval <= q-asp_lower){
             asp_upper = 1;
-            asp_lower *= 2;
+            asp_lower = (asp_lower + PAWN_VALUE/4) * 2;
          }
          else if(eval >= q+asp_upper){
-            asp_upper *= 2;
+            asp_upper = (asp_upper + PAWN_VALUE/4) * 2;
             asp_lower = 1;
          }
          else if(pvArray[0] == NO_MOVE){
-            asp_upper *= 2;
-            asp_lower *= 2;
+            asp_upper = (asp_upper + PAWN_VALUE/4) * 2;
+            asp_lower = (asp_lower + PAWN_VALUE/4) * 2;
          }
          q = eval;
          #ifdef DEBUG
@@ -335,7 +335,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
    debug[PVS][NODE_COUNT]++;
    #endif
 
-   if(ply != 0 && (isRepetition(pos) || isInsufficient(*pos))) return 0;
+   if(ply != 0 && (pos->halfmove_clock >= 100 || isInsufficient(*pos) || isRepetition(pos))) return 0;
 
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES];
@@ -530,8 +530,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray, Sear
    debug[ZWS][NODE_COUNT]++;
    #endif
 
-   if(isRepetition(pos)) return 0;
-   if(isInsufficient(*pos)) return 0;
+   if(pos->halfmove_clock >= 100 || isInsufficient(*pos) || isRepetition(pos)) return 0;
 
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES];
@@ -541,7 +540,6 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray, Sear
       if(pos->flags & IN_CHECK) return -(CHECKMATE_VALUE - ply);
       else return 0;
    }
-   if(pos->halfmove_clock >= 100) return 0;
 
    TTEntry* ttEntry = getTTEntry(pos->hash);
    Move ttMove = NO_MOVE;
@@ -662,9 +660,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
    //printf("Pos->Eval in q search: %d\n", pos->eval);
    #endif
    // Handle Draw or Mate
-   if(pos->halfmove_clock >= 100) return 0;
-   if(isRepetition(pos)) return 0;
-   if(isInsufficient(*pos)) return 0;
+   if(pos->halfmove_clock >= 100 || isInsufficient(*pos) || isRepetition(pos)) return 0;
    
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES];
@@ -737,7 +733,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
       }
    }
 
-   evalMoves(moveList, moveVals, size, *pos);
+   q_evalMoves(moveList, moveVals, size, *pos);
    
    Move bestMove = NO_MOVE;
    i32 bestScore = MIN_EVAL;
@@ -750,7 +746,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
-      selectSort(i, moveList, moveVals, size, ttMove, getKillerMoves(ply)); 
+      q_selectSort(i, moveList, moveVals, size, ttMove); 
 
       if(moveVals[i] < 0) break;
 
@@ -761,7 +757,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
       *pos = prevPos; //Unmake Move
 
       if( score >= beta ){
-         storeKillerMove(ply, moveList[i]);
+         // storeKillerMove(ply, moveList[i]);
          storeTTEntry(prevPos.hash, 0, score, CUT_NODE, moveList[i]);
          #ifdef DEBUG
          debug[QS][NODE_BETA_CUT]++;
@@ -773,14 +769,11 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
       i32 delta = DELTA_VALUE;
       if (GET_FLAGS(moveList[i]) & PROMOTION) delta += (QUEEN_VALUE - PAWN_VALUE);
       if ( score < alpha - delta && pos->stage != END_GAME) {
-         storeKillerMove(ply, moveList[i]);
-         //storeTTEntry(pos->hash, 0, bestScore, Q_ALL_NODE, moveList[i]);
          #ifdef DEBUG
          debug[QS][NODE_PRUNED_FUTIL]++;
          #endif
          return alpha;
       }
-
 
       if( score > alpha ){
          alpha = score;
@@ -837,6 +830,31 @@ void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size, Move ttMove, Mov
     }
 }
 
+
+void q_selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size, Move ttMove) {
+   i32 maxIdx = i;
+
+   for (i32 j = i + 1; j < size; j++) {
+      if (moveList[j] == ttMove){
+         maxIdx = j;
+         break;
+      }
+      
+      if (moveVals[j] > moveVals[maxIdx]) {
+         maxIdx = j;
+      }
+   }
+
+   if (maxIdx != i) {
+      i32 tempVal = moveVals[i];
+      moveVals[i] = moveVals[maxIdx];
+      moveVals[maxIdx] = tempVal;
+
+      Move tempMove = moveList[i];
+      moveList[i] = moveList[maxIdx];
+      moveList[maxIdx] = tempMove;
+   }
+}
 
 
 

@@ -3,6 +3,7 @@
 
 #include "types.h"
 //Flags
+extern volatile i32 run_program;
 extern volatile i32 run_get_best_move;
 extern volatile i32 best_move_found;
 extern volatile i32 print_pv_info;

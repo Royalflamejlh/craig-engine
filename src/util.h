@@ -18,6 +18,7 @@ i32 python_close();
 
 Move moveStrToType(Position pos, char* str);
 Stage calculateStage(Position pos);
+u32 calculate_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u8 turn);
 
 void printPV(Move *pvArray, i32 depth);
 void printPVInfo(SearchData data);

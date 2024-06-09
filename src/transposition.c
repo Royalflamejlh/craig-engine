@@ -31,6 +31,11 @@ i32 initTT(){
     return 0;
 }
 
+i32 freeTT(){
+    free(table);
+    return 0;
+}
+
 TTEntry* getTTEntry(u64 hash){
     for(i32 i = 0; i < ROTATION; i++){
         u64 key = (hash + i) & KEY_MASK; // Ensure wrapping around

@@ -288,7 +288,6 @@ i32 makeMove(Position *pos, Move move){
     if(from == 4)  pos->flags &= ~(W_LONG_CASTLE | W_SHORT_CASTLE);
     if(from == 60) pos->flags &= ~(B_LONG_CASTLE | B_SHORT_CASTLE);
 
-
     if(!turn) pos->fullmove_number++;
 
     setAttackMasks(pos);
@@ -320,7 +319,6 @@ i32 makeMove(Position *pos, Move move){
     hs->current_idx++;
     if(pos->halfmove_clock == 0) hs->last_reset_idx = hs->current_idx;
     hs->ptr[hs->current_idx] = pos->hash;    
-
 
 
     #ifdef DEBUG

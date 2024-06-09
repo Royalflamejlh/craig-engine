@@ -842,4 +842,86 @@ void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
     return;
 }
 
+void q_evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
+    for(i32 i = 0; i < size; i++){
+        moveVals[i] = 0;
+        Move move = moveList[i];
+        Square fr_sq = GET_FROM(move);
+        Square to_sq = GET_TO(move);
+
+        i32 fr_piece = (i32)pos.charBoard[fr_sq];
+        i32 to_piece = (i32)pos.charBoard[to_sq];
+
+        i32 fr_piece_i = pieceToIndex[fr_piece];
+        i32 to_piece_i = pieceToIndex[to_piece];
+
+        #ifdef DEBUG
+        if(fr_piece_i >= 12 || to_piece_i >= 12){
+            printf("Warning illegal piece found at:");
+            printPosition(pos, TRUE);
+            printf("from piece: %d", pos.charBoard[fr_sq]);
+            printf(" to piece: %d", pos.charBoard[to_sq]);
+        }
+        #endif
+
+        //Add on the PST values
+        moveVals[i] += PST[pos.stage][fr_piece_i][to_sq] - PST[pos.stage][fr_piece_i][fr_sq];
+        
+        //Add on the flag values
+        //i32 histScore;
+        switch(GET_FLAGS(move)){
+            case QUEEN_PROMO_CAPTURE:
+                moveVals[i] += (pieceValues[to_piece_i] + QUEEN_VALUE - PAWN_VALUE);
+                moveVals[i] += PST[pos.stage][to_piece_i][to_sq];
+                break;
+            case ROOK_PROMO_CAPTURE:
+                moveVals[i] += (pieceValues[to_piece_i] + ROOK_VALUE - PAWN_VALUE);
+                moveVals[i] += PST[pos.stage][to_piece_i][to_sq];
+                break;
+            case BISHOP_PROMO_CAPTURE:
+                moveVals[i] += (pieceValues[to_piece_i] + BISHOP_VALUE - PAWN_VALUE);
+                moveVals[i] += PST[pos.stage][to_piece_i][to_sq];
+                break;
+            case KNIGHT_PROMO_CAPTURE:
+                moveVals[i] += (pieceValues[to_piece_i] + KNIGHT_VALUE - PAWN_VALUE);
+                moveVals[i] += PST[pos.stage][to_piece_i][to_sq];
+                break;
+                
+            case EP_CAPTURE:
+                moveVals[i] += PAWN_VALUE;
+                moveVals[i] += PST[pos.stage][to_piece_i][to_sq];
+                break;
+
+            case CAPTURE:
+                moveVals[i] += pieceValues[to_piece_i];
+                moveVals[i] += PST[pos.stage][to_piece_i][to_sq];
+                break;
+
+            case QUEEN_PROMOTION:
+                moveVals[i] += (QUEEN_VALUE - PAWN_VALUE);    
+                break;
+            case ROOK_PROMOTION:
+                moveVals[i] += (ROOK_VALUE - PAWN_VALUE);    
+                break;
+            case BISHOP_PROMOTION:
+                moveVals[i] += (BISHOP_VALUE - PAWN_VALUE);    
+                break;
+            case KNIGHT_PROMOTION:
+                moveVals[i] += (KNIGHT_VALUE - PAWN_VALUE);    
+                break;
+                
+            case QUEEN_CASTLE:
+            case KING_CASTLE:
+                moveVals[i] += MOVE_CASTLE_BONUS;
+                break;
+
+            case DOUBLE_PAWN_PUSH:
+            case QUIET:
+            default:
+                break;
+        }
+    }
+
+    return;
+}
 

@@ -24,6 +24,7 @@ struct TTEntry{
 typedef struct TTEntry TTEntry;
 
 i32 initTT();
+i32 freeTT();
 
 TTEntry* getTTEntry(u64 hash);
 

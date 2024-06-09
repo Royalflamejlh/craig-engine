@@ -272,6 +272,27 @@ Stage calculateStage(Position pos){
 }
 
 /*
+ * Returns the maximum allowed search time
+ */
+u32 calculate_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u8 turn){
+    u32 time = 0;
+    u32 advantage = 0;
+    if(wtime == 0 && winc == 0 && btime == 0 && binc == 0) return 0;
+    if(turn){
+        time = wtime + winc;
+        advantage = wtime - btime;
+    } else{
+        time = btime + binc;
+        advantage = btime - wtime;
+    }
+    if(time <= 1000) return 100;
+    if(time <= 100) return 10;
+    if(time <= 10) return 1;
+    if(advantage >  0) return ((time + advantage) / 15);
+    return (time / 20);
+}
+
+/*
 *
 * Hash Stack Stuff
 *
