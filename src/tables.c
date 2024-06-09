@@ -15,8 +15,11 @@ void storeKillerMove(int ply, Move move){ //TODO: Make sure cant have two of sam
    }
 }
 
-Move* getKillerMoves(int ply){
-    return killerMoves[ply];
+u8 isKillerMove(Move move, int ply){
+   for(int i = 0; i < KMV_CNT; i++){
+      if(move == killerMoves[ply][i]) return TRUE;
+   }
+   return FALSE;
 }
 
 void clearKillerMoves(void){

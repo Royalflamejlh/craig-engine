@@ -1,6 +1,7 @@
 #include "evaluator.h"
 #include "types.h"
 #include "util.h"
+#include "tables.h"
 #include "movement.h"
 #include "bitboard/bbutils.h"
 #include "bitboard/bitboard.h"
@@ -61,6 +62,8 @@
 #define PST_KING_MULT_END      30  // PST Mult King in Eval
 
 // Defines for Movement Eval
+#define KILLER_MOVE_BONUS   40000 // Bonus for move being killer move
+#define TT_MOVE_BONUS       50000 // Bonus for move being TT move
 
 #define MOVE_CASTLE_BONUS  300  // Eval bonus for castling
 #define MOVE_OPN_QUEEN_PEN   5  // Pen for moving queen in the opening
@@ -755,20 +758,22 @@ void initPST(){
 #define HIST_MAX_SCORE  PAWN_VALUE - 100
 
 
-void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
+void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos, Move ttMove, u32 ply){
     for(i32 i = 0; i < size; i++){
         moveVals[i] = 0;
         Move move = moveList[i];
+
         Square fr_sq = GET_FROM(move);
         Square to_sq = GET_TO(move);
-
         i32 fr_piece = (i32)pos.charBoard[fr_sq];
         i32 to_piece = (i32)pos.charBoard[to_sq];
+        i32 fr_piece_i = pieceToIndex[fr_piece];
+        i32 to_piece_i = pieceToIndex[to_piece];
 
         if(pos.stage == OPN_GAME && (fr_piece == WHITE_QUEEN || fr_piece == BLACK_QUEEN)) moveVals[i] -= MOVE_OPN_QUEEN_PEN;
 
-        i32 fr_piece_i = pieceToIndex[fr_piece];
-        i32 to_piece_i = pieceToIndex[to_piece];
+        if(move == ttMove)          moveVals += TT_MOVE_BONUS;
+        if(isKillerMove(move, ply)) moveVals += KILLER_MOVE_BONUS;
 
         #ifdef DEBUG
         if(fr_piece_i >= 12 || to_piece_i >= 12){

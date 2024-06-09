@@ -1,6 +1,7 @@
 #include "tree.h"
 #include <stdio.h>
 #include <string.h>
+#include "bitboard/bbutils.h"
 #include "movement.h"
 #include "types.h"
 #include "util.h"
@@ -25,11 +26,10 @@
 
 #define LMR_DEPTH 3 // LMR not performed if depth < LMR_DEPTH
 
-#define MAX_ASP_START PAWN_VALUE-100 // Maximum size of bounds for an aspiration window to start on
-#define ASP_EDGE PAWN_VALUE/4  // Buffer size of aspiration window
+#define ASP_EDGE (PAWN_VALUE/4)  // Buffer size of aspiration window
 
 #define FUTIL_DEPTH 2 // Depth to start futility pruning
-#define FUTIL_MARGIN PAWN_VALUE-100 // Score difference for a node to be futility pruned
+#define FUTIL_MARGIN (PAWN_VALUE-100) // Score difference for a node to be futility pruned
 
 #define NULL_PRUNE_R 3 //How much Null prunin' takes off
 
@@ -254,16 +254,16 @@ i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval_prev, SearchStat
       while(eval <= q-asp_lower || eval >= q+asp_upper || pvArray[0] == NO_MOVE){
          if(abs(eval) == CHECKMATE_VALUE) break;
          if(eval <= q-asp_lower){
-            asp_upper = 1;
-            asp_lower = (asp_lower + PAWN_VALUE/4) * 2;
+            asp_upper = ASP_EDGE;
+            asp_lower = (asp_lower + ASP_EDGE) * 2;
          }
          else if(eval >= q+asp_upper){
-            asp_upper = (asp_upper + PAWN_VALUE/4) * 2;
-            asp_lower = 1;
+            asp_upper = (asp_upper + ASP_EDGE) * 2;
+            asp_lower = ASP_EDGE;
          }
          else if(pvArray[0] == NO_MOVE){
-            asp_upper = (asp_upper + PAWN_VALUE/4) * 2;
-            asp_lower = (asp_lower + PAWN_VALUE/4) * 2;
+            asp_upper = (asp_upper + ASP_EDGE) * 2;
+            asp_lower = (asp_lower + ASP_EDGE) * 2;
          }
          q = eval;
          #ifdef DEBUG
@@ -407,7 +407,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
    if(abs(beta-1) >= CHECKMATE_VALUE/2) prunable = FALSE;
    if(pos->stage == END_GAME) prunable = FALSE;
 
-   evalMoves(moveList, moveVals, size, *pos);
+   evalMoves(moveList, moveVals, size, *pos, ttMove, ply);
 
    //Store the list of moves and their evaluations at the start
    #ifdef DEBUG
@@ -431,10 +431,8 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
-      selectSort(i, moveList, moveVals, size, ttMove, getKillerMoves(ply));
-
+      selectSort(i, moveList, moveVals, size);
       makeMove(pos, moveList[i]);
-
       // Update Prunability PVS
       u8 prunable_move = prunable;
       if(i <= PV_PRUNE_MOVE_IDX) prunable_move = FALSE;
@@ -490,7 +488,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
       }
       if( score > bestScore ){ //Improved best move
          bestMove = moveList[i];
-         bestScore = moveVals[i];
+         bestScore = score;
       }
    }
    if (exact) {
@@ -533,7 +531,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray, Sear
    if(pos->halfmove_clock >= 100 || isInsufficient(*pos) || isRepetition(pos)) return 0;
 
    Move moveList[MAX_MOVES];
-   i32 moveVals[MAX_MOVES];
+   i32 moveVals[MAX_MOVES] = {0};
    i32 size = generateLegalMoves(*pos, moveList);
    //Handle Draw or Mate
    if(size == 0){
@@ -591,7 +589,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray, Sear
       return beta;
    }
 
-   evalMoves(moveList, moveVals, size, *pos);
+   evalMoves(moveList, moveVals, size, *pos, ttMove, ply);
 
    #ifdef DEBUG
    if(size > 0) debug[ZWS][NODE_LOOP_CHILDREN]++;
@@ -602,8 +600,8 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray, Sear
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
-      selectSort(i, moveList, moveVals, size, ttMove, getKillerMoves(ply));
-
+      
+      selectSort(i, moveList, moveVals, size);
       makeMove(pos, moveList[i]);
 
       // Set Move prunability prunability ZWS
@@ -614,7 +612,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray, Sear
       if(pos->stage == END_GAME) prunable_move = FALSE; // If its the endgame
 
       if( prunable_move && depth == 1){ // Futility Pruning
-         if(prevPos.quick_eval + moveVals[i] < beta-1 - FUTIL_MARGIN){ 
+         if((prevPos.quick_eval + moveVals[i]) < ((beta-1) - FUTIL_MARGIN)){ 
          #ifdef DEBUG
          debug[ZWS][NODE_PRUNED_FUTIL]++;
          #endif // Unmake Move
@@ -659,11 +657,13 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
    debug[QS][NODE_COUNT]++;
    //printf("Pos->Eval in q search: %d\n", pos->eval);
    #endif
+   // Check the bounds
+   if(q_ply >= MAX_QUIESCE_PLY) return alpha;
    // Handle Draw or Mate
    if(pos->halfmove_clock >= 100 || isInsufficient(*pos) || isRepetition(pos)) return 0;
    
    Move moveList[MAX_MOVES];
-   i32 moveVals[MAX_MOVES];
+   i32 moveVals[MAX_MOVES] = {0};
    i32 size = generateThreatMoves(*pos, moveList);
    if(size == 0){
       size = generateLegalMoves(*pos, moveList);
@@ -695,8 +695,6 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
       alpha = stand_pat;
    }
 
-   if(q_ply >= MAX_QUIESCE_PLY) return alpha;
-
    q_evalMoves(moveList, moveVals, size, *pos);
    
    #ifdef DEBUG
@@ -707,7 +705,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
-      q_selectSort(i, moveList, moveVals, size); 
+      selectSort(i, moveList, moveVals, size); 
 
       if(moveVals[i] < 0) break;
 
@@ -746,44 +744,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
    return alpha;
 }
 
-
-void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size, Move ttMove, Move *killerMoves) {
-    i32 maxIdx = i;
-
-    for (i32 j = i + 1; j < size; j++) {
-        if (moveList[j] == ttMove){
-            maxIdx = j;
-            break;
-        }
-
-        i32 found = 0;
-        for(i32 k = 0; k < KMV_CNT; k++){
-            if(moveList[j] == killerMoves[k]){
-                maxIdx = j;
-                found = 1;
-                break;
-            }
-        }
-        if(found) break;
-
-        if (moveVals[j] > moveVals[maxIdx]) {
-            maxIdx = j;
-        }
-    }
-   
-    if (maxIdx != i) {
-        i32 tempVal = moveVals[i];
-        moveVals[i] = moveVals[maxIdx];
-        moveVals[maxIdx] = tempVal;
-
-        Move tempMove = moveList[i];
-        moveList[i] = moveList[maxIdx];
-        moveList[maxIdx] = tempMove;
-    }
-}
-
-
-void q_selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size) {
+void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size) {
    i32 maxIdx = i;
 
    for (i32 j = i + 1; j < size; j++) {
