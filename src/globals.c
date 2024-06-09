@@ -14,6 +14,7 @@ volatile i32 run_program;
 volatile i32 run_get_best_move;
 volatile i32 best_move_found;
 volatile i32 print_pv_info;
+volatile i32 print_best_move;
 
 // Position Data
 static Position global_position;
@@ -37,6 +38,7 @@ void init_globals(){
     run_get_best_move = FALSE;
     best_move_found = FALSE;
     print_pv_info = FALSE;
+    print_best_move = FALSE;
 
 #if defined(__unix__) || defined(__APPLE__)
     pthread_mutex_lock(&mutex_global_position);

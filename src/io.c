@@ -162,7 +162,7 @@ static i32 processInput(char* input){
         #ifdef DEBUG
         printf("info string Stopping\n");
         #endif
-        printBestMove(get_global_best_move());
+        print_best_move = TRUE;
         stopSearch();
     }
     else if (strncmp(input, "quit", 4) == 0){
@@ -231,6 +231,11 @@ i32 outputLoop(){
             printPVInfo(data);
             print_pv_info = FALSE;
             free(data.PVArray);
+        }
+        if(print_best_move){
+            Move move = get_global_best_move();
+            if(move != NO_MOVE) printBestMove(move);
+            print_best_move = FALSE;
         }
     }
     return 0;

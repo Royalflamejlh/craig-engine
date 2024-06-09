@@ -6,7 +6,10 @@
 extern volatile i32 run_program;
 extern volatile i32 run_get_best_move;
 extern volatile i32 best_move_found;
+
+//Print Signals
 extern volatile i32 print_pv_info;
+extern volatile i32 print_best_move;
 
 void init_globals();
 void free_globals();

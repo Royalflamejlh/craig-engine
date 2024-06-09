@@ -79,8 +79,7 @@ i32 searchLoop(){
 
     if(cur_depth > search_depth && print_on_depth){ // Print best move in the case we reached max depth
         print_on_depth = FALSE;
-        Move move = get_global_best_move();
-        if(move != NO_MOVE) printBestMove(move);
+        print_best_move = TRUE;
     }
 
     // Free Thread Data
