@@ -2,8 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-
-#define TRANS_BITS 29
+#define TRANS_BITS 28
 
 #define KEY_MASK (((1ULL << TRANS_BITS))-1)
 

@@ -243,7 +243,18 @@ void printPV(Move *pvArray, i32 depth) {
 void printPVInfo(SearchData data){
     printf("info ");
     printf("depth %d ", data.depth);
-    printf("score cp %d ", data.eval/10);
+
+    i32 score = data.eval;
+    if(abs(score) < CHECKMATE_VALUE - MAX_MOVES){
+        printf("score cp %d ", score/10);
+    }
+    else{
+        i32 mate = CHECKMATE_VALUE - abs(score);
+        mate = (mate + 1) / 2;
+        if(score < 0) mate = -mate;
+        printf("score mate %d ", mate);
+    }
+
     printf("time %d ", (int)(data.stats.elap_time * 1000));
     printf("nodes %lld ", (long long)data.stats.node_count);
     printf("nps %lld ", (long long)((double)data.stats.node_count / data.stats.elap_time));

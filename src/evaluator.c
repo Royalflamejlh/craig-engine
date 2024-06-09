@@ -215,7 +215,7 @@ i32 evaluate(Position pos
     i32 stage = pos.stage;
     
     // Insufficient Material Stuff
-    if(isInsufficient(pos)) return 0; //TODO: Maybe dont need?
+    if(isInsufficient(pos)) return 0;
 
     #ifdef DEBUG
     if(verbose){
