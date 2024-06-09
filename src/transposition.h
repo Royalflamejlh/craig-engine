@@ -7,8 +7,6 @@ enum {
     PV_NODE,
     CUT_NODE,
     ALL_NODE,
-    Q_ALL_NODE,
-    Q_EXACT_NODE
 };
 
 #pragma pack(1)

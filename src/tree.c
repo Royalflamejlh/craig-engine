@@ -697,56 +697,17 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
 
    if(q_ply >= MAX_QUIESCE_PLY) return alpha;
 
-   TTEntry* ttEntry = getTTEntry(pos->hash);
-   Move ttMove = NO_MOVE;
-   if (ttEntry) {
-      #ifdef DEBUG
-      debug[QS][NODE_TT_HIT]++;
-      #endif
-      ttMove = ttEntry->move;
-      switch (ttEntry->nodeType) {
-         case Q_EXACT_NODE:
-            #ifdef DEBUG
-            debug[QS][NODE_TT_PVS_RET]++;
-            #endif
-            return ttEntry->eval;
-            break;
-         case CUT_NODE:
-            if (ttEntry->eval >= beta){
-               #ifdef DEBUG
-               debug[QS][NODE_TT_BETA_RET]++;
-               #endif
-               return beta;
-            }
-            break;
-         case Q_ALL_NODE:
-         case ALL_NODE: // Upper bound
-            if (ttEntry->eval < alpha){
-               #ifdef DEBUG
-               debug[QS][NODE_TT_ALPHA_RET]++;
-               #endif
-               return alpha;
-            }
-            break;
-         default:
-            break;
-      }
-   }
-
    q_evalMoves(moveList, moveVals, size, *pos);
    
-   Move bestMove = NO_MOVE;
-   i32 bestScore = MIN_EVAL;
    #ifdef DEBUG
    if(size > 0) debug[QS][NODE_LOOP_CHILDREN]++;
    #endif
-   i32 exact = 0;
    Position prevPos = *pos;
    for (i32 i = 0; i < size; i++)  {
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
-      q_selectSort(i, moveList, moveVals, size, ttMove); 
+      q_selectSort(i, moveList, moveVals, size); 
 
       if(moveVals[i] < 0) break;
 
@@ -758,7 +719,6 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
 
       if( score >= beta ){
          // storeKillerMove(ply, moveList[i]);
-         storeTTEntry(prevPos.hash, 0, score, CUT_NODE, moveList[i]);
          #ifdef DEBUG
          debug[QS][NODE_BETA_CUT]++;
          #endif
@@ -777,16 +737,8 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
 
       if( score > alpha ){
          alpha = score;
-         exact = TRUE;
-      }
-      if( score > bestScore){
-         bestScore = score;
-         bestMove = moveList[i];
       }
    }
-
-   if(exact) storeTTEntry(pos->hash, 0, alpha, Q_EXACT_NODE, bestMove);
-   else if(bestScore != MIN_EVAL) storeTTEntry(pos->hash, 0, bestScore, Q_ALL_NODE, bestMove);
 
    #ifdef DEBUG
    debug[QS][NODE_ALPHA_RET]++;
@@ -831,15 +783,10 @@ void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size, Move ttMove, Mov
 }
 
 
-void q_selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size, Move ttMove) {
+void q_selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size) {
    i32 maxIdx = i;
 
    for (i32 j = i + 1; j < size; j++) {
-      if (moveList[j] == ttMove){
-         maxIdx = j;
-         break;
-      }
-      
       if (moveVals[j] > moveVals[maxIdx]) {
          maxIdx = j;
       }
