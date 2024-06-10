@@ -772,8 +772,8 @@ void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos, Move ttMov
 
         if(pos.stage == OPN_GAME && (fr_piece == WHITE_QUEEN || fr_piece == BLACK_QUEEN)) moveVals[i] -= MOVE_OPN_QUEEN_PEN;
 
-        if(move == ttMove)          moveVals += TT_MOVE_BONUS;
-        if(isKillerMove(move, ply)) moveVals += KILLER_MOVE_BONUS;
+        if(move == ttMove)          moveVals[i] += TT_MOVE_BONUS;
+        if(isKillerMove(move, ply)) moveVals[i] += KILLER_MOVE_BONUS;
 
         #ifdef DEBUG
         if(fr_piece_i >= 12 || to_piece_i >= 12){

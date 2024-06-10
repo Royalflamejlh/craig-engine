@@ -531,7 +531,7 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray, Sear
    if(pos->halfmove_clock >= 100 || isInsufficient(*pos) || isRepetition(pos)) return 0;
 
    Move moveList[MAX_MOVES];
-   i32 moveVals[MAX_MOVES] = {0};
+   i32 moveVals[MAX_MOVES];
    i32 size = generateLegalMoves(*pos, moveList);
    //Handle Draw or Mate
    if(size == 0){
@@ -663,7 +663,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
    if(pos->halfmove_clock >= 100 || isInsufficient(*pos) || isRepetition(pos)) return 0;
    
    Move moveList[MAX_MOVES];
-   i32 moveVals[MAX_MOVES] = {0};
+   i32 moveVals[MAX_MOVES];
    i32 size = generateThreatMoves(*pos, moveList);
    if(size == 0){
       size = generateLegalMoves(*pos, moveList);
