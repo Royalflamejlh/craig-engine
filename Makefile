@@ -20,9 +20,12 @@ OBJS = $(SRCS:src/%.c=$(OBJDIR)/%.o)
 # Windows Vars
 ##
 WIN_CC = x86_64-w64-mingw32-gcc
-WIN_CFLAGS = -Wall -Wextra -O3 -Ofast -funroll-loops -flto -finline-functions -fexpensive-optimizations -fomit-frame-pointer -D __FAST_AS_POOP=1
+WIN_CFLAGS = -Wall -Wextra 
+WIN_RELEASE_FLAGS = -O3 -Ofast -funroll-loops -flto -finline-functions -fexpensive-optimizations -fomit-frame-pointer -D __FAST_AS_POOP=1
+WIN_DEBUG_FLAGS = -g -D __COMPILE_DEBUG=1 -D __RAND_SEED=287091847 -D VERBOSE -D MAX_DEPTH=64 -D DEBUG
 WIN_LDFLAGS = -static-libgcc -static-libstdc++
-WIN_TARGET = $(BINDIR)/chess.exe
+WIN_TARGET_DEBUG = $(BINDIR)/chess_db.exe
+WIN_TARGET_RELEASE = $(BINDIR)/chess.exe
 WIN_OBJS = $(SRCS:src/%.c=$(OBJDIR)/win_%.o)
 
 
@@ -41,13 +44,13 @@ create_dirs:
 	mkdir -p $(OBJDIR) $(addprefix $(OBJDIR)/, $(dir $(SRCS:src/%=%)))
 	mkdir -p $(addprefix $(OBJDIR)/win_, $(dir $(SRCS:src/%=%)))
 
-all: linux_debug windows
+all: linux_debug windows_debug linux_release windows_release
 
-debug: linux_debug 
+debug: linux_debug windows_debug
 
 profile: linux_profile
 
-release: linux_release windows
+release: linux_release windows_release
 
 
 $(BINDIR) $(OBJDIR):
@@ -69,25 +72,32 @@ $(OBJDIR)/%.o: src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(LINUX_TARGET_DEBUG): $(BINDIR) $(OBJS)
-	$(CC) $(CFLAGS) $(DEBUG_LDFLAGS) -o $(LINUX_TARGET_DEBUG) $(OBJS)
+	$(CC) $(CFLAGS) $(DEBUG_FLAGS) $(DEBUG_LDFLAGS) -o $(LINUX_TARGET_DEBUG) $(OBJS) $(DEBUG_LDFLAGS)
 
 $(LINUX_TARGET_RELEASE): $(BINDIR) $(OBJS)
-	$(CC) $(CFLAGS) $(RELEASE_FLAGS) -o $(LINUX_TARGET_RELEASE) $(OBJS)
+	$(CC) $(CFLAGS) $(RELEASE_FLAGS) $(RELEASE_LDFLAGS) -o $(LINUX_TARGET_RELEASE) $(OBJS) $(RELEASE_LDFLAGS)
 
 $(LINUX_TARGET_PROFILE): $(BINDIR) $(OBJS)
-	$(CC) $(CFLAGS) $(PROFILE_FLAGS) -o $(LINUX_TARGET_PROFILE) $(OBJS)
+	$(CC) $(CFLAGS) $(PROFILE_FLAGS) $(PROFILE_LDFLAGS) -o $(LINUX_TARGET_PROFILE) $(OBJS) $(PROFILE_LDFLAGS)
 
 
 ##
 # Windows Stuff
 ##
-windows: create_dirs $(WIN_TARGET)
+windows_debug: WIN_CFLAGS += $(WIN_DEBUG_FLAGS)
+windows_debug: create_dirs $(WIN_TARGET_DEBUG)
+
+windows_release: WIN_RELEASE += $(WIN_RELEASE_FLAGS)
+windows_release: create_dirs $(WIN_TARGET_RELEASE)
 
 $(OBJDIR)/win_%.o: src/%.c
 	$(WIN_CC) $(WIN_CFLAGS) -c $< -o $@
 
-$(WIN_TARGET): $(BINDIR) $(WIN_OBJS)
-	$(WIN_CC) $(WIN_CFLAGS) -o $(WIN_TARGET) $(WIN_OBJS) $(WIN_LDFLAGS)
+$(WIN_TARGET_DEBUG): $(BINDIR) $(WIN_OBJS)
+	$(WIN_CC) $(WIN_CFLAGS) $(WIN_DEBUG_FLAGS) $(WIN_DEBUG_LDFLAGS) -o $(WIN_TARGET_DEBUG) $(WIN_OBJS) $(WIN_LDFLAGS)
+
+$(WIN_TARGET_RELEASE): $(BINDIR) $(WIN_OBJS)
+	$(WIN_CC) $(WIN_CFLAGS) $(WIN_RELEASE_FLAGS) $(WIN_RELEASE_LDFLAGS) -o $(WIN_TARGET_RELEASE) $(WIN_OBJS) $(WIN_LDFLAGS)
 
 
 ##
@@ -99,4 +109,5 @@ clean:
 	rm -rf $(BINDIR)
 
 clean_obj:
+	rm -f $(LINUX_TARGET) $(WIN_TARGET)
 	rm -rf $(OBJDIR)

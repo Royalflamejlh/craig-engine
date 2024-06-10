@@ -78,9 +78,9 @@ void stopStats(SearchStats* stats){
 #endif // Windows
 
 #ifdef DEBUG
-#if defined(__unix__) || defined(__APPLE__)
-#include <assert.h>
 #include <math.h>
+#include <assert.h>
+#if defined(__unix__) || defined(__APPLE__)
 #define DEBUG_TIME
 #include <time.h>
 static struct timespec start_time, end_time;
