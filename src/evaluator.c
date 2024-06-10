@@ -172,7 +172,7 @@ i32 eval_mobility(Position position){
     u64 ownPos = position.color[turn];
     u64 oppPos = position.color[!turn];
     u64 oppAttackMask = position.attack_mask[!turn];
-    Move moveList[MAX_MOVES] = {};
+    Move moveList[MAX_MOVES];
 
 
     if(!(position.flags & IN_CHECK) && !(position.pinned & ownPos)){
