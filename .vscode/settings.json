@@ -26,6 +26,11 @@
       "cwd": "/Users/johnhoward/Documents/github/godengine/bin",
       "binaryPath": "/Users/johnhoward/Documents/github/godengine/bin/chess",
       "binaryArgs": []
+    },
+    {
+      "cwd": "/config/workspace/godengine/bin",
+      "binaryPath": "/config/workspace/godengine/bin/chess_db",
+      "binaryArgs": []
     }
   ],
   "C_Cpp_Runner.cCompilerPath": "gcc",
