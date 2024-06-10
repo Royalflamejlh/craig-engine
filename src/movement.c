@@ -366,7 +366,7 @@ i32 makeNullMove(Position *pos){
     pos->halfmove_clock++;
     if(!turn) pos->fullmove_number++;
 
-    i32 regen_pinned = pos->en_passant != 0;
+    i32 regen_pinned = pos->en_passant != 0; // If there was an en passant square we have to regen pinned pieces
     pos->en_passant = 0ULL;
 
     pos->flags ^= WHITE_TURN;

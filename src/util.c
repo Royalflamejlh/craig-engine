@@ -234,8 +234,8 @@ Move moveStrToType(Position pos, char* str){
 void printPV(Move *pvArray, i32 depth) {
     for (i32 i = 0; i < depth; i++) {
         if(pvArray[i] != NO_MOVE){ 
+            if(i != 0) printf(" ");
             printMoveShort(pvArray[i]);
-            printf(" ");
         }
     }
 }

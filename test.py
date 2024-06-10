@@ -3,19 +3,19 @@ import chess.engine
 import logging
 
 # Configuration
-craig_time = .5  # Time in seconds Craig has for each move
-fish_time = .5  # Time in seconds Stockfish has for each move
+craig_time = .9  # Time in seconds Craig has for each move
+fish_time = .9  # Time in seconds Stockfish has for each move
 num_games = 100  # Number of games to be played for the calculation
 
 #logging.basicConfig(level=logging.DEBUG)
 
 
-def play_game(white_engine, black_engine, white_time, black_time, white_depth, engine, turn):
+def play_game(white_engine, black_engine, white_time, black_time, turn):
     board = chess.Board()
     while not board.is_game_over():
         if board.turn == chess.WHITE:
             try:
-                result = white_engine.play(board, chess.engine.Limit(time=white_time, depth=white_depth))
+                result = white_engine.play(board, chess.engine.Limit(time=white_time))
             except TimeoutError:
                 print("White to move:")
                 print(board)
@@ -24,7 +24,7 @@ def play_game(white_engine, black_engine, white_time, black_time, white_depth, e
                 return TimeoutError
         else:
             try:
-                result = black_engine.play(board, chess.engine.Limit(time=black_time, depth=white_depth))
+                result = black_engine.play(board, chess.engine.Limit(time=black_time))
             except TimeoutError:
                 print("Black to move:")
                 print(board)
@@ -63,9 +63,9 @@ def main(db_engine_path, engine_path):
         
         # Alternate starting colors
         if i % 2 == 0:
-            result = play_game(craig, fish, craig_time, fish_time, 6, fish, i)
+            result = play_game(craig, fish, craig_time, fish_time, i)
         else:
-            result = play_game(fish, craig, fish_time, craig_time, 6, fish, i)
+            result = play_game(fish, craig, fish_time, craig_time, i)
         
         if result == "1-0":
             craig_wins += 1 if i % 2 == 0 else 0
@@ -79,7 +79,7 @@ def main(db_engine_path, engine_path):
         # Close the engines
         craig.quit()
         fish.quit()
-        print(f"Game {i+1} completed. {craig_wins} wins for Craig, {fish_wins} wins for {engine2_name}")
+        print(f"Game {i+1} completed. {craig_wins} wins for {engine1_name}, {fish_wins} wins for {engine2_name}")
 
     elo_diff = calculate_elo_difference(craig_wins, fish_wins, draws)
     print(f"Elo difference: {elo_diff} (positive means {engine1_name} is stronger)")
@@ -89,9 +89,9 @@ if __name__ == "__main__":
     import sys
     import math
 
-    engine1_path = "./bin/chess"
-    engine1_name = "Craig Testing"
-    engine2_path = "./bin/chess"
-    engine2_name = "CraigEngine V0.1"
+    engine1_path = "./chess_depthlimit"
+    engine1_name = "With Depth Limit"
+    engine2_path = "./chess_nolimit"
+    engine2_name = "Without Depth Limit"
     
     main(engine1_path, engine2_path)
