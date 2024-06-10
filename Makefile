@@ -1,7 +1,7 @@
 ##
 # Linux Vars
 ##
-CC = gcc
+CC = clang
 ASAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer -Wno-format-security -fsanitize=undefined -fsanitize=nullability -fsanitize=integer
 CFLAGS = -Wall -Wextra 
 DEBUG_FLAGS = -g $(ASAN_FLAGS) -D __COMPILE_DEBUG=1 -D __RAND_SEED=287091847 -D VERBOSE -D MAX_DEPTH=64 -D DEBUG

@@ -2,17 +2,20 @@
 #include "tables.h"
 #include <string.h>
 
+//TODO: Both of these tables need to be modified to support threading.
+
 /*
 * Killer Moves
 */
 static Move killerMoves[MAX_DEPTH][KMV_CNT] = {0}; // TODO: Figure out if need to change / have two max depth values
 static u32 kmvIdx = 0;
 
-void storeKillerMove(int ply, Move move){ //TODO: Make sure cant have two of same moves in killer moves 
-   if(killerMoves[ply][kmvIdx] != move){
-      killerMoves[ply][kmvIdx] = move;
-      kmvIdx = (kmvIdx + 1) % KMV_CNT;
+void storeKillerMove(int ply, Move move){ 
+   for(int i = 0; i < KMV_CNT; i++){
+      if(killerMoves[ply][kmvIdx] == move) return;
    }
+   killerMoves[ply][kmvIdx] = move;
+   kmvIdx = (kmvIdx + 1) % KMV_CNT;
 }
 
 u8 isKillerMove(Move move, int ply){

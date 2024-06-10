@@ -65,15 +65,15 @@ i32 searchLoop(){
     is_searching = TRUE;
 
     u32 cur_depth = 1;
-    i32 eval = 0, eval_prev = 0;
+    i32 eval = 0;
 
     while(run_get_best_move && cur_depth <= search_depth){
         SearchStats stats;
-        eval = searchTree(searchPosition, cur_depth, pvArray, eval_prev, &stats);
+        //startHelpers();
+        eval = searchTree(searchPosition, cur_depth, pvArray, eval, &stats);
         update_global_pv(cur_depth, pvArray, eval, stats);
+        //stopHelpers();
 
-        // Update for next iteration
-        eval_prev = eval;
         cur_depth++;
     }
 
@@ -86,3 +86,8 @@ i32 searchLoop(){
     free(pvArray);
     return 0;
 }
+
+/*
+ * Loop Function for Helper Threads
+ */
+i32 startHelpers(Position pos, i32 eval, u32 depth);

@@ -217,9 +217,9 @@ static void exit_search(){
 }
 
 /*
-* Get that move son.
+* Sets up the aspiration window, then searches the 
 */
-i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval_prev, SearchStats* stats){
+i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval, SearchStats* stats){
    if(!pvArray){
       printf("info string Warning: No PV Array found!\n");
       return 0;
@@ -232,9 +232,9 @@ i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval_prev, SearchStat
    startStats(stats);
 
    Position searchPos = pos;
-   i32 eval;
+
    //printf("Running pv search at depth %d\n", i);
-   if(depth <= 2){
+   if(depth <= 1){
       eval = pvSearch(&searchPos, MIN_EVAL+1, MAX_EVAL-1, depth, 0, pvArray, 0, stats);
       searchPos = pos;
       #ifdef DEBUG
@@ -244,11 +244,10 @@ i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval_prev, SearchStat
       i32 asp_lower, asp_upper;
       //Calculate the Aspiration Window
       asp_upper = asp_lower = ASP_EDGE;
-      i32 q = eval_prev;
+      i32 q = eval;
       #ifdef DEBUG
-      printf("Running with window: %d, %d (eval_prev: %d, depth: %d)\n", q-asp_lower, q+asp_upper, eval_prev, depth);
+      printf("Running with window: %d, %d (eval_prev: %d, depth: %d)\n", q-asp_lower, q+asp_upper, eval, depth);
       #endif
-
       eval = pvSearch(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pvArray, 0, stats);
       searchPos = pos;
       while(eval <= q-asp_lower || eval >= q+asp_upper || pvArray[0] == NO_MOVE){
@@ -265,14 +264,14 @@ i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval_prev, SearchStat
             asp_upper = (asp_upper + ASP_EDGE) * 2;
             asp_lower = (asp_lower + ASP_EDGE) * 2;
          }
-         q = eval;
          #ifdef DEBUG
-         printf("Running again with window: %d, %d (eval: %d, q: %d, move: ", q-asp_lower, q+asp_upper, q, eval_prev);
+         printf("Running again with window: %d, %d (eval: %d, q: %d, move: ", q-asp_lower, q+asp_upper, eval, q);
          printMove(pvArray[0]);
          printf(", depth: %d", depth);
          printf(")\n");
          #endif
-         
+
+         q = eval;
          eval = pvSearch(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pvArray, 0, stats);
          searchPos = pos;
       }
@@ -676,19 +675,18 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
          }
       }
       else{
-         return evaluate(*pos
-         #ifdef DEBUG
-         , FALSE
+         #ifndef DEBUG
+         return evaluate(*pos);
+         #else
+         return evaluate(*pos, FALSE);
          #endif
-         );
       }
    }
-
-   i32 stand_pat = evaluate(*pos
-                     #ifdef DEBUG
-                     , FALSE
-                     #endif 
-                     );
+   #ifndef DEBUG
+   i32 stand_pat = evaluate(*pos);
+   #else
+   i32 stand_pat = evaluate(*pos, FALSE);
+   #endif   
    if( stand_pat >= beta )
       return beta;
    if( alpha < stand_pat ){

@@ -27,7 +27,9 @@ pthread_mutex_t timer_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t timer_cond = PTHREAD_COND_INITIALIZER;
 static pthread_t timerThread;
 
-// Timer thread function
+/*
+ * Starts a timer that prints out the best move and stops the search on completion
+ */
 void* timerThreadFunction(void* durationPtr) {
     #ifdef DEBUG
     printf("info string Running timer thread function\n");
@@ -101,6 +103,9 @@ i32 startTimerThread(i64 durationInSeconds) {
     return 0;
 }
 
+/*
+ * Cancels the timer thread
+ */
 void stopTimerThread() {
     #ifdef DEBUG
     printf("info string Stopping timer thread\n");
