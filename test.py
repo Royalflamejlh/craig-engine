@@ -3,16 +3,12 @@ import chess.engine
 import logging
 
 # Configuration
-craig_time = 3  # Time in seconds Craig has for each move
-fish_time = 3  # Time in seconds Stockfish has for each move
-num_games = 100  # Number of games to be played for the calculation
+craig_time = 1  # Time in seconds Craig has for each move
+fish_time = 1  # Time in seconds Stockfish has for each move
+num_games = 10  # Number of games to be played for the calculation
 
 #logging.basicConfig(level=logging.DEBUG)
-def printEngineName(turn):
-    if turn % 2 == 0:
-        print("Stockfish")
-    else:
-        print("Craig Engine")
+
 
 def play_game(white_engine, black_engine, white_time, black_time, white_depth, engine, turn):
     board = chess.Board()
@@ -35,19 +31,7 @@ def play_game(white_engine, black_engine, white_time, black_time, white_depth, e
                 print(board.fen())
                 print(board.epd())
                 return TimeoutError
-            
-            
         board.push(result.move)
-        for i in range(10):
-            print()
-            
-            
-            
-        info = engine.analyse(board, chess.engine.Limit(time=0.1))
-        print(info["score"])
-        printEngineName(turn)
-        print(board)
-        printEngineName(turn+1)
     return board.result()
 
 def calculate_elo_difference(games_won, games_lost, games_drawn):
@@ -95,17 +79,19 @@ def main(db_engine_path, engine_path):
         # Close the engines
         craig.quit()
         fish.quit()
-        print(f"Game {i+1} completed. {craig_wins} wins for Craig, {fish_wins} wins for Stockfish")
+        print(f"Game {i+1} completed. {craig_wins} wins for Craig, {fish_wins} wins for {engine2_name}")
 
     elo_diff = calculate_elo_difference(craig_wins, fish_wins, draws)
-    print(f"Elo difference: {elo_diff} (positive means Craig is stronger)")
-    print(f"Results: {craig_wins} wins for Craig, {fish_wins} wins for Stockfish, {draws} draws")
+    print(f"Elo difference: {elo_diff} (positive means {engine1_name} is stronger)")
+    print(f"Results: {craig_wins} wins for {engine1_name}, {fish_wins} wins for {engine2_name}, {draws} draws")
 
 if __name__ == "__main__":
     import sys
     import math
 
-    engine1_path = sys.argv[1] if len(sys.argv) > 1 else "./bin/chess"
-    engine2_path = sys.argv[2] if len(sys.argv) > 2 else "stockfish"
+    engine1_path = "./bin/chess"
+    engine1_name = "Craig Testing"
+    engine2_path = "./bin/chess"
+    engine2_name = "CraigEngine V0.1"
     
     main(engine1_path, engine2_path)
