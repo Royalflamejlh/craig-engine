@@ -1,7 +1,7 @@
 ##
 # Linux Vars
 ##
-CC = clang
+CC = gcc
 ASAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer -Wno-format-security -fsanitize=undefined -fsanitize=nullability -fsanitize=integer
 CFLAGS = -Wall -Wextra 
 DEBUG_FLAGS = -g $(ASAN_FLAGS) -D __COMPILE_DEBUG=1 -D __RAND_SEED=287091847 -D VERBOSE -D MAX_DEPTH=64 -D DEBUG
@@ -87,7 +87,7 @@ $(LINUX_TARGET_PROFILE): $(BINDIR) $(OBJS)
 windows_debug: WIN_CFLAGS += $(WIN_DEBUG_FLAGS)
 windows_debug: create_dirs $(WIN_TARGET_DEBUG)
 
-windows_release: WIN_RELEASE += $(WIN_RELEASE_FLAGS)
+windows_release: WIN_CFLAGS += $(WIN_RELEASE_FLAGS)
 windows_release: create_dirs $(WIN_TARGET_RELEASE)
 
 $(OBJDIR)/win_%.o: src/%.c
