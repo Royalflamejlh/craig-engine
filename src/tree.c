@@ -582,7 +582,9 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray, Sear
    if(pos->stage == END_GAME) prunable = FALSE;
 
    //Null move prunin'
-   if(prunable && !isNull){
+   if(prunable && !isNull 
+               && depth > NULL_PRUNE_R + 1 
+               && pos->quick_eval >= beta - 500){
       if(pruneNullMoves(pos, beta, depth, ply, pvArray, stats) >= beta){
          #ifdef DEBUG
          debug[ZWS][NODE_PRUNED_NULL]++;
