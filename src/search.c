@@ -57,7 +57,7 @@ void stopSearch(){
  */
 i32 searchLoop(){
     // Set up local thread info
-    Move *pvArray = calloc((MAX_DEPTH*MAX_DEPTH + MAX_DEPTH)/2, sizeof(Move));
+    Move pvArray[MAX_DEPTH] = {0};
 
     Position searchPosition = get_global_position();
 
@@ -82,8 +82,6 @@ i32 searchLoop(){
         print_best_move = TRUE;
     }
 
-    // Free Thread Data
-    free(pvArray);
     return 0;
 }
 
