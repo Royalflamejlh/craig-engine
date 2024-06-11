@@ -29,11 +29,11 @@
 #define ASP_EDGE (PAWN_VALUE/4)  // Buffer size of aspiration window
 
 #define FUTIL_DEPTH 2 // Depth to start futility pruning
-#define FUTIL_MARGIN (PAWN_VALUE-100) // Score difference for a node to be futility pruned
+#define FUTIL_MARGIN 300 // Score difference for a node to be futility pruned
 
 #define NULL_PRUNE_R 3 //How much Null prunin' takes off
 
-#define DELTA_VALUE 2000
+#define DELTA_VALUE 750
 
 typedef enum searchs{
    PVS,
@@ -387,7 +387,7 @@ static u8 getLMRDepth(u8 curDepth, u8 moveIdx, u8 moveCount, Move move, i32 allo
    if(moveIdx < moveCount / 8) return curDepth - 1;
    if(moveIdx < moveCount / 4) return curDepth - 2;
    if(moveIdx < moveCount / 2) return curDepth / 3;
-   return curDepth/4;
+   return curDepth / 4;
 }
 
 /*
@@ -754,6 +754,16 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats* 
    if(q_ply >= MAX_QUIESCE_PLY) return alpha;
    // Handle Draw or Mate
    if(pos->halfmove_clock >= 100 || isInsufficient(*pos) || isRepetition(pos)) return 0;
+
+   // Early Delta Pruning (See if down more than Queen)
+   i32 delta = QUEEN_VALUE;
+   if (canPromotePawn(pos)) delta += (QUEEN_VALUE - PAWN_VALUE);
+   if (pos->quick_eval + delta< alpha && pos->stage != END_GAME) {
+      #ifdef DEBUG
+      debug[QS][NODE_PRUNED_FUTIL]++;
+      #endif
+      return alpha;
+   }
    
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES];
@@ -799,11 +809,19 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats* 
       #endif
       q_selectSort(i, moveList, moveVals, size); 
 
-      if(moveVals[i] < 0) break;
+      //Delta Pruning
+      i32 delta = DELTA_VALUE;
+      if (GET_FLAGS(moveList[i]) & PROMOTION) delta += (QUEEN_VALUE - PAWN_VALUE);
+      if (pos->quick_eval + delta + moveVals[i] < alpha && pos->stage != END_GAME) {
+         #ifdef DEBUG
+         debug[QS][NODE_PRUNED_FUTIL]++;
+         #endif
+         continue;
+      }
 
       makeMove(pos, moveList[i]);
 
-      i32 score = -quiesce(pos,  -beta, -alpha, ply + 1, q_ply + 1, stats);
+      i32 score = -quiesce(pos, -beta, -alpha, ply + 1, q_ply + 1, stats);
 
       *pos = prevPos; //Unmake Move
 
@@ -813,16 +831,6 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats* 
          debug[QS][NODE_BETA_CUT]++;
          #endif
          return beta;
-      }
-
-      //Delta Pruning
-      i32 delta = DELTA_VALUE;
-      if (GET_FLAGS(moveList[i]) & PROMOTION) delta += (QUEEN_VALUE - PAWN_VALUE);
-      if ( score < alpha - delta && pos->stage != END_GAME) {
-         #ifdef DEBUG
-         debug[QS][NODE_PRUNED_FUTIL]++;
-         #endif
-         return alpha;
       }
 
       if( score > alpha ){

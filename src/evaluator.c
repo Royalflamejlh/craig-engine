@@ -840,7 +840,7 @@ i32 evalMove(Move move, Position* pos){
 }
 
 /*
- * Verison of move evaluation that is less accurate and faster
+ * Verison of move evaluation that is less accurate and faster using only see
  */
 void q_evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
     for(i32 i = 0; i < size; i++){

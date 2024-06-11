@@ -3,8 +3,8 @@ import chess.engine
 import logging
 
 # Configuration
-craig_time = .9  # Time in seconds Craig has for each move
-fish_time = .9  # Time in seconds Stockfish has for each move
+craig_time = 1  # Time in seconds Craig has for each move
+fish_time = 1  # Time in seconds Stockfish has for each move
 num_games = 100  # Number of games to be played for the calculation
 
 #logging.basicConfig(level=logging.DEBUG)
@@ -89,9 +89,9 @@ if __name__ == "__main__":
     import sys
     import math
 
-    engine1_path = "./chess_depthlimit"
-    engine1_name = "With Depth Limit"
-    engine2_path = "./chess_nolimit"
-    engine2_name = "Without Depth Limit"
+    engine1_path = "./bin/chess"
+    engine1_name = "Latest Build"
+    engine2_path = "./releases/0.3/chess"
+    engine2_name = "Latest Release"
     
     main(engine1_path, engine2_path)

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include "bitboard/bbutils.h"
 #include "transposition.h"
 #include "bitboard/bitboard.h"
 #include "bitboard/magic.h"
@@ -9,6 +10,7 @@
 #include "globals.h"
 #include "threads.h"
 #include "types.h"
+#include "util.h"
 
 #ifdef __COMPILE_DEBUG
 #define RUN_TEST
@@ -47,6 +49,7 @@ i32 main(void) {
         return -1;
     }
     init_globals();
+
     #ifdef RUN_TEST
     testBB();
     #endif

@@ -43,6 +43,15 @@ static inline void movcpy (Move* pTarget, const Move* pSource, i32 n) {
 }
 
 /*
+ * Returns whether or not their is a pawn is in a position that can promote (on the row only)
+ */
+static inline u8 canPromotePawn(Position *pos){
+   u8 turn = pos->flags & WHITE_TURN;
+   u64 row = turn ? 0x00FF000000000000ULL : 0x000000000000FF00ULL;
+   return (pos->pawn[turn] & row) != 0;
+}
+
+/*
 * Returns whether the position has Insufficient material / Drawn
 */
 static inline u8 isInsufficient(Position pos){
