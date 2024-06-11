@@ -35,9 +35,6 @@
 
 #define DELTA_VALUE 2000
 
-
-//static void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size);
-
 typedef enum searchs{
    PVS,
    ZWS,
@@ -205,6 +202,26 @@ static double calculateEBF(){
 
 }
 #endif
+
+static inline void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size) {
+   i32 maxIdx = i;
+
+   for (i32 j = i + 1; j < size; j++) {
+      if (moveVals[j] > moveVals[maxIdx]) {
+         maxIdx = j;
+      }
+   }
+
+   if (maxIdx != i) {
+      i32 tempVal = moveVals[i];
+      moveVals[i] = moveVals[maxIdx];
+      moveVals[maxIdx] = tempVal;
+
+      Move tempMove = moveList[i];
+      moveList[i] = moveList[maxIdx];
+      moveList[maxIdx] = tempMove;
+   }
+}
 
 
 //exit thread function
@@ -743,26 +760,5 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
    #endif
    return alpha;
 }
-
-void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size) {
-   i32 maxIdx = i;
-
-   for (i32 j = i + 1; j < size; j++) {
-      if (moveVals[j] > moveVals[maxIdx]) {
-         maxIdx = j;
-      }
-   }
-
-   if (maxIdx != i) {
-      i32 tempVal = moveVals[i];
-      moveVals[i] = moveVals[maxIdx];
-      moveVals[maxIdx] = tempVal;
-
-      Move tempMove = moveList[i];
-      moveList[i] = moveList[maxIdx];
-      moveList[maxIdx] = tempMove;
-   }
-}
-
 
 

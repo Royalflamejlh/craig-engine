@@ -62,8 +62,9 @@
 #define PST_KING_MULT_END      30  // PST Mult King in Eval
 
 // Defines for Movement Eval
+#define CAPTURE_MOVE_BONUS  30000 // Bonus for move being a capture
 #define KILLER_MOVE_BONUS   40000 // Bonus for move being killer move
-#define TT_MOVE_BONUS       50000 // Bonus for move being TT move
+#define TT_MOVE_BONUS       90000 // Bonus for move being TT move
 
 #define MOVE_CASTLE_BONUS  300  // Eval bonus for castling
 #define MOVE_OPN_QUEEN_PEN   5  // Pen for moving queen in the opening
