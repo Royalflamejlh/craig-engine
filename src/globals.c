@@ -44,7 +44,7 @@ void init_globals(){
     pthread_mutex_lock(&mutex_global_position);
     global_position = fenToPosition(START_FEN);
     pthread_mutex_lock(&mutex_global_PV);
-    global_sd.PVArray = calloc((MAX_DEPTH*MAX_DEPTH + MAX_DEPTH)/2, sizeof(Move));
+    global_sd.PVArray = calloc(MAX_DEPTH, sizeof(Move));
     global_sd.depth = 0;
     global_sd.best_move = NO_MOVE;
     global_sd.eval = 0;
@@ -57,7 +57,7 @@ void init_globals(){
     EnterCriticalSection(&mutex_global_position);
     global_position = fenToPosition(START_FEN);
     EnterCriticalSection(&mutex_global_PV);
-    global_sd.PVArray = calloc((MAX_DEPTH*MAX_DEPTH + MAX_DEPTH)/2, sizeof(Move));
+    global_sd.PVArray = calloc(MAX_DEPTH, sizeof(Move));
     global_sd.depth = 0;
     global_sd.best_move = NO_MOVE;
     global_sd.eval = 0;
@@ -124,7 +124,7 @@ void update_global_pv(u32 depth, Move* pvArray, i32 eval, SearchStats stats){
     global_sd.eval = eval;
     global_sd.stats = stats;
     global_sd.best_move = pvArray[0];
-    memcpy(global_sd.PVArray, pvArray, ((depth*depth + depth)/2)*sizeof(Move));
+    memcpy(global_sd.PVArray, pvArray, (MAX_DEPTH)*sizeof(Move));
 
     pthread_mutex_unlock(&mutex_global_PV);
 #elif defined(_WIN32) || defined(_WIN64)
@@ -139,7 +139,7 @@ void update_global_pv(u32 depth, Move* pvArray, i32 eval, SearchStats stats){
     global_sd.eval = eval;
     global_sd.stats = stats;
     global_sd.best_move = pvArray[0];
-    memcpy(global_sd.PVArray, pvArray, ((depth*depth + depth)/2)*sizeof(Move));
+    memcpy(global_sd.PVArray, pvArray, (MAX_DEPTH)*sizeof(Move));
 
     LeaveCriticalSection(&mutex_global_PV);
 #endif
@@ -213,10 +213,8 @@ SearchData get_global_pv_data(){
     data.eval = global_sd.eval;
     data.stats = global_sd.stats;
     data.best_move = global_sd.best_move;
-
-    u32 depth = data.depth;
-    data.PVArray = malloc(((depth*depth + depth)/2)*sizeof(Move));
-    memcpy(data.PVArray, global_sd.PVArray, ((depth*depth + depth)/2)*sizeof(Move));
+    data.PVArray = malloc(MAX_DEPTH*sizeof(Move));
+    memcpy(data.PVArray, global_sd.PVArray, (MAX_DEPTH)*sizeof(Move));
 
 #if defined(__unix__) || defined(__APPLE__)
     pthread_mutex_unlock(&mutex_global_PV);

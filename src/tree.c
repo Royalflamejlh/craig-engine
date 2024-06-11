@@ -35,6 +35,8 @@
 
 #define DELTA_VALUE 750
 
+#define Q_STAND_PAT_BUFFER (PAWN_VALUE - 100) // Positional eval buffer on stand pat
+
 typedef enum searchs{
    PVS,
    ZWS,
@@ -755,10 +757,18 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats* 
    // Handle Draw or Mate
    if(pos->halfmove_clock >= 100 || isInsufficient(*pos) || isRepetition(pos)) return 0;
 
+
+   i32 stand_pat = pos->quick_eval; // Check to see if the player can opt to not move and be better
+   if(!(pos->flags & IN_CHECK) && stand_pat >= beta + Q_STAND_PAT_BUFFER)
+      return beta;
+   if( alpha < stand_pat ){
+      alpha = stand_pat;
+   }
+
    // Early Delta Pruning (See if down more than Queen)
    i32 delta = QUEEN_VALUE;
    if (canPromotePawn(pos)) delta += (QUEEN_VALUE - PAWN_VALUE);
-   if (pos->quick_eval + delta< alpha && pos->stage != END_GAME) {
+   if (pos->quick_eval + delta < alpha && pos->stage != END_GAME) {
       #ifdef DEBUG
       debug[QS][NODE_PRUNED_FUTIL]++;
       #endif
@@ -785,16 +795,6 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats* 
          return evaluate(*pos, FALSE);
          #endif
       }
-   }
-   #ifndef DEBUG
-   i32 stand_pat = evaluate(*pos);
-   #else
-   i32 stand_pat = evaluate(*pos, FALSE);
-   #endif   
-   if( stand_pat >= beta )
-      return beta;
-   if( alpha < stand_pat ){
-      alpha = stand_pat;
    }
 
    q_evalMoves(moveList, moveVals, size, *pos);
