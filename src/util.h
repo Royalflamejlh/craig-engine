@@ -23,7 +23,7 @@ u32 calculate_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u8 turn);
 void printPV(Move *pvArray, i32 depth);
 void printPVInfo(SearchData data);
 
-static inline i32 count_bits(u64 v){
+static inline u32 count_bits(u64 v){
     u32 c;
     for (c = 0; v; c++){
         v &= v - 1;
