@@ -1,4 +1,5 @@
 #include "tree.h"
+#include "types.h"
 #include "tables.h"
 #include <string.h>
 
@@ -11,6 +12,7 @@ static Move killerMoves[MAX_DEPTH][KMV_CNT] = {0}; // TODO: Figure out if need t
 static u32 kmvIdx = 0;
 
 void storeKillerMove(int ply, Move move){ 
+   if(GET_FLAGS(move) <= DOUBLE_PAWN_PUSH) return; // Killer moves arent quiet
    for(int i = 0; i < KMV_CNT; i++){
       if(killerMoves[ply][kmvIdx] == move) return;
    }

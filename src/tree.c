@@ -203,7 +203,67 @@ static double calculateEBF(){
 }
 #endif
 
-static inline void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size) {
+#define TT_MOVE_BONUS       3000000 // Bonus for move being in the TT
+#define CAPTURE_MOVE_BONUS  2000000 // Bonus for move being a capture
+#define KILLER_MOVE_BONUS   1000000 // Bonus for move being killer move
+
+static inline u32 selectSort(u32 i, u32 evalIdx, Position* pos, Move *moveList, i32 *moveVals, u32 size, Move ttMove, u32 ply) {
+   u32 maxIdx = i;
+
+   if(moveList[i] == ttMove){
+      moveVals[i] = TT_MOVE_BONUS;
+      return evalIdx; // Return if the next move is the TTMove
+   }
+
+   if(i <= evalIdx){
+      moveVals[i] = evalMove(moveList[i], pos);
+      if(GET_FLAGS(moveList[i]) > DOUBLE_PAWN_PUSH){
+         moveVals[i] += CAPTURE_MOVE_BONUS;
+      } else if(isKillerMove(moveList[i], ply)){
+         moveVals[i] += KILLER_MOVE_BONUS;
+      }
+      evalIdx = i+1;
+   }
+
+   for (u32 j = i + 1; j < size; j++) {
+      if(moveList[j] == ttMove){ // If the move is in the TT sort immediatly
+         maxIdx = j;
+         moveVals[j] = TT_MOVE_BONUS;
+         break;
+      }
+
+      if(j <= evalIdx){ // If the move hasn't been evaluated yet calculate score
+         moveVals[j] = evalMove(moveList[j], pos);
+         if(GET_FLAGS(moveList[j]) > DOUBLE_PAWN_PUSH){
+            moveVals[j] += CAPTURE_MOVE_BONUS;
+         } else if(isKillerMove(moveList[j], ply)){
+            moveVals[j] += KILLER_MOVE_BONUS;
+         }
+         evalIdx = j+1;
+      }
+
+      if (moveVals[j] > moveVals[maxIdx]) {
+         maxIdx = j;
+      }
+   }
+
+   if (maxIdx != i) { // Swap the moves
+      i32 tempVal = moveVals[i];
+      moveVals[i] = moveVals[maxIdx];
+      moveVals[maxIdx] = tempVal;
+
+      Move tempMove = moveList[i];
+      moveList[i] = moveList[maxIdx];
+      moveList[maxIdx] = tempMove;
+   }
+
+   return evalIdx;
+}
+
+/*
+ * Simple select sort for q search
+ */
+static inline void q_selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size) {
    i32 maxIdx = i;
 
    for (i32 j = i + 1; j < size; j++) {
@@ -222,7 +282,6 @@ static inline void selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size) {
       moveList[maxIdx] = tempMove;
    }
 }
-
 
 //exit thread function
 static void exit_search(){
@@ -297,7 +356,7 @@ i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval, SearchStats* st
    #ifdef DEBUG
    printf("Principal Variation at depth %d: ", depth);
    printPV(pvArray, depth);
-   printf("found with score %d\n", eval);
+   printf(" found with score %d\n", eval);
    printTreeDebug();
    printTTDebug();
    printf("\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
@@ -324,7 +383,7 @@ static i32 pruneNullMoves(Position* pos, i32 beta, i32 depth, i32 ply, Move* pvA
 static u8 getLMRDepth(u8 curDepth, u8 moveIdx, u8 moveCount, Move move, i32 allowLMR){
    if(curDepth < LMR_DEPTH) return curDepth - 1;
    if(!allowLMR) return curDepth - 1;
-   if(GET_FLAGS(move) & ~DOUBLE_PAWN_PUSH) return curDepth - 1; // If anything but double pawn push
+   if(GET_FLAGS(move) <= DOUBLE_PAWN_PUSH) return curDepth - 1; // If anything but double pawn push
    if(moveIdx < moveCount / 8) return curDepth - 1;
    if(moveIdx < moveCount / 4) return curDepth - 2;
    if(moveIdx < moveCount / 2) return curDepth / 3;
@@ -393,6 +452,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
          switch (ttEntry->nodeType) {
             case PV_NODE: // Exact value
                pvArray[pvIndex] = ttEntry->move;
+               movcpy(pvArray + pvIndex + 1, pvArray + pvNextIndex, depth - 1);
                #ifdef DEBUG
                debug[PVS][NODE_TT_PVS_RET]++;
                #endif
@@ -424,8 +484,6 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
    if(abs(beta-1) >= CHECKMATE_VALUE/2) prunable = FALSE;
    if(pos->stage == END_GAME) prunable = FALSE;
 
-   evalMoves(moveList, moveVals, size, *pos, ttMove, ply);
-
    //Store the list of moves and their evaluations at the start
    #ifdef DEBUG
    //Store the values at the starting time
@@ -443,19 +501,17 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, char depth, char ply, Move* pv
    Move bestMove = NO_MOVE;
    i32 bestScore = MIN_EVAL;
    u8 exact = FALSE;
+   u32 evalIdx = 0;
    Position prevPos = *pos;
    for (i32 i = 0; i < size; i++)  {
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
-      selectSort(i, moveList, moveVals, size);
+      evalIdx = selectSort(i, evalIdx, pos, moveList, moveVals, size, ttMove, ply);
       makeMove(pos, moveList[i]);
       // Update Prunability PVS
       u8 prunable_move = prunable;
-      if(i <= PV_PRUNE_MOVE_IDX) prunable_move = FALSE;
-      if(pos->flags & IN_CHECK) prunable_move = FALSE; // If in check
-      if(GET_FLAGS(moveList[i]) & ~DOUBLE_PAWN_PUSH) prunable_move = FALSE; // If the move is anything but dpp / queit
-      if(pos->stage == END_GAME) prunable_move = FALSE; // If its the endgame
+      if(i <= PV_PRUNE_MOVE_IDX || pos->flags & IN_CHECK || (GET_FLAGS(moveList[i]) <= DOUBLE_PAWN_PUSH) || pos->stage == END_GAME) prunable_move = FALSE;
 
       if( prunable_move && depth == 1){ //Futility Pruning
          if(prevPos.quick_eval + moveVals[i] < alpha - FUTIL_MARGIN){ 
@@ -610,24 +666,23 @@ i32 zwSearch( Position* pos, i32 beta, char depth, char ply, Move* pvArray, Sear
       }
    }
 
-   evalMoves(moveList, moveVals, size, *pos, ttMove, ply);
-
    #ifdef DEBUG
    if(size > 0) debug[ZWS][NODE_LOOP_CHILDREN]++;
    #endif
 
    Position prevPos = *pos;
+   u32 evalIdx = 0;
    for (i32 i = 0; i < size; i++)  {
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
       
-      selectSort(i, moveList, moveVals, size);
+      evalIdx = selectSort(i, evalIdx, pos, moveList, moveVals, size, ttMove, ply);
       makeMove(pos, moveList[i]);
 
       // Set Move prunability prunability ZWS
       u8 prunable_move = prunable;
-      if(i <= PRUNE_MOVE_IDX || pos->flags & IN_CHECK || (GET_FLAGS(moveList[i]) & ~DOUBLE_PAWN_PUSH) || pos->stage == END_GAME) prunable_move = FALSE;
+      if(i <= PRUNE_MOVE_IDX || pos->flags & IN_CHECK || (GET_FLAGS(moveList[i]) <= DOUBLE_PAWN_PUSH) || pos->stage == END_GAME) prunable_move = FALSE;
 
       if( prunable_move && depth == 1){ // Futility Pruning
          if((prevPos.quick_eval + moveVals[i]) < ((beta-1) - FUTIL_MARGIN)){ 
@@ -722,7 +777,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, char ply, char q_ply, Move* pvA
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
-      selectSort(i, moveList, moveVals, size); 
+      q_selectSort(i, moveList, moveVals, size); 
 
       if(moveVals[i] < 0) break;
 

@@ -1,4 +1,5 @@
 #include "util.h"
+#include "bitboard/bbutils.h"
 #include "movement.h"
 #include "types.h"
 #include <stdio.h>
@@ -227,7 +228,8 @@ Move moveStrToType(Position pos, char* str){
             return moveList[i];
         }
     }
-    printf("info warning move not found");
+    printf("info string Warning: move: %s not found.\n", str);
+    
     return NO_MOVE;
 }
 
@@ -301,7 +303,7 @@ u32 calculate_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u8 turn){
 HashStack createHashStack(void){
     u64 *ptr = malloc(sizeof(u64) * GAME_MOVES);
     if (ptr == NULL) {
-        printf("info Warning: Failed to allocate space for the Hash Stack.\n");
+        printf("info string Warning: Failed to allocate space for the Hash Stack.\n");
     }
     HashStack hashStack = {ptr, GAME_MOVES, 0, 0};
     return hashStack;

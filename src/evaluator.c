@@ -62,10 +62,6 @@
 #define PST_KING_MULT_END      30  // PST Mult King in Eval
 
 // Defines for Movement Eval
-#define CAPTURE_MOVE_BONUS  30000 // Bonus for move being a capture
-#define KILLER_MOVE_BONUS   40000 // Bonus for move being killer move
-#define TT_MOVE_BONUS       90000 // Bonus for move being TT move
-
 #define MOVE_CASTLE_BONUS  300  // Eval bonus for castling
 #define MOVE_OPN_QUEEN_PEN   5  // Pen for moving queen in the opening
 
@@ -759,93 +755,88 @@ void initPST(){
 #define HIST_MAX_SCORE  PAWN_VALUE - 100
 
 
-void evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos, Move ttMove, u32 ply){
-    for(i32 i = 0; i < size; i++){
-        moveVals[i] = 0;
-        Move move = moveList[i];
+i32 evalMove(Move move, Position* pos){
 
-        Square fr_sq = GET_FROM(move);
-        Square to_sq = GET_TO(move);
-        i32 fr_piece = (i32)pos.charBoard[fr_sq];
-        i32 to_piece = (i32)pos.charBoard[to_sq];
-        i32 fr_piece_i = pieceToIndex[fr_piece];
-        i32 to_piece_i = pieceToIndex[to_piece];
+    i32 eval = 0;
 
-        if(pos.stage == OPN_GAME && (fr_piece == WHITE_QUEEN || fr_piece == BLACK_QUEEN)) moveVals[i] -= MOVE_OPN_QUEEN_PEN;
+    Square fr_sq = GET_FROM(move);
+    Square to_sq = GET_TO(move);
+    i32 fr_piece = (i32)pos->charBoard[fr_sq];
+    i32 to_piece = (i32)pos->charBoard[to_sq];
+    i32 fr_piece_i = pieceToIndex[fr_piece];
+    i32 to_piece_i = pieceToIndex[to_piece];
 
-        if(move == ttMove)          moveVals[i] += TT_MOVE_BONUS;
-        if(isKillerMove(move, ply)) moveVals[i] += KILLER_MOVE_BONUS;
+    if(pos->stage == OPN_GAME && (fr_piece == WHITE_QUEEN || fr_piece == BLACK_QUEEN)) eval -= MOVE_OPN_QUEEN_PEN;
 
-        #ifdef DEBUG
-        if(fr_piece_i >= 12 || to_piece_i >= 12){
-            printf("Warning illegal piece found at:");
-            printPosition(pos, TRUE);
-            printf("from piece: %d", pos.charBoard[fr_sq]);
-            printf(" to piece: %d", pos.charBoard[to_sq]);
-        }
-        #endif
+    #ifdef DEBUG
+    if(fr_piece_i >= 12 || to_piece_i >= 12){
+        printf("Warning illegal piece found at:");
+        printPosition(*pos, TRUE);
+        printf("from piece: %d", pos->charBoard[fr_sq]);
+        printf(" to piece: %d", pos->charBoard[to_sq]);
+    }
+    #endif
 
-        //Add on the PST values
-        moveVals[i] += PST[pos.stage][fr_piece_i][to_sq] - PST[pos.stage][fr_piece_i][fr_sq];
-        
-        //Add on the flag values
-        //i32 histScore;
-        switch(GET_FLAGS(move)){
-            case QUEEN_PROMO_CAPTURE:
-                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + QUEEN_VALUE;
-                moveVals[i] += PST[pos.stage][to_piece_i][to_sq];
-                break;
-            case ROOK_PROMO_CAPTURE:
-                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + ROOK_VALUE;
-                moveVals[i] += PST[pos.stage][to_piece_i][to_sq];
-                break;
-            case BISHOP_PROMO_CAPTURE:
-                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + BISHOP_VALUE;
-                moveVals[i] += PST[pos.stage][to_piece_i][to_sq];
-                break;
-            case KNIGHT_PROMO_CAPTURE:
-                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + KNIGHT_VALUE;
-                moveVals[i] += PST[pos.stage][to_piece_i][to_sq];
-                break;
-                
-            case EP_CAPTURE:
-                moveVals[i] += see(pos, to_sq, ( WHITE_PAWN + ((pos.flags & WHITE_TURN) * 6) ), fr_sq, fr_piece_i);
-                moveVals[i] += PST[pos.stage][to_piece_i][to_sq];
-                break;
+    //Add on the PST values
+    eval += PST[pos->stage][fr_piece_i][to_sq] - PST[pos->stage][fr_piece_i][fr_sq];
+    
+    //Add on the flag values
+    //i32 histScore;
+    switch(GET_FLAGS(move)){
+        case QUEEN_PROMO_CAPTURE:
+            eval += see(*pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + QUEEN_VALUE;
+            eval += PST[pos->stage][to_piece_i][to_sq];
+            break;
+        case ROOK_PROMO_CAPTURE:
+            eval += see(*pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + ROOK_VALUE;
+            eval += PST[pos->stage][to_piece_i][to_sq];
+            break;
+        case BISHOP_PROMO_CAPTURE:
+            eval += see(*pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + BISHOP_VALUE;
+            eval += PST[pos->stage][to_piece_i][to_sq];
+            break;
+        case KNIGHT_PROMO_CAPTURE:
+            eval += see(*pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + KNIGHT_VALUE;
+            eval += PST[pos->stage][to_piece_i][to_sq];
+            break;
+            
+        case EP_CAPTURE:
+            eval += see(*pos, to_sq, ( WHITE_PAWN + ((pos->flags & WHITE_TURN) * 6) ), fr_sq, fr_piece_i);
+            eval += PST[pos->stage][to_piece_i][to_sq];
+            break;
 
-            case CAPTURE:
-                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i);
-                moveVals[i] += PST[pos.stage][to_piece_i][to_sq];
-                break;
+        case CAPTURE:
+            eval += see(*pos, to_sq, to_piece_i, fr_sq, fr_piece_i);
+            eval += PST[pos->stage][to_piece_i][to_sq];
+            break;
 
-            case QUEEN_PROMOTION:
-                moveVals[i] += (QUEEN_VALUE - PAWN_VALUE);    
-                break;
-            case ROOK_PROMOTION:
-                moveVals[i] += (ROOK_VALUE - PAWN_VALUE);    
-                break;
-            case BISHOP_PROMOTION:
-                moveVals[i] += (BISHOP_VALUE - PAWN_VALUE);    
-                break;
-            case KNIGHT_PROMOTION:
-                moveVals[i] += (KNIGHT_VALUE - PAWN_VALUE);    
-                break;
-                
-            case QUEEN_CASTLE:
-            case KING_CASTLE:
-                moveVals[i] += MOVE_CASTLE_BONUS;
-                break;
+        case QUEEN_PROMOTION:
+            eval += (QUEEN_VALUE - PAWN_VALUE);    
+            break;
+        case ROOK_PROMOTION:
+            eval += (ROOK_VALUE - PAWN_VALUE);    
+            break;
+        case BISHOP_PROMOTION:
+            eval += (BISHOP_VALUE - PAWN_VALUE);    
+            break;
+        case KNIGHT_PROMOTION:
+            eval += (KNIGHT_VALUE - PAWN_VALUE);    
+            break;
+            
+        case QUEEN_CASTLE:
+        case KING_CASTLE:
+            eval += MOVE_CASTLE_BONUS;
+            break;
 
-            case DOUBLE_PAWN_PUSH:
-            case QUIET:
-                //histScore = getHistoryScore(pos.flags, moveList[i]) >> HIST_SCORE_SHIFT;
-                //moveVals[i] += MIN(histScore, HIST_MAX_SCORE);
-            default:
-                break;
-        }
+        case DOUBLE_PAWN_PUSH:
+        case QUIET:
+            //histScore = getHistoryScore(pos.flags, moveList[i]) >> HIST_SCORE_SHIFT;
+            //moveVals[i] += MIN(histScore, HIST_MAX_SCORE);
+        default:
+            break;
     }
 
-    return;
+    return eval;
 }
 
 /*
