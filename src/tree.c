@@ -209,7 +209,7 @@ static double calculateEBF(){
 #define CAPTURE_MOVE_BONUS  2000000 // Bonus for move being a capture
 #define KILLER_MOVE_BONUS   1000000 // Bonus for move being killer move
 
-static inline u32 selectSort(u32 i, u32 evalIdx, Position* pos, Move *moveList, i32 *moveVals, u32 size, Move ttMove, u32 ply) {
+static inline u32 selectSort(u32 i, u32 evalIdx, Position* pos, Move *moveList, i32 *moveVals, u32 size, KillerMoves* km, Move ttMove, u32 ply) {
    u32 maxIdx = i;
 
    if(moveList[i] == ttMove){
@@ -221,7 +221,7 @@ static inline u32 selectSort(u32 i, u32 evalIdx, Position* pos, Move *moveList, 
       moveVals[i] = evalMove(moveList[i], pos);
       if(GET_FLAGS(moveList[i]) > DOUBLE_PAWN_PUSH){
          moveVals[i] += CAPTURE_MOVE_BONUS;
-      } else if(isKillerMove(moveList[i], ply)){
+      } else if(isKillerMove(km, moveList[i], ply)){
          moveVals[i] += KILLER_MOVE_BONUS;
       }
       evalIdx = i+1;
@@ -238,7 +238,7 @@ static inline u32 selectSort(u32 i, u32 evalIdx, Position* pos, Move *moveList, 
          moveVals[j] = evalMove(moveList[j], pos);
          if(GET_FLAGS(moveList[j]) > DOUBLE_PAWN_PUSH){
             moveVals[j] += CAPTURE_MOVE_BONUS;
-         } else if(isKillerMove(moveList[j], ply)){
+         } else if(isKillerMove(km, moveList[j], ply)){
             moveVals[j] += KILLER_MOVE_BONUS;
          }
          evalIdx = j+1;
@@ -314,7 +314,7 @@ static inline void pvFill(Position pos, Move* pvArray, u8 depth){
 /*
 * Sets up the aspiration window, then searches the 
 */
-i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval, SearchStats* stats){
+i32 searchTree(Position pos, u32 depth, Move *pvArray, KillerMoves* km, i32 eval, SearchStats* stats){
    if(!pvArray){
       printf("info string Warning: No PV Array found!\n");
       return 0;
@@ -330,7 +330,7 @@ i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval, SearchStats* st
 
    //printf("Running pv search at depth %d\n", i);
    if(depth <= 2){
-      eval = pvSearch(&searchPos, MIN_EVAL+1, MAX_EVAL-1, depth, 0, pvArray, stats);
+      eval = pvSearch(&searchPos, MIN_EVAL+1, MAX_EVAL-1, depth, 0, pvArray, km, stats);
       searchPos = pos;
       #ifdef DEBUG
       printf("Result from depth window: %d, %d i: %d eval: %d\n", MIN_EVAL+1, MAX_EVAL, depth, eval);
@@ -343,7 +343,7 @@ i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval, SearchStats* st
       #ifdef DEBUG
       printf("Running with window: %d, %d (eval_prev: %d, depth: %d)\n", q-asp_lower, q+asp_upper, eval, depth);
       #endif
-      eval = pvSearch(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pvArray, stats);
+      eval = pvSearch(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pvArray, km, stats);
       searchPos = pos;
       while(eval <= q-asp_lower || eval >= q+asp_upper || pvArray[0] == NO_MOVE){
          if(abs(eval) == CHECKMATE_VALUE) break;
@@ -367,7 +367,7 @@ i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval, SearchStats* st
          #endif
 
          q = eval;
-         eval = pvSearch(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pvArray, stats);
+         eval = pvSearch(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pvArray, km, stats);
          searchPos = pos;
       }
    }
@@ -391,16 +391,16 @@ i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval, SearchStats* st
 */
 
 // Null Move Search
-static i32 pruneNullMoves(Position* pos, i32 beta, i32 depth, i32 ply, SearchStats* stats){
+static inline i32 pruneNullMoves(Position* pos, i32 beta, i32 depth, i32 ply, KillerMoves* km, SearchStats* stats){
    Position prevPos = *pos;
    makeNullMove(pos);
-   i32 score = -zwSearch(pos, 1-beta, depth - NULL_PRUNE_R - 1, ply + 1, stats, TRUE);
+   i32 score = -zwSearch(pos, 1-beta, depth - NULL_PRUNE_R - 1, ply + 1, km, stats, TRUE);
    *pos = prevPos;
    return score;
 }
 
 // Late move reduction
-static u8 getLMRDepth(u8 curDepth, u8 moveIdx, u8 moveCount, Move move, i32 allowLMR){
+static inline u8 getLMRDepth(u8 curDepth, u8 moveIdx, u8 moveCount, Move move, i32 allowLMR){
    if(curDepth < LMR_DEPTH) return curDepth - 1;
    if(!allowLMR) return curDepth - 1;
    if(GET_FLAGS(move) > DOUBLE_PAWN_PUSH) return curDepth - 1; // If anything but double pawn push
@@ -415,7 +415,7 @@ static u8 getLMRDepth(u8 curDepth, u8 moveIdx, u8 moveCount, Move move, i32 allo
 *  PRINCIPAL VARIATION SEARCH
 *
 */
-i32 pvSearch( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pvArray, SearchStats* stats) {
+i32 pvSearch( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pvArray, KillerMoves* km, SearchStats* stats) {
    //printf("Depth = %d, Ply = %d, Depth+ply = %d\n", depth, ply, depth+ply);
    if(!run_get_best_move) exit_search();
 
@@ -525,7 +525,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pvArra
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
-      evalIdx = selectSort(i, evalIdx, pos, moveList, moveVals, size, ttMove, ply);
+      evalIdx = selectSort(i, evalIdx, pos, moveList, moveVals, size, km, ttMove, ply);
       makeMove(pos, moveList[i]);
       // Update Prunability PVS
       u8 prunable_move = prunable;
@@ -543,12 +543,12 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pvArra
 
       i32 score;
       if ( i == 0 ) { // Only do full PV on the first move
-         score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, stats);
+         score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, km, stats);
          //printf("PV b search pv score = %d\n", score);
       } else {
-         score = -zwSearch(pos, -alpha, depth - 1, ply + 1, stats, FALSE);
+         score = -zwSearch(pos, -alpha, depth - 1, ply + 1, km, stats, FALSE);
          if ( score > alpha ){
-            score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, stats);
+            score = -pvSearch(pos, -beta, -alpha, depth - 1, ply + 1, pvArray, km, stats);
          }
       }
 
@@ -556,8 +556,8 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pvArra
 
       if( score >= beta ) { //Beta cutoff
          storeTTEntry(pos->hash, depth, score, CUT_NODE, moveList[i]);
-         storeKillerMove(ply, moveList[i]);
-         storeHistoryMove(pos->flags, moveList[i], depth);
+         storeKillerMove(km, ply, moveList[i]);
+         //storeHistoryMove(pos->flags, moveList[i], depth);
       
          #ifdef DEBUG
          //printf("Returning beta cutoff: %d >= %d\n", score, beta);
@@ -606,7 +606,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pvArra
 *  ZERO WINDOW SEARCH
 *
 */
-i32 zwSearch( Position* pos, i32 beta, i8 depth, u8 ply, SearchStats* stats, u8 isNull) {
+i32 zwSearch( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, SearchStats* stats, u8 isNull) {
    if(!run_get_best_move) exit_search();
    // alpha == beta - 1
    // this is either a cut- or all-node
@@ -680,7 +680,7 @@ i32 zwSearch( Position* pos, i32 beta, i8 depth, u8 ply, SearchStats* stats, u8 
    if(prunable && !isNull 
                && depth > NULL_PRUNE_R + 1 
                && pos->quick_eval >= (beta - NMR_MARGIN)){
-      if(pruneNullMoves(pos, beta, depth, ply, stats) >= beta){
+      if(pruneNullMoves(pos, beta, depth, ply, km, stats) >= beta){
          #ifdef DEBUG
          debug[ZWS][NODE_PRUNED_NULL]++;
          #endif
@@ -699,7 +699,7 @@ i32 zwSearch( Position* pos, i32 beta, i8 depth, u8 ply, SearchStats* stats, u8 
       assert(prevPos.hash == pos->hash);
       #endif
       
-      evalIdx = selectSort(i, evalIdx, pos, moveList, moveVals, size, ttMove, ply);
+      evalIdx = selectSort(i, evalIdx, pos, moveList, moveVals, size, km, ttMove, ply);
       makeMove(pos, moveList[i]);
 
       // Set Move prunability prunability ZWS
@@ -721,13 +721,13 @@ i32 zwSearch( Position* pos, i32 beta, i8 depth, u8 ply, SearchStats* stats, u8 
       debug[ZWS][NODE_LMR_REDUCTIONS] += MAX(((depth - 1) - search_depth), 0);
       //printf("zws further search score %d\n", score);
       #endif
-      i32 score = -zwSearch(pos, 1-beta, search_depth, ply + 1, stats, FALSE);
+      i32 score = -zwSearch(pos, 1-beta, search_depth, ply + 1, km, stats, FALSE);
       *pos = prevPos; // Unmake Move
 
       if( score >= beta ){ // Beta Cutoff
          storeTTEntry(pos->hash, depth, score, CUT_NODE, moveList[i]);
-         storeKillerMove(ply, moveList[i]);
-         storeHistoryMove(pos->flags, moveList[i], depth);
+         storeKillerMove(km, ply, moveList[i]);
+         //storeHistoryMove(pos->flags, moveList[i], depth);
          #ifdef DEBUG
          debug[ZWS][NODE_BETA_CUT]++;
          //printf("zws fail hard beta cut %d\n", beta);

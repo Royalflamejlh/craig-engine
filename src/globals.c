@@ -195,6 +195,30 @@ Position get_global_position(){
 }
 
 /*
+ * Returns a new copy of the global position
+ */
+Position copy_global_position(){
+#if defined(__unix__) || defined(__APPLE__)
+    pthread_mutex_lock(&mutex_global_position);
+    Position pos = global_position;
+    pos.hashStack = createHashStack();
+    memcpy(pos.hashStack.ptr, global_position.hashStack.ptr, sizeof(u64)*HASHSTACK_SIZE);
+    pos.hashStack.current_idx    = global_position.hashStack.current_idx;
+    pos.hashStack.last_reset_idx = global_position.hashStack.last_reset_idx;
+    pthread_mutex_unlock(&mutex_global_position);
+#elif defined(_WIN32) || defined(_WIN64)
+    EnterCriticalSection(&mutex_global_position);
+    Position pos = global_position;
+    pos.hashStack = createHashStack();
+    memcpy(pos.hashStack.ptr, global_position.hashStack.ptr, sizeof(u64)*HASHSTACK_SIZE);
+    pos.hashStack.current_idx    = global_position.hashStack.current_idx;
+    pos.hashStack.last_reset_idx = global_position.hashStack.last_reset_idx;
+    LeaveCriticalSection(&mutex_global_position);
+#endif
+    return pos;
+}
+
+/*
  * Returns the Global Best Move
  */
 Move get_global_best_move() {

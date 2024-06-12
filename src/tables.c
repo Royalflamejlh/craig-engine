@@ -1,35 +1,28 @@
 #include "tree.h"
 #include "types.h"
 #include "tables.h"
-#include <string.h>
-
 //TODO: Both of these tables need to be modified to support threading.
 
 /*
 * Killer Moves
 */
-static Move killerMoves[MAX_DEPTH][KMV_CNT] = {0}; // TODO: Figure out if need to change / have two max depth values
-static u32 kmvIdx = 0;
 
-void storeKillerMove(int ply, Move move){ 
+void storeKillerMove(KillerMoves* km, int ply, Move move){ 
    if(GET_FLAGS(move) <= DOUBLE_PAWN_PUSH) return; // Killer moves arent quiet
    for(int i = 0; i < KMV_CNT; i++){
-      if(killerMoves[ply][kmvIdx] == move) return;
+      if(km->table[ply][km->kmvIdx] == move) return;
    }
-   killerMoves[ply][kmvIdx] = move;
-   kmvIdx = (kmvIdx + 1) % KMV_CNT;
+   km->table[ply][km->kmvIdx] = move;
+   km->kmvIdx = (km->kmvIdx + 1) % KMV_CNT;
 }
 
-u8 isKillerMove(Move move, int ply){
+u8 isKillerMove(KillerMoves* km, Move move, int ply){ // TODO: Just get all three killer moves and on each move iteration check if they match
    for(int i = 0; i < KMV_CNT; i++){
-      if(move == killerMoves[ply][i]) return TRUE;
+      if(move == km->table[ply][i]) return TRUE;
    }
    return FALSE;
 }
 
-void clearKillerMoves(void){
-   memset(killerMoves, 0, sizeof(killerMoves));
-}
 
 /*
 * History Tables

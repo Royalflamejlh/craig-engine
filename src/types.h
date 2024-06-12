@@ -274,4 +274,10 @@ typedef struct{
     SearchStats stats;
 } SearchData;
 
+#define KMV_CNT 3
+typedef struct{
+    Move table[MAX_DEPTH][KMV_CNT];
+    u32 kmvIdx;
+} KillerMoves;
+
 #endif // TYPES_H

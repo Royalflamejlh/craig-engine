@@ -25,7 +25,6 @@ volatile u8 print_on_depth;
 void startSearch(u32 time, u32 depth){
     is_searching = FALSE; // Set up new search
     print_on_depth = FALSE;
-    clearKillerMoves();
     search_depth = depth;
     
     startSearchThreads(); // Launch Threads
@@ -58,8 +57,9 @@ void stopSearch(){
 i32 searchLoop(){
     // Set up local thread info
     Move pvArray[MAX_DEPTH] = {0};
+    KillerMoves km = {0};
 
-    Position searchPosition = get_global_position(); // TODO: Copy global position hashtable to new hashtable
+    Position searchPosition = copy_global_position(); // TODO: Copy global position hashtable to new hashtable
 
     // Begin Search
     is_searching = TRUE;
@@ -73,7 +73,7 @@ i32 searchLoop(){
         //startHelpers();
         i32 avg_eval = (eval + prev_eval) / 2;
         prev_eval = eval;
-        eval = searchTree(searchPosition, cur_depth, pvArray, avg_eval, &stats);
+        eval = searchTree(searchPosition, cur_depth, pvArray, &km, avg_eval, &stats);
         update_global_pv(cur_depth, pvArray, eval, stats);
         //stopHelpers();
 
@@ -84,6 +84,8 @@ i32 searchLoop(){
         print_on_depth = FALSE;
         print_best_move = TRUE;
     }
+
+    removeHashStack(&searchPosition.hashStack);
 
     return 0;
 }
