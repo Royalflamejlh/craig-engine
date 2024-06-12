@@ -85,9 +85,18 @@ i32 searchLoop(){
         print_best_move = TRUE;
     }
 
+    #ifdef DEBUG
+    printf("info string Completed search thread, freeing and exiting.\n");
+    #endif
     removeHashStack(&searchPosition.hashStack);
 
     return 0;
+}
+
+//exit thread function
+void exit_search(Position* pos){
+   removeHashStack(&pos->hashStack);
+   quit_thread();
 }
 
 /*

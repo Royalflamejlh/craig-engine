@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include "bitboard/bbutils.h"
+#include "search.h"
 #include "transposition.h"
 #include "bitboard/bitboard.h"
 #include "bitboard/magic.h"
@@ -56,7 +57,7 @@ i32 main(void) {
     #endif  
 
     launch_threads();
-
+    stopSearch();
     printf("info string All threads have finished.\n");
     free_globals();
     freeTT();

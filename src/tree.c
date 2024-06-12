@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "bitboard/bbutils.h"
+#include "search.h"
 #include "movement.h"
 #include "types.h"
 #include "util.h"
@@ -285,14 +286,6 @@ static inline void q_selectSort(i32 i, Move *moveList, i32 *moveVals, i32 size) 
    }
 }
 
-//exit thread function
-static void exit_search(){
-   #if defined(__unix__) || defined(__APPLE__)
-   pthread_exit(NULL);
-   #elif defined(_WIN32) || defined(_WIN64)
-   ExitThread(0);
-   #endif
-}
 
 /*
  * On a TT hit in the mainline fills the pv array with the PV for printing
@@ -417,7 +410,7 @@ static inline u8 getLMRDepth(u8 curDepth, u8 moveIdx, u8 moveCount, Move move, i
 */
 i32 pvSearch( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pvArray, KillerMoves* km, SearchStats* stats) {
    //printf("Depth = %d, Ply = %d, Depth+ply = %d\n", depth, ply, depth+ply);
-   if(!run_get_best_move) exit_search();
+   if(!run_get_best_move) exit_search(pos);
 
    stats->node_count++;
    #ifdef DEBUG
@@ -607,7 +600,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pvArra
 *
 */
 i32 zwSearch( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, SearchStats* stats, u8 isNull) {
-   if(!run_get_best_move) exit_search();
+   if(!run_get_best_move) exit_search(pos);
    // alpha == beta - 1
    // this is either a cut- or all-node
 
@@ -745,7 +738,7 @@ i32 zwSearch( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, Search
 
 //quisce search
 i32 quiesce( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats* stats) {
-   if(!run_get_best_move) exit_search();
+   if(!run_get_best_move) exit_search(pos);
    stats->node_count++;
    #ifdef DEBUG
    debug[QS][NODE_COUNT]++;

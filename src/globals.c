@@ -11,11 +11,14 @@
 #include <windows.h>
 #endif
 
-volatile i32 run_program;
-volatile i32 run_get_best_move;
-volatile i32 best_move_found;
-volatile i32 print_pv_info;
-volatile i32 print_best_move;
+// Flags
+_Atomic volatile i32 run_program;
+_Atomic volatile i32 run_get_best_move;
+_Atomic volatile i32 best_move_found;
+
+// Signals
+_Atomic volatile i32 print_pv_info;
+_Atomic volatile i32 print_best_move;
 
 // Position Data
 static Position global_position;
@@ -73,23 +76,25 @@ void init_globals(){
 void free_globals(){
 #if defined(__unix__) || defined(__APPLE__)
     pthread_mutex_lock(&mutex_global_position);
+
     removeHashStack(&global_position.hashStack);
 
     pthread_mutex_lock(&mutex_global_PV);
     free(global_sd.PVArray);
     global_sd.PVArray = NULL;
-    pthread_mutex_unlock(&mutex_global_PV);
 
+    pthread_mutex_unlock(&mutex_global_PV);
     pthread_mutex_unlock(&mutex_global_position);
 #elif defined(_WIN32) || defined(_WIN64)
     EnterCriticalSection(&mutex_global_position);
+
     removeHashStack(&global_position.hashStack);
 
     EnterCriticalSection(&mutex_global_PV);
     free(global_sd.PVArray);
     global_sd.PVArray = NULL;
-    LeaveCriticalSection(&mutex_global_PV);
 
+    LeaveCriticalSection(&mutex_global_PV);
     LeaveCriticalSection(&mutex_global_position);
 
     DeleteCriticalSection(&mutex_global_PV);

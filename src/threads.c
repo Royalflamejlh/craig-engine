@@ -12,7 +12,7 @@
 #include "search.h"
 #include "io.h"
 
-#define NUM_SEARCH_THREADS 1
+#define NUM_SEARCH_THREADS 4
 
 #if defined(__unix__) || defined(__APPLE__)
 
@@ -26,6 +26,13 @@ static pthread_t search_threads[NUM_SEARCH_THREADS];
 pthread_mutex_t timer_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t timer_cond = PTHREAD_COND_INITIALIZER;
 static pthread_t timerThread;
+
+/*
+ * Quits out of a thread
+ */
+void quit_thread(){
+   pthread_exit(NULL);
+}
 
 /*
  * Starts a timer that prints out the best move and stops the search on completion
@@ -161,7 +168,6 @@ void startSearchThreads(){
     #ifdef DEBUG
     printf("info string starting search threads\n");
     #endif
-
     run_get_best_move = true;
     for (i32 i = 0; i < NUM_SEARCH_THREADS; i++) {
         pthread_create(&search_threads[i], NULL, search_thread_entry, NULL);
@@ -172,13 +178,7 @@ void stopSearchThreads(){
     #ifdef DEBUG
     printf("info string stopping search threads\n");
     #endif
-
     run_get_best_move = false;
-    for (i32 i = 0; i < NUM_SEARCH_THREADS; i++) {
-        if(search_threads[i]){
-            pthread_join(search_threads[i], NULL);
-        }
-    }
 }
 
 i32 launch_threads(void){
@@ -204,6 +204,11 @@ static HANDLE search_threads[NUM_SEARCH_THREADS];
 // Global variable to control the timer thread
 volatile i32 runTimerThread = 1;
 static HANDLE timerThread;
+
+// Quits thread
+void quit_thread(){
+    ExitThread(0);
+}
 
 // Timer thread function
 DWORD WINAPI timerThreadFunction(LPVOID durationPtr) {
