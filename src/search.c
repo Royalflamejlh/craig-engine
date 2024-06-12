@@ -4,6 +4,8 @@
 #include "globals.h"
 #include "tree.h"
 #include "tables.h"
+#include <stdio.h>
+#include "pthread.h"
 #include "types.h"
 #include "util.h"
 
@@ -11,11 +13,22 @@
 #include <stdio.h>
 #endif
 
-volatile u8 is_searching; // Flag for if search loop is running
+_Atomic volatile u8 is_searching;          // Flag for if search loop is running
+_Atomic volatile u8 is_helpers_searching;  // Flag for if helper loop is running
 
 // Search Parameters
-volatile u32 search_depth;
-volatile u8 print_on_depth;
+_Atomic volatile u8  helpers_run;
+_Atomic volatile u32 helpers_search_depth;
+_Atomic volatile u32 helper_eval;
+
+_Atomic volatile u32 search_depth;
+_Atomic volatile u8  print_on_depth;
+
+
+pthread_mutex_t helper_lock = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t helper_cond = PTHREAD_COND_INITIALIZER;
+int do_helper_search = FALSE;
+
 
 /*
 * Starts the search threads
@@ -42,60 +55,118 @@ void startSearch(u32 time, u32 depth){
 }
 
 /*
+ * Called from the timer thread when the search times out
+ */
+void search_timed_out(void){
+    while(best_move_found == FALSE);
+    stopSearchThreads();
+    print_best_move = TRUE;
+}
+
+/*
  * Stops the search and prints the best move
  * Called from the IO Thread
  */
 void stopSearch(){
     stopTimerThread();
     stopSearchThreads();
-    is_searching = FALSE;
+}
+
+/*
+ * Resumes the helpers at the current depth and ecal
+ */
+static inline void resume_helpers(i32 depth, i32 eval){
+    pthread_mutex_lock(&helper_lock);
+    helpers_search_depth = depth;
+    helper_eval = eval;
+    do_helper_search = TRUE;
+    pthread_cond_broadcast(&helper_cond);  // Change this line
+    pthread_mutex_unlock(&helper_lock);
+}
+
+static inline void stop_helpers(){
+    if(!helpers_run) return;
+    helpers_run = FALSE;
+    resume_helpers(0, MAX_DEPTH+1);
+}
+
+static inline void helper_wait(){ // TODO: abstract away in threads.h or something for windows
+    pthread_mutex_lock(&helper_lock);
+    do_helper_search = FALSE;
+    while (!do_helper_search) pthread_cond_wait(&helper_cond, &helper_lock); // Block until the helpers are released
+    pthread_mutex_unlock(&helper_lock);
+}
+
+static void helper_loop(Position* pos, Move* pvArray, KillerMoves* km, u32 thread_num){
+    SearchStats stats;
+    helpers_run = TRUE;
+    helper_wait();
+    while(helpers_run && helpers_search_depth + (thread_num % 3) <= search_depth){
+        //printf("Helper thread searching at depth %d\n", helpers_search_depth + (thread_num % 3));
+        helper_search_tree(*pos, helpers_search_depth + (thread_num % 3), pvArray, km, helper_eval, &stats, thread_num);
+        helper_wait();
+    }
+    return;
 }
 
 /*
  * Loop Function for Search Threads
  */
-i32 searchLoop(){
+i32 search_loop(u32 thread_num){
+    #ifdef DEBUG
+    printf("\n\nthread number is %d\n\n", thread_num);
+    #endif
     // Set up local thread info
     Move pvArray[MAX_DEPTH] = {0};
     KillerMoves km = {0};
+    i32 eval, prev_eval;
+    eval = prev_eval = 0;
+
+    u32 cur_depth = (1 + (thread_num % NUM_MAIN_THREADS)) % search_depth;
+    u8 is_helper_thread = (thread_num >= NUM_MAIN_THREADS);
 
     Position searchPosition = copy_global_position(); // TODO: Copy global position hashtable to new hashtable
+
+    if(is_helper_thread){ // If the thread is a helper thread enter the helper loop
+        helper_loop(&searchPosition, pvArray, &km, thread_num);
+        goto exit_search_loop;
+    }
 
     // Begin Search
     is_searching = TRUE;
 
-    u32 cur_depth = 1;
-    i32 eval, prev_eval;
-    eval = prev_eval = 0;
-
     while(run_get_best_move && cur_depth <= search_depth){
         SearchStats stats;
-        //startHelpers();
+        
         i32 avg_eval = (eval + prev_eval) / 2;
         prev_eval = eval;
-        eval = searchTree(searchPosition, cur_depth, pvArray, &km, avg_eval, &stats);
-        update_global_pv(cur_depth, pvArray, eval, stats);
-        //stopHelpers();
 
+        if(cur_depth > MIN_HELPER_DEPTH) resume_helpers(cur_depth, avg_eval);
+        eval = search_tree(searchPosition, cur_depth, pvArray, &km, avg_eval, &stats);
+        update_global_pv(cur_depth, pvArray, eval, stats);
         cur_depth++;
     }
+    stop_helpers();
 
-    if(cur_depth > search_depth && print_on_depth){ // Print best move in the case we reached max depth
+    if(run_get_best_move && cur_depth > search_depth && print_on_depth){ // Print best move in the case we reached max depth
         print_on_depth = FALSE;
         print_best_move = TRUE;
     }
-
     #ifdef DEBUG
     printf("info string Completed search thread, freeing and exiting.\n");
     #endif
-    removeHashStack(&searchPosition.hashStack);
 
+exit_search_loop:
+    removeHashStack(&searchPosition.hashStack);
+    is_searching = FALSE;
+    quit_thread();
     return 0;
 }
 
 //exit thread function
 void exit_search(Position* pos){
    removeHashStack(&pos->hashStack);
+   is_searching = FALSE;
    quit_thread();
 }
 

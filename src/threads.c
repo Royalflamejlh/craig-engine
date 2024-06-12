@@ -12,15 +12,13 @@
 #include "search.h"
 #include "io.h"
 
-#define NUM_SEARCH_THREADS 4
-
 #if defined(__unix__) || defined(__APPLE__)
 
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
 
-static pthread_t search_threads[NUM_SEARCH_THREADS];
+static pthread_t search_threads[NUM_THREADS];
 
 // Global variable to control the timer thread
 pthread_mutex_t timer_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -73,9 +71,7 @@ void* timerThreadFunction(void* durationPtr) {
     
     
     if(timed_out){ // Call the print function after waking up
-        while(best_move_found == FALSE);
-        stopSearchThreads();
-        print_best_move = TRUE;
+        search_timed_out();
     }
 
     #ifdef DEBUG
@@ -153,14 +149,15 @@ void *output_thread_entry(void *arg) {
 }
 
 void *search_thread_entry(void *arg) {
-    (void)arg;
+    u32 thread_num = *(u32*)arg;
+    free(arg);
 
     #ifdef DEBUG
     printf("info string Search Thread Starting\n");
     fflush(stdout);
     #endif
 
-    searchLoop();
+    search_loop(thread_num);
     return NULL;
 }
 
@@ -169,8 +166,14 @@ void startSearchThreads(){
     printf("info string starting search threads\n");
     #endif
     run_get_best_move = true;
-    for (i32 i = 0; i < NUM_SEARCH_THREADS; i++) {
-        pthread_create(&search_threads[i], NULL, search_thread_entry, NULL);
+    for (i32 i = 0; i < NUM_THREADS; i++) {
+        u32* thread_num = malloc(sizeof(u32));
+        if(!thread_num){
+            printf("info string Warning: failed to allocate memory in start search threads.\n");
+            return;
+        }
+        *thread_num = i;
+        pthread_create(&search_threads[i], NULL, search_thread_entry, thread_num);
     }
 }
 
@@ -199,7 +202,7 @@ i32 launch_threads(void){
 #elif defined(_WIN32) || defined(_WIN64)
 
 #include <windows.h>
-static HANDLE search_threads[NUM_SEARCH_THREADS];
+static HANDLE search_threads[NUM_THREADS];
 
 // Global variable to control the timer thread
 volatile i32 runTimerThread = 1;
@@ -267,27 +270,34 @@ DWORD WINAPI output_thread_entry(LPVOID arg) {
 }
 
 DWORD WINAPI search_thread_entry(LPVOID arg) {
-    (void)arg;
-    searchLoop();
+    u32 thread_num = *(u32*)arg;
+    free(arg);
+
+    #ifdef DEBUG
+    printf("info string Search Thread Starting\n");
+    fflush(stdout);
+    #endif
+
+    search_loop(thread_num);
     return 0;
 }
 
 void startSearchThreads(){
     run_get_best_move = true;
     DWORD threadId;
-    for (i32 i = 0; i < NUM_SEARCH_THREADS; i++) {
-        search_threads[i] = CreateThread(NULL, 0, search_thread_entry, NULL, 0, &threadId);
+    for (i32 i = 0; i < NUM_THREADS; i++) {
+        u32* thread_num = malloc(sizeof(u32));
+        if(!thread_num){
+            printf("info string Warning: failed to allocate memory in start search threads.\n");
+            return;
+        }
+        *thread_num = i;
+        search_threads[i] = CreateThread(NULL, 0, search_thread_entry, thread_num, 0, &threadId);
     }
 }
 
 void stopSearchThreads(){
     run_get_best_move = false;
-    for (i32 i = 0; i < NUM_SEARCH_THREADS; i++) {
-        if(search_threads[i]){
-            WaitForSingleObject(search_threads[i], INFINITE);
-            CloseHandle(search_threads[i]);
-        }
-    }
 }
 
 i32 launch_threads(void){

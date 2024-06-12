@@ -169,7 +169,7 @@ i32 testBB(void) {
     }
     printf("\n----------------------------- SELECT SORT TESTING ------------------------------\n\n");
     for (i32 i = 0; i < sizeNode; i++)  {
-        selectSort(i, moveListNode, moveVals, sizeNode);
+        select_sort(i, moveListNode, moveVals, sizeNode);
         printf("Move with value %d selected at pos %d\n", moveVals[i], i);
         printMove(moveListNode[i]);
     }
@@ -206,7 +206,7 @@ i32 testBB(void) {
     for (i32 i = 0; i < 100; i++)  {
         size_hash = generateLegalMoves(pos, moveList_hash);
         evalMoves(moveList_hash, moveVals, size_hash, NO_MOVE, NULL, 0, pos);
-        selectSort(0, moveList_hash, moveVals, size_hash);
+        select_sort(0, moveList_hash, moveVals, size_hash);
         makeMove(&pos, moveList_hash[0]);
         printf("Hash %d is: %" PRIu64 "\n", i+1, pos.hash);
     }

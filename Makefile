@@ -21,7 +21,7 @@ OBJS = $(SRCS:src/%.c=$(OBJDIR)/%.o)
 ##
 WIN_CC = x86_64-w64-mingw32-gcc
 WIN_CFLAGS = -Wall -Wextra 
-WIN_RELEASE_FLAGS = -O3 -Ofast -funroll-loops -flto -finline-functions -fexpensive-optimizations -fomit-frame-pointer -D __FAST_AS_POOP=1
+WIN_RELEASE_FLAGS = -pthread -O3 -Ofast -funroll-loops -flto -finline-functions -fexpensive-optimizations -fomit-frame-pointer -D __FAST_AS_POOP=1
 WIN_DEBUG_FLAGS = -g -D __COMPILE_DEBUG=1 -D __RAND_SEED=287091847 -D VERBOSE -D MAX_DEPTH=64 -D DEBUG
 WIN_LDFLAGS = -static-libgcc -static-libstdc++
 WIN_TARGET_DEBUG = $(BINDIR)/chess_db.exe
