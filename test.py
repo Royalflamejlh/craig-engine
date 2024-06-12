@@ -3,9 +3,9 @@ import chess.engine
 import logging
 
 # Configuration
-craig_time = .1 # Time in seconds Craig has for each move
-fish_time = .1  # Time in seconds Stockfish has for each move
-num_games = 10  # Number of games to be played for the calculation
+craig_time = .9 # Time in seconds Craig has for each move
+fish_time = .9  # Time in seconds Stockfish has for each move
+num_games = 100  # Number of games to be played for the calculation
 
 #logging.basicConfig(level=logging.DEBUG)
 

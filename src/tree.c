@@ -28,10 +28,11 @@
 
 #define ASP_EDGE (PAWN_VALUE/4)  // Buffer size of aspiration window
 
-#define FUTIL_DEPTH 2 // Depth to start futility pruning
-#define FUTIL_MARGIN 300 // Score difference for a node to be futility pruned
+#define PV_FUTIL_MARGIN 300 // Score difference for a node to be futility pruned
+#define ZW_FUTIL_MARGIN 200
 
-#define NULL_PRUNE_R 3 //How much Null prunin' takes off
+#define NULL_PRUNE_R 3 // How much Null prunin' takes off
+#define NMR_MARGIN 2000 // The higher this is, the more likely a null move search is to be taken
 
 #define DELTA_VALUE 750 // Min move value to be tried in Q search
 
@@ -328,7 +329,7 @@ i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval, SearchStats* st
    Position searchPos = pos;
 
    //printf("Running pv search at depth %d\n", i);
-   if(depth <= 1){
+   if(depth <= 2){
       eval = pvSearch(&searchPos, MIN_EVAL+1, MAX_EVAL-1, depth, 0, pvArray, stats);
       searchPos = pos;
       #ifdef DEBUG
@@ -402,7 +403,7 @@ static i32 pruneNullMoves(Position* pos, i32 beta, i32 depth, i32 ply, SearchSta
 static u8 getLMRDepth(u8 curDepth, u8 moveIdx, u8 moveCount, Move move, i32 allowLMR){
    if(curDepth < LMR_DEPTH) return curDepth - 1;
    if(!allowLMR) return curDepth - 1;
-   if(GET_FLAGS(move) <= DOUBLE_PAWN_PUSH) return curDepth - 1; // If anything but double pawn push
+   if(GET_FLAGS(move) > DOUBLE_PAWN_PUSH) return curDepth - 1; // If anything but double pawn push
    if(moveIdx < moveCount / 8) return curDepth - 1;
    if(moveIdx < moveCount / 4) return curDepth - 2;
    if(moveIdx < moveCount / 2) return curDepth / 3;
@@ -449,7 +450,6 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pvArra
       if(pos->flags & IN_CHECK) return -(CHECKMATE_VALUE - ply);
       else return 0;
    }
-   if(pos->halfmove_clock >= 100) return 0;
 
    //Test the TT table
    TTEntry* ttEntry = getTTEntry(pos->hash);
@@ -519,7 +519,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pvArra
    Move bestMove = NO_MOVE;
    i32 bestScore = MIN_EVAL;
    u8 exact = FALSE;
-   u32 evalIdx = 0;
+   u32 evalIdx = 0; // Used for select sort
    Position prevPos = *pos;
    for (i32 i = 0; i < size; i++)  {
       #ifdef DEBUG
@@ -529,12 +529,11 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pvArra
       makeMove(pos, moveList[i]);
       // Update Prunability PVS
       u8 prunable_move = prunable;
-      if(i <= PV_PRUNE_MOVE_IDX || pos->flags & IN_CHECK || (GET_FLAGS(moveList[i]) <= DOUBLE_PAWN_PUSH) || pos->stage == END_GAME) prunable_move = FALSE;
+      if(i <= PV_PRUNE_MOVE_IDX || pos->flags & IN_CHECK || (GET_FLAGS(moveList[i]) > DOUBLE_PAWN_PUSH) || pos->stage == END_GAME ) prunable_move = FALSE;
 
-      if( prunable_move && depth == 1){ //Futility Pruning
-         if(prevPos.quick_eval + moveVals[i] < alpha - FUTIL_MARGIN){ 
+      if( prunable_move && depth == 1 && abs(alpha) < (CHECKMATE_VALUE/2) && abs(beta) < (CHECKMATE_VALUE/2)){ // Futility Pruning
+         if(prevPos.quick_eval + moveVals[i] < alpha - PV_FUTIL_MARGIN){ 
             #ifdef DEBUG
-            //printf("PVS Futil Prune (qe=%d) + (moveVal=%d) < %d\n", quickEval(*pos), moveVals[i], beta-1 + FUTIL_MARGIN);
             debug[PVS][NODE_PRUNED_FUTIL]++;
             #endif
             *pos = prevPos; //Unmake Move
@@ -680,7 +679,7 @@ i32 zwSearch( Position* pos, i32 beta, i8 depth, u8 ply, SearchStats* stats, u8 
    //Null move prunin'
    if(prunable && !isNull 
                && depth > NULL_PRUNE_R + 1 
-               && pos->quick_eval >= beta - 500){
+               && pos->quick_eval >= (beta - NMR_MARGIN)){
       if(pruneNullMoves(pos, beta, depth, ply, stats) >= beta){
          #ifdef DEBUG
          debug[ZWS][NODE_PRUNED_NULL]++;
@@ -705,15 +704,15 @@ i32 zwSearch( Position* pos, i32 beta, i8 depth, u8 ply, SearchStats* stats, u8 
 
       // Set Move prunability prunability ZWS
       u8 prunable_move = prunable;
-      if(i <= PRUNE_MOVE_IDX || pos->flags & IN_CHECK || (GET_FLAGS(moveList[i]) <= DOUBLE_PAWN_PUSH) || pos->stage == END_GAME) prunable_move = FALSE;
+      if(i <= PRUNE_MOVE_IDX || pos->flags & IN_CHECK || (GET_FLAGS(moveList[i]) > DOUBLE_PAWN_PUSH) || pos->stage == END_GAME) prunable_move = FALSE;
 
-      if( prunable_move && depth == 1){ // Futility Pruning
-         if((prevPos.quick_eval + moveVals[i]) < ((beta-1) - FUTIL_MARGIN)){ 
-         #ifdef DEBUG
-         debug[ZWS][NODE_PRUNED_FUTIL]++;
-         #endif // Unmake Move
-         *pos = prevPos;
-         continue;
+      if( prunable_move && depth == 1 && abs(beta) < (CHECKMATE_VALUE/2) ){ // Futility Pruning
+         if((prevPos.quick_eval + moveVals[i]) < ((beta-1) - ZW_FUTIL_MARGIN)){ 
+            #ifdef DEBUG
+            debug[ZWS][NODE_PRUNED_FUTIL]++;
+            #endif // Unmake Move
+            *pos = prevPos;
+            continue;
          }
       }
       
@@ -723,7 +722,6 @@ i32 zwSearch( Position* pos, i32 beta, i8 depth, u8 ply, SearchStats* stats, u8 
       //printf("zws further search score %d\n", score);
       #endif
       i32 score = -zwSearch(pos, 1-beta, search_depth, ply + 1, stats, FALSE);
-      
       *pos = prevPos; // Unmake Move
 
       if( score >= beta ){ // Beta Cutoff
@@ -822,9 +820,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats* 
       }
 
       makeMove(pos, moveList[i]);
-
       i32 score = -quiesce(pos, -beta, -alpha, ply + 1, q_ply + 1, stats);
-
       *pos = prevPos; //Unmake Move
 
       if( score >= beta ){
@@ -834,7 +830,6 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats* 
          #endif
          return beta;
       }
-
       if( score > alpha ){
          alpha = score;
       }

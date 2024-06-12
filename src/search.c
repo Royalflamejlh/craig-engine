@@ -65,12 +65,15 @@ i32 searchLoop(){
     is_searching = TRUE;
 
     u32 cur_depth = 1;
-    i32 eval = 0;
+    i32 eval, prev_eval;
+    eval = prev_eval = 0;
 
     while(run_get_best_move && cur_depth <= search_depth){
         SearchStats stats;
         //startHelpers();
-        eval = searchTree(searchPosition, cur_depth, pvArray, eval, &stats);
+        i32 avg_eval = (eval + prev_eval) / 2;
+        prev_eval = eval;
+        eval = searchTree(searchPosition, cur_depth, pvArray, avg_eval, &stats);
         update_global_pv(cur_depth, pvArray, eval, stats);
         //stopHelpers();
 
