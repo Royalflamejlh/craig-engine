@@ -67,8 +67,8 @@ void* timerThreadFunction(void* durationPtr) {
     
     if(timed_out){ // Call the print function after waking up
         while(best_move_found == FALSE);
-        print_best_move = TRUE;
         stopSearchThreads();
+        print_best_move = TRUE;
     }
 
     #ifdef DEBUG
@@ -213,8 +213,8 @@ DWORD WINAPI timerThreadFunction(LPVOID durationPtr) {
 
     if (runTimerThread) {
         while(best_move_found == FALSE);
-        print_best_move = TRUE;
         stopSearchThreads();
+        print_best_move = TRUE;
     }
 
     return 0;

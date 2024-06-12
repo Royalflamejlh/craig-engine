@@ -162,8 +162,8 @@ static i32 processInput(char* input){
         #ifdef DEBUG
         printf("info string Stopping\n");
         #endif
-        print_best_move = TRUE;
         stopSearch();
+        print_best_move = TRUE;
     }
     else if (strncmp(input, "quit", 4) == 0){
         printf("info string Closing Engine\n");

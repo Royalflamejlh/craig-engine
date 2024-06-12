@@ -3,6 +3,7 @@
 #include "bitboard/bbutils.h"
 #include "types.h"
 #include "string.h"
+#include "util.h"
 
 #if defined(__unix__) || defined(__APPLE__) // UNIX
 #include <pthread.h>
@@ -71,15 +72,26 @@ void init_globals(){
  */
 void free_globals(){
 #if defined(__unix__) || defined(__APPLE__)
+    pthread_mutex_lock(&mutex_global_position);
+    removeHashStack(&global_position.hashStack);
+
     pthread_mutex_lock(&mutex_global_PV);
     free(global_sd.PVArray);
     global_sd.PVArray = NULL;
     pthread_mutex_unlock(&mutex_global_PV);
+
+    pthread_mutex_unlock(&mutex_global_position);
 #elif defined(_WIN32) || defined(_WIN64)
+    EnterCriticalSection(&mutex_global_position);
+    removeHashStack(&global_position.hashStack);
+
     EnterCriticalSection(&mutex_global_PV);
     free(global_sd.PVArray);
     global_sd.PVArray = NULL;
     LeaveCriticalSection(&mutex_global_PV);
+
+    LeaveCriticalSection(&mutex_global_position);
+
     DeleteCriticalSection(&mutex_global_PV);
     DeleteCriticalSection(&mutex_global_position);
 #endif
@@ -153,11 +165,13 @@ void update_global_pv(u32 depth, Move* pvArray, i32 eval, SearchStats stats){
 void set_global_position(Position pos){
 #if defined(__unix__) || defined(__APPLE__)
     pthread_mutex_lock(&mutex_global_position);
+    if(pos.hashStack.ptr != global_position.hashStack.ptr) removeHashStack(&global_position.hashStack);
     global_position = pos;
     reset_global_pv_data();
     pthread_mutex_unlock(&mutex_global_position);
 #elif defined(_WIN32) || defined(_WIN64)
     EnterCriticalSection(&mutex_global_position);
+    if(pos.hashStack.ptr != global_position.hashStack.ptr) removeHashStack(&global_position.hashStack);
     global_position = pos;
     reset_global_pv_data();
     LeaveCriticalSection(&mutex_global_position);

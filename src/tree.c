@@ -33,9 +33,8 @@
 
 #define NULL_PRUNE_R 3 //How much Null prunin' takes off
 
-#define DELTA_VALUE 750
+#define DELTA_VALUE 750 // Min move value to be tried in Q search
 
-#define Q_STAND_PAT_BUFFER (PAWN_VALUE - 100) // Positional eval buffer on stand pat
 
 typedef enum searchs{
    PVS,
@@ -757,10 +756,14 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats* 
    // Handle Draw or Mate
    if(pos->halfmove_clock >= 100 || isInsufficient(*pos) || isRepetition(pos)) return 0;
 
-
-   i32 stand_pat = pos->quick_eval; // Check to see if the player can opt to not move and be better
-   if(!(pos->flags & IN_CHECK) && stand_pat >= beta + Q_STAND_PAT_BUFFER)
+   #ifdef DEBUG
+   i32 stand_pat = evaluate(*pos, FALSE); // Check to see if the player can opt to not move and be better
+   #else
+   i32 stand_pat = evaluate(*pos); // Check to see if the player can opt to not move and be better
+   #endif
+   if(!(pos->flags & IN_CHECK) && stand_pat >= beta){
       return beta;
+   }
    if( alpha < stand_pat ){
       alpha = stand_pat;
    }
@@ -789,11 +792,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats* 
          }
       }
       else{
-         #ifndef DEBUG
-         return evaluate(*pos);
-         #else
-         return evaluate(*pos, FALSE);
-         #endif
+         return alpha;
       }
    }
 
@@ -812,7 +811,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats* 
       //Delta Pruning
       i32 delta = DELTA_VALUE;
       if (GET_FLAGS(moveList[i]) & PROMOTION) delta += (QUEEN_VALUE - PAWN_VALUE);
-      if (pos->quick_eval + delta + moveVals[i] < alpha && pos->stage != END_GAME) {
+      if (moveVals[i] < delta && pos->stage != END_GAME) {
          #ifdef DEBUG
          debug[QS][NODE_PRUNED_FUTIL]++;
          #endif

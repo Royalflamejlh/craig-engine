@@ -284,8 +284,8 @@ i32 evaluate(Position pos
     //
     // Defense
     //
-    eval_val += BASE_DEFEND_BONUS * count_bits(pos.color[turn] &  pos.attack_mask[turn]);
-    eval_val -= BASE_DEFEND_BONUS * count_bits(pos.color[!turn] &  pos.attack_mask[!turn]);
+    eval_val += BASE_DEFEND_BONUS * count_bits(pos.color[turn] & pos.attack_mask[turn]);
+    eval_val -= BASE_DEFEND_BONUS * count_bits(pos.color[!turn] & pos.attack_mask[!turn]);
     #ifdef DEBUG
     if(verbose) printf("After Defend Bonus: %d\n", eval_val);
     #endif
@@ -332,8 +332,8 @@ i32 evaluate(Position pos
     // King Safety
     //
     if(pos.stage != END_GAME){
-        eval_val += count_bits(getKingAttacks(pos.king[turn])  | pos.color[turn])  * KING_SAFTEY_FRIEND;
-        eval_val -= count_bits(getKingAttacks(pos.king[!turn]) | pos.color[!turn]) * KING_SAFTEY_FRIEND;
+        eval_val += (i32)count_bits(getKingAttacks(pos.king[turn])  | pos.color[turn])  * KING_SAFTEY_FRIEND;
+        eval_val -= (i32)count_bits(getKingAttacks(pos.king[!turn]) | pos.color[!turn]) * KING_SAFTEY_FRIEND;
     }
 
     //

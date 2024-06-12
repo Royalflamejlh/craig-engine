@@ -22,16 +22,12 @@ void playSelfInfinite(void);
 
 #ifdef __PROFILE
 void playSelfInfinite(void){
-    global_position = fenToPosition(START_FEN);
-    global_best_move = NO_MOVE;
-    run_get_best_move = TRUE;
-    Move moveList[MAX_MOVES];
-    while(generateLegalMoves(global_position, moveList)){
-        getBestMove(global_position, MAX_DEPTH);
-        if(global_best_move != NO_MOVE){
-            makeMove(&global_position, global_best_move);
-            printPosition(global_position, FALSE);
-        }
+    Position tempPos = get_global_position();
+    
+    
+    while(generateLegalMoves(tempPos, moveList)){
+        makeMove(&tempPos, get_global_best_move());
+        set_global_position(tempPos);
     }
 }
 #endif
