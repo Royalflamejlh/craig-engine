@@ -74,7 +74,7 @@ void processGoCommand(char* input) {
     u32 movetime = 0;
 
     u32 time = 0;
-    u32 depth = MAX_DEPTH;
+    u32 depth = MAX_DEPTH - 1;
 
     token = strtok_r(input, " ", &saveptr);
     while (token != NULL) {
