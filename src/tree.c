@@ -22,7 +22,7 @@
 #define PV_PRUNE_MOVE_IDX     5 // Move to start pruning on in pv
 #define PRUNE_MOVE_IDX        2 // Move to start pruning on otherwise
 
-#define MAX_QUIESCE_PLY 10 //How far q search can go 
+#define MAX_QUIESCE_PLY 5 //How far q search can go 
 
 #define LMR_DEPTH 3 // LMR not performed if depth < LMR_DEPTH
 
@@ -294,6 +294,23 @@ static void exit_search(){
 }
 
 /*
+ * On a TT hit in the mainline fills the pv array with the PV for printing
+ */
+static inline void pvFill(Position pos, Move* pvArray){
+   u8 ply = 0;
+   TTEntry* ttEntry = getTTEntry(pos.hash);
+   while(ttEntry->depth > 0){
+      pvArray[ply] = ttEntry->move;
+      #ifdef DEBUG
+      if(ttEntry->move == NO_MOVE) printf("NO MOVE FOUND IN PV");
+      #endif
+      makeMove(&pos, ttEntry->move);
+      ply++;
+      ttEntry = getTTEntry(pos.hash);
+   }
+}
+
+/*
 * Sets up the aspiration window, then searches the 
 */
 i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval, SearchStats* stats){
@@ -353,6 +370,7 @@ i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval, SearchStats* st
          searchPos = pos;
       }
    }
+   pvFill(searchPos, pvArray);
 
    #ifdef DEBUG
    printf("Principal Variation at depth %d: ", depth);
@@ -389,22 +407,6 @@ static u8 getLMRDepth(u8 curDepth, u8 moveIdx, u8 moveCount, Move move, i32 allo
    if(moveIdx < moveCount / 4) return curDepth - 2;
    if(moveIdx < moveCount / 2) return curDepth / 3;
    return curDepth / 4;
-}
-
-/*
- * On a TT hit in the mainline fills the pv array with the PV
- */
-static inline void pvFill(Position pos, Move* pvArray, u8 ply){
-   TTEntry* ttEntry = getTTEntry(pos.hash);
-   while(ttEntry->depth > 0){
-      pvArray[ply] = ttEntry->move;
-      #ifdef DEBUG
-      if(ttEntry->move == NO_MOVE) printf("NO MOVE FOUND IN PV");
-      #endif
-      makeMove(&pos, ttEntry->move);
-      ply++;
-      ttEntry = getTTEntry(pos.hash);
-   }
 }
 
 /*
@@ -463,7 +465,7 @@ i32 pvSearch( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pvArra
                #ifdef DEBUG
                debug[PVS][NODE_TT_PVS_RET]++;
                #endif
-               pvFill(*pos, pvArray, ply);
+               pvArray[ply] = ttEntry->move;
                return ttEntry->eval;
             case CUT_NODE: // Lower bound
                if (ttEntry->eval >= beta){
@@ -761,6 +763,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats* 
    #else
    i32 stand_pat = evaluate(*pos); // Check to see if the player can opt to not move and be better
    #endif
+
    if(!(pos->flags & IN_CHECK) && stand_pat >= beta){
       return beta;
    }
@@ -771,7 +774,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats* 
    // Early Delta Pruning (See if down more than Queen)
    i32 delta = QUEEN_VALUE;
    if (canPromotePawn(pos)) delta += (QUEEN_VALUE - PAWN_VALUE);
-   if (pos->quick_eval + delta < alpha && pos->stage != END_GAME) {
+   if (!(pos->flags & IN_CHECK) && stand_pat + delta < alpha && pos->stage != END_GAME) {
       #ifdef DEBUG
       debug[QS][NODE_PRUNED_FUTIL]++;
       #endif
@@ -811,7 +814,7 @@ i32 quiesce( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats* 
       //Delta Pruning
       i32 delta = DELTA_VALUE;
       if (GET_FLAGS(moveList[i]) & PROMOTION) delta += (QUEEN_VALUE - PAWN_VALUE);
-      if (moveVals[i] < delta && pos->stage != END_GAME) {
+      if (!(pos->flags & IN_CHECK) && stand_pat + delta + moveVals[i] < alpha && pos->stage != END_GAME) {
          #ifdef DEBUG
          debug[QS][NODE_PRUNED_FUTIL]++;
          #endif

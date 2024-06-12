@@ -3,9 +3,9 @@ import chess.engine
 import logging
 
 # Configuration
-craig_time = .7 # Time in seconds Craig has for each move
-fish_time = .7  # Time in seconds Stockfish has for each move
-num_games = 100  # Number of games to be played for the calculation
+craig_time = .1 # Time in seconds Craig has for each move
+fish_time = .1  # Time in seconds Stockfish has for each move
+num_games = 10  # Number of games to be played for the calculation
 
 #logging.basicConfig(level=logging.DEBUG)
 
@@ -15,7 +15,7 @@ def play_game(white_engine, black_engine, white_time, black_time, turn):
     while not board.is_game_over():
         if board.turn == chess.WHITE:
             try:
-                result = white_engine.play(board, chess.engine.Limit(time=white_time))
+                result = white_engine.play(board, chess.engine.Limit(depth=white_time))
             except TimeoutError:
                 print("White to move:")
                 print(board)
@@ -24,7 +24,7 @@ def play_game(white_engine, black_engine, white_time, black_time, turn):
                 return TimeoutError
         else:
             try:
-                result = black_engine.play(board, chess.engine.Limit(time=black_time))
+                result = black_engine.play(board, chess.engine.Limit(depth=black_time))
             except TimeoutError:
                 print("Black to move:")
                 print(board)

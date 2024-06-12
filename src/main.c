@@ -24,7 +24,6 @@ void playSelfInfinite(void);
 void playSelfInfinite(void){
     Position tempPos = get_global_position();
     
-    
     while(generateLegalMoves(tempPos, moveList)){
         makeMove(&tempPos, get_global_best_move());
         set_global_position(tempPos);
