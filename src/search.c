@@ -59,7 +59,7 @@ i32 searchLoop(){
     // Set up local thread info
     Move pvArray[MAX_DEPTH] = {0};
 
-    Position searchPosition = get_global_position();
+    Position searchPosition = get_global_position(); // TODO: Copy global position hashtable to new hashtable
 
     // Begin Search
     is_searching = TRUE;
