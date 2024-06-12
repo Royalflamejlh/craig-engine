@@ -217,7 +217,7 @@ i32 testBB(void) {
     }
 
     printf("Printing Hash Table Since Last Unique Move (at: %d): \n", pos.hashStack.last_reset_idx);
-    for(i32 i = pos.hashStack.last_reset_idx; i < pos.hashStack.current_idx; i++){
+    for(i32 i = pos.hashStack.last_reset_idx; i != pos.hashStack.current_idx; i = (i+1) % HASHSTACK_SIZE){
         printf("HashTable[%d] : %" PRIu64 "\n", i, pos.hashStack.ptr[i]);
     }
 

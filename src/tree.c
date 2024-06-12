@@ -297,10 +297,10 @@ static void exit_search(){
 /*
  * On a TT hit in the mainline fills the pv array with the PV for printing
  */
-static inline void pvFill(Position pos, Move* pvArray){
+static inline void pvFill(Position pos, Move* pvArray, u8 depth){
    u8 ply = 0;
    TTEntry* ttEntry = getTTEntry(pos.hash);
-   while(ttEntry->depth > 0){
+   while(ttEntry && ttEntry->depth > 0 && ply < depth){
       pvArray[ply] = ttEntry->move;
       #ifdef DEBUG
       if(ttEntry->move == NO_MOVE) printf("NO MOVE FOUND IN PV");
@@ -371,7 +371,7 @@ i32 searchTree(Position pos, u32 depth, Move *pvArray, i32 eval, SearchStats* st
          searchPos = pos;
       }
    }
-   pvFill(searchPos, pvArray);
+   pvFill(searchPos, pvArray, depth);
 
    #ifdef DEBUG
    printf("Principal Variation at depth %d: ", depth);

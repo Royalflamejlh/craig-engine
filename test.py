@@ -5,7 +5,7 @@ import logging
 # Configuration
 craig_time = .9 # Time in seconds Craig has for each move
 fish_time = .9  # Time in seconds Stockfish has for each move
-num_games = 100  # Number of games to be played for the calculation
+num_games = 50  # Number of games to be played for the calculation
 
 #logging.basicConfig(level=logging.DEBUG)
 

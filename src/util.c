@@ -8,8 +8,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-#define HASHSTACK_INIT_SIZE 256
-
 #ifdef PYTHON
 static i32 fifo_fd_in, fifo_fd_out;
 static pid_t pid;
@@ -301,23 +299,14 @@ u32 calculate_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u8 turn){
 */
 
 HashStack createHashStack(void){
-    u64 *ptr = malloc(sizeof(u64) * GAME_MOVES);
+    u64 *ptr = malloc(sizeof(u64) * HASHSTACK_SIZE);
     if (ptr == NULL) {
         printf("info string Warning: Failed to allocate space for the Hash Stack.\n");
     }
-    HashStack hashStack = {ptr, GAME_MOVES, 0, 0};
+    HashStack hashStack = {ptr, 0, 0};
     return hashStack;
 }
 
-void doubleHashStack(HashStack *hs){
-    hs->size *= 2;
-    hs->ptr = realloc(hs->ptr, sizeof(u64) * hs->size);
-    printf("info string growing hash stack\n");
-    if (hs->ptr == NULL) {
-        printf("info string Warning: Failed to allocate space for the Hash Stack.\n");
-        return;
-    }
-}
 
 i32 removeHashStack(HashStack *hashStack){
     if (hashStack && hashStack->ptr) {

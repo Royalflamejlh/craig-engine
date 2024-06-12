@@ -113,20 +113,20 @@ typedef u16 Move;
 #define PROMOTION               0x8
 
 // Flag setters using defined constants
-#define SET_QUIET(move)              SET_FLAGS(move, QUIET)
-#define SET_DOUBLE_PAWN_PUSH(move)   SET_FLAGS(move, DOUBLE_PAWN_PUSH)
-#define SET_KING_CASTLE(move)        SET_FLAGS(move, KING_CASTLE)
-#define SET_QUEEN_CASTLE(move)       SET_FLAGS(move, QUEEN_CASTLE)
-#define SET_CAPTURE(move)            SET_FLAGS(move, CAPTURE)
-#define SET_EP_CAPTURE(move)         SET_FLAGS(move, EP_CAPTURE)
-#define SET_KNIGHT_PROMOTION(move)   SET_FLAGS(move, KNIGHT_PROMOTION)
-#define SET_BISHOP_PROMOTION(move)   SET_FLAGS(move, BISHOP_PROMOTION)
-#define SET_ROOK_PROMOTION(move)     SET_FLAGS(move, ROOK_PROMOTION)
-#define SET_QUEEN_PROMOTION(move)    SET_FLAGS(move, QUEEN_PROMOTION)
+#define SET_QUIET(move)                SET_FLAGS(move, QUIET)
+#define SET_DOUBLE_PAWN_PUSH(move)     SET_FLAGS(move, DOUBLE_PAWN_PUSH)
+#define SET_KING_CASTLE(move)          SET_FLAGS(move, KING_CASTLE)
+#define SET_QUEEN_CASTLE(move)         SET_FLAGS(move, QUEEN_CASTLE)
+#define SET_CAPTURE(move)              SET_FLAGS(move, CAPTURE)
+#define SET_EP_CAPTURE(move)           SET_FLAGS(move, EP_CAPTURE)
+#define SET_KNIGHT_PROMOTION(move)     SET_FLAGS(move, KNIGHT_PROMOTION)
+#define SET_BISHOP_PROMOTION(move)     SET_FLAGS(move, BISHOP_PROMOTION)
+#define SET_ROOK_PROMOTION(move)       SET_FLAGS(move, ROOK_PROMOTION)
+#define SET_QUEEN_PROMOTION(move)      SET_FLAGS(move, QUEEN_PROMOTION)
 #define SET_KNIGHT_PROMO_CAPTURE(move) SET_FLAGS(move, KNIGHT_PROMO_CAPTURE)
 #define SET_BISHOP_PROMO_CAPTURE(move) SET_FLAGS(move, BISHOP_PROMO_CAPTURE)
-#define SET_ROOK_PROMO_CAPTURE(move) SET_FLAGS(move, ROOK_PROMO_CAPTURE)
-#define SET_QUEEN_PROMO_CAPTURE(move) SET_FLAGS(move, QUEEN_PROMO_CAPTURE)
+#define SET_ROOK_PROMO_CAPTURE(move)   SET_FLAGS(move, ROOK_PROMO_CAPTURE)
+#define SET_QUEEN_PROMO_CAPTURE(move)  SET_FLAGS(move, QUEEN_PROMO_CAPTURE)
 
 // Flag getters
 inline i32 IS_QUIET(Move move) { return GET_FLAGS(move) == QUIET; }
@@ -180,9 +180,10 @@ static const i32 pieceToIndex[128] = {
     ['k'] = BLACK_KING
 };
 
+#define HASHSTACK_SIZE 100
+
 typedef struct {
     u64* ptr; //A stack of hashes of player positions
-    i32 size; //Size of the hash stack
     i32 current_idx; //An index to the current hash
     i32 last_reset_idx; //An index to the last move which reset halfmove clock
 } HashStack;

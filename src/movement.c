@@ -315,8 +315,7 @@ i32 makeMove(Position *pos, Move move){
     pos->hash = hashPosition(*pos);
 
     HashStack *hs = &pos->hashStack;
-    if(hs->current_idx + 1 >= hs->size) doubleHashStack(hs);
-    hs->current_idx++;
+    hs->current_idx = (hs->current_idx + 1) % HASHSTACK_SIZE;
     if(pos->halfmove_clock == 0) hs->last_reset_idx = hs->current_idx;
     hs->ptr[hs->current_idx] = pos->hash;    
 
@@ -329,8 +328,8 @@ i32 makeMove(Position *pos, Move move){
         printf("From move: ");
         printMove(move);
         printf(".\r\n");
-        u64 prevHash = pos->hashStack.ptr[pos->hashStack.current_idx-1];
-        u64 prevprevHash = pos->hashStack.ptr[pos->hashStack.current_idx-2];
+        u64 prevHash = pos->hashStack.ptr[(pos->hashStack.current_idx-1)%HASHSTACK_SIZE];
+        u64 prevprevHash = pos->hashStack.ptr[(pos->hashStack.current_idx-2)%HASHSTACK_SIZE];
 
         printf("Prev Move: ");
         TTEntry *prev = getTTEntry(prevHash);
