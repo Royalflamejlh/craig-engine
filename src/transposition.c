@@ -52,7 +52,7 @@ TTEntry* getTTEntry(u64 hash){
     return NULL;
 }
 
-void storeTTEntry(u64 hash, char depth, i32 eval, char nodeType, Move move){
+void storeTTEntry(u64 hash, char depth, i32 eval, char nodeType, Move move){ // TODO: make atomic
     for(i32 i = 0; i < ROTATION; i++){
         u64 key = (hash + i) & KEY_MASK; // Ensure wrapping around
         if(nodeType != PV_NODE && table[key].nodeType == PV_NODE){

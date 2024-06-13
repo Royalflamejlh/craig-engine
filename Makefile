@@ -7,9 +7,9 @@ CFLAGS = -Wall -Wextra
 DEBUG_FLAGS = -g $(ASAN_FLAGS) -D __COMPILE_DEBUG=1 -D __RAND_SEED=287091847 -D VERBOSE -D MAX_DEPTH=64 -D DEBUG
 RELEASE_FLAGS = -O3 -Ofast -funroll-loops -flto -finline-functions -fexpensive-optimizations -fomit-frame-pointer -D __FAST_AS_POOP=1 -D STORE_STATS
 PROFILE_FLAGS = -g -O2 -fno-lto -fno-omit-frame-pointer -pthread -D __PROFILE=1 -D __RAND_SEED=287091847
-DEBUG_LDFLAGS += -lpthread $(ASAN_FLAGS) 
-RELEASE_LDFLAGS += -lpthread
-PROFILE_LDFLAGS += -lpthread
+DEBUG_LDFLAGS += -lm -lpthread $(ASAN_FLAGS) 
+RELEASE_LDFLAGS += -lm -lpthread
+PROFILE_LDFLAGS += -lm -lpthread
 LINUX_TARGET_DEBUG = $(BINDIR)/chess_db
 LINUX_TARGET_RELEASE = $(BINDIR)/chess
 LINUX_TARGET_PROFILE = $(BINDIR)/chess_prof
@@ -21,9 +21,9 @@ OBJS = $(SRCS:src/%.c=$(OBJDIR)/%.o)
 ##
 WIN_CC = x86_64-w64-mingw32-gcc
 WIN_CFLAGS = -Wall -Wextra 
-WIN_RELEASE_FLAGS = -pthread -O3 -Ofast -funroll-loops -flto -finline-functions -fexpensive-optimizations -fomit-frame-pointer -D __FAST_AS_POOP=1
-WIN_DEBUG_FLAGS = -g -pthread -D __COMPILE_DEBUG=1 -D __RAND_SEED=287091847 -D VERBOSE -D MAX_DEPTH=64 -D DEBUG
-WIN_LDFLAGS = -static-libgcc -static-libstdc++
+WIN_RELEASE_FLAGS = -O3 -Ofast -funroll-loops -flto -finline-functions -fexpensive-optimizations -fomit-frame-pointer -D __FAST_AS_POOP=1
+WIN_DEBUG_FLAGS = -g -D __COMPILE_DEBUG=1 -D __RAND_SEED=287091847 -D VERBOSE -D MAX_DEPTH=64 -D DEBUG
+WIN_LDFLAGS = -pthread -lm -static-libgcc -static-libstdc++
 WIN_TARGET_DEBUG = $(BINDIR)/chess_db.exe
 WIN_TARGET_RELEASE = $(BINDIR)/chess.exe
 WIN_OBJS = $(SRCS:src/%.c=$(OBJDIR)/win_%.o)

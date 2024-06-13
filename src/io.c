@@ -73,14 +73,17 @@ void processGoCommand(char* input) {
     u32 binc = 0;
     u32 movetime = 0;
     u32 movestogo = 0;
+    u8 infinite = FALSE;
 
     SearchParameters params;
     params.depth = MAX_DEPTH - 1;
 
     token = strtok_r(input, " ", &saveptr);
+    if(token == NULL) infinite = TRUE; // If the user only said "go" then we want to run infinite
     while (token != NULL) {
-        if (strcmp(token, "infinite") == 0) {
-            params.max_time = 0;
+        if (strncmp(token, "infinite", 8) == 0) {
+            infinite = TRUE;
+            break;
         } else if (strcmp(token, "wtime") == 0) {
             token = strtok_r(NULL, " ", &saveptr);
             if (token != NULL) {
@@ -124,8 +127,11 @@ void processGoCommand(char* input) {
         params.max_time = movetime;
         params.rec_time = movetime;
         params.can_shorten = FALSE;
-    }
-    else{ 
+    } else if(infinite == TRUE){
+        params.rec_time = 0;
+        params.max_time = 0;
+        params.can_shorten = FALSE;
+    } else{ 
         params.max_time = calculate_max_search_time(wtime, winc, btime, binc, movestogo, get_global_position().flags & WHITE_TURN);
         params.rec_time = calculate_rec_search_time(wtime, winc, btime, binc, movestogo, get_global_position().flags & WHITE_TURN);
         params.can_shorten = TRUE;

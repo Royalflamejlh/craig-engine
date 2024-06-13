@@ -295,7 +295,7 @@ static inline void q_select_sort(i32 i, Move *moveList, i32 *moveVals, i32 size)
  */
 static inline u32 helper_select_sort(u32 i, u32 evalIdx, Position* pos, Move *moveList, i32 *moveVals, u32 size, KillerMoves* km, Move ttMove, u32 ply, u32 thread_num) {
    i32 thread_dif = (thread_num % 2) ? -1 : 1;
-   moveVals[i] += (i * HELPER_MOVE_DISORDER) + (thread_dif * (i32)thread_num * HELPER_THREAD_DISORDER);
+   moveVals[i] += ((i32)i * HELPER_MOVE_DISORDER) + (thread_dif * (i32)thread_num * HELPER_THREAD_DISORDER);
    select_sort(i, evalIdx, pos, moveList, moveVals, size, km, ttMove, ply);
    return evalIdx;
 }
@@ -317,10 +317,50 @@ static inline void pvFill(Position pos, Move* pv_array, u8 depth){
    }
 }
 
+
+/*
+ * Does a brief search on the opening position to get some values in the hashtable
+ */
+void search_opening(u32 depth){
+   #ifdef DEBUG
+   printf("Searching all opening positions\n");
+   #endif
+   run_get_best_move = TRUE;
+   Position pos = fenToPosition(START_FEN);
+   SearchStats stats;
+   Move pv_array[MAX_DEPTH] = {0};
+   KillerMoves km = {0};
+
+   search_tree(pos, depth, pv_array, &km, 0, &stats, NULL); // Generate for white
+
+   Move moveList[MAX_MOVES];
+   i32 moveVals[MAX_MOVES];
+   
+   i32 size = generateLegalMoves(pos, moveList);
+
+   q_evalMoves(moveList, moveVals, size, pos);
+   
+   Position prevPos = pos;
+   for (i32 i = 0; i < size; i++)  {
+      q_select_sort(i, moveList, moveVals, size); 
+      if(moveVals[i] <= 0) break;
+      makeMove(&pos, moveList[i]);
+      search_tree(pos, depth, pv_array, &km, 0, &stats, NULL);
+      pos = prevPos;
+   }
+
+   remove_hash_stack(&pos.hashStack);
+   run_get_best_move = FALSE;
+   #ifdef DEBUG
+   printf("All opening positions searched\n");
+   #endif
+}
+
+
 /*
 * Sets up the aspiration window, then searches the 
 */
-i32 search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 eval, SearchStats* stats){
+i32 search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 eval, SearchStats* stats, TimePreference* time_preference){
    if(!pv_array){
       printf("info string Warning: No PV Array found!\n");
       return 0;
@@ -336,7 +376,7 @@ i32 search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 ev
 
    //printf("Running pv search at depth %d\n", i);
    if(depth <= 2){
-      eval = pv_search(&searchPos, MIN_EVAL+1, MAX_EVAL-1, depth, 0, pv_array, km, stats);
+      eval = pv_search(&searchPos, MIN_EVAL+1, MAX_EVAL-1, depth, 0, pv_array, km, stats, time_preference);
       searchPos = pos;
       #ifdef DEBUG
       printf("Result from depth window: %d, %d i: %d eval: %d\n", MIN_EVAL+1, MAX_EVAL, depth, eval);
@@ -349,7 +389,7 @@ i32 search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 ev
       #ifdef DEBUG
       printf("Running with window: %d, %d (eval_prev: %d, depth: %d)\n", q-asp_lower, q+asp_upper, eval, depth);
       #endif
-      eval = pv_search(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pv_array, km, stats);
+      eval = pv_search(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pv_array, km, stats, time_preference);
       searchPos = pos;
       while(eval <= q-asp_lower || eval >= q+asp_upper || pv_array[0] == NO_MOVE){
          if(abs(eval) == CHECKMATE_VALUE) break;
@@ -365,6 +405,7 @@ i32 search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 ev
             asp_upper = (asp_upper + ASP_EDGE) * 2;
             asp_lower = (asp_lower + ASP_EDGE) * 2;
          }
+         if(time_preference) *time_preference = EXTEND_TIME; // Extend time if we miss the window
          #ifdef DEBUG
          printf("Running again with window: %d, %d (eval: %d, q: %d, move: ", q-asp_lower, q+asp_upper, eval, q);
          printMove(pv_array[0]);
@@ -373,7 +414,7 @@ i32 search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 ev
          #endif
 
          q = eval;
-         eval = pv_search(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pv_array, km, stats);
+         eval = pv_search(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pv_array, km, stats, NULL);
          searchPos = pos;
       }
    }
@@ -453,7 +494,7 @@ static inline u8 getLMRDepth(u8 curDepth, u8 moveIdx, u8 moveCount, Move move, i
 *  PRINCIPAL VARIATION SEARCH
 *
 */
-i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_array, KillerMoves* km, SearchStats* stats) {
+i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_array, KillerMoves* km, SearchStats* stats, TimePreference* time_preference) {
    //printf("Depth = %d, Ply = %d, Depth+ply = %d\n", depth, ply, depth+ply);
    if(!run_get_best_move) exit_search(pos);
 
@@ -483,10 +524,14 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
    #endif
 
 
-   //Handle Draw or Mate
+   //Handle Draw, Mate, or single move
    if(size == 0){
+      if(time_preference && ply == 0) *time_preference = HALT_TIME;
       if(pos->flags & IN_CHECK) return -(CHECKMATE_VALUE - ply);
       else return 0;
+   }
+   else if(size == 1 && time_preference && ply == 0){
+      *time_preference = HALT_TIME;
    }
 
    //Test the TT table
@@ -581,12 +626,12 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
 
       i32 score;
       if ( i == 0 ) { // Only do full PV on the first move
-         score = -pv_search(pos, -beta, -alpha, depth - 1, ply + 1, pv_array, km, stats);
+         score = -pv_search(pos, -beta, -alpha, depth - 1, ply + 1, pv_array, km, stats, NULL);
          //printf("PV b search pv score = %d\n", score);
       } else {
          score = -zw_search(pos, -alpha, depth - 1, ply + 1, km, stats, FALSE);
          if ( score > alpha ){
-            score = -pv_search(pos, -beta, -alpha, depth - 1, ply + 1, pv_array, km, stats);
+            score = -pv_search(pos, -beta, -alpha, depth - 1, ply + 1, pv_array, km, stats, NULL);
          }
       }
 
@@ -702,11 +747,11 @@ i32 helper_pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move
       makeMove(pos, moveList[i]);
       i32 score;
       if ( i == 0 ) {
-         score = -pv_search(pos, -beta, -alpha, depth - 1, ply + 1, pv_array, km, stats);
+         score = -helper_pv_search(pos, -beta, -alpha, depth - 1, ply + 1, pv_array, km, stats, thread_num);
       } else {
          score = -zw_search(pos, -alpha, depth - 1, ply + 1, km, stats, FALSE);
          if ( score > alpha ){
-            score = -pv_search(pos, -beta, -alpha, depth - 1, ply + 1, pv_array, km, stats);
+            score = -helper_pv_search(pos, -beta, -alpha, depth - 1, ply + 1, pv_array, km, stats, thread_num);
          }
       }
       *pos = prevPos;

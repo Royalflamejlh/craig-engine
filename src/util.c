@@ -3,6 +3,8 @@
 #include "movement.h"
 #include "types.h"
 #include <stdio.h>
+#include <time.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -269,6 +271,12 @@ Stage calculateStage(Position pos){
     if(pos.fullmove_number < OPN_GAME_MOVES) stage = OPN_GAME; 
     if(count_bits(pos.color[0] | pos.color[1]) <= END_GAME_PIECES) stage = END_GAME;
     return stage;
+}
+
+u64 millis(){
+    struct timespec _t;
+    clock_gettime(CLOCK_REALTIME, &_t);
+    return _t.tv_sec*1000 + lround(_t.tv_nsec/1e6);
 }
 
 /*

@@ -125,16 +125,17 @@ static void reset_global_pv_data(){
 
 /*
  * Checks and sees if the Global PV can be updated, and if it can it updates it
+ * Returns true if an update happen, false if an update did not happen
  */
-void update_global_pv(u32 depth, Move* pv_array, i32 eval, SearchStats stats){
-    if(pv_array == NULL || pv_array[0] == NO_MOVE) return;
+u8 update_global_pv(u32 depth, Move* pv_array, i32 eval, SearchStats stats){
+    if(pv_array == NULL || pv_array[0] == NO_MOVE) return FALSE;
 
 #if defined(__unix__) || defined(__APPLE__)
     pthread_mutex_lock(&mutex_global_PV); // Start Crit Section
 
     if(depth <= global_sd.depth){ // If new depth is less or same as current exit
         pthread_mutex_unlock(&mutex_global_PV);
-        return;
+        return FALSE;
     }
 
     global_sd.depth = depth;
@@ -149,7 +150,7 @@ void update_global_pv(u32 depth, Move* pv_array, i32 eval, SearchStats stats){
 
     if(depth <= global_sd.depth){ // If new depth is less or same as current exit
         LeaveCriticalSection(&mutex_global_PV);
-        return;
+        return FALSE;
     }
 
     global_sd.depth = depth;
@@ -162,6 +163,7 @@ void update_global_pv(u32 depth, Move* pv_array, i32 eval, SearchStats stats){
 #endif
     best_move_found = TRUE; // Set flag that best move has been found
     print_pv_info = TRUE;   // Set flag to print new PV
+    return TRUE;
 }
 
 /*

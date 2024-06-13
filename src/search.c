@@ -1,9 +1,10 @@
-#include <iomanip>
 #include <stdbool.h>
 #include "search.h"
+#include "bitboard/bbutils.h"
 #include "threads.h"
 #include "globals.h"
 #include "tree.h"
+#include "evaluator.h"
 #include "tables.h"
 #include <stdio.h>
 #include "pthread.h"
@@ -17,7 +18,7 @@
 _Atomic volatile u8 is_searching;          // Flag for if search loop is running
 _Atomic volatile u8 is_helpers_searching;  // Flag for if helper loop is running
 _Atomic volatile u8 can_shorten;           // Flag for if can leave before timer finishes
-_Atomic volatile u8  print_on_depth;       // Flag for whether or not to print when expected depth is reached
+_Atomic volatile u8 print_on_depth;        // Flag for whether or not to print when expected depth is reached
 
 // Search Parameters
 _Atomic volatile u8  helpers_run;
@@ -33,6 +34,8 @@ pthread_mutex_t helper_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t helper_cond = PTHREAD_COND_INITIALIZER;
 int do_helper_search = FALSE;
 
+#define SEARCH_REDUCTION_LEVEL 2    // How much time is reduced when search finds move to reduce time on (higher means less time reduced)
+#define SEARCH_EXTENSION_LEVEL 2    // How much time is expanded when search finds move to extend time on (higher means less)
 
 
 /*
@@ -127,51 +130,78 @@ i32 search_loop(u32 thread_num){
     // Set up local thread info
     Move pv_array[MAX_DEPTH] = {0};
     KillerMoves km = {0};
-    i32 eval, prev_eval;
-    eval = prev_eval = 0;
+
+    if(search_depth == 0){
+        printf("info string Warning search depth was 0\n");
+        return -1;
+    }
 
     u32 cur_depth = (1 + (thread_num % NUM_MAIN_THREADS)) % search_depth;
     u8 is_helper_thread = (thread_num >= NUM_MAIN_THREADS);
 
-    Position search_pos = copy_global_position(); // TODO: Copy global position hashtable to new hashtable
+    Position search_pos = copy_global_position(); 
+
+    if(can_shorten && search_pos.stage == OPN_GAME){ // Shorten the move time in the opening
+        search_time /= 2;
+    }
 
     if(is_helper_thread){ // If the thread is a helper thread enter the helper loop
         helper_loop(&search_pos, pv_array, &km, thread_num);
         goto exit_search_loop;
     }
 
+    Move found_move[MAX_DEPTH] = {0};   // Arrays of the previous evals and moves found in search
+    i32  found_eval[MAX_DEPTH] = {0};
+
     // Begin Search
     is_searching = TRUE;
 
     while(run_get_best_move && cur_depth <= search_depth){
-        SearchStats stats; // Set up for iteratoin
-        i32 avg_eval = (eval + prev_eval) / 2;
-        prev_eval = eval;
+        SearchStats stats; // Set up for iteration
+        i32 avg_eval = 0;
+        if(cur_depth >= 2) avg_eval = (found_eval[cur_depth-1] + found_eval[cur_depth-2]) / 2;
         TimePreference time_preference = NORMAL_TIME;
 
         if(cur_depth > MIN_HELPER_DEPTH) resume_helpers(cur_depth, avg_eval); // Run Search
-        eval = search_tree(search_pos, cur_depth, pv_array, &km, avg_eval, &stats);
-        update_global_pv(cur_depth, pv_array, eval, stats);
+        found_eval[cur_depth] = search_tree(search_pos, cur_depth, pv_array, &km, avg_eval, &stats, &time_preference);
+        found_move[cur_depth] = pv_array[0];
+        u8 updated = update_global_pv(cur_depth, pv_array, found_eval[cur_depth], stats);
 
-        // Calculate whether to continue searching or print early
-        if(can_shorten){
-            printf("info string Can shorten search\n");
-            if( time_preference == HALT_TIME       ||
-                eval >= (CHECKMATE_VALUE-MAX_MOVES )){
-                stopTimerThread();
-                run_get_best_move = FALSE;
-                print_best_move = TRUE;
+        if(can_shorten && updated){ // Continue searching if we can't shorten or we didn't find a better move
+            if( time_preference == HALT_TIME       ||   // If we should stop the search early
+                found_eval[cur_depth] >= (CHECKMATE_VALUE-MAX_MOVES)){
+                search_time = 0;
             }
-            else if(time_preference == REDUCE_TIME){
-                search_time = se
-                
+            if(time_preference == NORMAL_TIME){        // In the case of normal time we look at the past moves/evals to see if we need to continue or we can stop
+                if(cur_depth >= 7){
+                    Move prev_move = NO_MOVE;
+                    i32 move_changes = 0;
+                    i32 min_eval = MAX_EVAL;
+                    i32 max_eval = 0;
+                    for(u32 i = cur_depth; i >= cur_depth - 6; i--){
+                        if(found_eval[i] == 0 && found_move[i] == NO_MOVE) continue;
+                        if(found_eval[i] > max_eval) max_eval = found_eval[i];
+                        if(found_eval[i] < min_eval) min_eval = found_eval[i];
+                        if(prev_move != found_move[i]) move_changes++;
+                        prev_move = found_move[i];
+                    }  
+                    if( (move_changes == 0) || (abs(min_eval - max_eval) <= (PAWN_VALUE/8)))  time_preference = REDUCE_TIME;
+                    if( (move_changes >  3) || (abs(min_eval - max_eval) >= (PAWN_VALUE)))    time_preference = EXTEND_TIME;
+                }
             }
-            else if(time_preference == NORMAL_TIME){
-                if(millis() - start_time >= (u64)search_time)
+            if(time_preference == REDUCE_TIME){
+                search_time -= (search_time >> SEARCH_REDUCTION_LEVEL);
             }
-            
-        }  
+            if(time_preference == EXTEND_TIME){
+                search_time += (search_time >> SEARCH_EXTENSION_LEVEL);
+            }
+        }
 
+        if(can_shorten && (u32)(millis() - start_time) >= (search_time*3) / 2){ // If over 50% of the time has elapsed we stop the search
+            stopTimerThread();
+            run_get_best_move = FALSE;
+            print_best_move = TRUE;
+        }
 
         cur_depth++;
     }
@@ -198,8 +228,3 @@ void exit_search(Position* pos){
    is_searching = FALSE;
    quit_thread();
 }
-
-/*
- * Loop Function for Helper Threads
- */
-i32 startHelpers(Position pos, i32 eval, u32 depth);

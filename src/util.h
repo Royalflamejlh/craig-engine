@@ -1,9 +1,6 @@
 #ifndef UTIL_H
 #define UTIL_H
 #include <stdlib.h>
-#include <time.h>
-#include <math.h>
-
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
@@ -26,12 +23,7 @@ u32 calculate_max_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 move
 void printPV(Move *pv_array, i32 depth);
 void printPVInfo(SearchData data);
 
-
-static inline u64 millis(){
-    struct timespec _t;
-    clock_gettime(CLOCK_REALTIME, &_t);
-    return _t.tv_sec*1000 + lround(_t.tv_nsec/1e6);
-}
+u64 millis();
 
 static inline i32 count_bits(u64 v){
     u32 c;

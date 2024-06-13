@@ -11,6 +11,7 @@
 #include "globals.h"
 #include "threads.h"
 #include "types.h"
+#include "tree.h"
 #include "util.h"
 
 #ifdef __COMPILE_DEBUG
@@ -45,6 +46,8 @@ i32 main(void) {
         return -1;
     }
     init_globals();
+    search_opening(10);
+    printf("info string Finished start up!\n");
 
     #ifdef RUN_TEST
     testBB();
