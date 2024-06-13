@@ -34,8 +34,8 @@ pthread_mutex_t helper_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t helper_cond = PTHREAD_COND_INITIALIZER;
 int do_helper_search = FALSE;
 
-#define SEARCH_REDUCTION_LEVEL 2    // How much time is reduced when search finds move to reduce time on (higher means less time reduced)
-#define SEARCH_EXTENSION_LEVEL 2    // How much time is expanded when search finds move to extend time on (higher means less)
+#define SEARCH_REDUCTION_LEVEL 0.75    // How much time is reduced when search finds move to reduce time on
+#define SEARCH_EXTENSION_LEVEL 1.50    // How much time is expanded when search finds move to extend time on
 
 
 /*
@@ -193,17 +193,17 @@ i32 search_loop(u32 thread_num){
                 }
             }
             if(time_preference == REDUCE_TIME){
-                search_time -= (search_time >> SEARCH_REDUCTION_LEVEL);
+                search_time = (u32)((double)search_time * SEARCH_REDUCTION_LEVEL);
             }
             if(time_preference == EXTEND_TIME){
-                search_time += (search_time >> SEARCH_EXTENSION_LEVEL);
+                search_time = (u32)((double)search_time * SEARCH_EXTENSION_LEVEL);
             }
         }
         if(can_shorten && search_pos.stage == OPN_GAME){
-            if(search_pos.fullmove_number <= 2)      search_time = 0;  // No time in the start TODO: make sure it matches the starting hash?
-            else if(search_pos.fullmove_number == 3) search_time = MIN(10, search_time);
-            else if(search_pos.fullmove_number == 4) search_time = MIN(100, search_time);
-            else search_time /= 8;
+            if(search_pos.fullmove_number <= 1)      search_time = 0;  // No time in the start TODO: make sure it matches the starting hash?
+            else if(search_pos.fullmove_number == 2) search_time = MIN(10, search_time);
+            else if(search_pos.fullmove_number == 3) search_time = MIN(100, search_time);
+            else search_time -= (search_time/4);
         }
 
         printf("info string checking time %d >= %d\n", (u32)(millis() - start_time), (search_time) / 2);
