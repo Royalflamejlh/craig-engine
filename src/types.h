@@ -285,4 +285,11 @@ typedef struct{
     u32 depth;
 } SearchParameters;
 
+typedef enum {
+    EXTEND_TIME,
+    NORMAL_TIME,
+    REDUCE_TIME,
+    HALT_TIME
+} TimePreference;
+
 #endif // TYPES_H

@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <stdbool.h>
 #include "search.h"
 #include "threads.h"
@@ -15,6 +16,8 @@
 
 _Atomic volatile u8 is_searching;          // Flag for if search loop is running
 _Atomic volatile u8 is_helpers_searching;  // Flag for if helper loop is running
+_Atomic volatile u8 can_shorten;           // Flag for if can leave before timer finishes
+_Atomic volatile u8  print_on_depth;       // Flag for whether or not to print when expected depth is reached
 
 // Search Parameters
 _Atomic volatile u8  helpers_run;
@@ -22,12 +25,14 @@ _Atomic volatile u32 helpers_search_depth;
 _Atomic volatile u32 helper_eval;
 
 _Atomic volatile u32 search_depth;
-_Atomic volatile u8  print_on_depth;
+_Atomic volatile u32 search_time;
+_Atomic volatile u64 start_time;
 
 
 pthread_mutex_t helper_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t helper_cond = PTHREAD_COND_INITIALIZER;
 int do_helper_search = FALSE;
+
 
 
 /*
@@ -36,20 +41,23 @@ int do_helper_search = FALSE;
 * Called from the IO Thread
 */
 void start_search(SearchParameters params){
-    is_searching = FALSE; // Set up new search
+    is_searching   = FALSE; // Set up new search
     print_on_depth = FALSE;
+
     search_depth = params.depth;
-    
+    search_time  = params.rec_time;
+    start_time   = millis();
+    can_shorten  = params.can_shorten;
+
     start_search_threads(); // Launch Threads
 
     if(params.max_time){ // If a time has been set setup the timer
         #ifdef DEBUG
         printf("info string Search max time is: %d\n", params.max_time);
         #endif
-        while(!is_searching); // Wait for search to begin in at least one thread
+        while(!is_searching);              // Wait for search to begin in at least one thread
         startTimerThread(params.max_time);
-    }
-    else if (params.depth != MAX_DEPTH){ // If we are in a depth based search we want to setup to print move 
+    } else if (params.depth != MAX_DEPTH){ // If we are in a depth based search we want to setup to print move 
         print_on_depth = TRUE;
     }
 }
@@ -136,14 +144,35 @@ i32 search_loop(u32 thread_num){
     is_searching = TRUE;
 
     while(run_get_best_move && cur_depth <= search_depth){
-        SearchStats stats;
-        
+        SearchStats stats; // Set up for iteratoin
         i32 avg_eval = (eval + prev_eval) / 2;
         prev_eval = eval;
+        TimePreference time_preference = NORMAL_TIME;
 
-        if(cur_depth > MIN_HELPER_DEPTH) resume_helpers(cur_depth, avg_eval);
+        if(cur_depth > MIN_HELPER_DEPTH) resume_helpers(cur_depth, avg_eval); // Run Search
         eval = search_tree(search_pos, cur_depth, pv_array, &km, avg_eval, &stats);
         update_global_pv(cur_depth, pv_array, eval, stats);
+
+        // Calculate whether to continue searching or print early
+        if(can_shorten){
+            printf("info string Can shorten search\n");
+            if( time_preference == HALT_TIME       ||
+                eval >= (CHECKMATE_VALUE-MAX_MOVES )){
+                stopTimerThread();
+                run_get_best_move = FALSE;
+                print_best_move = TRUE;
+            }
+            else if(time_preference == REDUCE_TIME){
+                search_time = se
+                
+            }
+            else if(time_preference == NORMAL_TIME){
+                if(millis() - start_time >= (u64)search_time)
+            }
+            
+        }  
+
+
         cur_depth++;
     }
     stop_helpers();
