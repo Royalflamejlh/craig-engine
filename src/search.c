@@ -52,9 +52,7 @@ void start_search(SearchParameters params){
     start_time   = millis();
     can_shorten  = params.can_shorten;
 
-    start_search_threads(); // Launch Threads
-
-    if(params.max_time){ // If a time has been set setup the timer
+    if(params.max_time){ // If a time has been set setup the timer (Under a second the timer will not have time to launch)
         #ifdef DEBUG
         printf("info string Search max time is: %d\n", params.max_time);
         #endif
@@ -62,15 +60,24 @@ void start_search(SearchParameters params){
     } else if (params.depth != MAX_DEPTH){ // If we are in a depth based search we want to setup to print move 
         print_on_depth = TRUE;
     }
+
+    start_search_threads(); // Launch Threads
 }
 
 /*
  * Called from the timer thread when the search times out
  */
 void search_timed_out(void){
-    while(best_move_found == FALSE);
-    stopSearchThreads();
-    print_best_move = TRUE;
+    if(best_move_found == FALSE){
+        search_time = 0;
+    }
+    else if(run_get_best_move){
+        stopSearchThreads();
+        print_best_move = TRUE;
+    }
+    else{
+        printf("info string Warning: Timer finished but no search is running or move is found!\n");
+    }
 }
 
 /*
@@ -194,16 +201,19 @@ i32 search_loop(u32 thread_num){
         }
         if(can_shorten && search_pos.stage == OPN_GAME){
             if(search_pos.fullmove_number <= 2)      search_time = 0;  // No time in the start TODO: make sure it matches the starting hash?
-            else if(search_pos.fullmove_number == 3) search_time = MIN(100, search_time);
-            else if(search_pos.fullmove_number == 4) search_time = MIN(200, search_time);
-            else search_time /= 4;
+            else if(search_pos.fullmove_number == 3) search_time = MIN(10, search_time);
+            else if(search_pos.fullmove_number == 4) search_time = MIN(100, search_time);
+            else search_time /= 8;
         }
-        if(can_shorten && ((u32)(millis() - start_time) >= (search_time) / 2) ){ // If over 50% of the time has elapsed we stop the search
-            stopTimerThread();
+
+        printf("info string checking time %d >= %d\n", (u32)(millis() - start_time), (search_time) / 2);
+        if(can_shorten && updated && ((u32)(millis() - start_time) >= (search_time) / 2) ){ // If over 50% of the time has elapsed we stop the search
             run_get_best_move = FALSE;
             print_best_move = TRUE;
+            stopTimerThread();
             break;
         }
+
         cur_depth++;
     }
     stop_helpers();

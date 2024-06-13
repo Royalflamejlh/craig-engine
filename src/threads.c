@@ -35,19 +35,20 @@ void quit_thread(){
 /*
  * Starts a timer that prints out the best move and stops the search on completion
  */
-void* timerThreadFunction(void* durationPtr) {
+void* timerThreadFunction(void* duration_ms_ptr) {
     #ifdef DEBUG
     printf("info string Running timer thread function\n");
     fflush(stdout);
     #endif
 
-    i64 duration = *(i64*)durationPtr;
-    free(durationPtr);
+    i64 duration_ms = *(i64*)duration_ms_ptr;
+    free(duration_ms_ptr);
 
     //Set up time to wait to
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
-    ts.tv_sec += duration;
+    ts.tv_sec  += duration_ms / 1000;
+    ts.tv_nsec += (duration_ms % 1000) * 1000000;
 
     u8 timed_out; // Whether or not to print after completion
 
@@ -82,7 +83,7 @@ void* timerThreadFunction(void* durationPtr) {
     return (void*)(i64)result;
 }
 
-i32 startTimerThread(i64 durationInSeconds) {
+i32 startTimerThread(i64 duration_ms) {
     i64 *durationPtr = malloc(sizeof(i64));
     #ifdef DEBUG
     printf("info string Starting timer thread\n");
@@ -93,7 +94,7 @@ i32 startTimerThread(i64 durationInSeconds) {
         printf("info string Warning failed to allocate space for duration pointer.\n");
         return -1;
     }
-    *durationPtr = (durationInSeconds / 1000);
+    *durationPtr = duration_ms;
     
     if (pthread_create(&timerThread, NULL, timerThreadFunction, durationPtr)) {
         perror("info string Failed to create timer thread\n");
@@ -228,7 +229,7 @@ DWORD WINAPI timerThreadFunction(LPVOID durationPtr) {
     return 0;
 }
 
-i32 startTimerThread(i64 durationInSeconds) {
+i32 startTimerThread(i64 duration_ms) {
     runTimerThread = 1;
     DWORD threadId;
     i64 *durationPtr = malloc(sizeof(i64));
@@ -236,7 +237,7 @@ i32 startTimerThread(i64 durationInSeconds) {
         printf("info string Warning failed to allocate space for duration pointer.\n");
         return -1;
     }
-    *durationPtr = durationInSeconds;
+    *durationPtr = duration_ms;
     timerThread = CreateThread(NULL, 0, timerThreadFunction, durationPtr, 0, &threadId);
     if (timerThread == NULL) {
         printf("info string Failed to create timer thread\n");
