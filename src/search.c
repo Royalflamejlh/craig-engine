@@ -35,7 +35,7 @@ pthread_cond_t helper_cond = PTHREAD_COND_INITIALIZER;
 int do_helper_search = FALSE;
 
 #define SEARCH_REDUCTION_LEVEL 0.75    // How much time is reduced when search finds move to reduce time on
-#define SEARCH_EXTENSION_LEVEL 1.50    // How much time is expanded when search finds move to extend time on
+#define SEARCH_EXTENSION_LEVEL 2.5     // How much time is expanded when search finds move to extend time on
 
 
 /*
@@ -170,6 +170,9 @@ i32 search_loop(u32 thread_num){
         found_move[cur_depth] = pv_array[0];
         u8 updated = update_global_pv(cur_depth, pv_array, found_eval[cur_depth], stats);
 
+        /*
+         * Below here is my god awful time calculation code :) 
+         */
         if(can_shorten && updated){ // Continue searching if we can't shorten or we didn't find a better move
             if( time_preference == HALT_TIME       ||   // If we should stop the search early
                 found_eval[cur_depth] >= (CHECKMATE_VALUE-MAX_MOVES)){
@@ -201,19 +204,15 @@ i32 search_loop(u32 thread_num){
         }
         if(can_shorten && search_pos.stage == OPN_GAME){
             if(search_pos.fullmove_number <= 1)      search_time = 0;  // No time in the start TODO: make sure it matches the starting hash?
-            else if(search_pos.fullmove_number == 2) search_time = MIN(10, search_time);
-            else if(search_pos.fullmove_number == 3) search_time = MIN(100, search_time);
-            else search_time -= (search_time/4);
+            else if(search_pos.fullmove_number <= 3) search_time = (search_time/5);
         }
 
-        printf("info string checking time %d >= %d\n", (u32)(millis() - start_time), (search_time) / 2);
         if(can_shorten && updated && ((u32)(millis() - start_time) >= (search_time) / 2) ){ // If over 50% of the time has elapsed we stop the search
             run_get_best_move = FALSE;
             print_best_move = TRUE;
             stopTimerThread();
             break;
         }
-
         cur_depth++;
     }
     stop_helpers();
