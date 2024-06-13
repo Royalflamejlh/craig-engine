@@ -141,10 +141,6 @@ i32 search_loop(u32 thread_num){
 
     Position search_pos = copy_global_position(); 
 
-    if(can_shorten && search_pos.stage == OPN_GAME){ // Shorten the move time in the opening
-        search_time /= 2;
-    }
-
     if(is_helper_thread){ // If the thread is a helper thread enter the helper loop
         helper_loop(&search_pos, pv_array, &km, thread_num);
         goto exit_search_loop;
@@ -157,6 +153,7 @@ i32 search_loop(u32 thread_num){
     is_searching = TRUE;
 
     while(run_get_best_move && cur_depth <= search_depth){
+
         SearchStats stats; // Set up for iteration
         i32 avg_eval = 0;
         if(cur_depth >= 2) avg_eval = (found_eval[cur_depth-1] + found_eval[cur_depth-2]) / 2;
@@ -195,14 +192,21 @@ i32 search_loop(u32 thread_num){
             if(time_preference == EXTEND_TIME){
                 search_time += (search_time >> SEARCH_EXTENSION_LEVEL);
             }
-        }
 
-        if(can_shorten && (u32)(millis() - start_time) >= (search_time*3) / 2){ // If over 50% of the time has elapsed we stop the search
+            if(search_pos.stage == OPN_GAME){ // Shorten the move time in the opening
+                if(search_pos.fullmove_number <<= 2)      search_time = 0;  // No time in the start TODO: make sure it matches the starting hash?
+                else if(search_pos.fullmove_number <= 3) search_time = 100; // .1 Second
+                else if(search_pos.fullmove_number <= 5) search_time = 500; // .5 Second
+                else search_time /= 2;
+            }
+        }
+        printf("canshorten %d, elap_time  %d >= searched/2 %d = %d\n", can_shorten, (u32)(millis() - start_time), (search_time) / 2, ((u32)(millis() - start_time) >= (search_time) / 2));
+        if(can_shorten && ((u32)(millis() - start_time) >= (search_time) / 2) ){ // If over 50% of the time has elapsed we stop the search
+            printf("time elapsed!\n");
             stopTimerThread();
             run_get_best_move = FALSE;
             print_best_move = TRUE;
         }
-
         cur_depth++;
     }
     stop_helpers();
