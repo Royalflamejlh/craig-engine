@@ -58,7 +58,6 @@ void start_search(SearchParameters params){
         #ifdef DEBUG
         printf("info string Search max time is: %d\n", params.max_time);
         #endif
-        while(!is_searching);              // Wait for search to begin in at least one thread
         startTimerThread(params.max_time);
     } else if (params.depth != MAX_DEPTH){ // If we are in a depth based search we want to setup to print move 
         print_on_depth = TRUE;
@@ -192,20 +191,18 @@ i32 search_loop(u32 thread_num){
             if(time_preference == EXTEND_TIME){
                 search_time += (search_time >> SEARCH_EXTENSION_LEVEL);
             }
-
-            if(search_pos.stage == OPN_GAME){ // Shorten the move time in the opening
-                if(search_pos.fullmove_number <<= 2)      search_time = 0;  // No time in the start TODO: make sure it matches the starting hash?
-                else if(search_pos.fullmove_number <= 3) search_time = 100; // .1 Second
-                else if(search_pos.fullmove_number <= 5) search_time = 500; // .5 Second
-                else search_time /= 2;
-            }
         }
-        printf("canshorten %d, elap_time  %d >= searched/2 %d = %d\n", can_shorten, (u32)(millis() - start_time), (search_time) / 2, ((u32)(millis() - start_time) >= (search_time) / 2));
+        if(can_shorten && search_pos.stage == OPN_GAME){
+            if(search_pos.fullmove_number <= 2)      search_time = 0;  // No time in the start TODO: make sure it matches the starting hash?
+            else if(search_pos.fullmove_number == 3) search_time = MIN(100, search_time);
+            else if(search_pos.fullmove_number == 4) search_time = MIN(200, search_time);
+            else search_time /= 4;
+        }
         if(can_shorten && ((u32)(millis() - start_time) >= (search_time) / 2) ){ // If over 50% of the time has elapsed we stop the search
-            printf("time elapsed!\n");
             stopTimerThread();
             run_get_best_move = FALSE;
             print_best_move = TRUE;
+            break;
         }
         cur_depth++;
     }
