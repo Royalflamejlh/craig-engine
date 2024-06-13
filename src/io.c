@@ -72,14 +72,15 @@ void processGoCommand(char* input) {
     u32 btime = 0;
     u32 binc = 0;
     u32 movetime = 0;
+    u32 movestogo = 0;
 
-    u32 time = 0;
-    u32 depth = MAX_DEPTH - 1;
+    SearchParameters params;
+    params.depth = MAX_DEPTH - 1;
 
     token = strtok_r(input, " ", &saveptr);
     while (token != NULL) {
         if (strcmp(token, "infinite") == 0) {
-            time = 0;
+            params.max_time = 0;
         } else if (strcmp(token, "wtime") == 0) {
             token = strtok_r(NULL, " ", &saveptr);
             if (token != NULL) {
@@ -105,21 +106,32 @@ void processGoCommand(char* input) {
             if (token != NULL) {
                 movetime = atol(token);
             }
-        } else if (strcmp(token, "depth") == 0) {
+        } else if (strcmp(token, "movestogo") == 0) {
             token = strtok_r(NULL, " ", &saveptr);
             if (token != NULL) {
-                depth = atol(token);
+                movestogo = atol(token);
+            }
+        }else if (strcmp(token, "depth") == 0) {
+            token = strtok_r(NULL, " ", &saveptr);
+            if (token != NULL) {
+                params.depth = atol(token);
             }
         }
         token = strtok_r(NULL, " ", &saveptr);
     }
 
-    if(movetime != 0) time = movetime;
+    if(movetime != 0){
+        params.max_time = movetime;
+        params.rec_time = movetime;
+        params.can_shorten = FALSE;
+    }
     else{ 
-        time = calculate_search_time(wtime, winc, btime, binc, get_global_position().flags & WHITE_TURN);
+        params.max_time = calculate_max_search_time(wtime, winc, btime, binc, movestogo, get_global_position().flags & WHITE_TURN);
+        params.rec_time = calculate_rec_search_time(wtime, winc, btime, binc, movestogo, get_global_position().flags & WHITE_TURN);
+        params.can_shorten = TRUE;
     }
     
-    startSearch(time, depth);
+    start_search(params);
 }
 
 static i32 processInput(char* input){
@@ -230,7 +242,7 @@ i32 outputLoop(){
             SearchData data = get_global_pv_data();
             printPVInfo(data);
             print_pv_info = FALSE;
-            free(data.PVArray);
+            free(data.pv_array);
         }
         if(print_best_move){
             Move move = get_global_best_move();

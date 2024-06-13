@@ -231,11 +231,11 @@ Move moveStrToType(Position pos, char* str){
     return NO_MOVE;
 }
 
-void printPV(Move *pvArray, i32 depth) {
+void printPV(Move *pv_array, i32 depth) {
     for (i32 i = 0; i < depth; i++) {
-        if(pvArray[i] != NO_MOVE){ 
+        if(pv_array[i] != NO_MOVE){ 
             if(i != 0) printf(" ");
-            printMoveShort(pvArray[i]);
+            printMoveShort(pv_array[i]);
         }
     }
 }
@@ -259,7 +259,7 @@ void printPVInfo(SearchData data){
     printf("nodes %lld ", (long long)data.stats.node_count);
     printf("nps %lld ", (long long)((double)data.stats.node_count / data.stats.elap_time));
     printf("pv ");
-    printPV(data.PVArray, data.depth);
+    printPV(data.pv_array, data.depth);
     printf("\n");
     fflush(stdout);
 }
@@ -272,9 +272,9 @@ Stage calculateStage(Position pos){
 }
 
 /*
- * Returns the maximum allowed search time
+ * Returns the recommended search time
  */
-u32 calculate_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u8 turn){
+u32 calculate_rec_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 moves_remain, u8 turn){
     u32 time = 0;
     u32 advantage = 0;
     if(wtime == 0 && winc == 0 && btime == 0 && binc == 0) return 0;
@@ -285,11 +285,27 @@ u32 calculate_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u8 turn){
         time = btime + binc;
         advantage = btime - wtime;
     }
-    if(time <= 1000) return 100;
-    if(time <= 100) return 10;
+    if(moves_remain) return (time / moves_remain);
     if(time <= 10) return 1;
+    if(time <= 100) return 20;
+    if(time <= 1000) return 200;
     if(advantage >  0) return ((time + advantage) / 15);
-    return (time / 20);
+    return (time / 15);
+}
+
+/*
+ * Returns the maximum search time
+ */
+u32 calculate_max_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 moves_remain, u8 turn){
+    u32 time = 0;
+    if(wtime == 0 && winc == 0 && btime == 0 && binc == 0) return 0;
+    if(turn){
+        time = wtime + winc;
+    } else{
+        time = btime + binc;
+    }
+    if(moves_remain) return (time / moves_remain);
+    return (time / 10) + 1;
 }
 
 /*
@@ -308,7 +324,7 @@ HashStack createHashStack(void){
 }
 
 
-i32 removeHashStack(HashStack *hashStack){
+i32 remove_hash_stack(HashStack *hashStack){
     if (hashStack && hashStack->ptr) {
         free(hashStack->ptr);
         hashStack->ptr = NULL;

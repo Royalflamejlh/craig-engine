@@ -33,14 +33,12 @@ typedef real64 d64;
 #define TRUE 1
 #define FALSE 0
 
-#define MAX_SEARCH_DEPTH 256 // Total max search depth (always)
-
 #if defined(__PROFILE)
 #define MAX_DEPTH 6
 #endif
 
 #ifndef MAX_DEPTH
-#define MAX_DEPTH MAX_SEARCH_DEPTH
+#define MAX_DEPTH 256
 #endif
 
 #define MAX_EVAL       9999999
@@ -267,7 +265,7 @@ typedef struct{
 #endif // Windows
 
 typedef struct{
-    Move* PVArray;
+    Move* pv_array;
     Move best_move;
     u32 depth;
     i32 eval;
@@ -279,5 +277,12 @@ typedef struct{
     Move table[MAX_DEPTH][KMV_CNT];
     u32 kmvIdx;
 } KillerMoves;
+
+typedef struct{
+    u32 max_time;
+    u32 rec_time;
+    u8  can_shorten;
+    u32 depth;
+} SearchParameters;
 
 #endif // TYPES_H

@@ -161,7 +161,7 @@ void *search_thread_entry(void *arg) {
     return NULL;
 }
 
-void startSearchThreads(){
+void start_search_threads(){
     #ifdef DEBUG
     printf("info string starting search threads\n");
     #endif
@@ -282,7 +282,7 @@ DWORD WINAPI search_thread_entry(LPVOID arg) {
     return 0;
 }
 
-void startSearchThreads(){
+void start_search_threads(){
     run_get_best_move = true;
     DWORD threadId;
     for (i32 i = 0; i < NUM_THREADS; i++) {

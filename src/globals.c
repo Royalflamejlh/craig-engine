@@ -48,7 +48,7 @@ void init_globals(){
     pthread_mutex_lock(&mutex_global_position);
     global_position = fenToPosition(START_FEN);
     pthread_mutex_lock(&mutex_global_PV);
-    global_sd.PVArray = calloc(MAX_DEPTH, sizeof(Move));
+    global_sd.pv_array = calloc(MAX_DEPTH, sizeof(Move));
     global_sd.depth = 0;
     global_sd.best_move = NO_MOVE;
     global_sd.eval = 0;
@@ -61,7 +61,7 @@ void init_globals(){
     EnterCriticalSection(&mutex_global_position);
     global_position = fenToPosition(START_FEN);
     EnterCriticalSection(&mutex_global_PV);
-    global_sd.PVArray = calloc(MAX_DEPTH, sizeof(Move));
+    global_sd.pv_array = calloc(MAX_DEPTH, sizeof(Move));
     global_sd.depth = 0;
     global_sd.best_move = NO_MOVE;
     global_sd.eval = 0;
@@ -77,22 +77,22 @@ void free_globals(){
 #if defined(__unix__) || defined(__APPLE__)
     pthread_mutex_lock(&mutex_global_position);
 
-    removeHashStack(&global_position.hashStack);
+    remove_hash_stack(&global_position.hashStack);
 
     pthread_mutex_lock(&mutex_global_PV);
-    free(global_sd.PVArray);
-    global_sd.PVArray = NULL;
+    free(global_sd.pv_array);
+    global_sd.pv_array = NULL;
 
     pthread_mutex_unlock(&mutex_global_PV);
     pthread_mutex_unlock(&mutex_global_position);
 #elif defined(_WIN32) || defined(_WIN64)
     EnterCriticalSection(&mutex_global_position);
 
-    removeHashStack(&global_position.hashStack);
+    remove_hash_stack(&global_position.hashStack);
 
     EnterCriticalSection(&mutex_global_PV);
-    free(global_sd.PVArray);
-    global_sd.PVArray = NULL;
+    free(global_sd.pv_array);
+    global_sd.pv_array = NULL;
 
     LeaveCriticalSection(&mutex_global_PV);
     LeaveCriticalSection(&mutex_global_position);
@@ -126,8 +126,8 @@ static void reset_global_pv_data(){
 /*
  * Checks and sees if the Global PV can be updated, and if it can it updates it
  */
-void update_global_pv(u32 depth, Move* pvArray, i32 eval, SearchStats stats){
-    if(pvArray == NULL || pvArray[0] == NO_MOVE) return;
+void update_global_pv(u32 depth, Move* pv_array, i32 eval, SearchStats stats){
+    if(pv_array == NULL || pv_array[0] == NO_MOVE) return;
 
 #if defined(__unix__) || defined(__APPLE__)
     pthread_mutex_lock(&mutex_global_PV); // Start Crit Section
@@ -140,8 +140,8 @@ void update_global_pv(u32 depth, Move* pvArray, i32 eval, SearchStats stats){
     global_sd.depth = depth;
     global_sd.eval = eval;
     global_sd.stats = stats;
-    global_sd.best_move = pvArray[0];
-    memcpy(global_sd.PVArray, pvArray, (MAX_DEPTH)*sizeof(Move));
+    global_sd.best_move = pv_array[0];
+    memcpy(global_sd.pv_array, pv_array, (MAX_DEPTH)*sizeof(Move));
 
     pthread_mutex_unlock(&mutex_global_PV);
 #elif defined(_WIN32) || defined(_WIN64)
@@ -155,8 +155,8 @@ void update_global_pv(u32 depth, Move* pvArray, i32 eval, SearchStats stats){
     global_sd.depth = depth;
     global_sd.eval = eval;
     global_sd.stats = stats;
-    global_sd.best_move = pvArray[0];
-    memcpy(global_sd.PVArray, pvArray, (MAX_DEPTH)*sizeof(Move));
+    global_sd.best_move = pv_array[0];
+    memcpy(global_sd.pv_array, pv_array, (MAX_DEPTH)*sizeof(Move));
 
     LeaveCriticalSection(&mutex_global_PV);
 #endif
@@ -170,13 +170,13 @@ void update_global_pv(u32 depth, Move* pvArray, i32 eval, SearchStats stats){
 void set_global_position(Position pos){
 #if defined(__unix__) || defined(__APPLE__)
     pthread_mutex_lock(&mutex_global_position);
-    if(pos.hashStack.ptr != global_position.hashStack.ptr) removeHashStack(&global_position.hashStack);
+    if(pos.hashStack.ptr != global_position.hashStack.ptr) remove_hash_stack(&global_position.hashStack);
     global_position = pos;
     reset_global_pv_data();
     pthread_mutex_unlock(&mutex_global_position);
 #elif defined(_WIN32) || defined(_WIN64)
     EnterCriticalSection(&mutex_global_position);
-    if(pos.hashStack.ptr != global_position.hashStack.ptr) removeHashStack(&global_position.hashStack);
+    if(pos.hashStack.ptr != global_position.hashStack.ptr) remove_hash_stack(&global_position.hashStack);
     global_position = pos;
     reset_global_pv_data();
     LeaveCriticalSection(&mutex_global_position);
@@ -256,8 +256,8 @@ SearchData get_global_pv_data(){
     data.eval = global_sd.eval;
     data.stats = global_sd.stats;
     data.best_move = global_sd.best_move;
-    data.PVArray = malloc(MAX_DEPTH*sizeof(Move));
-    memcpy(data.PVArray, global_sd.PVArray, (MAX_DEPTH)*sizeof(Move));
+    data.pv_array = malloc(MAX_DEPTH*sizeof(Move));
+    memcpy(data.pv_array, global_sd.pv_array, (MAX_DEPTH)*sizeof(Move));
 
 #if defined(__unix__) || defined(__APPLE__)
     pthread_mutex_unlock(&mutex_global_PV);

@@ -35,21 +35,21 @@ int do_helper_search = FALSE;
 * Passed the max time and the max depth for the search
 * Called from the IO Thread
 */
-void startSearch(u32 time, u32 depth){
+void start_search(SearchParameters params){
     is_searching = FALSE; // Set up new search
     print_on_depth = FALSE;
-    search_depth = depth;
+    search_depth = params.depth;
     
-    startSearchThreads(); // Launch Threads
+    start_search_threads(); // Launch Threads
 
-    if(time){ // If a time has been set setup the timer
+    if(params.max_time){ // If a time has been set setup the timer
         #ifdef DEBUG
-        printf("info string Search time is: %d\n", time);
+        printf("info string Search max time is: %d\n", params.max_time);
         #endif
         while(!is_searching); // Wait for search to begin in at least one thread
-        startTimerThread(time);
+        startTimerThread(params.max_time);
     }
-    else if (depth != MAX_DEPTH){ // If we are in a depth based search we want to setup to print move 
+    else if (params.depth != MAX_DEPTH){ // If we are in a depth based search we want to setup to print move 
         print_on_depth = TRUE;
     }
 }
@@ -97,13 +97,13 @@ static inline void helper_wait(){ // TODO: abstract away in threads.h or somethi
     pthread_mutex_unlock(&helper_lock);
 }
 
-static void helper_loop(Position* pos, Move* pvArray, KillerMoves* km, u32 thread_num){
+static void helper_loop(Position* pos, Move* pv_array, KillerMoves* km, u32 thread_num){
     SearchStats stats;
     helpers_run = TRUE;
     helper_wait();
     while(helpers_run && helpers_search_depth + (thread_num % 3) <= search_depth){
         //printf("Helper thread searching at depth %d\n", helpers_search_depth + (thread_num % 3));
-        helper_search_tree(*pos, helpers_search_depth + (thread_num % 3), pvArray, km, helper_eval, &stats, thread_num);
+        helper_search_tree(*pos, helpers_search_depth + (thread_num % 3), pv_array, km, helper_eval, &stats, thread_num);
         helper_wait();
     }
     return;
@@ -114,10 +114,10 @@ static void helper_loop(Position* pos, Move* pvArray, KillerMoves* km, u32 threa
  */
 i32 search_loop(u32 thread_num){
     #ifdef DEBUG
-    printf("\n\nthread number is %d\n\n", thread_num);
+    printf("thread number is %d\n", thread_num);
     #endif
     // Set up local thread info
-    Move pvArray[MAX_DEPTH] = {0};
+    Move pv_array[MAX_DEPTH] = {0};
     KillerMoves km = {0};
     i32 eval, prev_eval;
     eval = prev_eval = 0;
@@ -125,10 +125,10 @@ i32 search_loop(u32 thread_num){
     u32 cur_depth = (1 + (thread_num % NUM_MAIN_THREADS)) % search_depth;
     u8 is_helper_thread = (thread_num >= NUM_MAIN_THREADS);
 
-    Position searchPosition = copy_global_position(); // TODO: Copy global position hashtable to new hashtable
+    Position search_pos = copy_global_position(); // TODO: Copy global position hashtable to new hashtable
 
     if(is_helper_thread){ // If the thread is a helper thread enter the helper loop
-        helper_loop(&searchPosition, pvArray, &km, thread_num);
+        helper_loop(&search_pos, pv_array, &km, thread_num);
         goto exit_search_loop;
     }
 
@@ -142,8 +142,8 @@ i32 search_loop(u32 thread_num){
         prev_eval = eval;
 
         if(cur_depth > MIN_HELPER_DEPTH) resume_helpers(cur_depth, avg_eval);
-        eval = search_tree(searchPosition, cur_depth, pvArray, &km, avg_eval, &stats);
-        update_global_pv(cur_depth, pvArray, eval, stats);
+        eval = search_tree(search_pos, cur_depth, pv_array, &km, avg_eval, &stats);
+        update_global_pv(cur_depth, pv_array, eval, stats);
         cur_depth++;
     }
     stop_helpers();
@@ -157,7 +157,7 @@ i32 search_loop(u32 thread_num){
     #endif
 
 exit_search_loop:
-    removeHashStack(&searchPosition.hashStack);
+    remove_hash_stack(&search_pos.hashStack);
     is_searching = FALSE;
     quit_thread();
     return 0;
@@ -165,7 +165,7 @@ exit_search_loop:
 
 //exit thread function
 void exit_search(Position* pos){
-   removeHashStack(&pos->hashStack);
+   remove_hash_stack(&pos->hashStack);
    is_searching = FALSE;
    quit_thread();
 }

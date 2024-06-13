@@ -18,9 +18,10 @@ i32 python_close();
 
 Move moveStrToType(Position pos, char* str);
 Stage calculateStage(Position pos);
-u32 calculate_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u8 turn);
+u32 calculate_rec_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 moves_remain, u8 turn);
+u32 calculate_max_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 moves_remain, u8 turn);
 
-void printPV(Move *pvArray, i32 depth);
+void printPV(Move *pv_array, i32 depth);
 void printPVInfo(SearchData data);
 
 static inline i32 count_bits(u64 v){
@@ -88,7 +89,7 @@ static inline i32 isRepetition(Position* pos){
 */
 
 HashStack createHashStack(void);
-i32 removeHashStack(HashStack *hashStack);
+i32 remove_hash_stack(HashStack *hashStack);
 
 
 

@@ -11,7 +11,7 @@
 
 i32 startTimerThread(i64 durationInSeconds);
 void stopTimerThread();
-void startSearchThreads();
+void start_search_threads();
 void stopSearchThreads();
 void quit_thread();
 i32 launch_threads(void);

@@ -71,7 +71,7 @@ i32 testBB(void) {
             }
         }
 
-        removeHashStack(&pos.hashStack);
+        remove_hash_stack(&pos.hashStack);
     }
 
     fclose(file);
@@ -108,7 +108,7 @@ i32 testBB(void) {
                 }
             }
         }
-        removeHashStack(&pos.hashStack);
+        remove_hash_stack(&pos.hashStack);
     }
     printf("Check Complete.\n");
 
@@ -124,7 +124,7 @@ i32 testBB(void) {
         u64 num_moves = perft(depth, pos);
         printf("Perft output is %ld for depth %d\n", (long)num_moves, depth);
     }
-    removeHashStack(&pos.hashStack);
+    remove_hash_stack(&pos.hashStack);
 
     printf("\nComplete, running perft suite.\n");
 
@@ -143,7 +143,7 @@ i32 testBB(void) {
             //i64 num_moves = perft(depth, pos);
             //printf("D%d: %lld |", depth, (long long i32)num_moves);
         }
-        removeHashStack(&pos.hashStack);
+        remove_hash_stack(&pos.hashStack);
         //printf("\n\n");
     }
     printf("\nPerft Suite Complete\n");
@@ -175,7 +175,7 @@ i32 testBB(void) {
     }
     printf("\n--------------------------------------------------------------------------\n");
 
-    removeHashStack(&pos.hashStack);
+    remove_hash_stack(&pos.hashStack);
     
     pos = fenToPosition(START_FEN);
     Move best_move = getBestMove(pos);
@@ -190,7 +190,7 @@ i32 testBB(void) {
         best_move = getBestMove(pos);
     }
 
-    removeHashStack(&pos.hashStack);
+    remove_hash_stack(&pos.hashStack);
     #endif
 
     #ifdef HASH_TEST
@@ -221,7 +221,7 @@ i32 testBB(void) {
         printf("HashTable[%d] : %" PRIu64 "\n", i, pos.hashStack.ptr[i]);
     }
 
-    removeHashStack(&pos.hashStack);
+    remove_hash_stack(&pos.hashStack);
     #endif
 
     #ifdef PUZZLE_TEST
@@ -242,7 +242,7 @@ i32 testBB(void) {
         pos = fenToPosition(fen);
         getBestMove(pos, 5);
         Move best_move = global_best_move;
-        removeHashStack(&pos.hashStack);
+        remove_hash_stack(&pos.hashStack);
 
         printPosition(pos, FALSE);
         printf(fen);
