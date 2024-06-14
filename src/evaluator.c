@@ -37,50 +37,262 @@
 #define DOUBLE_BISHOP_BONUS   700  // Bonus for having both bishops
 #define DOUBLE_ROOK_PEN       100  // Penality for having both rooks
 
-#define PST_PAWN_MULT_OPN       7  // PST Mult Pawns in Eval
-#define PST_PAWN_MULT_MID       5  // PST Mult Pawns in Eval
-#define PST_PAWN_MULT_END       4  // PST Mult Pawns in Eval
-
-#define PST_KNIGHT_MULT_OPN    70  // PST Mult Knights in Eval
-#define PST_KNIGHT_MULT_MID    50  // PST Mult Knights in Eval
-#define PST_KNIGHT_MULT_END    25  // PST Mult Knights in Eval
-
-#define PST_BISHOP_MULT_OPN    70  // PST Mult Bishop in Eval
-#define PST_BISHOP_MULT_MID    50  // PST Mult Bishop in Eval
-#define PST_BISHOP_MULT_END    25  // PST Mult Bishop in Eval
-
-#define PST_QUEEN_MULT_OPN     10  // PST Mult Queen in Eval
-#define PST_QUEEN_MULT_MID     30  // PST Mult Queen in Eval
-#define PST_QUEEN_MULT_END     20  // PST Mult Queen in Eval
-
-#define PST_ROOK_MULT_OPN      10  // PST Mult Rook in Eval
-#define PST_ROOK_MULT_MID      40  // PST Mult Rook in Eval
-#define PST_ROOK_MULT_END      20  // PST Mult Rook in Eval
-
-#define PST_KING_MULT_OPN      20  // PST Mult King in Eval
-#define PST_KING_MULT_MID      40  // PST Mult King in Eval
-#define PST_KING_MULT_END      30  // PST Mult King in Eval
-
 // Defines for Movement Eval
 #define MOVE_CASTLE_BONUS  300  // Eval bonus for castling
 #define MOVE_OPN_QUEEN_PEN   5  // Pen for moving queen in the opening
 
+/* Material Values */
 
-static i32 PST[3][12][64];
+const int pawn_value   =   1000;
+const int knight_value =   3500;
+const int bishop_value =   3600;
+const int rook_value   =   5000;
+const int queen_value  =  10000;
+const int king_value   = 100000;
 
 static const i32 pieceValues[] = {
-    [WHITE_PAWN] = PAWN_VALUE,
-    [WHITE_KNIGHT] = KNIGHT_VALUE,
-    [WHITE_BISHOP] = BISHOP_VALUE,
-    [WHITE_ROOK] = ROOK_VALUE,
-    [WHITE_QUEEN] = QUEEN_VALUE,
-    [WHITE_KING] = KING_VALUE,
-    [BLACK_PAWN] = PAWN_VALUE,
-    [BLACK_KNIGHT] = KNIGHT_VALUE,
-    [BLACK_BISHOP] = BISHOP_VALUE,
-    [BLACK_ROOK] = ROOK_VALUE,
-    [BLACK_QUEEN] = QUEEN_VALUE,
-    [BLACK_KING] = KING_VALUE
+    [WHITE_PAWN  ] = pawn_value,
+    [BLACK_PAWN  ] = pawn_value,
+    [WHITE_KNIGHT] = knight_value,
+    [BLACK_KNIGHT] = knight_value,
+    [WHITE_BISHOP] = bishop_value,
+    [BLACK_BISHOP] = bishop_value,
+    [WHITE_ROOK  ] = rook_value,
+    [BLACK_ROOK  ] = rook_value,
+    [WHITE_QUEEN ] = queen_value,
+    [BLACK_QUEEN ] = queen_value,
+    [WHITE_KING  ] = king_value,
+    [BLACK_KING  ] = king_value
+};
+
+/* Piece-Square Tables */
+
+const i32 pst_pawn[3][64] = {
+    [OPN_GAME] =
+    {
+          0,   0,   0,   0,   0,   0,   0,   0,
+         10,   0,   0, -50, -50,   0,   0,  10,
+          0,  30,  30,  10,  10,  30,  30,   0,
+          0,   0,   0,  40,  40,   0,   0,   0,
+          0,   0,   0,  20,  20,   0,   0,   0,
+         10,  10,  10,  20,  20,  10,  10,  10,
+         30,  30,  30,  30,  30,  30,  30,  30,
+          0,   0,   0,   0,   0,   0,   0,   0
+    },
+    [MID_GAME] =
+    {
+          0,   0,   0,   0,   0,   0,   0,   0,
+         10,   0,   0, -10, -10,   0,   0,  10,
+         10,  20,  20,  10,  10,  20,  20,  10,
+          0,  10,  10,  30,  30,  10,  10,   0,
+          0,   0,   0,  30,  30,   0,   0,   0,
+         30,  30,  30,  40,  40,  30,  30,  30,
+         90,  90,  90,  90,  90,  90,  90,  90,
+          0,   0,   0,   0,   0,   0,   0,   0
+    },
+    [END_GAME] =
+    {
+          0,   0,   0,   0,   0,   0,   0,   0,
+        -10, -10, -10, -10, -10, -10, -10, -10,
+         -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,
+          0,   0,   0,   0,   0,   0,   0,   0,
+         30,  30,  30,  30,  30,  30,  30,  30,
+         70,  70,  70,  70,  70,  70,  70,  70,
+         90,  90,  90,  90,  90,  90,  90,  90,
+          0,   0,   0,   0,   0,   0,   0,   0
+    }
+};
+
+const i32 pst_knight[3][64] = {
+    [OPN_GAME] =
+    {
+        -50, -40, -30, -30, -30, -30, -40, -50,
+        -40, -20,   0,  20,  20,   0, -20, -40,
+        -30,   0,  30,  30,  30,  30,   0, -30,
+        -30,   0,  10,  20,  20,  10,   0, -30,
+        -30,   0,  10,  20,  20,  10,   0, -30,
+        -30,   0,  10,  10,  10,  10,   0, -30,
+        -40, -20,   0,   0,   0,   0, -20, -40,
+        -50, -40, -30, -30, -30, -30, -40, -50
+    },
+    [MID_GAME] = 
+    {
+        -50, -40, -30, -30, -30, -30, -40, -50,
+        -40, -20,   0,   0,   0,   0, -20, -40,
+        -30,   0,  10,  10,  10,  10,   0, -30,
+        -30,   0,  10,  20,  20,  10,   0, -30,
+        -30,   0,  10,  20,  20,  10,   0, -30,
+        -30,   0,  10,  10,  10,  10,   0, -30,
+        -40, -20,   0,   0,   0,   0, -20, -40,
+        -50, -40, -30, -30, -30, -30, -40, -50
+    },
+    [END_GAME] =
+    {
+        -50, -40, -30, -30, -30, -30, -40, -50,
+        -40, -20,   0,   0,   0,   0, -20, -40,
+        -30,   0,  10,  10,  10,  10,   0, -30,
+        -30,   0,  10,  20,  20,  10,   0, -30,
+        -30,   0,  10,  20,  20,  10,   0, -30,
+        -30,   0,  10,  10,  10,  10,   0, -30,
+        -40, -20,   0,   0,   0,   0, -20, -40,
+        -50, -40, -30, -30, -30, -30, -40, -50
+    }
+};
+
+const i32 pst_bishop[3][64] = {
+    [OPN_GAME] =
+    {
+         10, -10, -10, -10, -10, -10, -10,  10,
+        -10,  40,   0,   0,   0,   0,  40, -10,
+        -10,   0,  20,  40,  40,  20,   0, -10,
+        -10,   0,  10,  10,  10,  10,   0, -10,
+        -10,   0,  10,  10,  10,  10,   0, -10,
+        -10,   0,  10,  10,  10,  10,   0, -10,
+        -10,  10,   0,   0,   0,   0,  10, -10,
+         10, -10, -10, -10, -10, -10, -10,  10
+    },
+    [MID_GAME] = 
+    {
+         10, -10, -10, -10, -10, -10, -10,  10,
+        -10,  10,   0,   0,   0,   0,  10, -10,
+        -10,   0,  10,  20,  20,  10,   0, -10,
+        -10,   0,  10,  20,  20,  10,   0, -10,
+        -10,   0,  20,  20,  20,  20,   0, -10,
+        -10,  20,  20,  20,  20,  20,  20, -10,
+        -10,  10,   0,   0,   0,   0,  10, -10,
+         10, -10, -10, -10, -10, -10, -10,  10
+    },
+    [END_GAME] =
+    {
+         20, -10, -10, -10, -10, -10, -10,  20,
+        -10,  20,   0,   0,   0,   0,  20, -10,
+        -10,   0,  20,  10,  10,  20,   0, -10,
+        -10,   0,  10,  20,  20,  10,   0, -10,
+        -10,   0,  10,  20,  20,  10,   0, -10,
+        -10,   0,  20,  10,  10,  20,   0, -10,
+        -10,  20,   0,   0,   0,   0,  20, -10,
+         20, -10, -10, -10, -10, -10, -10,  20
+    }
+};
+
+const i32 pst_rook[3][64] = {
+    [OPN_GAME] =
+    {
+          0,   0,   0,  20,  20,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0,
+         10,  20,  20,  20,  20,  20,  20,  10,
+          0,   0,   0,   0,   0,   0,   0,   0
+    },
+    [MID_GAME] =
+    {
+          0,   0,   0,  10,  10,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0,
+         10,  20,  20,  20,  20,  20,  20,  10,
+          0,   0,   0,   0,   0,   0,   0,   0
+    },
+    [END_GAME] =
+    {
+          0,   0,   0,   0,   0,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0,
+          0,   0,   0,   0,   0,   0,   0,   0
+    },
+};
+
+const i32 pst_queen[3][64] = {
+    [OPN_GAME] =
+    {
+        -20, -10, -10, -10, -10, -10, -10, -20,
+        -10,   0,   0,   0,   0,   0,   0, -10,
+        -10,   0,  10,  10,  10,  10,   0, -10,
+        -10,   0,  10,  10,  10,  10,   0, -10,
+        -10,   0,   0,  10,  10,   0,   0, -10,
+        -10,   0,   0,   0,   0,   0,   0, -10,
+        -10,   0,   0,   0,   0,   0,   0, -10,
+        -20, -10, -10, -10, -10, -10, -10, -20
+    },
+    [MID_GAME] =
+    {
+        -20, -10, -10, -10, -10, -10, -10, -20,
+        -10,   0,   0,   0,   0,   0,   0, -10,
+        -10,   0,  10,  10,  10,  10,   0, -10,
+        -10,   0,  10,  20,  20,  10,   0, -10,
+        -10,   0,  10,  20,  20,  10,   0, -10,
+        -10,  10,  10,  10,  10,  10,  10, -10,
+        -10,   0,  10,   0,   0,  10,   0, -10,
+        -20, -10, -10, -10, -10, -10, -10, -20
+    },
+    [END_GAME] =
+    {
+        -20, -10, -10, -10, -10, -10, -10, -20,
+        -10,   0,   0,   0,   0,   0,   0, -10,
+        -10,   0,   0,   0,   0,   0,   0, -10,
+        -10,   0,   0,   0,   0,   0,   0, -10,
+        -10,   0,   0,   0,   0,   0,   0, -10,
+        -10,   0,   0,   0,   0,   0,   0, -10,
+        -10,   0,   0,   0,   0,   0,   0, -10,
+        -20, -10, -10, -10, -10, -10, -10, -20
+    }
+};
+
+i32 pst_king[3][64] = {
+    [OPN_GAME] =
+    {
+         40,  40, -10,   0,   0, -10,  40,  40,
+         20,  20, -10, -10, -10, -10,  20,  20,
+        -10, -20, -20, -20, -20, -20, -20, -10,
+        -20, -30, -30, -40, -40, -30, -30, -20,
+        -30, -40, -40, -50, -50, -40, -40, -30,
+        -30, -40, -40, -50, -50, -40, -40, -30,
+        -30, -40, -40, -50, -50, -40, -40, -30,
+        -30, -40, -50, -50, -50, -50, -40, -30
+    },
+    [MID_GAME] =
+    {
+         30,  40,  10,   0,   0,  10,  40,  30,
+         10,  10, -10, -10, -10, -10,  10,  10,
+        -10, -20, -20, -50, -50, -20, -20, -10,
+        -20, -50, -50, -90, -90, -50, -50, -20,
+        -30, -50, -50, -90, -90, -50, -50, -30,
+        -30, -40, -40, -50, -50, -40, -40, -30,
+        -30, -40, -40, -50, -50, -40, -40, -30,
+        -30, -40, -40, -50, -50, -40, -40, -30
+    },
+    [END_GAME] =
+    {
+        -50, -40, -30, -20, -20, -30, -40, -50,
+        -30, -20, -10,   0,   0, -10, -20, -30,
+        -30, -10,  20,  30,  30,  20, -10, -30,
+        -30, -10,  30,  40,  40,  30, -10, -30,
+        -30, -10,  30,  40,  40,  30, -10, -30,
+        -30, -10,  20,  30,  30,  20, -10, -30,
+        -30, -30,   0,   0,   0,   0, -30, -30,
+        -50, -30, -30, -30, -30, -30, -30, -50
+    }
+};
+
+i32 quickEval(Position pos){
+    i32 eval_val = 0;
+    Turn turn = pos.flags & TURN;
+    eval_val += king_value   * (count_bits(pos.king[turn])   - count_bits(pos.king[!turn]));
+    eval_val += queen_value  * (count_bits(pos.queen[turn])  - count_bits(pos.queen[!turn]));
+    eval_val += rook_value   * (count_bits(pos.rook[turn])   - count_bits(pos.rook[!turn]));
+    eval_val += bishop_value * (count_bits(pos.bishop[turn]) - count_bits(pos.bishop[!turn]));
+    eval_val += knight_value * (count_bits(pos.knight[turn]) - count_bits(pos.knight[!turn]));
+    eval_val += pawn_value   * (count_bits(pos.pawn[turn])   - count_bits(pos.pawn[!turn]));
+    return eval_val;
 };
 
 u64 getLeastValuablePiece(Position pos, u64 attadef, u8 turn, PieceIndex* piece){
@@ -123,8 +335,20 @@ u64 getLeastValuablePiece(Position pos, u64 attadef, u8 turn, PieceIndex* piece)
    return 0; // empty set
 }
 
+static inline i32 quickEval(Position pos){
+    i32 eval_val = 0;
+    Turn turn = pos.flags & WHITE_TURN;
+    eval_val += KING_VALUE   * (count_bits(pos.king[turn])   - count_bits(pos.king[!turn]));
+    eval_val += QUEEN_VALUE  * (count_bits(pos.queen[turn])  - count_bits(pos.queen[!turn]));
+    eval_val += ROOK_VALUE   * (count_bits(pos.rook[turn])   - count_bits(pos.rook[!turn]));
+    eval_val += BISHOP_VALUE * (count_bits(pos.bishop[turn]) - count_bits(pos.bishop[!turn]));
+    eval_val += KNIGHT_VALUE * (count_bits(pos.knight[turn]) - count_bits(pos.knight[!turn]));
+    eval_val += PAWN_VALUE   * (count_bits(pos.pawn[turn])   - count_bits(pos.pawn[!turn]));
+    return eval_val;
+};
 
-// Here be the static exchange evaluator
+/* Static Exchange Evaluator */
+
 i32 see ( Position pos, u32 toSq, PieceIndex target, u32 frSq, PieceIndex aPiece){
     i32 gain[32], d = 0;
     i32 turn = pos.flags & WHITE_TURN;
@@ -136,7 +360,6 @@ i32 see ( Position pos, u32 toSq, PieceIndex target, u32 frSq, PieceIndex aPiece
     while (fromSet) {
         d++; // next depth and side
         gain[d]  = pieceValues[aPiece] - gain[d-1]; // Speculative store
-        //if (-gain[d-1] < 0 && gain[d] < 0) break; // Pruning
         attadef ^= fromSet; // reset bit in set to traverse
         removed |= fromSet; // Update bitboard storing removed pieces
         if ( fromSet & mayXray ){ // If the piece was possibly xrayed through
@@ -456,283 +679,6 @@ i32 evaluate(Position pos){
     return eval_val;
 }
 
-
-/*
-*  Below here is the move evaluating code
-*/
-
-void initPST(){
-
-
-    // Pawns
-    i32 PST_PAWN_OPN[64] = {
-         0,   0,   0,   0,   0,   0,   0,   0,
-        10,   0,   0, -50, -50,   0,   0,  10,
-         0,  30,  30,  10,  10,  30,  30,   0,
-         0,   0,   0,  40,  40,   0,   0,   0,
-         0,   0,   0,   2,   2,   0,   0,   0,
-         1,   1,   2,   3,   3,   2,   1,   1,
-         5,   5,   5,   5,   5,   5,   5,   5,
-         0,   0,   0,   0,   0,   0,   0,   0
-    };
-
-    i32 PST_PAWN_MID[64] = {
-         0,   0,   0,   0,   0,   0,   0,   0,
-         0,   0,   0, -10, -10,   0,   0,   0,
-        10,  20,  20,  10,  10,  20,  20,  10,
-         0,  10,  10,  30,  30,  10,  10,   0,
-         0,   0,   0,  30,  30,   0,   0,   0,
-        10,  10,  20,  40,  40,  20,  10,  10,
-        50,  50,  50,  50,  50,  50,  50,  50,
-         0,   0,   0,   0,   0,   0,   0,   0
-    };
-
-    i32 PST_PAWN_END[64] = {
-         0,   0,   0,   0,   0,   0,   0,   0,
-       -10, -10, -10, -10, -10, -10, -10, -10,
-        -5,  -5,  -5,  -5,  -5,  -5,  -5,  -5,
-         0,   0,   0,   0,   0,   0,   0,   0,
-        30,  30,  30,  30,  30,  30,  30,  30,
-        70,  70,  70,  70,  70,  70,  70,  70,
-        90,  90,  90,  90,  90,  90,  90,  90,
-         0,   0,   0,   0,   0,   0,   0,   0
-    };
-
-
-    // Knights
-    i32 PST_KNIGHT_OPN[64] = {
-        -5, -4, -3, -3, -3, -3, -4, -5,
-        -4, -2,  0,  2,  2,  0, -2, -4,
-        -3,  0,  3,  3,  3,  3,  0, -3,
-        -3,  0,  1,  2,  2,  1,  0, -3,
-        -3,  0,  1,  2,  2,  1,  0, -3,
-        -3,  0,  1,  1,  1,  1,  0, -3,
-        -4, -2,  0,  0,  0,  0, -2, -4,
-        -5, -4, -3, -3, -3, -3, -4, -5
-    };
-
-    i32 PST_KNIGHT_MID[64] = {
-        -5, -4, -3, -3, -3, -3, -4, -5,
-        -4, -2,  0,  0,  0,  0, -2, -4,
-        -3,  0,  1,  1,  1,  1,  0, -3,
-        -3,  0,  1,  2,  2,  1,  0, -3,
-        -3,  0,  1,  2,  2,  1,  0, -3,
-        -3,  0,  1,  1,  1,  1,  0, -3,
-        -4, -2,  0,  0,  0,  0, -2, -4,
-        -5, -4, -3, -3, -3, -3, -4, -5
-    };
-
-    i32 PST_KNIGHT_END[64] = {
-        -5, -4, -3, -3, -3, -3, -4, -5,
-        -4, -2,  0,  0,  0,  0, -2, -4,
-        -3,  0,  1,  1,  1,  1,  0, -3,
-        -3,  0,  1,  2,  2,  1,  0, -3,
-        -3,  0,  1,  2,  2,  1,  0, -3,
-        -3,  0,  1,  1,  1,  1,  0, -3,
-        -4, -2,  0,  0,  0,  0, -2, -4,
-        -5, -4, -3, -3, -3, -3, -4, -5
-    };
-
-    // Bishops
-    i32 PST_BISHOP_OPN[64] = {
-         1, -1, -1, -1, -1, -1, -1,  1,
-        -1,  4,  0,  0,  0,  0,  4, -1,
-        -1,  0,  2,  4,  4,  2,  0, -1,
-        -1,  0,  1,  1,  1,  1,  0, -1,
-        -1,  0,  1,  1,  1,  1,  0, -1,
-        -1,  0,  1,  1,  1,  1,  0, -1,
-        -1,  1,  0,  0,  0,  0,  1, -1,
-         1, -1, -1, -1, -1, -1, -1,  1
-    };
-
-    i32 PST_BISHOP_MID[64] = {
-         1, -1, -1, -1, -1, -1, -1,  1,
-        -1,  1,  0,  0,  0,  0,  1, -1,
-        -1,  0,  1,  2,  2,  1,  0, -1,
-        -1,  0,  1,  2,  2,  1,  0, -1,
-        -1,  0,  2,  2,  2,  2,  0, -1,
-        -1,  2,  2,  2,  2,  2,  2, -1,
-        -1,  1,  0,  0,  0,  0,  1, -1,
-         1, -1, -1, -1, -1, -1, -1,  1
-    };
-
-    i32 PST_BISHOP_END[64] = {
-         2, -1, -1, -1, -1, -1, -1,  2,
-        -1,  2,  0,  0,  0,  0,  2, -1,
-        -1,  0,  2,  1,  1,  2,  0, -1,
-        -1,  0,  1,  2,  2,  1,  0, -1,
-        -1,  0,  1,  2,  2,  1,  0, -1,
-        -1,  0,  2,  1,  1,  2,  0, -1,
-        -1,  2,  0,  0,  0,  0,  2, -1,
-         2, -1, -1, -1, -1, -1, -1,  2
-    };
-
-
-    // Rooks
-    i32 PST_ROOK_OPN[64] = {
-        0,  0,  0,  2,  2,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,
-        1,  2,  2,  2,  2,  2,  2,  1,
-        0,  0,  0,  0,  0,  0,  0,  0
-    };
-
-    i32 PST_ROOK_MID[64] = {
-        0,  0,  0,  1,  1,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,
-        1,  2,  2,  2,  2,  2,  2,  1,
-        0,  0,  0,  0,  0,  0,  0,  0
-    };
-
-    i32 PST_ROOK_END[64] = {
-        0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0
-    };
-
-
-    //Queens
-    i32 PST_QUEEN_OPN[64] = {
-        -2, -1, -1, -1, -1, -1, -1, -2,
-        -1,  0,  0,  0,  0,  0,  0, -1,
-        -1,  0,  1,  1,  1,  1,  0, -1,
-        -1,  0,  1,  1,  1,  1,  0, -1,
-        -1,  0,  0,  1,  1,  0,  0, -1,
-        -1,  0,  0,  0,  0,  0,  0, -1,
-        -1,  0,  0,  0,  0,  0,  0, -1,
-        -2, -1, -1, -1, -1, -1, -1, -2
-    };
-
-    i32 PST_QUEEN_MID[64] = {
-        -2, -1, -1, -1, -1, -1, -1, -2,
-        -1,  0,  0,  0,  0,  0,  0, -1,
-        -1,  0,  1,  1,  1,  1,  0, -1,
-        -1,  0,  1,  2,  2,  1,  0, -1,
-        -1,  0,  1,  2,  2,  1,  0, -1,
-        -1,  1,  1,  1,  1,  1,  1, -1,
-        -1,  0,  1,  0,  0,  1,  0, -1,
-        -2, -1, -1, -1, -1, -1, -1, -2
-    };
-
-    i32 PST_QUEEN_END[64] = {
-        -2, -1, -1, -1, -1, -1, -1, -2,
-        -1,  0,  0,  0,  0,  0,  0, -1,
-        -1,  0,  0,  0,  0,  0,  0, -1,
-        -1,  0,  0,  0,  0,  0,  0, -1,
-        -1,  0,  0,  0,  0,  0,  0, -1,
-        -1,  0,  0,  0,  0,  0,  0, -1,
-        -1,  0,  0,  0,  0,  0,  0, -1,
-        -2, -1, -1, -1, -1, -1, -1, -2
-    };
-
-
-    //King
-    i32 PST_KING_OPN[64] = {
-         4,  4, -1,  0,  0, -1,  4,  4,
-         2,  2,  0,  0,  0,  0,  2,  2,
-        -1, -2, -2, -2, -2, -2, -2, -1,
-        -2, -3, -3, -4, -4, -3, -3, -2,
-        -3, -4, -4, -5, -5, -4, -4, -3,
-        -3, -4, -4, -5, -5, -4, -4, -3,
-        -3, -4, -4, -5, -5, -4, -4, -3,
-        -3, -4, -5, -5, -5, -5, -4, -3
-    };
-
-    i32 PST_KING_MID[64] = {
-        3,   4,  2,  0,  0,  2,  4,  3,
-        1,   1,  0,  0,  0,  0,  1,  1,
-        -1, -2, -2, -2, -2, -2, -2, -1,
-        -2, -3, -3, -4, -4, -3, -3, -2,
-        -3, -4, -4, -5, -5, -4, -4, -3,
-        -3, -4, -4, -5, -5, -4, -4, -3,
-        -3, -4, -4, -5, -5, -4, -4, -3,
-        -3, -4, -4, -5, -5, -4, -4, -3
-    };
-
-    i32 PST_KING_END[64] = {
-        -5, -4, -3, -2, -2, -3, -4, -5,
-        -3, -2, -1,  0,  0, -1, -2, -3,
-        -3, -1,  2,  3,  3,  2, -1, -3,
-        -3, -1,  3,  4,  4,  3, -1, -3,
-        -3, -1,  3,  4,  4,  3, -1, -3,
-        -3, -1,  2,  3,  3,  2, -1, -3,
-        -3, -3,  0,  0,  0,  0, -3, -3,
-        -5, -3, -3, -3, -3, -3, -3, -5
-    };
-
-
-    // Initialize PST for white pieces
-    for (i32 i = 0; i < 64; i++) {
-        // Pawns
-        PST[OPN_GAME][WHITE_PAWN][i] = PST_PAWN_OPN[i] * PST_PAWN_MULT_OPN;
-        PST[MID_GAME][WHITE_PAWN][i] = PST_PAWN_MID[i] * PST_PAWN_MULT_MID;
-        PST[END_GAME][WHITE_PAWN][i] = PST_PAWN_END[i] * PST_PAWN_MULT_END;
-
-        PST[OPN_GAME][BLACK_PAWN][63 - i] = PST_PAWN_OPN[i] * PST_PAWN_MULT_OPN;
-        PST[MID_GAME][BLACK_PAWN][63 - i] = PST_PAWN_MID[i] * PST_PAWN_MULT_MID;
-        PST[END_GAME][BLACK_PAWN][63 - i] = PST_PAWN_END[i] * PST_PAWN_MULT_END;
-
-        // Knights
-        PST[OPN_GAME][WHITE_KNIGHT][i] = PST_KNIGHT_OPN[i] * PST_KNIGHT_MULT_OPN;
-        PST[MID_GAME][WHITE_KNIGHT][i] = PST_KNIGHT_MID[i] * PST_KNIGHT_MULT_MID;
-        PST[END_GAME][WHITE_KNIGHT][i] = PST_KNIGHT_END[i] * PST_KNIGHT_MULT_END;
-
-        PST[OPN_GAME][BLACK_KNIGHT][63 - i] = PST_KNIGHT_OPN[i] * PST_KNIGHT_MULT_OPN;
-        PST[MID_GAME][BLACK_KNIGHT][63 - i] = PST_KNIGHT_MID[i] * PST_KNIGHT_MULT_MID;
-        PST[END_GAME][BLACK_KNIGHT][63 - i] = PST_KNIGHT_END[i] * PST_KNIGHT_MULT_END;
-
-        // Bishops
-        PST[OPN_GAME][WHITE_BISHOP][i] = PST_BISHOP_OPN[i] * PST_BISHOP_MULT_OPN;
-        PST[MID_GAME][WHITE_BISHOP][i] = PST_BISHOP_MID[i] * PST_BISHOP_MULT_MID;
-        PST[END_GAME][WHITE_BISHOP][i] = PST_BISHOP_END[i] * PST_BISHOP_MULT_END;
-
-        PST[OPN_GAME][BLACK_BISHOP][63 - i] = PST_BISHOP_OPN[i] * PST_BISHOP_MULT_OPN;
-        PST[MID_GAME][BLACK_BISHOP][63 - i] = PST_BISHOP_MID[i] * PST_BISHOP_MULT_MID;
-        PST[END_GAME][BLACK_BISHOP][63 - i] = PST_BISHOP_END[i] * PST_BISHOP_MULT_END;
-
-        // Rooks
-        PST[OPN_GAME][WHITE_ROOK][i] = PST_ROOK_OPN[i] * PST_ROOK_MULT_OPN;
-        PST[MID_GAME][WHITE_ROOK][i] = PST_ROOK_MID[i] * PST_ROOK_MULT_MID;
-        PST[END_GAME][WHITE_ROOK][i] = PST_ROOK_END[i] * PST_ROOK_MULT_END;
-
-        PST[OPN_GAME][BLACK_ROOK][63 - i] = PST_ROOK_OPN[i] * PST_ROOK_MULT_OPN;
-        PST[MID_GAME][BLACK_ROOK][63 - i] = PST_ROOK_MID[i] * PST_ROOK_MULT_MID;
-        PST[END_GAME][BLACK_ROOK][63 - i] = PST_ROOK_END[i] * PST_ROOK_MULT_END;
-
-        // Queens
-        PST[OPN_GAME][WHITE_QUEEN][i] = PST_QUEEN_OPN[i] * PST_QUEEN_MULT_OPN;
-        PST[MID_GAME][WHITE_QUEEN][i] = PST_QUEEN_MID[i] * PST_QUEEN_MULT_MID;
-        PST[END_GAME][WHITE_QUEEN][i] = PST_QUEEN_END[i] * PST_QUEEN_MULT_END;
-
-        PST[OPN_GAME][BLACK_QUEEN][63 - i] = PST_QUEEN_OPN[i] * PST_QUEEN_MULT_OPN;
-        PST[MID_GAME][BLACK_QUEEN][63 - i] = PST_QUEEN_MID[i] * PST_QUEEN_MULT_MID;
-        PST[END_GAME][BLACK_QUEEN][63 - i] = PST_QUEEN_END[i] * PST_QUEEN_MULT_END;
-
-        // King
-        PST[OPN_GAME][WHITE_KING][i] = PST_KING_OPN[i] * PST_KING_MULT_OPN;
-        PST[MID_GAME][WHITE_KING][i] = PST_KING_MID[i] * PST_KING_MULT_MID;
-        PST[END_GAME][WHITE_KING][i] = PST_KING_END[i] * PST_KING_MULT_END;
-
-        PST[OPN_GAME][BLACK_KING][63 - i] = PST_KING_OPN[i] * PST_KING_MULT_OPN;
-        PST[MID_GAME][BLACK_KING][63 - i] = PST_KING_MID[i] * PST_KING_MULT_MID;
-        PST[END_GAME][BLACK_KING][63 - i] = PST_KING_END[i] * PST_KING_MULT_END;
-
-    }
-
-}
-
 //Move iterating logic
 //First find TTMove, test, and remove from movelist
 //Then find killerMoves, test, and remove from movelist
@@ -747,14 +693,13 @@ i32 evalMove(Move move, Position* pos){
 
     i32 eval = 0;
 
+    // Get the piece information from the move and the position.
     Square fr_sq = GET_FROM(move);
     Square to_sq = GET_TO(move);
-    i32 fr_piece = (i32)pos->charBoard[fr_sq];
-    i32 to_piece = (i32)pos->charBoard[to_sq];
-    i32 fr_piece_i = pieceToIndex[fr_piece];
-    i32 to_piece_i = pieceToIndex[to_piece];
-
-    if(pos->stage == OPN_GAME && (fr_piece == WHITE_QUEEN || fr_piece == BLACK_QUEEN)) eval -= MOVE_OPN_QUEEN_PEN;
+    char fr_piece = pos->charBoard[fr_sq];
+    char to_piece = pos->charBoard[to_sq];
+    i32 fr_piece_i = pieceToIndex[(int)fr_piece];
+    i32 to_piece_i = pieceToIndex[(int)to_piece];
 
     #ifdef DEBUG
     if(fr_piece_i >= 12 || to_piece_i >= 12){
@@ -799,16 +744,16 @@ i32 evalMove(Move move, Position* pos){
             break;
 
         case QUEEN_PROMOTION:
-            eval += (QUEEN_VALUE - PAWN_VALUE);    
+            eval += (queen_value - pawn_value);    
             break;
         case ROOK_PROMOTION:
-            eval += (ROOK_VALUE - PAWN_VALUE);    
+            eval += (ROOK_VALUE - pawn_value);    
             break;
         case BISHOP_PROMOTION:
-            eval += (BISHOP_VALUE - PAWN_VALUE);    
+            eval += (BISHOP_VALUE - pawn_value);    
             break;
         case KNIGHT_PROMOTION:
-            eval += (KNIGHT_VALUE - PAWN_VALUE);    
+            eval += (KNIGHT_VALUE - pawn_value);    
             break;
             
         case QUEEN_CASTLE:
@@ -816,10 +761,6 @@ i32 evalMove(Move move, Position* pos){
             eval += MOVE_CASTLE_BONUS;
             break;
 
-        case DOUBLE_PAWN_PUSH:
-        case QUIET:
-            //histScore = getHistoryScore(pos.flags, moveList[i]) >> HIST_SCORE_SHIFT;
-            //moveVals[i] += MIN(histScore, HIST_MAX_SCORE);
         default:
             break;
     }

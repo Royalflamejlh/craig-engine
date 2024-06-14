@@ -150,14 +150,19 @@ static inline Move MAKE_MOVE(i32 from, i32 to, i32 flags) {
     SET_FLAGS(move, flags);
     return move;
 }
-
+// Masks for Position Flags
 #define IN_D_CHECK     0x40
 #define IN_CHECK       0x20
 #define W_SHORT_CASTLE 0x10
 #define W_LONG_CASTLE  0x08
 #define B_SHORT_CASTLE 0x04 
 #define B_LONG_CASTLE  0x02 
-#define WHITE_TURN     0x01 //0 / False for black    1 / True for white
+#define TURN           0x01 
+
+typedef enum{
+    BLACK_TURN,
+    WHITE_TURN
+} Turn;
 
 typedef enum {
     WHITE_PAWN, WHITE_KNIGHT, WHITE_BISHOP, WHITE_ROOK, WHITE_QUEEN, WHITE_KING,

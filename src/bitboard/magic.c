@@ -2,9 +2,7 @@
 #include "../util.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <inttypes.h>
 #include <time.h>
-#include <string.h>
 
 
 //static u64 find_magic(i32 sq, i32 m, i32 bishop);
@@ -18,11 +16,6 @@ static i32 verifyMagic(i32 square, i32 isBishop);
 static i32 initAttackTable(void);
 static void calculateAttackTableOffsets();
 static i32 transform(u64 b, u64 magic, i32 bits);
-
-#ifdef DEBUG_MAGIC
-static u64 DEBUG_MAGIC_bishopAttacks(u64 occ, i32 sq);
-static u64 DEBUG_MAGIC_rookAttacks(u64 occ, i32 sq);
-#endif
 
 static u64 attack_table[108000];
 static i32 attack_table_offsets[128];
@@ -202,78 +195,46 @@ i32 BBits[64] = {
 };
 
 i32 generateMagics(void) {
-    #ifdef __RAND_SEED
-    srand(__RAND_SEED);
-    #else
-    time_t t;
-    srand((unsigned) time(&t));
-    #endif
+  #ifdef __RAND_SEED
+  srand(__RAND_SEED);
+  #else
+  time_t t;
+  srand((unsigned) time(&t));
+  #endif
 
-    printf("info string Generating Magics!\n");
-    calculateAttackTableOffsets();
-    i32 square;
-    for(square = 0; square < 64; square++){
-        //u64 magic = find_magic(square, RBits[square], 0);
-        mRookTbl[square].magic = rook_magics[square];
-        mRookTbl[square].mask  = rmask(square);
-        mRookTbl[square].shift = 64 - RBits[square];
-        mRookTbl[square].ptr = &attack_table[attack_table_offsets[square]];
-        //printf("0x%llxULL,\n", magic);
-        
-        #ifdef DEBUG_MAGIC
-        printf("Rook Square %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, AttackTableIdx = %d, Ptr = %p\n",
-            square,
-            mRookTbl[square].magic,
-            mRookTbl[square].mask,
-            mRookTbl[square].shift,
-            attack_table_offsets[square],
-            (void*)mRookTbl[square].ptr);
-        #endif
-    }
+  calculateAttackTableOffsets();
 
-    printf("info string Finished generating rook magics, generating bishop magics.\n");
-    for(square = 0; square < 64; square++){
-        //u64 magic = find_magic(square, BBits[square], 1);
-        mBishopTbl[square].magic = bishop_magics[square];
-        mBishopTbl[square].mask  = bmask(square);
-        mBishopTbl[square].shift = 64 - BBits[square];
-        mBishopTbl[square].ptr   = &attack_table[attack_table_offsets[square + 64]];
-        //printf("0x%llxULL,\n", magic);
+  for(int square = 0; square < 64; square++){
+      mRookTbl[square].magic = rook_magics[square];
+      mRookTbl[square].mask  = rmask(square);
+      mRookTbl[square].shift = 64 - RBits[square];
+      mRookTbl[square].ptr = &attack_table[attack_table_offsets[square]];
+  }
 
-        #ifdef DEBUG_MAGIC
-        printf("Bishop Square %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, AttackTableIdx = %d, Ptr = %p\n",
-            square,
-            mBishopTbl[square].magic,
-            mBishopTbl[square].mask,
-            mBishopTbl[square].shift,
-            attack_table_offsets[square + 64],
-            (void*)mBishopTbl[square].ptr);
-        #endif
-    }
+  for(int square = 0; square < 64; square++){
+      mBishopTbl[square].magic = bishop_magics[square];
+      mBishopTbl[square].mask  = bmask(square);
+      mBishopTbl[square].shift = 64 - BBits[square];
+      mBishopTbl[square].ptr   = &attack_table[attack_table_offsets[square + 64]];
+  }
 
-    
-    initAttackTable();
+  initAttackTable();
 
+  for (int square = 0; square < 64; ++square) {
+      if (verifyMagic(square, 0)) {
+          printf("info string Verification failed for rook magic at square %d\n", square);
+          return -1;
+      }
+  }
 
-    for (square = 0; square < 64; ++square) {
-        if (verifyMagic(square, 0)) {
-            printf("info string Verification failed for rook magic at square %d\n", square);
-            return -1;
-        }
-    }
+  for (int square = 0; square < 64; ++square) {
+      if (verifyMagic(square, 1)) {
+          printf("info string Verification failed for bishop magic at square %d\n", square);
+          return -1;
+      }
+  }
 
-    printf("info string All rook magics verified successfully\n");
-
-    for (square = 0; square < 64; ++square) {
-        if (verifyMagic(square, 1)) {
-            printf("info string Verification failed for bishop magic at square %d\n", square);
-            return -1;
-        }
-    }
-
-    printf("info string All bishop magics verified successfully\n");
-
-    return 0;
+  return 0;
 }
 
 static i32 verifyMagic(i32 square, i32 isBishop) {
@@ -299,7 +260,6 @@ static i32 verifyMagic(i32 square, i32 isBishop) {
 
     return 0;
 }
-
 
 static i32 initAttackTable() {
     printf("info string Initializing the attack table!\n");
@@ -363,63 +323,12 @@ u64 rookAttacks(u64 occ, i32 sq) {
    return aptr[occ];
 }
 
-#ifdef DEBUG_MAGIC
-static u64 DEBUG_MAGIC_bishopAttacks(u64 occ, i32 sq) {
-    u64* aptr = mBishopTbl[sq].ptr;
-    u64 original_occ = occ;
-    occ &= mBishopTbl[sq].mask;
-    u64 masked_occ = occ;
-    occ *= mBishopTbl[sq].magic;
-    u64 multiplied_occ = occ;
-    occ >>= mBishopTbl[sq].shift;
-    u64 index = occ;
-
-    printf("Bishop DEBUG_MAGIC: %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, Ptr = %p, Original Occupancy: 0x%" PRIx64 ", Masked Occupancy: 0x%" PRIx64 ", Multiplied Occupancy: 0x%" PRIx64 ", Index: 0x%" PRIx64 "\n",
-            sq,
-            mBishopTbl[sq].magic,
-            mBishopTbl[sq].mask,
-            mBishopTbl[sq].shift,
-            (void*)mBishopTbl[sq].ptr,
-            original_occ,
-            masked_occ,
-            multiplied_occ,
-            index);
-    return aptr[index];
-}
-
-static u64 DEBUG_MAGIC_rookAttacks(u64 occ, i32 sq) {
-    u64* aptr = mRookTbl[sq].ptr;
-    u64 original_occ = occ;
-    occ &= mRookTbl[sq].mask;
-    u64 masked_occ = occ;
-    occ *= mRookTbl[sq].magic;
-    u64 multiplied_occ = occ;
-    occ >>= mRookTbl[sq].shift;
-    u64 index = occ;
-
-    printf("Rook DEBUG_MAGIC: %d: Magic = 0x%" PRIx64 ", Mask = 0x%" PRIx64 ", Shift = %d, Ptr = %p, Original Occupancy: 0x%" PRIx64 ", Masked Occupancy: 0x%" PRIx64 ", Multiplied Occupancy: 0x%" PRIx64 ", Index: 0x%" PRIx64 "\n",
-            sq,
-            mRookTbl[sq].magic,
-            mRookTbl[sq].mask,
-            mRookTbl[sq].shift,
-            (void*)mRookTbl[sq].ptr,
-            original_occ,
-            masked_occ,
-            multiplied_occ,
-            index);
-    return aptr[index];
-}
-#endif
-
 u64 random_uint64_fewbits() {
   return random_uint64() & random_uint64() & random_uint64();
 }
 
 static i32 count_1s(u64 b) {
   return __builtin_popcountll(b);
-  // i32 r;
-  // for(r = 0; b; r++, b &= b - 1);
-  // return r;
 }
 
 i32 pop_1st_bit(u64 *bb) {
@@ -502,7 +411,6 @@ static u64 batt(i32 sq, u64 block) {
   }
   return result;
 }
-
 
 static i32 transform(u64 b, u64 magic, i32 bits) {
   return (i32)((b * magic) >> (64 - bits));
