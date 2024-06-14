@@ -10,13 +10,8 @@
 #include "transposition.h"
 #include "globals.h"
 #include "tables.h"
-
-#if defined(__unix__) || defined(__APPLE__)
-#include "pthread.h"
+#include <pthread.h>
 #include <time.h>
-#elif defined(_WIN32) || defined(_WIN64)
-#include <windows.h>
-#endif
 
 #define ID_STEP 1 //Changing this may break Aspiration windows (it will)
 
@@ -49,8 +44,6 @@ typedef enum searchs{
    SEARCH_TYPE_COUNT
 } SearchType;
 
-// UNIX Functions
-#if defined(__unix__) || defined(__APPLE__) // UNIX
 
 void startStats(SearchStats* stats){
    clock_gettime(CLOCK_MONOTONIC, &stats->start_time);
@@ -64,31 +57,13 @@ void stopStats(SearchStats* stats){
                      (stats->end_time.tv_nsec - stats->start_time.tv_nsec) / 1e9;
 }
 
-#elif defined(_WIN32) || defined(_WIN64)
-
-void startStats(SearchStats* stats){
-   LARGE_INTEGER freq;
-   QueryPerformanceFrequency(&freq);
-   stats->freq_inv = 1.0 / freq.QuadPart;
-   QueryPerformanceCounter(&stats->start_time);
-   stats->node_count = 0;
-   stats->elap_time = 0;
-}
-
-void stopStats(SearchStats* stats){
-   QueryPerformanceCounter(&stats->end_time);
-   stats->elap_time = (stats->end_time.QuadPart - stats->start_time.QuadPart) * stats->freq_inv;
-}
-#endif // Windows
-
 #ifdef DEBUG
 #include <math.h>
 #include <assert.h>
-#if defined(__unix__) || defined(__APPLE__)
-#define DEBUG_TIME
 #include <time.h>
+
+#define DEBUG_TIME
 static struct timespec start_time, end_time;
-#endif
 
 static double calculateEBF();
 
@@ -305,13 +280,13 @@ static inline u32 helper_select_sort(u32 i, u32 evalIdx, Position* pos, Move *mo
  */
 static inline void pvFill(Position pos, Move* pv_array, u8 depth){
    u8 ply = 0;
-   TTEntry* ttEntry = getTTEntry(pos.hash);
-   while(ttEntry && ttEntry->depth > 0 && ply < depth){
-      pv_array[ply] = ttEntry->move;
+   TTEntryData ttEntry = getTTEntry(pos.hash);
+   while(ttEntry.data && ttEntry.fields.depth > 0 && ply < depth){
+      pv_array[ply] = ttEntry.fields.move;
       #ifdef DEBUG
-      if(ttEntry->move == NO_MOVE) printf("NO MOVE FOUND IN PV");
+      if(ttEntry.fields.move == NO_MOVE) printf("NO MOVE FOUND IN PV");
       #endif
-      makeMove(&pos, ttEntry->move);
+      makeMove(&pos, ttEntry.fields.move);
       ply++;
       ttEntry = getTTEntry(pos.hash);
    }
@@ -535,23 +510,23 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
    }
 
    //Test the TT table
-   TTEntry* ttEntry = getTTEntry(pos->hash);
+   TTEntryData ttEntry = getTTEntry(pos->hash);
    Move ttMove = NO_MOVE;
-   if (ttEntry) {
+   if (ttEntry.data) {
       #ifdef DEBUG
       debug[PVS][NODE_TT_HIT]++;
       #endif
-      ttMove = ttEntry->move;
-      if(ttEntry->depth >= depth){
-         switch (ttEntry->nodeType) {
+      ttMove = ttEntry.fields.move;
+      if(ttEntry.fields.depth >= depth){
+         switch (ttEntry.fields.node_type) {
             case PV_NODE: // Exact value
                #ifdef DEBUG
                debug[PVS][NODE_TT_PVS_RET]++;
                #endif
-               pv_array[ply] = ttEntry->move;
-               return ttEntry->eval;
+               pv_array[ply] = ttEntry.fields.move;
+               return ttEntry.fields.eval;
             case CUT_NODE: // Lower bound
-               if (ttEntry->eval >= beta){
+               if (ttEntry.fields.eval >= beta){
                   #ifdef DEBUG
                   debug[PVS][NODE_TT_BETA_RET]++;
                   #endif
@@ -559,7 +534,7 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
                }
                break;
             case ALL_NODE: // Upper bound
-               if (ttEntry->eval < alpha){
+               if (ttEntry.fields.eval < alpha){
                   #ifdef DEBUG
                   debug[PVS][NODE_TT_ALPHA_RET]++;
                   #endif
@@ -699,25 +674,25 @@ i32 helper_pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move
    }
 
    //Test the TT table
-   TTEntry* ttEntry = getTTEntry(pos->hash);
+   TTEntryData ttEntry = getTTEntry(pos->hash);
    Move ttMove = NO_MOVE;
-   if (ttEntry) {
+   if (ttEntry.data) {
       #ifdef DEBUG
       debug[PVS][NODE_TT_HIT]++;
       #endif
-      ttMove = ttEntry->move;
-      if(ttEntry->depth >= depth){
-         switch (ttEntry->nodeType) {
+      ttMove = ttEntry.fields.move;
+      if(ttEntry.fields.depth >= depth){
+         switch (ttEntry.fields.node_type) {
             case PV_NODE: // Exact value
-               pv_array[ply] = ttEntry->move;
-               return ttEntry->eval;
+               pv_array[ply] = ttEntry.fields.move;
+               return ttEntry.fields.eval;
             case CUT_NODE: // Lower bound
-               if (ttEntry->eval >= beta){
+               if (ttEntry.fields.eval >= beta){
                   return beta;
                }
                break;
             case ALL_NODE: // Upper bound
-               if (ttEntry->eval < alpha){
+               if (ttEntry.fields.eval < alpha){
                   return alpha;
                }
                break;
@@ -805,23 +780,23 @@ i32 zw_search( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, Searc
       else return 0;
    }
 
-   TTEntry* ttEntry = getTTEntry(pos->hash);
+   TTEntryData ttEntry = getTTEntry(pos->hash);
    Move ttMove = NO_MOVE;
-   if (ttEntry) {
+   if (ttEntry.data) {
       #ifdef DEBUG
       debug[ZWS][NODE_TT_HIT]++;
       #endif
-      ttMove = ttEntry->move;
-      if(ttEntry->depth >= depth){
-         switch (ttEntry->nodeType) {
+      ttMove = ttEntry.fields.move;
+      if(ttEntry.fields.depth >= depth){
+         switch (ttEntry.fields.node_type) {
             case PV_NODE: // Exact value
                #ifdef DEBUG
                debug[ZWS][NODE_TT_PVS_RET]++;
                #endif
-               return ttEntry->eval;
+               return ttEntry.fields.eval;
                break;
             case CUT_NODE: // Lower bound
-               if (ttEntry->eval >= beta){
+               if (ttEntry.fields.eval >= beta){
                   #ifdef DEBUG
                   debug[ZWS][NODE_TT_BETA_RET]++;
                   #endif
@@ -829,7 +804,7 @@ i32 zw_search( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, Searc
                }
                break;
             case ALL_NODE:
-               if (ttEntry->eval < beta-1){
+               if (ttEntry.fields.eval < beta-1){
                   #ifdef DEBUG
                   debug[ZWS][NODE_TT_ALPHA_RET]++;
                   #endif

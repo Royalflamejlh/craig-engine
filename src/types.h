@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <inttypes.h>
+#include <time.h>
 
 typedef uint8_t   u8;
 typedef uint16_t u16;
@@ -245,24 +246,14 @@ typedef enum {
 } Square;
 
 
-#if defined(__unix__) || defined(__APPLE__) // UNIX
-#include <time.h>
+
+
 typedef struct{
     struct timespec start_time;
     struct timespec end_time;
     double elap_time;
     u64 node_count;
 } SearchStats;
-#elif defined(_WIN32) || defined(_WIN64)
-#include <windows.h>
-typedef struct{
-    LARGE_INTEGER start_time;
-    LARGE_INTEGER end_time;
-    double elap_time;
-    u64 node_count;
-    double freq_inv;
-} SearchStats;
-#endif // Windows
 
 typedef struct{
     Move* pv_array;

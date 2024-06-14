@@ -215,8 +215,9 @@ i32 search_loop(u32 thread_num){
             }
         }
         if(can_shorten && search_pos.stage == OPN_GAME){
-            if(search_pos.fullmove_number <= 1)      search_time = 0;  // No time in the start TODO: make sure it matches the starting hash?
-            else if(search_pos.fullmove_number <= 3) search_time = (search_time/5);
+            if(search_pos.fullmove_number == 1)      search_time = 0;  // No time in the start TODO: make sure it matches the starting hash?
+            else if(search_pos.fullmove_number == 2) search_time = (search_time/2);
+            else if(search_pos.fullmove_number == 3) search_time = ((search_time*3)/4);
         }
         if(can_shorten && search_pos.stage == END_GAME && found_eval[cur_depth] >= 5){
             time_preference = EXTEND_TIME;

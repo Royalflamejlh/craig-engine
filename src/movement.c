@@ -332,17 +332,17 @@ i32 makeMove(Position *pos, Move move){
         u64 prevprevHash = pos->hashStack.ptr[(pos->hashStack.current_idx-2)%HASHSTACK_SIZE];
 
         printf("Prev Move: ");
-        TTEntry *prev = getTTEntry(prevHash);
-        if(prev){
-            printMove(prev->move);
+        TTEntryData prev = getTTEntry(prevHash);
+        if(prev.data){
+            printMove(prev.fields.move);
         }
         else{
             printf("n/a");
         }
         printf(" Prev-prev move: ");
         prev = getTTEntry(prevprevHash);
-        if(prev){
-            printMove(prev->move);
+        if(prev.data){
+            printMove(prev.fields.move);
         }
         else{
             printf("n/a");
