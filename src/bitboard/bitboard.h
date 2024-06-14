@@ -36,18 +36,18 @@ u64 getKingThreatMovesAppend(u64 kings, u64 ownPieces, u64 oppPieces, u64 oppAtt
 
 void getCastleMovesAppend(u64 white, u64 b_attack_mask, char flags, Move* moveList, i32* idx);
 
-void getCheckMovesAppend(Position position, Move* moveList, i32* idx);
+void getCheckMovesAppend(Position* position, Move* moveList, i32* idx);
 
-void getPinnedMovesAppend(Position position, Move* moveList, i32* idx);
-void getPinnedThreatMovesAppend(Position position, u64 r_check_squares, u64 b_check_squares, i32 kingSq, Move* moveList, i32* idx);
+void getPinnedMovesAppend(Position* position, Move* moveList, i32* idx);
+void getPinnedThreatMovesAppend(Position* position, u64 r_check_squares, u64 b_check_squares, i32 kingSq, Move* moveList, i32* idx);
 
-u64 getAttackers(Position pos, i32 square, i32 attackerColor);
-u64 getXRayAttackers(Position pos, i32 square, i32 attackerColor, u64 removed);
+u64 getAttackers(Position* pos, i32 square, i32 attackerColor);
+u64 getXRayAttackers(Position* pos, i32 square, i32 attackerColor, u64 removed);
 
-u64 generateAttacks(Position position, i32 turn);
+u64 generateAttacks(Position* position, i32 turn);
 
-static inline void setAttackMasks(Position *pos){
-    pos->attack_mask[1] = generateAttacks(*pos, 1);
-    pos->attack_mask[0] = generateAttacks(*pos, 0);
+static inline void setAttackMasks(Position* pos){
+    pos->attack_mask[1] = generateAttacks(pos, 1);
+    pos->attack_mask[0] = generateAttacks(pos, 0);
 }
 #endif /* bitboard_h */

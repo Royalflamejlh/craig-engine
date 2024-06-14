@@ -7,79 +7,69 @@
 #include "util.h"
 #include "hash.h"
 
-
-#ifdef DEBUG
-#include "transposition.h"
-#endif
-
-/*
-* Wow Cool! Totaly sensical move generation!
-*/
-u16 generateLegalMoves(Position position,  Move* moveList){
+u16 generateLegalMoves(Position* position,  Move* moveList){
     i32 size[] = {0};
-    i32 turn = position.flags & WHITE_TURN; //True for white false for black
-    u64 ownPos = position.color[turn];
-    u64 oppPos = position.color[!turn];
-    u64 oppAttackMask = position.attack_mask[!turn];
+    i32 turn = position->flags & WHITE_TURN; //True for white false for black
+    u64 ownPos = position->color[turn];
+    u64 oppPos = position->color[!turn];
+    u64 oppAttackMask = position->attack_mask[!turn];
 
-    if(position.flags & IN_CHECK){
-        if(position.flags & IN_D_CHECK){
-            getKingMovesAppend(position.king[turn], ownPos, oppPos, oppAttackMask, moveList, size);
+    if(position->flags & IN_CHECK){
+        if(position->flags & IN_D_CHECK){
+            getKingMovesAppend(position->king[turn], ownPos, oppPos, oppAttackMask, moveList, size);
         }
         else{
             getCheckMovesAppend(position, moveList, size);
         }
     }
-    else if(position.pinned & ownPos){
+    else if(position->pinned & ownPos){
         getPinnedMovesAppend(position, moveList, size);
     }
     else{
-        getCastleMovesAppend(ownPos | oppPos, oppAttackMask, position.flags, moveList, size);
+        getCastleMovesAppend(ownPos | oppPos, oppAttackMask, position->flags, moveList, size);
 
-        getBishopMovesAppend(position.queen[turn],  ownPos, oppPos, moveList, size);
-        getRookMovesAppend(  position.queen[turn],  ownPos, oppPos, moveList, size);
-        getRookMovesAppend(  position.rook[turn],   ownPos, oppPos, moveList, size);
-        getBishopMovesAppend(position.bishop[turn], ownPos, oppPos, moveList, size);
-        getKnightMovesAppend(position.knight[turn], ownPos, oppPos, moveList, size);
-        getKingMovesAppend(  position.king[turn],   ownPos, oppPos, oppAttackMask, moveList, size);
-        getPawnMovesAppend(  position.pawn[turn],   ownPos, oppPos, position.en_passant, position.flags, moveList, size);
+        getBishopMovesAppend(position->queen[turn],  ownPos, oppPos, moveList, size);
+        getRookMovesAppend(  position->queen[turn],  ownPos, oppPos, moveList, size);
+        getRookMovesAppend(  position->rook[turn],   ownPos, oppPos, moveList, size);
+        getBishopMovesAppend(position->bishop[turn], ownPos, oppPos, moveList, size);
+        getKnightMovesAppend(position->knight[turn], ownPos, oppPos, moveList, size);
+        getKingMovesAppend(  position->king[turn],   ownPos, oppPos, oppAttackMask, moveList, size);
+        getPawnMovesAppend(  position->pawn[turn],   ownPos, oppPos, position->en_passant, position->flags, moveList, size);
     }
     return *size;
 }
 
-/*
-* Generate Moves that capture pieces, and put the opponents king in check
-*/
-u16 generateThreatMoves(Position position,  Move* moveList){
+/* Generate Moves that capture pieces, and put the opponents king in check */
+u16 generateThreatMoves(Position* position,  Move* moveList){
     i32 size[] = {0};
-    i32 turn = position.flags & WHITE_TURN; //True for white false for black
-    u64 ownPos = position.color[turn];
-    u64 oppPos = position.color[!turn];
-    u64 oppAttackMask = position.attack_mask[!turn];
+    i32 turn = position->flags & TURN;
+    u64 ownPos = position->color[turn];
+    u64 oppPos = position->color[!turn];
+    u64 oppAttackMask = position->attack_mask[!turn];
 
-    i32 kingSq = __builtin_ctzll(position.king[!turn]);
+    i32 kingSq = __builtin_ctzll(position->king[!turn]);
     u64 r_check_squares = rookAttacks(  ownPos | oppPos, kingSq) & ~(ownPos | oppPos);
     u64 b_check_squares = bishopAttacks(ownPos | oppPos, kingSq) & ~(ownPos | oppPos);
 
-    if(position.flags & IN_CHECK){
-        if(position.flags & IN_D_CHECK){
-            getKingMovesAppend(position.king[turn], ownPos, oppPos, oppAttackMask, moveList, size);
+    if(position->flags & IN_CHECK){
+        if(position->flags & IN_D_CHECK){
+            getKingMovesAppend(position->king[turn], ownPos, oppPos, oppAttackMask, moveList, size);
         }
         else{
             getCheckMovesAppend(position, moveList, size);
         }
     }
-    else if(position.pinned & ownPos){
+    else if(position->pinned & ownPos){
         getPinnedThreatMovesAppend(position, r_check_squares, b_check_squares, kingSq, moveList, size);
     }
     else{
-        getBishopThreatMovesAppend(position.queen[turn],  ownPos, oppPos, b_check_squares, moveList, size);
-        getRookThreatMovesAppend(  position.queen[turn],  ownPos, oppPos, r_check_squares, moveList, size);
-        getRookThreatMovesAppend(  position.rook[turn],   ownPos, oppPos, r_check_squares, moveList, size);
-        getBishopThreatMovesAppend(position.bishop[turn], ownPos, oppPos, b_check_squares, moveList, size);
-        getKnightThreatMovesAppend(position.knight[turn], ownPos, oppPos, kingSq, moveList, size);
-        getKingThreatMovesAppend(  position.king[turn],   ownPos, oppPos, oppAttackMask, moveList, size);
-        getPawnThreatMovesAppend(  position.pawn[turn],   ownPos, oppPos, position.en_passant, position.flags, kingSq, moveList, size);
+        getBishopThreatMovesAppend(position->queen[turn],  ownPos, oppPos, b_check_squares, moveList, size);
+        getRookThreatMovesAppend(  position->queen[turn],  ownPos, oppPos, r_check_squares, moveList, size);
+        getRookThreatMovesAppend(  position->rook[turn],   ownPos, oppPos, r_check_squares, moveList, size);
+        getBishopThreatMovesAppend(position->bishop[turn], ownPos, oppPos, b_check_squares, moveList, size);
+        getKnightThreatMovesAppend(position->knight[turn], ownPos, oppPos, kingSq, moveList, size);
+        getKingThreatMovesAppend(  position->king[turn],   ownPos, oppPos, oppAttackMask, moveList, size);
+        getPawnThreatMovesAppend(  position->pawn[turn],   ownPos, oppPos, position->en_passant, position->flags, kingSq, moveList, size);
     }
     return *size;
 }
@@ -120,11 +110,7 @@ static void movePiece(Position *pos, i32 turn, i32 from, i32 to){
     pos->color[turn] = setBit(pos->color[turn], to);
 }
 
-
-
-/*
-* Used to remove the captured piece
-*/
+/* Used to remove the captured piece */
 static void removeCaptured(Position *pos, i32 square){
     i32 turn = pos->flags & WHITE_TURN;
     switch(toupper(pos->charBoard[square])){
@@ -170,6 +156,7 @@ i32 makeMove(Position *pos, Move move){
     pos->halfmove_clock++;
     pos->en_passant = 0ULL;
 
+    // Handle move flags
     switch(GET_FLAGS(move)){
         case QUEEN_PROMO_CAPTURE:
             removeCaptured(pos, to);
@@ -222,11 +209,11 @@ i32 makeMove(Position *pos, Move move){
             break;
 
         case QUEEN_PROMOTION:
-            pos->color[turn] = clearBit(pos->color[turn], from); //Update Color BB
+            pos->color[turn] = clearBit(pos->color[turn], from);
             pos->color[turn] = setBit(pos->color[turn], to);
-            pos->queen[turn] = setBit(pos->queen[turn], to);  //Update Queen BB
-            pos->pawn[turn] = clearBit(pos->pawn[turn], from);  //Update Pawn BB
-            pos->charBoard[from] = 0;  //Update Charboard
+            pos->queen[turn] = setBit(pos->queen[turn], to);
+            pos->pawn[turn] = clearBit(pos->pawn[turn], from);
+            pos->charBoard[from] = 0;
             pos->charBoard[to] = turn ? 'Q' : 'q';
             pos->halfmove_clock = 0;
             break;
@@ -271,7 +258,7 @@ i32 makeMove(Position *pos, Move move){
 
         case DOUBLE_PAWN_PUSH:
             pos->en_passant = 1ULL << (turn ? to - 8 : to + 8);
-            // fall through
+            // Fall through
         case QUIET:
         default:
             movePiece(pos, turn, from, to);
@@ -298,7 +285,7 @@ i32 makeMove(Position *pos, Move move){
     //Double Check Flag
     if(pos->flags & IN_CHECK){
        i32 king_sq = __builtin_ctzll(pos->king[!turn]);
-       u64 attackers = getAttackers(*pos, king_sq, turn);
+       u64 attackers = getAttackers(pos, king_sq, turn);
        attackers &= attackers - 1;
        if(attackers) pos->flags |= IN_D_CHECK;
     }
@@ -306,11 +293,11 @@ i32 makeMove(Position *pos, Move move){
 
     pos->flags ^= WHITE_TURN;
 
-    pos->pinned = generatePinnedPieces(*pos);
+    pos->pinned = generatePinnedPieces(pos);
 
     pos->stage = calculateStage(*pos);
 
-    pos->quick_eval = quick_eval(*pos);
+    pos->material_eval = eval_material(pos);
 
     pos->hash = hashPosition(*pos);
 
@@ -321,38 +308,15 @@ i32 makeMove(Position *pos, Move move){
 
 
     #ifdef DEBUG
-    
     if(count_bits(pos->king[0]) != 1 || count_bits(pos->king[1]) != 1){
-        printf("ILLEGAL POSITION WITH TWO KINGS\n");
+        printf("Illegal Position found without correct number of kings.\n");
         printPosition(*pos, TRUE);
+
         printf("From move: ");
         printMove(move);
         printf(".\r\n");
-        u64 prevHash = pos->hashStack.ptr[(pos->hashStack.current_idx-1)%HASHSTACK_SIZE];
-        u64 prevprevHash = pos->hashStack.ptr[(pos->hashStack.current_idx-2)%HASHSTACK_SIZE];
-
-        printf("Prev Move: ");
-        TTEntryData prev = getTTEntry(prevHash);
-        if(prev.data){
-            printMove(prev.fields.move);
-        }
-        else{
-            printf("n/a");
-        }
-        printf(" Prev-prev move: ");
-        prev = getTTEntry(prevprevHash);
-        if(prev.data){
-            printMove(prev.fields.move);
-        }
-        else{
-            printf("n/a");
-        }
-        printf("\r\n");
-        
         fflush(stdout);
-        while(TRUE){};
     }
-
     #endif
 
     return 0;
@@ -360,17 +324,16 @@ i32 makeMove(Position *pos, Move move){
 
 i32 makeNullMove(Position *pos){
 
-    i32 turn = pos->flags & WHITE_TURN;
-
     pos->halfmove_clock++;
-    if(!turn) pos->fullmove_number++;
+    if(!(pos->flags & TURN)) pos->fullmove_number++;
 
-    i32 regen_pinned = pos->en_passant != 0; // If there was an en passant square we have to regen pinned pieces
-    pos->en_passant = 0ULL;
+    pos->flags ^= TURN;
 
-    pos->flags ^= WHITE_TURN;
-
-    if(regen_pinned) pos->pinned = generatePinnedPieces(*pos);
+    // If there was an en passant square we have to regen pinned pieces
+    if(pos->en_passant){
+        pos->en_passant = 0ULL;
+        pos->pinned = generatePinnedPieces(pos);
+    }
 
     pos->hash = hashPosition(*pos);
 
@@ -378,37 +341,44 @@ i32 makeNullMove(Position *pos){
 }
 
 void unmakeMove(Position *position, Move move){
-    char from_piece = position->charBoard[GET_FROM(move)];
-    switch(from_piece){
-    }
+    // Suppress errors until I implement this ;P
+    (void)*position;
+    (void)move;
 }
 
-
-static u64 generatePinnedPiecesColor(Position pos, i32 turn){
-    i32 k_square = __builtin_ctzll(pos.king[turn]);
-    //Lets do white first!
+static u64 generatePinnedPiecesColor(Position* pos, i32 turn){
     u64 pos_pinners;
-    u64 all_pieces = pos.color[0] | pos.color[1];  //Contains all the initial pieces
-    u64 pinned = pos.color[turn];  //The peices belonging to white which become pinnged
-    u64 d_attack_mask, h_attack_mask, attack_mask = 0ULL;  // A attack masks
-    u64 pin_directions = 0ULL;
+    i32 k_square = __builtin_ctzll(pos->king[turn]);
 
+    //Contains all the initial pieces
+    u64 all_pieces = pos->color[0] | pos->color[1];  
+
+    // The peices belonging to white which become pinned
+    u64 pinned = pos->color[turn];  
+
+    // A attack masks
+    u64 d_attack_mask, h_attack_mask, attack_mask = 0ULL;
+
+    u64 pin_directions = 0ULL;
     u64 ep_pawn_square = 0ULL;
-    //Make sure ep_pawn_square is the same row as the k_square
-    //if white turn => king must be row 5
-    //if black turn => king must be row 4
-    if((pos.en_passant != 0) && (k_square / 8 == (turn ? 4 : 3))){ //If can capture en-passant
-        ep_pawn_square = turn ? southOne(pos.en_passant) : northOne(pos.en_passant);
+
+    // Make sure ep_pawn_square is the same row as the k_square
+    // if white turn => king must be row 5
+    // if black turn => king must be row 4
+    if((pos->en_passant != 0) && (k_square / 8 == (turn ? 4 : 3))){ //If can capture en-passant
+        ep_pawn_square = turn ? southOne(pos->en_passant) : northOne(pos->en_passant);
     }
     
-    attack_mask |= rookAttacks(all_pieces & ~ep_pawn_square, k_square);  //Get a bb of squares being attacked by the king
+    // Get a bb of squares being attacked by the king
+    attack_mask |= rookAttacks(all_pieces & ~ep_pawn_square, k_square);  
     attack_mask |= bishopAttacks(all_pieces, k_square);
 
-    pinned &= attack_mask; // The pinned white pieces now contains the ones with a ray to the king
+    // The pinned white pieces now contains the ones with a ray to the king
+    pinned &= attack_mask; 
 
-    //Now get all pieces under attack as if king is queen again and these are the possible pinners
+    // Now get all pieces under attack as if king is queen again and these are the possible pinners
     h_attack_mask = rookAttacks(all_pieces & ~pinned & ~ep_pawn_square, k_square);
-    pos_pinners = h_attack_mask & (pos.queen[!turn] | pos.rook[!turn]);
+    pos_pinners = h_attack_mask & (pos->queen[!turn] | pos->rook[!turn]);
     while(pos_pinners){
         i32 pinner_sq = __builtin_ctzll(pos_pinners);
         pin_directions |= betweenMask[k_square][pinner_sq];
@@ -416,18 +386,19 @@ static u64 generatePinnedPiecesColor(Position pos, i32 turn){
     }
 
     d_attack_mask = bishopAttacks(all_pieces & ~pinned, k_square);
-    pos_pinners = d_attack_mask & (pos.queen[!turn] | pos.bishop[!turn]);
+    pos_pinners = d_attack_mask & (pos->queen[!turn] | pos->bishop[!turn]);
     while(pos_pinners){
         i32 pinner_sq = __builtin_ctzll(pos_pinners);
         pin_directions |= betweenMask[k_square][pinner_sq];
         pos_pinners &= pos_pinners - 1;
     }
 
-    pinned &= pin_directions; //Only keep the pieces that are actually pinned
+    // Only keep the pieces that are actually pinned
+    pinned &= pin_directions; 
     return pinned;
 }
 
-u64 generatePinnedPieces(Position pos){
+u64 generatePinnedPieces(Position* pos){
     return generatePinnedPiecesColor(pos, 0) | generatePinnedPiecesColor(pos, 1);
 }
 

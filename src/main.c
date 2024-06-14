@@ -42,16 +42,12 @@ i32 main(void) {
     initZobrist();
     init_pst();
     if(initTT()){
-        printf("info string WARNING FAILED TO ALLOCATED SPACE FOR TRANSPOSITION TABLE\n");
+        printf("info string Warning failed to create transposition table, exiting.\n");
         return -1;
     }
     init_globals();
     
-    #ifdef DEBUG
-    search_opening(3);
-    #else
     search_opening(10);
-    #endif // DEBUG
 
     printf("info string Finished start up!\n");
 

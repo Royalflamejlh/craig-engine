@@ -23,7 +23,7 @@ i32 checkMoveCount(Position pos);
 i32 python_init();
 i32 python_close();
 
-Move moveStrToType(Position pos, char* str);
+Move moveStrToType(Position* pos, char* str);
 Stage calculateStage(Position pos);
 u32 calculate_rec_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 moves_remain, u8 turn);
 u32 calculate_max_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 moves_remain, u8 turn);
@@ -64,19 +64,19 @@ static inline u8 canPromotePawn(Position *pos){
 /*
 * Returns whether the position has Insufficient material / Drawn
 */
-static inline u8 isInsufficient(Position pos){
-   if(pos.stage != END_GAME) return FALSE;
-   u32 piece_count_w = count_bits(pos.color[0]);
-   u32 piece_count_b = count_bits(pos.color[1]);
+static inline u8 isInsufficient(Position* pos){
+   if(pos->stage != END_GAME) return FALSE;
+   u32 piece_count_w = count_bits(pos->color[0]);
+   u32 piece_count_b = count_bits(pos->color[1]);
    if(piece_count_w == 1 && piece_count_b == 1) return TRUE;
    if(piece_count_w <= 2 && piece_count_b == 1){
-      if((pos.knight[0] | pos.bishop[0])) return TRUE; 
+      if((pos->knight[0] | pos->bishop[0])) return TRUE; 
    }
    if(piece_count_w == 1 && piece_count_b <= 2){
-      if((pos.knight[1] | pos.bishop[1])) return TRUE;
+      if((pos->knight[1] | pos->bishop[1])) return TRUE;
    }
    if(piece_count_w <= 2 && piece_count_b <= 2){
-      if((pos.knight[0] | pos.bishop[0]) && (pos.knight[1] | pos.bishop[1])) return TRUE;
+      if((pos->knight[0] | pos->bishop[0]) && (pos->knight[1] | pos->bishop[1])) return TRUE;
    }
    return FALSE;
 }

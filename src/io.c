@@ -57,7 +57,7 @@ static void processMoves(char* str) {
         }
         //printf("Move String found: %s", moveStr);
         Position cur = get_global_position();
-        makeMove(&cur, moveStrToType(cur, moveStr));
+        makeMove(&cur, moveStrToType(&cur, moveStr));
         set_global_position(cur);
 get_next_token:
         pch = strtok_r(NULL, " ", &rest);
@@ -203,15 +203,19 @@ static i32 processInput(char* input){
         }
         else if (strncmp(input, "list moves", 10) == 0) {
             Move debug_moves[MAX_MOVES];
-            u32 size = generateLegalMoves(get_global_position(), debug_moves);
+            Position tempPos = get_global_position();
+            u32 size = generateLegalMoves(&tempPos, debug_moves);
             printf("Moves: \n");
             for(u32 i = 0; i < size; i++){
                 printMove(debug_moves[i]);
                 printf("\n");
             }
+            remove_hash_stack(&tempPos.hashStack);
         }
         else if (strncmp(input, "eval", 4) == 0){
-            printf("Eval: %d\n", eval(get_global_position()));
+            Position tempPos = get_global_position();
+            printf("Eval: %d\n", eval_position(&tempPos));
+            remove_hash_stack(&tempPos.hashStack);
         }
         else if (strncmp(input, "play move", 4) == 0){
             printf("Making move: ");

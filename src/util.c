@@ -171,7 +171,7 @@ u64 perft(i32 depth, Position pos){
   if (depth == 0) 
     return 1ULL;
 
-  n_moves = generateLegalMoves(pos, move_list);
+  n_moves = generateLegalMoves(&pos, move_list);
 
   for (i = 0; i < n_moves; i++) {
     Position prevPos = pos;
@@ -191,7 +191,7 @@ char getPiece(Position pos, i32 square){
     return pos.charBoard[square];
 }
 
-Move moveStrToType(Position pos, char* str){
+Move moveStrToType(Position* pos, char* str){
     Move moveList[MAX_MOVES] = {0};
     i32 size = generateLegalMoves(pos, moveList);
 

@@ -58,7 +58,7 @@ i32 testBB(void) {
         while ((token = strtok(fenEnd ? fenEnd + 1 : NULL, " ;")) != NULL) {
             if (token[0] == 'D' && token[1] == '1') {
                 expectedMoves = atoi(token + 3);
-                size = generateLegalMoves(pos, moveList);
+                size = generateLegalMoves(&pos, moveList);
                 if (size != expectedMoves) {
                     printf("Failed to get correct amount of moves for Position %s, correct: %d, found: %d\n", fen, expectedMoves, size);
                     printPosition(pos, TRUE);
@@ -91,12 +91,12 @@ i32 testBB(void) {
     for(i32 j = 0; j < 100; j++){
         char* FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
         pos = fen_to_position(FEN);
-        size = generateLegalMoves(pos, moveList);
+        size = generateLegalMoves(&pos, moveList);
         while(size != 0 && pos.halfmove_clock < 50){
             i32 randMove = rand() % size;
             makeMove(&pos, moveList[randMove]);
-            size = generateLegalMoves(pos, moveList);
-            threatSize = generateThreatMoves(pos, threatMoveList);
+            size = generateLegalMoves(&pos, moveList);
+            threatSize = generateThreatMoves(&pos, threatMoveList);
             for(i32 k = 0; k < threatSize; k++){
                 char found = 0;
                 for(i32 l = 0; l < size; l++){

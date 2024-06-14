@@ -200,7 +200,7 @@ static inline u32 select_sort(u32 i, u32 evalIdx, Position* pos, Move *moveList,
    }
 
    if(i <= evalIdx){
-      moveVals[i] = move_eval(moveList[i], pos);
+      moveVals[i] = eval_move(moveList[i], pos);
       if(GET_FLAGS(moveList[i]) > DOUBLE_PAWN_PUSH){
          moveVals[i] += CAPTURE_MOVE_BONUS;
       } else if(isKillerMove(km, moveList[i], ply)){
@@ -217,7 +217,7 @@ static inline u32 select_sort(u32 i, u32 evalIdx, Position* pos, Move *moveList,
       }
 
       if(j <= evalIdx){ // If the move hasn't been evaluated yet calculate score
-         moveVals[j] = move_eval(moveList[j], pos);
+         moveVals[j] = eval_move(moveList[j], pos);
          if(GET_FLAGS(moveList[j]) > DOUBLE_PAWN_PUSH){
             moveVals[j] += CAPTURE_MOVE_BONUS;
          } else if(isKillerMove(km, moveList[j], ply)){
@@ -313,9 +313,9 @@ void search_opening(u32 depth){
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES];
    
-   i32 size = generateLegalMoves(pos, moveList);
+   i32 size = generateLegalMoves(&pos, moveList);
 
-   movelist_eval(moveList, moveVals, size, pos);
+   eval_movelist(&pos, moveList, moveVals, size);
    
    Position prevPos = pos;
    for (i32 i = 0; i < size; i++)  {
@@ -481,11 +481,11 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
    #endif
    pv_array[ply] = NO_MOVE;
 
-   if(ply != 0 && (pos->halfmove_clock >= 100 || isInsufficient(*pos) || isRepetition(pos))) return 0;
+   if(ply != 0 && (pos->halfmove_clock >= 100 || isInsufficient(pos) || isRepetition(pos))) return 0;
 
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES];
-   i32 size = generateLegalMoves(*pos, moveList);
+   i32 size = generateLegalMoves(pos, moveList);
    for(i32 i = 0; i < size; i++){
       moveVals[i] = 0;
    }
@@ -592,7 +592,7 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
       if(i <= PV_PRUNE_MOVE_IDX || pos->flags & IN_CHECK || (GET_FLAGS(moveList[i]) > DOUBLE_PAWN_PUSH) || pos->stage == END_GAME ) prunable_move = FALSE;
 
       if( prunable_move && depth == 1 && abs(alpha) < (CHECKMATE_VALUE/2) && abs(beta) < (CHECKMATE_VALUE/2)){ // Futility Pruning
-         if(prevPos.quick_eval + moveVals[i] < alpha - PV_FUTIL_MARGIN){ 
+         if(prevPos.material_eval + moveVals[i] < alpha - PV_FUTIL_MARGIN){ 
             #ifdef DEBUG
             debug[PVS][NODE_PRUNED_FUTIL]++;
             #endif
@@ -662,12 +662,12 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
 i32 helper_pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_array, KillerMoves* km, SearchStats* stats, u32 thread_num) {
    if(!run_get_best_move) exit_search(pos);
    pv_array[ply] = NO_MOVE;
-   if(ply != 0 && (pos->halfmove_clock >= 100 || isInsufficient(*pos) || isRepetition(pos))) return 0;
+   if(ply != 0 && (pos->halfmove_clock >= 100 || isInsufficient(pos) || isRepetition(pos))) return 0;
 
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES] = {0};
 
-   i32 size = generateLegalMoves(*pos, moveList);
+   i32 size = generateLegalMoves(pos, moveList);
 
    //Handle Draw or Mate
    if(size == 0){
@@ -771,11 +771,11 @@ i32 zw_search( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, Searc
    debug[ZWS][NODE_COUNT]++;
    #endif
 
-   if(pos->halfmove_clock >= 100 || isInsufficient(*pos) || isRepetition(pos)) return 0;
+   if(pos->halfmove_clock >= 100 || isInsufficient(pos) || isRepetition(pos)) return 0;
 
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES];
-   i32 size = generateLegalMoves(*pos, moveList);
+   i32 size = generateLegalMoves(pos, moveList);
    //Handle Draw or Mate
    if(size == 0){
       if(pos->flags & IN_CHECK) return -(CHECKMATE_VALUE - ply);
@@ -834,7 +834,7 @@ i32 zw_search( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, Searc
    //Null move prunin'
    if(prunable && !isNull 
                && depth > NULL_PRUNE_R + 1 
-               && pos->quick_eval >= (beta - NMR_MARGIN)){
+               && pos->material_eval >= (beta - NMR_MARGIN)){
       if(pruneNullMoves(pos, beta, depth, ply, km, stats) >= beta){
          #ifdef DEBUG
          debug[ZWS][NODE_PRUNED_NULL]++;
@@ -862,7 +862,7 @@ i32 zw_search( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, Searc
       if(i <= PRUNE_MOVE_IDX || pos->flags & IN_CHECK || (GET_FLAGS(moveList[i]) > DOUBLE_PAWN_PUSH) || pos->stage == END_GAME) prunable_move = FALSE;
 
       if( prunable_move && depth == 1 && abs(beta) < (CHECKMATE_VALUE/2) ){ // Futility Pruning
-         if((prevPos.quick_eval + moveVals[i]) < ((beta-1) - ZW_FUTIL_MARGIN)){ 
+         if((prevPos.material_eval + moveVals[i]) < ((beta-1) - ZW_FUTIL_MARGIN)){ 
             #ifdef DEBUG
             debug[ZWS][NODE_PRUNED_FUTIL]++;
             #endif // Unmake Move
@@ -909,10 +909,10 @@ i32 q_search( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats*
    // Check the bounds
    if(q_ply >= MAX_QUIESCE_PLY) return alpha;
    // Handle Draw or Mate
-   if(pos->halfmove_clock >= 100 || isInsufficient(*pos) || isRepetition(pos)) return 0;
+   if(pos->halfmove_clock >= 100 || isInsufficient(pos) || isRepetition(pos)) return 0;
 
    // Check to see if the player can opt to not move and be better
-   i32 stand_pat = eval(*pos); 
+   i32 stand_pat = eval_position(pos); 
    if(!(pos->flags & IN_CHECK) && stand_pat >= beta){
       return beta;
    }
@@ -932,9 +932,9 @@ i32 q_search( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats*
    
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES];
-   i32 size = generateThreatMoves(*pos, moveList);
+   i32 size = generateThreatMoves(pos, moveList);
    if(size == 0){
-      size = generateLegalMoves(*pos, moveList);
+      size = generateLegalMoves(pos, moveList);
       if(size == 0){ // Check for end game
          if(pos->flags & IN_CHECK){
             return -(CHECKMATE_VALUE - ply); // Check Mate
@@ -948,7 +948,7 @@ i32 q_search( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats*
       }
    }
 
-   movelist_eval(moveList, moveVals, size, *pos);
+   eval_movelist(pos, moveList, moveVals, size);
    
    #ifdef DEBUG
    if(size > 0) debug[QS][NODE_LOOP_CHILDREN]++;

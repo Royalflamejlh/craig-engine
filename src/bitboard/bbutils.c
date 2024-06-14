@@ -104,22 +104,22 @@ Position fen_to_position(char* FEN) {
     //Double Check Flag
     if(pos.flags & IN_CHECK){
        i32 kign_sq = __builtin_ctzll(pos.king[1]);
-       u64 attackers = getAttackers(pos, kign_sq, 0);
+       u64 attackers = getAttackers(&pos, kign_sq, 0);
        attackers &= attackers - 1; // Allow underflow
        if(attackers) pos.flags |= IN_D_CHECK;
        
        kign_sq = __builtin_ctzll(pos.king[0]);
-       attackers = getAttackers(pos, kign_sq, WHITE_TURN);
+       attackers = getAttackers(&pos, kign_sq, WHITE_TURN);
        attackers &= attackers - 1; // Allow underflow
        if(attackers) pos.flags |= IN_D_CHECK;
        
     }
 
-    pos.pinned = generatePinnedPieces(pos);
+    pos.pinned = generatePinnedPieces(&pos);
 
     pos.stage = calculateStage(pos);
 
-    pos.quick_eval = quick_eval(pos);
+    pos.material_eval = eval_material(&pos);
 
     pos.hash = hashPosition(pos);
 
@@ -304,7 +304,7 @@ void printPosition(Position position, char verbose){
             
             if (file == 7){
                 printf("%d   |  ", rank + 1);
-                if(rank == 7) printf("Current Turn: %s -- Quick Evaluation: %d", ((position.flags & WHITE_TURN) ? "White" : "Black"), position.quick_eval);
+                if(rank == 7) printf("Current Turn: %s -- Quick Evaluation: %d", ((position.flags & WHITE_TURN) ? "White" : "Black"), position.material_eval);
                 if(rank == 5) printf("Halfmove Clock: %d -- Fullmove Number: %d -- Game Stage: %d", position.halfmove_clock, position.fullmove_number, position.stage);
                 if(rank == 3) printf("In Check: %s -- In Double-Check: %s", (position.flags & IN_CHECK) ? "Yes" : "No", (position.flags & IN_D_CHECK) ? "Yes" : "No");
                 if(rank == 1) printf("Castling Availability: ");

@@ -112,15 +112,15 @@ void generatePawnMoveMasks(void){
 }
 
 //All Attacks
-u64 generateAttacks(Position position, i32 turn){
+u64 generateAttacks(Position* position, i32 turn){
     u64 attack_mask = 0ULL;
-    attack_mask |= getBishopAttacks(position.bishop[turn], position.color[turn], position.color[!turn] & ~position.king[!turn]);
-    attack_mask |= getRookAttacks(  position.rook[turn],   position.color[turn], position.color[!turn] & ~position.king[!turn]);
-    attack_mask |= getBishopAttacks(position.queen[turn],  position.color[turn], position.color[!turn] & ~position.king[!turn]);
-    attack_mask |= getRookAttacks(  position.queen[turn],  position.color[turn], position.color[!turn] & ~position.king[!turn]);
-    attack_mask |= getKnightAttacks(position.knight[turn]);
-    attack_mask |= getKingAttacks(  position.king[turn]  );
-    attack_mask |= getPawnAttacks(  position.pawn[turn], turn);
+    attack_mask |= getBishopAttacks(position->bishop[turn], position->color[turn], position->color[!turn] & ~position->king[!turn]);
+    attack_mask |= getRookAttacks(  position->rook[turn],   position->color[turn], position->color[!turn] & ~position->king[!turn]);
+    attack_mask |= getBishopAttacks(position->queen[turn],  position->color[turn], position->color[!turn] & ~position->king[!turn]);
+    attack_mask |= getRookAttacks(  position->queen[turn],  position->color[turn], position->color[!turn] & ~position->king[!turn]);
+    attack_mask |= getKnightAttacks(position->knight[turn]);
+    attack_mask |= getKingAttacks(  position->king[turn]  );
+    attack_mask |= getPawnAttacks(  position->pawn[turn], turn);
     return attack_mask;
 }
 
@@ -601,40 +601,40 @@ void getCastleMovesAppend(u64 pieces, u64 attack_mask, char flags, Move* moveLis
 /*
 *  Returns all attackerColor pieces attacking a square
 */
-u64 getAttackers(Position pos, i32 square, i32 attackerColor){
+u64 getAttackers(Position* pos, i32 square, i32 attackerColor){
     u64 attackers = 0ULL;
-    u64 all_pieces = pos.color[0] | pos.color[1];
+    u64 all_pieces = pos->color[0] | pos->color[1];
     i32 pawn_mask_idx = attackerColor ? 4 : 0; //Reverse of normal
     u64 attack_mask;
 
     attack_mask = rookAttacks(all_pieces, square);
-    attackers |= (attack_mask & (pos.queen[attackerColor] | pos.rook[attackerColor]));
+    attackers |= (attack_mask & (pos->queen[attackerColor] | pos->rook[attackerColor]));
 
     attack_mask = bishopAttacks(all_pieces, square);
-    attackers |= (attack_mask & (pos.queen[attackerColor] | pos.bishop[attackerColor]));
+    attackers |= (attack_mask & (pos->queen[attackerColor] | pos->bishop[attackerColor]));
 
     attack_mask = knightMoves[square];
-    attackers |= (attack_mask & pos.knight[attackerColor]);
+    attackers |= (attack_mask & pos->knight[attackerColor]);
 
     attack_mask = pawnMoves[square][pawn_mask_idx + 2] | pawnMoves[square][pawn_mask_idx + 3];
-    attackers |= (attack_mask & pos.pawn[attackerColor]);
+    attackers |= (attack_mask & pos->pawn[attackerColor]);
 
     attack_mask = kingMoves[square];
-    attackers |= (attack_mask & pos.king[attackerColor]);
+    attackers |= (attack_mask & pos->king[attackerColor]);
 
     return attackers;
 }
 
-u64 getXRayAttackers(Position pos, i32 square, i32 attackerColor, u64 removed){
+u64 getXRayAttackers(Position* pos, i32 square, i32 attackerColor, u64 removed){
     u64 attackers = 0ULL;
-    u64 all_pieces = (pos.color[0] | pos.color[1]) & ~removed;
+    u64 all_pieces = (pos->color[0] | pos->color[1]) & ~removed;
     u64 attack_mask;
 
     attack_mask = rookAttacks(all_pieces, square);
-    attackers |= (attack_mask & (pos.queen[attackerColor] | pos.rook[attackerColor]));
+    attackers |= (attack_mask & (pos->queen[attackerColor] | pos->rook[attackerColor]));
 
     attack_mask = bishopAttacks(all_pieces, square);
-    attackers |= (attack_mask & (pos.queen[attackerColor] | pos.bishop[attackerColor]));
+    attackers |= (attack_mask & (pos->queen[attackerColor] | pos->bishop[attackerColor]));
 
     return attackers & ~removed;
 }
@@ -642,28 +642,28 @@ u64 getXRayAttackers(Position pos, i32 square, i32 attackerColor, u64 removed){
 /*
 * Here be ye function to get moves for white when they are in check!
 */
-void getCheckMovesAppend(Position pos, Move* moveList, i32* idx){
-    i32 turn = pos.flags & WHITE_TURN;
-    i32 king_sq = __builtin_ctzll(pos.king[turn]);
+void getCheckMovesAppend(Position* pos, Move* moveList, i32* idx){
+    i32 turn = pos->flags & WHITE_TURN;
+    i32 king_sq = __builtin_ctzll(pos->king[turn]);
     u64 checker_mask = getAttackers(pos, king_sq, !turn);
     i32 checker_sq = __builtin_ctzll(checker_mask);
     i32 pawn_mask_idx = turn ? 0 : 4;
-    u64 ownPieces = pos.color[turn];
-    u64 oppPieces = pos.color[!turn];
+    u64 ownPieces = pos->color[turn];
+    u64 oppPieces = pos->color[!turn];
     u64 between_squares = betweenMask[king_sq][checker_sq];
 
-    u64 upin = ~pos.pinned; //If in check, only unpinned pieces can moves (i believe havent proven though)
+    u64 upin = ~pos->pinned; //If in check, only unpinned pieces can moves (i believe havent proven though)
 
     
-    if(pos.en_passant){
-        u64 test_mask = turn ? southOne(pos.en_passant) : northOne(pos.en_passant);
+    if(pos->en_passant){
+        u64 test_mask = turn ? southOne(pos->en_passant) : northOne(pos->en_passant);
         if(test_mask == checker_mask){
-            getPawnMovesAppend(pos.pawn[turn] & upin, ~(pos.en_passant), 0ULL, pos.en_passant, pos.flags, moveList, idx); 
+            getPawnMovesAppend(pos->pawn[turn] & upin, ~(pos->en_passant), 0ULL, pos->en_passant, pos->flags, moveList, idx); 
         }
     }
     
-    u64 pawns = pos.pawn[turn] & upin;
-    getPawnMovesAppend(pawns, ~(between_squares | checker_mask), checker_mask, 0ULL, pos.flags, moveList, idx); 
+    u64 pawns = pos->pawn[turn] & upin;
+    getPawnMovesAppend(pawns, ~(between_squares | checker_mask), checker_mask, 0ULL, pos->flags, moveList, idx); 
     while (pawns) { //Handle the case of double forward moves
         u64 dp_moves = 0ULL;
         i32 square = __builtin_ctzll(pawns);
@@ -683,14 +683,14 @@ void getCheckMovesAppend(Position pos, Move* moveList, i32* idx){
         pawns &= pawns - 1;
     }
 
-    getKingMovesAppend(    pos.king[turn] & upin, ownPieces, oppPieces, pos.attack_mask[!turn], moveList, idx);
+    getKingMovesAppend(    pos->king[turn] & upin, ownPieces, oppPieces, pos->attack_mask[!turn], moveList, idx);
 
-    getKnightMovesAppend(pos.knight[turn] & upin, ~(between_squares | checker_mask), checker_mask, moveList, idx);
+    getKnightMovesAppend(pos->knight[turn] & upin, ~(between_squares | checker_mask), checker_mask, moveList, idx);
 
-    getRookMovesCheckAppend(  pos.queen[turn]  & upin, ownPieces, oppPieces, (between_squares | checker_mask), moveList, idx);
-    getBishopMovesCheckAppend(pos.queen[turn]  & upin, ownPieces, oppPieces, (between_squares | checker_mask), moveList, idx);
-    getRookMovesCheckAppend(  pos.rook[turn]   & upin, ownPieces, oppPieces, (between_squares | checker_mask), moveList, idx);
-    getBishopMovesCheckAppend(pos.bishop[turn] & upin, ownPieces, oppPieces, (between_squares | checker_mask), moveList, idx);
+    getRookMovesCheckAppend(  pos->queen[turn]  & upin, ownPieces, oppPieces, (between_squares | checker_mask), moveList, idx);
+    getBishopMovesCheckAppend(pos->queen[turn]  & upin, ownPieces, oppPieces, (between_squares | checker_mask), moveList, idx);
+    getRookMovesCheckAppend(  pos->rook[turn]   & upin, ownPieces, oppPieces, (between_squares | checker_mask), moveList, idx);
+    getBishopMovesCheckAppend(pos->bishop[turn] & upin, ownPieces, oppPieces, (between_squares | checker_mask), moveList, idx);
 }
 
 
@@ -851,73 +851,72 @@ static void getPinnedPawnThreatMovesAppend(i32 king_rank, i32 king_file, u64 pin
     }
 }
 
-void getPinnedMovesAppend(Position pos, Move* moveList, i32* size){
-    i32 turn = pos.flags & WHITE_TURN;
-    u64 pinned = pos.pinned;
-    i32 king_sq = __builtin_ctzll(pos.king[turn]);
+void getPinnedMovesAppend(Position* pos, Move* moveList, i32* size){
+    i32 turn = pos->flags & WHITE_TURN;
+    u64 pinned = pos->pinned;
+    i32 king_sq = __builtin_ctzll(pos->king[turn]);
     i32 king_rank = king_sq / 8;
     i32 king_file = king_sq % 8;
 
     //King does his thang
-    getKingMovesAppend(pos.king[turn], pos.color[turn],  pos.color[!turn], pos.attack_mask[!turn], moveList, size);
-    getCastleMovesAppend(pos.color[0] | pos.color[1], pos.attack_mask[!turn], pos.flags, moveList, size);
+    getKingMovesAppend(pos->king[turn], pos->color[turn],  pos->color[!turn], pos->attack_mask[!turn], moveList, size);
+    getCastleMovesAppend(pos->color[0] | pos->color[1], pos->attack_mask[!turn], pos->flags, moveList, size);
 
     //Pinned Knights Cannot Move
-    u64 pinned_knights = pos.knight[turn] & pinned;
-    getKnightMovesAppend(pos.knight[turn] & ~pinned_knights, pos.color[turn], pos.color[!turn], moveList, size);
+    u64 pinned_knights = pos->knight[turn] & pinned;
+    getKnightMovesAppend(pos->knight[turn] & ~pinned_knights, pos->color[turn], pos->color[!turn], moveList, size);
     
-    u64 pinned_queens = pos.queen[turn] & pinned;
-    getBishopMovesAppend(pos.queen[turn] & ~pinned_queens, pos.color[turn], pos.color[!turn], moveList, size);
-    getRookMovesAppend(  pos.queen[turn] & ~pinned_queens, pos.color[turn], pos.color[!turn], moveList, size);
-    getPinnedQueenMovesAppend(king_rank, king_file, pinned_queens, pos.color[turn], pos.color[!turn], moveList, size);
+    u64 pinned_queens = pos->queen[turn] & pinned;
+    getBishopMovesAppend(pos->queen[turn] & ~pinned_queens, pos->color[turn], pos->color[!turn], moveList, size);
+    getRookMovesAppend(  pos->queen[turn] & ~pinned_queens, pos->color[turn], pos->color[!turn], moveList, size);
+    getPinnedQueenMovesAppend(king_rank, king_file, pinned_queens, pos->color[turn], pos->color[!turn], moveList, size);
     
-    u64 pinned_rooks = pos.rook[turn] & pinned;
-    getRookMovesAppend(pos.rook[turn] & ~pinned_rooks, pos.color[turn], pos.color[!turn], moveList, size);
-    getPinnedRookMovesAppend(king_rank, king_file, pinned_rooks, pos.color[turn], pos.color[!turn], moveList, size);
+    u64 pinned_rooks = pos->rook[turn] & pinned;
+    getRookMovesAppend(pos->rook[turn] & ~pinned_rooks, pos->color[turn], pos->color[!turn], moveList, size);
+    getPinnedRookMovesAppend(king_rank, king_file, pinned_rooks, pos->color[turn], pos->color[!turn], moveList, size);
 
     //Process Pinned Bishops
-    u64 pinned_bishops = pos.bishop[turn] & pinned;
-    getBishopMovesAppend(pos.bishop[turn] & ~pinned_bishops, pos.color[turn], pos.color[!turn], moveList, size);
-    getPinnedBishopMovesAppend(king_rank, king_file, pinned_bishops, pos.color[turn], pos.color[!turn], moveList, size);
+    u64 pinned_bishops = pos->bishop[turn] & pinned;
+    getBishopMovesAppend(pos->bishop[turn] & ~pinned_bishops, pos->color[turn], pos->color[!turn], moveList, size);
+    getPinnedBishopMovesAppend(king_rank, king_file, pinned_bishops, pos->color[turn], pos->color[!turn], moveList, size);
 
 
     //Process Pinned Pawns
-    u64 pinned_pawns = pos.pawn[turn] & pinned;
-    getPawnMovesAppend(pos.pawn[turn] & ~pinned_pawns, pos.color[turn], pos.color[!turn], pos.en_passant, pos.flags, moveList, size);
-    getPinnedPawnMovesAppend(king_rank, king_file, pinned_pawns, pos.color[turn], pos.color[!turn], pos.en_passant, pos.flags, moveList, size);
+    u64 pinned_pawns = pos->pawn[turn] & pinned;
+    getPawnMovesAppend(pos->pawn[turn] & ~pinned_pawns, pos->color[turn], pos->color[!turn], pos->en_passant, pos->flags, moveList, size);
+    getPinnedPawnMovesAppend(king_rank, king_file, pinned_pawns, pos->color[turn], pos->color[!turn], pos->en_passant, pos->flags, moveList, size);
 }
 
-void getPinnedThreatMovesAppend(Position pos, u64 r_check_squares, u64 b_check_squares, i32 opp_king_sq, Move* moveList, i32* size){
-    i32 turn = pos.flags & WHITE_TURN;
-    u64 pinned = pos.pinned;
-    i32 king_sq = __builtin_ctzll(pos.king[turn]);
+void getPinnedThreatMovesAppend(Position* pos, u64 r_check_squares, u64 b_check_squares, i32 opp_king_sq, Move* moveList, i32* size){
+    i32 turn = pos->flags & TURN;
+    u64 pinned = pos->pinned;
+    i32 king_sq = __builtin_ctzll(pos->king[turn]);
     i32 king_rank = king_sq / 8;
     i32 king_file = king_sq % 8;
 
     //King does his thang
-    getKingThreatMovesAppend(pos.king[turn], pos.color[turn],  pos.color[!turn], pos.attack_mask[!turn], moveList, size);
+    getKingThreatMovesAppend(pos->king[turn], pos->color[turn],  pos->color[!turn], pos->attack_mask[!turn], moveList, size);
 
     //Pinned Knights Cannot Move
-    u64 pinned_knights = pos.knight[turn] & pinned;
-    getKnightThreatMovesAppend(pos.knight[turn] & ~pinned_knights, pos.color[turn], pos.color[!turn], opp_king_sq, moveList, size);
+    u64 pinned_knights = pos->knight[turn] & pinned;
+    getKnightThreatMovesAppend(pos->knight[turn] & ~pinned_knights, pos->color[turn], pos->color[!turn], opp_king_sq, moveList, size);
     
-    u64 pinned_queens = pos.queen[turn] & pinned;
-    getBishopThreatMovesAppend(pos.queen[turn] & ~pinned_queens, pos.color[turn], pos.color[!turn], b_check_squares, moveList, size);
-    getRookThreatMovesAppend(  pos.queen[turn] & ~pinned_queens, pos.color[turn], pos.color[!turn], r_check_squares, moveList, size);
-    getPinnedQueenThreatMovesAppend(king_rank, king_file, pinned_queens, pos.color[turn], pos.color[!turn], b_check_squares, r_check_squares,  moveList, size);
+    u64 pinned_queens = pos->queen[turn] & pinned;
+    getBishopThreatMovesAppend(pos->queen[turn] & ~pinned_queens, pos->color[turn], pos->color[!turn], b_check_squares, moveList, size);
+    getRookThreatMovesAppend(  pos->queen[turn] & ~pinned_queens, pos->color[turn], pos->color[!turn], r_check_squares, moveList, size);
+    getPinnedQueenThreatMovesAppend(king_rank, king_file, pinned_queens, pos->color[turn], pos->color[!turn], b_check_squares, r_check_squares,  moveList, size);
     
-    u64 pinned_rooks = pos.rook[turn] & pinned;
-    getRookThreatMovesAppend(pos.rook[turn] & ~pinned_rooks, pos.color[turn], pos.color[!turn], r_check_squares, moveList, size);
-    getPinnedRookThreatMovesAppend(king_rank, king_file, pinned_rooks, pos.color[turn], pos.color[!turn], r_check_squares, moveList, size);
+    u64 pinned_rooks = pos->rook[turn] & pinned;
+    getRookThreatMovesAppend(pos->rook[turn] & ~pinned_rooks, pos->color[turn], pos->color[!turn], r_check_squares, moveList, size);
+    getPinnedRookThreatMovesAppend(king_rank, king_file, pinned_rooks, pos->color[turn], pos->color[!turn], r_check_squares, moveList, size);
 
     //Process Pinned Bishops
-    u64 pinned_bishops = pos.bishop[turn] & pinned;
-    getBishopThreatMovesAppend(pos.bishop[turn] & ~pinned_bishops, pos.color[turn], pos.color[!turn], b_check_squares, moveList, size);
-    getPinnedBishopThreatMovesAppend(king_rank, king_file, pinned_bishops, pos.color[turn], pos.color[!turn], b_check_squares, moveList, size);
-
+    u64 pinned_bishops = pos->bishop[turn] & pinned;
+    getBishopThreatMovesAppend(pos->bishop[turn] & ~pinned_bishops, pos->color[turn], pos->color[!turn], b_check_squares, moveList, size);
+    getPinnedBishopThreatMovesAppend(king_rank, king_file, pinned_bishops, pos->color[turn], pos->color[!turn], b_check_squares, moveList, size);
 
     //Process Pinned Pawns
-    u64 pinned_pawns = pos.pawn[turn] & pinned;
-    getPawnThreatMovesAppend(pos.pawn[turn] & ~pinned_pawns, pos.color[turn], pos.color[!turn], pos.en_passant, pos.flags, opp_king_sq, moveList, size);
-    getPinnedPawnThreatMovesAppend(king_rank, king_file, pinned_pawns, pos.color[turn], pos.color[!turn], pos.en_passant, pos.flags, opp_king_sq, moveList, size);
+    u64 pinned_pawns = pos->pawn[turn] & pinned;
+    getPawnThreatMovesAppend(pos->pawn[turn] & ~pinned_pawns, pos->color[turn], pos->color[!turn], pos->en_passant, pos->flags, opp_king_sq, moveList, size);
+    getPinnedPawnThreatMovesAppend(king_rank, king_file, pinned_pawns, pos->color[turn], pos->color[!turn], pos->en_passant, pos->flags, opp_king_sq, moveList, size);
 }

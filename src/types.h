@@ -223,7 +223,7 @@ typedef struct {            //Each size of 2 array contains {Black, White}
 
     u64 hash; //Hash of the position
 
-    i32 quick_eval;
+    i32 material_eval;
 
     HashStack hashStack; //Pointer to the gamestate position is in
 
