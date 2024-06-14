@@ -923,9 +923,9 @@ i32 q_search( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats*
    }
 
    // Early Delta Pruning (See if down more than Queen)
-   i32 delta = QUEEN_VALUE;
-   if (canPromotePawn(pos)) delta += (QUEEN_VALUE - PAWN_VALUE);
-   if (!(pos->flags & IN_CHECK) && stand_pat + delta < alpha && pos->stage != END_GAME) {
+   i32 early_delta = QUEEN_VALUE;
+   if (canPromotePawn(pos)) early_delta += (QUEEN_VALUE - PAWN_VALUE);
+   if (!(pos->flags & IN_CHECK) && stand_pat + early_delta < alpha && pos->stage != END_GAME) {
       #ifdef DEBUG
       debug[QS][NODE_PRUNED_FUTIL]++;
       #endif

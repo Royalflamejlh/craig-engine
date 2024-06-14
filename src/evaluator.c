@@ -83,18 +83,6 @@ static const i32 pieceValues[] = {
     [BLACK_KING] = KING_VALUE
 };
 
-inline i32 quickEval(Position pos){
-    i32 eval_val = 0;
-    i32 turn = pos.flags & WHITE_TURN;
-    eval_val += KING_VALUE   * (count_bits(pos.king[turn])   - count_bits(pos.king[!turn]));
-    eval_val += QUEEN_VALUE  * (count_bits(pos.queen[turn])  - count_bits(pos.queen[!turn]));
-    eval_val += ROOK_VALUE   * (count_bits(pos.rook[turn])   - count_bits(pos.rook[!turn]));
-    eval_val += BISHOP_VALUE * (count_bits(pos.bishop[turn]) - count_bits(pos.bishop[!turn]));
-    eval_val += KNIGHT_VALUE * (count_bits(pos.knight[turn]) - count_bits(pos.knight[!turn]));
-    eval_val += PAWN_VALUE   * (count_bits(pos.pawn[turn])   - count_bits(pos.pawn[!turn]));
-    return eval_val;
-}
-
 u64 getLeastValuablePiece(Position pos, u64 attadef, u8 turn, PieceIndex* piece){
     u64 subset = attadef & pos.pawn[turn]; // Pawn
     if (subset){

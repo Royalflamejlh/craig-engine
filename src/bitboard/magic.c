@@ -255,7 +255,7 @@ i32 generateMagics(void) {
     initAttackTable();
 
 
-    for (i32 square = 0; square < 64; ++square) {
+    for (square = 0; square < 64; ++square) {
         if (verifyMagic(square, 0)) {
             printf("info string Verification failed for rook magic at square %d\n", square);
             return -1;
@@ -264,7 +264,7 @@ i32 generateMagics(void) {
 
     printf("info string All rook magics verified successfully\n");
 
-    for (i32 square = 0; square < 64; ++square) {
+    for (square = 0; square < 64; ++square) {
         if (verifyMagic(square, 1)) {
             printf("info string Verification failed for bishop magic at square %d\n", square);
             return -1;

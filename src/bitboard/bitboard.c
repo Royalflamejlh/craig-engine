@@ -500,7 +500,7 @@ u64 getKnightThreatMovesAppend(u64 knights, u64 ownPieces, u64 oppPieces, i32 op
     while (knights) {
         i32 square = __builtin_ctzll(knights);
     
-        u64 all_moves = knightMoves[square] & ~ownPieces;
+        all_moves = knightMoves[square] & ~ownPieces;
 
         u64 check_moves = all_moves & check_squares;
         u64 cap_moves = all_moves & oppPieces;

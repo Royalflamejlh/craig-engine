@@ -97,10 +97,10 @@ i32 testBB(void) {
             makeMove(&pos, moveList[randMove]);
             size = generateLegalMoves(pos, moveList);
             threatSize = generateThreatMoves(pos, threatMoveList);
-            for(i32 j = 0; j < threatSize; j++){
+            for(i32 k = 0; k < threatSize; k++){
                 char found = 0;
-                for(i32 k = 0; k < size; k++){
-                    if(threatMoveList[j] == moveList[k]) found = 1;
+                for(i32 l = 0; l < size; l++){
+                    if(threatMoveList[k] == moveList[l]) found = 1;
                 }
                 if(!found){
                     printf("Move in threat moves, that is not in move list!\n");

@@ -14,7 +14,7 @@
 #include "tree.h"
 #include "util.h"
 
-#ifdef __COMPILE_DEBUG
+#ifdef DEBUG
 #define RUN_TEST
 #include "tests/bbtests.h"
 #elif defined(__PROFILE)

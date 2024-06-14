@@ -2,6 +2,7 @@
 #define evaluate_h
 
 #include "types.h"
+#include "util.h"
 
 #define KING_VALUE     100000
 #define QUEEN_VALUE     10000
@@ -16,7 +17,18 @@ i32 evaluate(Position pos, u8 verbose);
 i32 evaluate(Position pos);
 #endif // DEBUG
 
-i32 quickEval(Position pos);
+static inline i32 quickEval(Position pos){
+    i32 eval_val = 0;
+    i32 turn = pos.flags & WHITE_TURN;
+    eval_val += KING_VALUE   * (count_bits(pos.king[turn])   - count_bits(pos.king[!turn]));
+    eval_val += QUEEN_VALUE  * (count_bits(pos.queen[turn])  - count_bits(pos.queen[!turn]));
+    eval_val += ROOK_VALUE   * (count_bits(pos.rook[turn])   - count_bits(pos.rook[!turn]));
+    eval_val += BISHOP_VALUE * (count_bits(pos.bishop[turn]) - count_bits(pos.bishop[!turn]));
+    eval_val += KNIGHT_VALUE * (count_bits(pos.knight[turn]) - count_bits(pos.knight[!turn]));
+    eval_val += PAWN_VALUE   * (count_bits(pos.pawn[turn])   - count_bits(pos.pawn[!turn]));
+    return eval_val;
+};
+
 void initPST(void);
 i32 evalMove(Move move, Position* pos);
 void q_evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos);

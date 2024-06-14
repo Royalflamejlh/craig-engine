@@ -11,8 +11,6 @@ static u64 zobristTurn;
 static i32 convertPieceToIndex(char piece);
 
 void initZobrist(void) {
-    
-    
     #ifdef __RAND_SEED
     srand(__RAND_SEED);
     #else

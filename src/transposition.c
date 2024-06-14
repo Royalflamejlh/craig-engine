@@ -41,7 +41,7 @@ TTEntryData getTTEntry(u64 hash){
     TTEntryData tt_data;
     TTEntry tt_entry;
     for(i32 i = 0; i < ROTATION; i++){
-        u64 key = (hash + i) & KEY_MASK; // Ensure wrapping around
+        u64 key = (hash + i) & KEY_MASK;
         tt_entry.data = atomic_load(&table[key].data);
         tt_entry.hash = atomic_load(&table[key].hash);
         if((tt_entry.data ^ tt_entry.hash) == hash){
