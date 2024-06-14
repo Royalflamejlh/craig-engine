@@ -35,7 +35,7 @@ pthread_cond_t helper_cond = PTHREAD_COND_INITIALIZER;
 int do_helper_search = FALSE;
 
 #define SEARCH_REDUCTION_LEVEL 0.75    // How much time is reduced when search finds move to reduce time on
-#define SEARCH_EXTENSION_LEVEL 2.5     // How much time is expanded when search finds move to extend time on
+#define SEARCH_EXTENSION_LEVEL 1.5     // How much time is expanded when search finds move to extend time on
 
 
 /*
@@ -51,17 +51,17 @@ void start_search(SearchParameters params){
     search_time  = params.rec_time;
     start_time   = millis();
     can_shorten  = params.can_shorten;
+    
+    start_search_threads(); // Launch Threads
 
     if(params.max_time){ // If a time has been set setup the timer (Under a second the timer will not have time to launch)
         #ifdef DEBUG
-        printf("info string Search max time is: %d\n", params.max_time);
+        printf("info string Starting timer with max time: %d\n", params.max_time);
         #endif
         startTimerThread(params.max_time);
     } else if (params.depth != MAX_DEPTH){ // If we are in a depth based search we want to setup to print move 
         print_on_depth = TRUE;
     }
-
-    start_search_threads(); // Launch Threads
 }
 
 /*
@@ -69,9 +69,15 @@ void start_search(SearchParameters params){
  */
 void search_timed_out(void){
     if(best_move_found == FALSE){
+        #ifdef DEBUG
+        printf("info string Max time hit setting searchtime to 0\n");
+        #endif
         search_time = 0;
     }
     else if(run_get_best_move){
+        #ifdef DEBUG
+        printf("info string Max time hit stopping search\n");
+        #endif
         stopSearchThreads();
         print_best_move = TRUE;
     }
@@ -85,8 +91,14 @@ void search_timed_out(void){
  * Called from the IO Thread
  */
 void stopSearch(){
-    stopTimerThread();
+    #ifdef DEBUG
+    printf("info string Stop search called, stopping search and timer threads\n");
+    #endif
     stopSearchThreads();
+    stopTimerThread();
+    #ifdef DEBUG
+    printf("info string Stop search completed, search and timer threads closed\n");
+    #endif
 }
 
 /*
@@ -206,11 +218,14 @@ i32 search_loop(u32 thread_num){
             if(search_pos.fullmove_number <= 1)      search_time = 0;  // No time in the start TODO: make sure it matches the starting hash?
             else if(search_pos.fullmove_number <= 3) search_time = (search_time/5);
         }
+        if(can_shorten && search_pos.stage == END_GAME && found_eval[cur_depth] >= 5){
+            time_preference = EXTEND_TIME;
+        }
 
         if(can_shorten && updated && ((u32)(millis() - start_time) >= (search_time) / 2) ){ // If over 50% of the time has elapsed we stop the search
+            stopTimerThread();
             run_get_best_move = FALSE;
             print_best_move = TRUE;
-            stopTimerThread();
             break;
         }
         cur_depth++;

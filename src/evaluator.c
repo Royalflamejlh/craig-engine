@@ -205,11 +205,11 @@ i32 eval_mobility(Position position){
 //
 // Evaluation Function
 //
-i32 evaluate(Position pos
 #ifdef DEBUG
-, u8 verbose
-#endif
-){
+i32 evaluate(Position pos, u8 verbose){
+#else
+i32 evaluate(Position pos){
+#endif // Debug
     i32 eval_val = pos.quick_eval;
     i32 turn = pos.flags & WHITE_TURN;
     i32 stage = pos.stage;

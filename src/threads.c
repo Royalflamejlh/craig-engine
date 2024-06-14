@@ -166,7 +166,7 @@ void start_search_threads(){
     #ifdef DEBUG
     printf("info string starting search threads\n");
     #endif
-    run_get_best_move = true;
+    run_get_best_move = TRUE;
     for (i32 i = 0; i < NUM_THREADS; i++) {
         u32* thread_num = malloc(sizeof(u32));
         if(!thread_num){
@@ -286,7 +286,7 @@ DWORD WINAPI search_thread_entry(LPVOID arg) {
 void start_search_threads(){
     run_get_best_move = true;
     DWORD threadId;
-    for (i32 i = 0; i < NUM_THREADS; i++) {
+    for (i32 i = 0; i < NUM_THREADS && run_get_best_move; i++) {
         u32* thread_num = malloc(sizeof(u32));
         if(!thread_num){
             printf("info string Warning: failed to allocate memory in start search threads.\n");

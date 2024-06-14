@@ -10,15 +10,16 @@
 #define KNIGHT_VALUE     3500
 #define PAWN_VALUE       1000
 
-i32 evaluate(Position pos
 #ifdef DEBUG
-, u8 verbose
-#endif
-);
+i32 evaluate(Position pos, u8 verbose);
+#else
+i32 evaluate(Position pos);
+#endif // DEBUG
+
 i32 quickEval(Position pos);
 void initPST(void);
 i32 evalMove(Move move, Position* pos);
 void q_evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos);
 i32 see ( Position pos, u32 toSq, PieceIndex target, u32 frSq, PieceIndex aPiece);
 
-#endif
+#endif //evaluate_h

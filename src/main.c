@@ -46,7 +46,13 @@ i32 main(void) {
         return -1;
     }
     init_globals();
+    
+    #ifdef DEBUG
+    search_opening(3);
+    #else
     search_opening(10);
+    #endif // DEBUG
+
     printf("info string Finished start up!\n");
 
     #ifdef RUN_TEST

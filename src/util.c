@@ -297,8 +297,8 @@ u32 calculate_rec_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 move
     if(time <= 10) return 1;
     if(time <= 100) return 20;
     if(time <= 1000) return 200;
-    if(advantage >  0) return ((time + advantage) / 15);
-    return (time / 15);
+    if(advantage >  0) return ((time) / 10);
+    return (time / 20);
 }
 
 /*
@@ -313,7 +313,7 @@ u32 calculate_max_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 move
         time = btime + binc;
     }
     if(moves_remain) return (time / moves_remain);
-    return (time / 10) + 1;
+    return (time / 5) + 1;
 }
 
 /*

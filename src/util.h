@@ -5,6 +5,14 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
+#ifdef DEBUG
+#include <stdio.h>
+#define DEBUG_PRINT(x) printf(x)
+#else
+#define DEBUG_PRINT(x) do {} while (0)
+#endif
+
+
 #include "types.h"
 void printMove(Move move);
 void printBestMove(Move move);
