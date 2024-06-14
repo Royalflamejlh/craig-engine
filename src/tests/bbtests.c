@@ -51,7 +51,7 @@ i32 testBB(void) {
         char *fenEnd = strchr(line, ';');
         if (fenEnd) *fenEnd = '\0';
         char *fen = line;
-        pos = fenToPosition(fen);
+        pos = fen_to_position(fen);
         if (fenEnd) *fenEnd = ';'; 
 
         char *token;
@@ -90,7 +90,7 @@ i32 testBB(void) {
     i32 threatSize;
     for(i32 j = 0; j < 100; j++){
         char* FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-        pos = fenToPosition(FEN);
+        pos = fen_to_position(FEN);
         size = generateLegalMoves(pos, moveList);
         while(size != 0 && pos.halfmove_clock < 50){
             i32 randMove = rand() % size;
@@ -119,7 +119,7 @@ i32 testBB(void) {
     printf("\n---------------------------------- PERFT TESTING ----------------------------------\n\n");
 
     printf("Perft from default position:\n");
-    pos = fenToPosition(START_FEN);
+    pos = fen_to_position(START_FEN);
     for(i32 depth = 1; depth < 4; depth++){
         u64 num_moves = perft(depth, pos);
         printf("Perft output is %ld for depth %d\n", (long)num_moves, depth);
@@ -136,7 +136,7 @@ i32 testBB(void) {
 
     while (fgets(line, sizeof(line), file)) {
         char *fen = line;
-        pos = fenToPosition(fen);
+        pos = fen_to_position(fen);
         //printf("Testing: %s", fen);
         for(i32 depth = 1; depth < 2; depth++){
             perft(depth, pos);
@@ -155,7 +155,7 @@ i32 testBB(void) {
     #ifdef NODE_TEST
     printf("\n---------------------------------- NODE TESTING ----------------------------------\n\n");
 
-    pos = fenToPosition("START_FEN");
+    pos = fen_to_position("START_FEN");
     printPosition(pos, FALSE);
 
     Move moveListNode[MAX_MOVES];
@@ -177,7 +177,7 @@ i32 testBB(void) {
 
     remove_hash_stack(&pos.hashStack);
     
-    pos = fenToPosition(START_FEN);
+    pos = fen_to_position(START_FEN);
     Move best_move = getBestMove(pos);
     while(best_move != NO_MOVE){
         printf("Best move found to be: \n");
@@ -196,7 +196,7 @@ i32 testBB(void) {
     #ifdef HASH_TEST
     printf("\n---------------------------------- HASH TESTING ----------------------------------\n\n");
 
-    pos = fenToPosition(START_FEN);
+    pos = fen_to_position(START_FEN);
     printf("Hash %d is: %" PRIu64 "\n", 0, pos.hash);
     Move moveList_hash[MAX_MOVES];
     i32 size_hash = 0;
@@ -239,7 +239,7 @@ i32 testBB(void) {
 
     while (fgets(line, sizeof(line), file)) {
         char *fen = line;
-        pos = fenToPosition(fen);
+        pos = fen_to_position(fen);
         getBestMove(pos, 5);
         Move best_move = global_best_move;
         remove_hash_stack(&pos.hashStack);
@@ -264,19 +264,19 @@ i32 testBB(void) {
 
     #ifdef SEE_TEST
     printf("\n---------------------------------- SEE TESTING ------------------------------------\n\n");
-    Position testpos = fenToPosition("1k1r4/1pp4p/p7/4p3/8/P5P1/1PP4P/2K1R3 w - -");
+    Position testpos = fen_to_position("1k1r4/1pp4p/p7/4p3/8/P5P1/1PP4P/2K1R3 w - -");
     i32 val = see(testpos, E5, BLACK_PAWN, E1, WHITE_ROOK);
     printf("See val: %d\n", val);
 
-    testpos = fenToPosition("1k1r3q/1ppn3p/p4b2/4p3/8/P2N2P1/1PP1R1BP/2K1Q3 w - -");
+    testpos = fen_to_position("1k1r3q/1ppn3p/p4b2/4p3/8/P2N2P1/1PP1R1BP/2K1Q3 w - -");
     val = see(testpos, E5, BLACK_PAWN, D3, WHITE_KNIGHT);
     printf("See val: %d\n", val);
 
-    testpos = fenToPosition("1k1r3q/1ppn3p/p4b2/4P3/8/P2N2P1/1PP1R1BP/2K1Q3 b - -");
+    testpos = fen_to_position("1k1r3q/1ppn3p/p4b2/4P3/8/P2N2P1/1PP1R1BP/2K1Q3 b - -");
     val = see(testpos, E5, WHITE_PAWN, D7, BLACK_KNIGHT);
     printf("See val: %d\n", val);
 
-    testpos = fenToPosition("rnkr3b/6pp/2p1b3/p3p1N1/2q1N3/1R3Q2/P1PPPP1P/2BKR3 w - -");
+    testpos = fen_to_position("rnkr3b/6pp/2p1b3/p3p1N1/2q1N3/1R3Q2/P1PPPP1P/2BKR3 w - -");
     val = see(testpos, E6, BLACK_BISHOP, G5, WHITE_KNIGHT);
     printf("See val: %d\n", val);
 

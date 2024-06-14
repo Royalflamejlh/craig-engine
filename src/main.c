@@ -40,7 +40,7 @@ i32 main(void) {
     generateMasks();
     generateMagics();
     initZobrist();
-    initPST();
+    init_pst();
     if(initTT()){
         printf("info string WARNING FAILED TO ALLOCATED SPACE FOR TRANSPOSITION TABLE\n");
         return -1;

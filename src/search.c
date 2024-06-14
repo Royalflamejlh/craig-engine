@@ -203,8 +203,8 @@ i32 search_loop(u32 thread_num){
                         if(prev_move != found_move[i]) move_changes++;
                         prev_move = found_move[i];
                     }  
-                    if( (move_changes == 0) || (abs(min_eval - max_eval) <= (PAWN_VALUE/8)))  time_preference = REDUCE_TIME;
-                    if( (move_changes >  3) || (abs(min_eval - max_eval) >= (PAWN_VALUE)))    time_preference = EXTEND_TIME;
+                    if( (move_changes == 0) || (abs(min_eval - max_eval) <= ( 100)))    time_preference = REDUCE_TIME;
+                    if( (move_changes >  3) || (abs(min_eval - max_eval) >= (1000)))    time_preference = EXTEND_TIME;
                 }
             }
             if(time_preference == REDUCE_TIME){

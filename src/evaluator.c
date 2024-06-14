@@ -41,33 +41,35 @@
 #define MOVE_CASTLE_BONUS  300  // Eval bonus for castling
 #define MOVE_OPN_QUEEN_PEN   5  // Pen for moving queen in the opening
 
+i32 PST[3][12][64];
+
 /* Material Values */
 
-const int pawn_value   =   1000;
-const int knight_value =   3500;
-const int bishop_value =   3600;
-const int rook_value   =   5000;
-const int queen_value  =  10000;
-const int king_value   = 100000;
+const int PawnValue   =   1000;
+const int KnightValue =   3500;
+const int BishopValue =   3600;
+const int RookValue   =   5000;
+const int QueenValue  =  10000;
+const int KingValue   = 100000;
 
 static const i32 pieceValues[] = {
-    [WHITE_PAWN  ] = pawn_value,
-    [BLACK_PAWN  ] = pawn_value,
-    [WHITE_KNIGHT] = knight_value,
-    [BLACK_KNIGHT] = knight_value,
-    [WHITE_BISHOP] = bishop_value,
-    [BLACK_BISHOP] = bishop_value,
-    [WHITE_ROOK  ] = rook_value,
-    [BLACK_ROOK  ] = rook_value,
-    [WHITE_QUEEN ] = queen_value,
-    [BLACK_QUEEN ] = queen_value,
-    [WHITE_KING  ] = king_value,
-    [BLACK_KING  ] = king_value
+    [WHITE_PAWN  ] = PawnValue,
+    [BLACK_PAWN  ] = PawnValue,
+    [WHITE_KNIGHT] = KnightValue,
+    [BLACK_KNIGHT] = KnightValue,
+    [WHITE_BISHOP] = BishopValue,
+    [BLACK_BISHOP] = BishopValue,
+    [WHITE_ROOK  ] = RookValue,
+    [BLACK_ROOK  ] = RookValue,
+    [WHITE_QUEEN ] = QueenValue,
+    [BLACK_QUEEN ] = QueenValue,
+    [WHITE_KING  ] = KingValue,
+    [BLACK_KING  ] = KingValue
 };
 
 /* Piece-Square Tables */
 
-const i32 pst_pawn[3][64] = {
+const i32 PSTPawn[3][64] = {
     [OPN_GAME] =
     {
           0,   0,   0,   0,   0,   0,   0,   0,
@@ -103,7 +105,7 @@ const i32 pst_pawn[3][64] = {
     }
 };
 
-const i32 pst_knight[3][64] = {
+const i32 PSTKnight[3][64] = {
     [OPN_GAME] =
     {
         -50, -40, -30, -30, -30, -30, -40, -50,
@@ -139,7 +141,7 @@ const i32 pst_knight[3][64] = {
     }
 };
 
-const i32 pst_bishop[3][64] = {
+const i32 PSTBishop[3][64] = {
     [OPN_GAME] =
     {
          10, -10, -10, -10, -10, -10, -10,  10,
@@ -175,7 +177,7 @@ const i32 pst_bishop[3][64] = {
     }
 };
 
-const i32 pst_rook[3][64] = {
+const i32 PSTRook[3][64] = {
     [OPN_GAME] =
     {
           0,   0,   0,  20,  20,   0,   0,   0,
@@ -211,7 +213,7 @@ const i32 pst_rook[3][64] = {
     },
 };
 
-const i32 pst_queen[3][64] = {
+const i32 PSTQueen[3][64] = {
     [OPN_GAME] =
     {
         -20, -10, -10, -10, -10, -10, -10, -20,
@@ -247,7 +249,7 @@ const i32 pst_queen[3][64] = {
     }
 };
 
-i32 pst_king[3][64] = {
+i32 PSTKing[3][64] = {
     [OPN_GAME] =
     {
          40,  40, -10,   0,   0, -10,  40,  40,
@@ -283,19 +285,44 @@ i32 pst_king[3][64] = {
     }
 };
 
-i32 quickEval(Position pos){
+void init_pst(){
+    for (int i = 0; i < 64; i++) {
+        for(int stage = 0; stage < 3; stage++){
+            // Pawn
+            PST[stage][WHITE_PAWN][i]        = PSTPawn[stage][i];
+            PST[stage][BLACK_PAWN][63 - i]   = PSTPawn[stage][i];
+            // Knight
+            PST[stage][WHITE_KNIGHT][i]      = PSTKnight[stage][i];
+            PST[stage][BLACK_KNIGHT][63 - i] = PSTKnight[stage][i];
+            // Bishop
+            PST[stage][WHITE_BISHOP][i]      = PSTBishop[stage][i];
+            PST[stage][BLACK_BISHOP][63 - i] = PSTBishop[stage][i];
+            // Rook
+            PST[stage][WHITE_ROOK][i]        = PSTRook[stage][i];
+            PST[stage][BLACK_ROOK][63 - i]   = PSTRook[stage][i];
+            // Queen
+            PST[stage][WHITE_QUEEN][i]       = PSTQueen[stage][i];
+            PST[stage][BLACK_QUEEN][63 - i]  = PSTQueen[stage][i];
+            // King
+            PST[stage][WHITE_KING][i]        = PSTKing[stage][i];
+            PST[stage][BLACK_KING][63 - i]   = PSTKing[stage][i];
+        }
+    }
+}
+
+i32 quick_eval(Position pos){
     i32 eval_val = 0;
     Turn turn = pos.flags & TURN;
-    eval_val += king_value   * (count_bits(pos.king[turn])   - count_bits(pos.king[!turn]));
-    eval_val += queen_value  * (count_bits(pos.queen[turn])  - count_bits(pos.queen[!turn]));
-    eval_val += rook_value   * (count_bits(pos.rook[turn])   - count_bits(pos.rook[!turn]));
-    eval_val += bishop_value * (count_bits(pos.bishop[turn]) - count_bits(pos.bishop[!turn]));
-    eval_val += knight_value * (count_bits(pos.knight[turn]) - count_bits(pos.knight[!turn]));
-    eval_val += pawn_value   * (count_bits(pos.pawn[turn])   - count_bits(pos.pawn[!turn]));
+    eval_val += KingValue   * (count_bits(pos.king[turn])   - count_bits(pos.king[!turn]));
+    eval_val += QueenValue  * (count_bits(pos.queen[turn])  - count_bits(pos.queen[!turn]));
+    eval_val += RookValue   * (count_bits(pos.rook[turn])   - count_bits(pos.rook[!turn]));
+    eval_val += BishopValue * (count_bits(pos.bishop[turn]) - count_bits(pos.bishop[!turn]));
+    eval_val += KnightValue * (count_bits(pos.knight[turn]) - count_bits(pos.knight[!turn]));
+    eval_val += PawnValue   * (count_bits(pos.pawn[turn])   - count_bits(pos.pawn[!turn]));
     return eval_val;
 };
 
-u64 getLeastValuablePiece(Position pos, u64 attadef, u8 turn, PieceIndex* piece){
+u64 getLeastValuablePiece(Position pos, u64 attadef, Turn turn, PieceIndex* piece){
     u64 subset = attadef & pos.pawn[turn]; // Pawn
     if (subset){
         *piece = WHITE_PAWN + 6*turn;
@@ -332,26 +359,14 @@ u64 getLeastValuablePiece(Position pos, u64 attadef, u8 turn, PieceIndex* piece)
         return subset & -subset;
     }
 
-   return 0; // empty set
+   return 0; // None were found
 }
-
-static inline i32 quickEval(Position pos){
-    i32 eval_val = 0;
-    Turn turn = pos.flags & WHITE_TURN;
-    eval_val += KING_VALUE   * (count_bits(pos.king[turn])   - count_bits(pos.king[!turn]));
-    eval_val += QUEEN_VALUE  * (count_bits(pos.queen[turn])  - count_bits(pos.queen[!turn]));
-    eval_val += ROOK_VALUE   * (count_bits(pos.rook[turn])   - count_bits(pos.rook[!turn]));
-    eval_val += BISHOP_VALUE * (count_bits(pos.bishop[turn]) - count_bits(pos.bishop[!turn]));
-    eval_val += KNIGHT_VALUE * (count_bits(pos.knight[turn]) - count_bits(pos.knight[!turn]));
-    eval_val += PAWN_VALUE   * (count_bits(pos.pawn[turn])   - count_bits(pos.pawn[!turn]));
-    return eval_val;
-};
 
 /* Static Exchange Evaluator */
 
 i32 see ( Position pos, u32 toSq, PieceIndex target, u32 frSq, PieceIndex aPiece){
     i32 gain[32], d = 0;
-    i32 turn = pos.flags & WHITE_TURN;
+    Turn turn = pos.flags & TURN;
     u64 mayXray = pos.pawn[0] | pos.pawn[1] | pos.bishop[0] | pos.bishop[1] | pos.rook[0] | pos.rook[1] | pos.queen[0] | pos.queen[1];
     u64 removed = 0;
     u64 fromSet = 1ULL << frSq;
@@ -376,7 +391,7 @@ i32 see ( Position pos, u32 toSq, PieceIndex target, u32 frSq, PieceIndex aPiece
 i32 eval_mobility(Position position){
     i32 score = 0;
     i32 size[] = {0};
-    i32 turn = position.flags & WHITE_TURN; // True for white false for black
+    Turn turn = position.flags & TURN;
     u64 ownPos = position.color[turn];
     u64 oppPos = position.color[!turn];
     u64 oppAttackMask = position.attack_mask[!turn];
@@ -416,33 +431,22 @@ i32 eval_mobility(Position position){
 //
 // Evaluation Function
 //
-#ifdef DEBUG
-i32 evaluate(Position pos, u8 verbose){
-#else
-i32 evaluate(Position pos){
-#endif // Debug
+
+i32 eval(Position pos){
     i32 eval_val = pos.quick_eval;
-    i32 turn = pos.flags & WHITE_TURN;
+    Turn turn = pos.flags & TURN;
     i32 stage = pos.stage;
     
     // Insufficient Material Stuff
     if(isInsufficient(pos)) return 0;
-
-    #ifdef DEBUG
-    if(verbose){
-        printf("\nEval for stage: %d, Starting at: %d\n", stage, eval_val);
-    }
-    #endif
+    if(TRACE) printf("\nEval for stage: %d, Starting at: %d\n", stage, eval_val);
 
     //
     // TURN
     //
     if(turn) eval_val += TO_MOVE_BONUS;
     else     eval_val -= TO_MOVE_BONUS;
-
-    #ifdef DEBUG
-    if(verbose) printf("After To Move Bonus: %d\n", eval_val);
-    #endif
+    if(TRACE) printf("After To Move Bonus: %d\n", eval_val);
  
     //
     // Mobility
@@ -452,9 +456,8 @@ i32 evaluate(Position pos){
     makeNullMove(&pos);
     eval_val -= eval_mobility(pos);
     pos = tempPos;
-    #ifdef DEBUG
-    if(verbose) printf("After Mobility Bonus: %d\n", eval_val);
-    #endif
+    if(TRACE) printf("After Mobility Bonus: %d\n", eval_val);
+
 
     //
     // Can Castle
@@ -463,18 +466,14 @@ i32 evaluate(Position pos){
     if (pos.flags & W_LONG_CASTLE ) eval_val += CAN_CASTLE_BONUS;
     if (pos.flags & B_SHORT_CASTLE) eval_val -= CAN_CASTLE_BONUS;
     if (pos.flags & B_LONG_CASTLE ) eval_val -= CAN_CASTLE_BONUS;
-    #ifdef DEBUG
-    if(verbose) printf("After Can Castle Bonus: %d\n", eval_val);
-    #endif
+    if(TRACE) printf("After Can Castle Bonus: %d\n", eval_val);
+
 
     //
     // Penalities
     //
     if(pos.flags & IN_CHECK) eval_val -= CHECK_PEN; // Penalty for being in check
-
-    #ifdef DEBUG
-    if(verbose) printf("After Penalties: %d\n", eval_val);
-    #endif
+    if(TRACE) printf("After Penalties: %d\n", eval_val);
 
     //
     // Pairing
@@ -497,28 +496,22 @@ i32 evaluate(Position pos){
     //
     eval_val += BASE_DEFEND_BONUS * count_bits(pos.color[turn] & pos.attack_mask[turn]);
     eval_val -= BASE_DEFEND_BONUS * count_bits(pos.color[!turn] & pos.attack_mask[!turn]);
-    #ifdef DEBUG
-    if(verbose) printf("After Defend Bonus: %d\n", eval_val);
-    #endif
+    if(TRACE) printf("After Defend Bonus: %d\n", eval_val);
+
 
     //
     // Attack
     //
     eval_val += BASE_ATTACK_BONUS * count_bits(pos.color[!turn] &  pos.attack_mask[turn]);
     eval_val -= BASE_ATTACK_BONUS * count_bits(pos.color[turn] &  pos.attack_mask[!turn]);
-    #ifdef DEBUG
-    if(verbose) printf("After Attack Bonus: %d\n", eval_val);
-    #endif
-    
+    if(TRACE) printf("After Attack Bonus: %d\n", eval_val);
+ 
     //
     // Hanging
     //
     eval_val -= BASE_HANGING_PEN * count_bits((pos.color[turn]  & ~pos.attack_mask[turn])  & pos.attack_mask[!turn]);
     eval_val += BASE_HANGING_PEN * count_bits((pos.color[!turn] & ~pos.attack_mask[!turn]) & pos.attack_mask[turn]);
-    #ifdef DEBUG
-    if(verbose) printf("After Hanging Penalty: %d\n", eval_val);
-    #endif
-
+    if(TRACE) printf("After Hanging Penalty: %d\n", eval_val);
 
     //
     // Pawn Evals
@@ -535,9 +528,7 @@ i32 evaluate(Position pos){
             eval_val += DOUBLE_PAWN_PEN * double_pawns;
         }
     }
-    #ifdef DEBUG
-    if(verbose) printf("After Pawn Structure: %d\n", eval_val);
-    #endif
+    if(TRACE) printf("After Pawn Structure: %d\n", eval_val);
 
     // 
     // King Safety
@@ -565,11 +556,8 @@ i32 evaluate(Position pos){
         eval_val -= PST[stage][index_op][square];
         pieces &= pieces - 1;
     }
-    #ifdef DEBUG
-    if(verbose){
-        printf("After Pawn PST: %d\n", eval_val);
-    }
-    #endif
+
+    if(TRACE) printf("After Pawn PST: %d\n", eval_val);
 
     //Knights
     index = turn ? WHITE_KNIGHT : BLACK_KNIGHT;
@@ -586,11 +574,8 @@ i32 evaluate(Position pos){
         eval_val -= PST[stage][index_op][square];
         pieces &= pieces - 1;
     }
-    #ifdef DEBUG
-    if(verbose){
-        printf("After Knight PST: %d\n", eval_val);
-    }
-    #endif
+
+    if(TRACE) printf("After Knight PST: %d\n", eval_val);
 
     //Bishops
     index = turn ? WHITE_BISHOP : BLACK_BISHOP;
@@ -607,11 +592,8 @@ i32 evaluate(Position pos){
         eval_val -= PST[stage][index_op][square];
         pieces &= pieces - 1;
     }
-    #ifdef DEBUG
-    if(verbose){
-        printf("After Bishop PST: %d\n", eval_val);
-    }
-    #endif
+    if(TRACE) printf("After Bishop PST: %d\n", eval_val);
+
 
     //Rooks
     index = turn ? WHITE_ROOK : BLACK_ROOK;
@@ -628,11 +610,7 @@ i32 evaluate(Position pos){
         eval_val -= PST[stage][index_op][square];
         pieces &= pieces - 1;
     }
-    #ifdef DEBUG
-    if(verbose){
-        printf("After Rook PST: %d\n", eval_val);
-    }
-    #endif
+    if(TRACE) printf("After Rook PST: %d\n", eval_val);
 
     //Queens
     index = turn ? WHITE_QUEEN : BLACK_QUEEN;
@@ -649,11 +627,8 @@ i32 evaluate(Position pos){
         eval_val -= PST[stage][index_op][square];
         pieces &= pieces - 1;
     }
-    #ifdef DEBUG
-    if(verbose){
-        printf("After Queen PST: %d\n", eval_val);
-    }
-    #endif
+    if(TRACE) printf("After Queen PST: %d\n", eval_val);
+
 
     //King
     index = turn ? WHITE_KING : BLACK_KING; // 5 : 11
@@ -670,11 +645,7 @@ i32 evaluate(Position pos){
         eval_val -= PST[stage][index_op][square];
         pieces &= pieces - 1;
     }
-    #ifdef DEBUG
-    if(verbose){
-        printf("After King PST: %d\n", eval_val);
-    }
-    #endif
+    if(TRACE) printf("After King PST: %d\n", eval_val);
 
     return eval_val;
 }
@@ -685,11 +656,7 @@ i32 evaluate(Position pos){
 //Then generate values for the remaining moves
 //Selection sort remaining moves
 
-#define HIST_SCORE_SHIFT 16
-#define HIST_MAX_SCORE  PAWN_VALUE - 100
-
-
-i32 evalMove(Move move, Position* pos){
+i32 move_eval(Move move, Position* pos){
 
     i32 eval = 0;
 
@@ -710,52 +677,54 @@ i32 evalMove(Move move, Position* pos){
     }
     #endif
 
-    //Add on the PST values
+    // Add on the PST values
     eval += PST[pos->stage][fr_piece_i][to_sq] - PST[pos->stage][fr_piece_i][fr_sq];
     
-    //Add on the flag values
-    //i32 histScore;
+    // Add on calculated values depending on the flag
     switch(GET_FLAGS(move)){
+        // Promotion Capture Moves
         case QUEEN_PROMO_CAPTURE:
-            eval += see(*pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + QUEEN_VALUE;
+            eval += see(*pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + QueenValue - PawnValue;
             eval += PST[pos->stage][to_piece_i][to_sq];
             break;
         case ROOK_PROMO_CAPTURE:
-            eval += see(*pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + ROOK_VALUE;
+            eval += see(*pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + RookValue - PawnValue;
             eval += PST[pos->stage][to_piece_i][to_sq];
             break;
         case BISHOP_PROMO_CAPTURE:
-            eval += see(*pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + BISHOP_VALUE;
+            eval += see(*pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + BishopValue - PawnValue;
             eval += PST[pos->stage][to_piece_i][to_sq];
             break;
         case KNIGHT_PROMO_CAPTURE:
-            eval += see(*pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + KNIGHT_VALUE;
+            eval += see(*pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + KnightValue - PawnValue;
             eval += PST[pos->stage][to_piece_i][to_sq];
             break;
-            
+        
+        // Capture Moves
         case EP_CAPTURE:
-            eval += see(*pos, to_sq, ( WHITE_PAWN + ((pos->flags & WHITE_TURN) * 6) ), fr_sq, fr_piece_i);
+            eval += see(*pos, to_sq, ( WHITE_PAWN + ((pos->flags & TURN) * 6) ), fr_sq, fr_piece_i);
             eval += PST[pos->stage][to_piece_i][to_sq];
             break;
-
         case CAPTURE:
             eval += see(*pos, to_sq, to_piece_i, fr_sq, fr_piece_i);
             eval += PST[pos->stage][to_piece_i][to_sq];
             break;
-
+        
+        // Promotion Moves
         case QUEEN_PROMOTION:
-            eval += (queen_value - pawn_value);    
+            eval += (QueenValue - PawnValue);    
             break;
         case ROOK_PROMOTION:
-            eval += (ROOK_VALUE - pawn_value);    
+            eval += (RookValue - PawnValue);    
             break;
         case BISHOP_PROMOTION:
-            eval += (BISHOP_VALUE - pawn_value);    
+            eval += (BishopValue - PawnValue);    
             break;
         case KNIGHT_PROMOTION:
-            eval += (KNIGHT_VALUE - pawn_value);    
+            eval += (KnightValue - PawnValue);    
             break;
-            
+        
+        // Castle Moves
         case QUEEN_CASTLE:
         case KING_CASTLE:
             eval += MOVE_CASTLE_BONUS;
@@ -771,7 +740,7 @@ i32 evalMove(Move move, Position* pos){
 /*
  * Verison of move evaluation that is less accurate and faster using only see
  */
-void q_evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
+void movelist_eval(Move* moveList, i32* moveVals, i32 size, Position pos){
     for(i32 i = 0; i < size; i++){
         moveVals[i] = 0;
         Move move = moveList[i];
@@ -786,19 +755,19 @@ void q_evalMoves(Move* moveList, i32* moveVals, i32 size, Position pos){
 
         switch(GET_FLAGS(move)){
             case QUEEN_PROMO_CAPTURE:
-                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + QUEEN_VALUE;
+                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + QueenValue;
                 moveVals[i] += PST[pos.stage][to_piece_i][to_sq];
                 break;
             case ROOK_PROMO_CAPTURE:
-                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + ROOK_VALUE;
+                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + RookValue;
                 moveVals[i] += PST[pos.stage][to_piece_i][to_sq];
                 break;
             case BISHOP_PROMO_CAPTURE:
-                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + BISHOP_VALUE;
+                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + BishopValue;
                 moveVals[i] += PST[pos.stage][to_piece_i][to_sq];
                 break;
             case KNIGHT_PROMO_CAPTURE:
-                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + KNIGHT_VALUE;
+                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + KnightValue;
                 moveVals[i] += PST[pos.stage][to_piece_i][to_sq];
                 break;
             case EP_CAPTURE:

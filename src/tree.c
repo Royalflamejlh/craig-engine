@@ -22,8 +22,8 @@
 
 #define LMR_DEPTH 3       // LMR not performed if depth < LMR_DEPTH
 
-#define ASP_EDGE (PAWN_VALUE/4)         // Buffer size of aspiration window
-#define HELPER_ASP_EDGE (PAWN_VALUE/2)  // Buffer size of aspiration window in helper search
+#define ASP_EDGE         250         // Buffer size of aspiration window
+#define HELPER_ASP_EDGE  500  // Buffer size of aspiration window in helper search
 
 #define PV_FUTIL_MARGIN 300 // Score difference for a node to be futility pruned
 #define ZW_FUTIL_MARGIN 200
@@ -31,11 +31,13 @@
 #define NULL_PRUNE_R 3  // How much Null prunin' takes off
 #define NMR_MARGIN 2000 // The higher this is, the more likely a null move search is to be taken
 
-#define DELTA_VALUE 750 // Min move value to be tried in Q search
-
 #define HELPER_MOVE_DISORDER 3 // Increasing this changes how out of order helper searches look at moves
 #define HELPER_THREAD_DISORDER 3 // How different each helper thread searches from one another
 
+/* Delta Pruning Rules */
+const int DeltaValue      =  750;
+const int EarlyDeltaValue = 9000;
+const int PromotionBuffer = 9000;
 
 typedef enum searchs{
    PVS,
@@ -198,7 +200,7 @@ static inline u32 select_sort(u32 i, u32 evalIdx, Position* pos, Move *moveList,
    }
 
    if(i <= evalIdx){
-      moveVals[i] = evalMove(moveList[i], pos);
+      moveVals[i] = move_eval(moveList[i], pos);
       if(GET_FLAGS(moveList[i]) > DOUBLE_PAWN_PUSH){
          moveVals[i] += CAPTURE_MOVE_BONUS;
       } else if(isKillerMove(km, moveList[i], ply)){
@@ -215,7 +217,7 @@ static inline u32 select_sort(u32 i, u32 evalIdx, Position* pos, Move *moveList,
       }
 
       if(j <= evalIdx){ // If the move hasn't been evaluated yet calculate score
-         moveVals[j] = evalMove(moveList[j], pos);
+         moveVals[j] = move_eval(moveList[j], pos);
          if(GET_FLAGS(moveList[j]) > DOUBLE_PAWN_PUSH){
             moveVals[j] += CAPTURE_MOVE_BONUS;
          } else if(isKillerMove(km, moveList[j], ply)){
@@ -301,7 +303,7 @@ void search_opening(u32 depth){
    printf("Searching all opening positions\n");
    #endif
    run_get_best_move = TRUE;
-   Position pos = fenToPosition(START_FEN);
+   Position pos = fen_to_position(START_FEN);
    SearchStats stats;
    Move pv_array[MAX_DEPTH] = {0};
    KillerMoves km = {0};
@@ -313,7 +315,7 @@ void search_opening(u32 depth){
    
    i32 size = generateLegalMoves(pos, moveList);
 
-   q_evalMoves(moveList, moveVals, size, pos);
+   movelist_eval(moveList, moveVals, size, pos);
    
    Position prevPos = pos;
    for (i32 i = 0; i < size; i++)  {
@@ -909,12 +911,8 @@ i32 q_search( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats*
    // Handle Draw or Mate
    if(pos->halfmove_clock >= 100 || isInsufficient(*pos) || isRepetition(pos)) return 0;
 
-   #ifdef DEBUG
-   i32 stand_pat = evaluate(*pos, FALSE); // Check to see if the player can opt to not move and be better
-   #else
-   i32 stand_pat = evaluate(*pos); // Check to see if the player can opt to not move and be better
-   #endif
-
+   // Check to see if the player can opt to not move and be better
+   i32 stand_pat = eval(*pos); 
    if(!(pos->flags & IN_CHECK) && stand_pat >= beta){
       return beta;
    }
@@ -923,8 +921,8 @@ i32 q_search( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats*
    }
 
    // Early Delta Pruning (See if down more than Queen)
-   i32 early_delta = QUEEN_VALUE;
-   if (canPromotePawn(pos)) early_delta += (QUEEN_VALUE - PAWN_VALUE);
+   i32 early_delta = EarlyDeltaValue;
+   if (canPromotePawn(pos)) early_delta += PromotionBuffer;
    if (!(pos->flags & IN_CHECK) && stand_pat + early_delta < alpha && pos->stage != END_GAME) {
       #ifdef DEBUG
       debug[QS][NODE_PRUNED_FUTIL]++;
@@ -950,7 +948,7 @@ i32 q_search( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats*
       }
    }
 
-   q_evalMoves(moveList, moveVals, size, *pos);
+   movelist_eval(moveList, moveVals, size, *pos);
    
    #ifdef DEBUG
    if(size > 0) debug[QS][NODE_LOOP_CHILDREN]++;
@@ -963,8 +961,8 @@ i32 q_search( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats*
       q_select_sort(i, moveList, moveVals, size); 
 
       //Delta Pruning
-      i32 delta = DELTA_VALUE;
-      if (GET_FLAGS(moveList[i]) & PROMOTION) delta += (QUEEN_VALUE - PAWN_VALUE);
+      i32 delta = DeltaValue;
+      if (GET_FLAGS(moveList[i]) & PROMOTION) delta += PromotionBuffer;
       if (!(pos->flags & IN_CHECK) && stand_pat + delta + moveVals[i] < alpha && pos->stage != END_GAME) {
          #ifdef DEBUG
          debug[QS][NODE_PRUNED_FUTIL]++;

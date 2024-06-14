@@ -20,9 +20,12 @@ W_LIBS += $(LIBS) -static-libgcc -static-libstdc++
 # Build Targets
 ##
 debug:
-	$(L_CC) $(DFLAGS) $(SAN_FLAGS) $(SRC) $(L_LIBS) -o $(NAME)-debug
+	$(L_CC) $(DFLAGS) $(SAN_FLAGS) $(SRC) $(L_LIBS) -o $(NAME)-debug.engine
 	$(W_CC) $(DFLAGS) $(SRC) $(W_LIBS) -o $(NAME)-debug.exe
 
 release:
-	$(L_CC) $(RFLAGS) $(SRC) $(L_LIBS) -o $(NAME)
+	$(L_CC) $(RFLAGS) $(SRC) $(L_LIBS) -o $(NAME).engine
 	$(W_CC) $(RFLAGS) $(SRC) $(W_LIBS) -o $(NAME).exe
+
+clean:
+	rm *.engine *.exe

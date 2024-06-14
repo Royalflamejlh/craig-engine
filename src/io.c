@@ -158,11 +158,11 @@ static i32 processInput(char* input){
         stopSearch();
         if (strncmp(input, "startpos", 8) == 0) {
             input += 9;
-            set_global_position(fenToPosition(START_FEN));
+            set_global_position(fen_to_position(START_FEN));
         }
         else if (strncmp(input, "fen", 3) == 0) {
             input += 4;
-            set_global_position(fenToPosition(input));
+            set_global_position(fen_to_position(input));
             while (*input != 'm' && *input != '\n' && *input != '\0') {
                 input++;
             }
@@ -211,7 +211,7 @@ static i32 processInput(char* input){
             }
         }
         else if (strncmp(input, "eval", 4) == 0){
-            printf("Eval: %d\n", evaluate(get_global_position(), TRUE));
+            printf("Eval: %d\n", eval(get_global_position()));
         }
         else if (strncmp(input, "play move", 4) == 0){
             printf("Making move: ");

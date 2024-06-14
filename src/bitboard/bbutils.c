@@ -21,7 +21,7 @@ static void updateBit(u64* bitboard, i32 square) {
     *bitboard |= (1ULL << square);
 }
 
-Position fenToPosition(char* FEN) {
+Position fen_to_position(char* FEN) {
     Position pos = {0};
     memset(pos.charBoard, 0, sizeof(pos.charBoard));
     i32 square = 56; // Start at A8
@@ -119,7 +119,7 @@ Position fenToPosition(char* FEN) {
 
     pos.stage = calculateStage(pos);
 
-    pos.quick_eval = quickEval(pos);
+    pos.quick_eval = quick_eval(pos);
 
     pos.hash = hashPosition(pos);
 

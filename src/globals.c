@@ -35,7 +35,7 @@ void init_globals(){
     print_best_move = FALSE;
 
     pthread_mutex_lock(&mutex_global_position);
-    global_position = fenToPosition(START_FEN);
+    global_position = fen_to_position(START_FEN);
     pthread_mutex_lock(&mutex_global_PV);
     global_sd.pv_array = calloc(MAX_DEPTH, sizeof(Move));
     global_sd.depth = 0;

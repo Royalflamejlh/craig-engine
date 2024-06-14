@@ -310,7 +310,7 @@ i32 makeMove(Position *pos, Move move){
 
     pos->stage = calculateStage(*pos);
 
-    pos->quick_eval = quickEval(*pos);
+    pos->quick_eval = quick_eval(*pos);
 
     pos->hash = hashPosition(*pos);
 

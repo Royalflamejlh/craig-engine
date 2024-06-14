@@ -74,7 +74,7 @@ void generateFileMasks();
 void generateDiagonalMasks();
 
 void printBB(u64 BB);
-Position fenToPosition(char* FEN);
+Position fen_to_position(char* FEN);
 i32 PositionToFen(Position pos, char* FEN);
 void printPosition(Position position, char verbose);
 void printDebug(Position position);
