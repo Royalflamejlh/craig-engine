@@ -23,7 +23,7 @@ _Atomic volatile u8 print_on_depth;        // Flag for whether or not to print w
 // Search Parameters
 _Atomic volatile u8  helpers_run;
 _Atomic volatile u32 helpers_search_depth;
-_Atomic volatile u32 helper_eval;
+_Atomic volatile i32 helper_eval;
 
 _Atomic volatile u32 search_depth;
 _Atomic volatile u32 search_time;

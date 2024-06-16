@@ -210,12 +210,10 @@ static i32 processInput(char* input){
                 printMove(debug_moves[i]);
                 printf("\n");
             }
-            remove_hash_stack(&tempPos.hashStack);
         }
         else if (strncmp(input, "eval", 4) == 0){
             Position tempPos = get_global_position();
             printf("Eval: %d\n", eval_position(&tempPos));
-            remove_hash_stack(&tempPos.hashStack);
         }
         else if (strncmp(input, "play move", 4) == 0){
             printf("Making move: ");

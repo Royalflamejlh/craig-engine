@@ -34,9 +34,8 @@ const i32 MoveCastleBonus = 30;
  * Evaluates a move in a position
  */
 i32 eval_move(Move move, Position* pos){
-
     i32 eval = 0;
-
+    
     // Get the piece information from the move and the position.
     Square fr_sq = GET_FROM(move);
     Square to_sq = GET_TO(move);

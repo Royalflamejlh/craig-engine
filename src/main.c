@@ -13,6 +13,7 @@
 #include "types.h"
 #include "tree.h"
 #include "util.h"
+#include "masks.h"
 
 #ifdef DEBUG
 #define RUN_TEST
@@ -41,13 +42,14 @@ i32 main(void) {
     generateMagics();
     initZobrist();
     init_pst();
+    init_masks();
     if(init_tt(20)){
         printf("info string Warning failed to create transposition table, exiting.\n");
         return -1;
     }
     init_globals();
     
-    search_opening(10);
+    //search_opening(10);
 
     printf("info string Finished start up!\n");
 

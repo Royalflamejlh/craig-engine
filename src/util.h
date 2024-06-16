@@ -37,6 +37,12 @@ static inline i32 getlsb(uint64_t bb) {
     return __builtin_ctzll(bb);
 }
 
+// Returns 1 if the given square is a light color square
+// 0 if a dark color square
+static inline u8 is_square_light(Square sq){
+    return ((sq / 8) + (sq % 8)) % 2 == 0;
+}
+
 static inline i32 count_bits(u64 v){
     u32 c;
     for (c = 0; v; c++){

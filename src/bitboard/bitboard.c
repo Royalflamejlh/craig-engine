@@ -534,7 +534,6 @@ u64 getKingAttacks(u64 kings) {
 u64 getKingMoves(Position* pos, Turn turn, i32* count) {
     u64 kings = pos->king[turn];
     u64 ownPieces = pos->color[turn];
-    u64 oppPieces = pos->color[!turn];
     u64 oppAttackMask = pos->attack_mask[!turn];
     u64 all_moves = 0ULL;
 
@@ -542,19 +541,12 @@ u64 getKingMoves(Position* pos, Turn turn, i32* count) {
     u64 nocap_moves = kingMoves[square] & ~ownPieces & ~oppAttackMask;
     all_moves |= nocap_moves;
 
-    u64 cap_moves = nocap_moves & oppPieces;
-    nocap_moves &= ~cap_moves;
+    u64 temp_moves = all_moves;
+    while(temp_moves){
+        (*count)++;
+        temp_moves &= temp_moves - 1;
+    }
 
-    while(nocap_moves){
-        i32 move_sq = getlsb(nocap_moves);
-        (*count)++;
-        nocap_moves &= nocap_moves - 1;
-    }
-    while(cap_moves){
-        i32 move_sq = getlsb(cap_moves);
-        (*count)++;
-        cap_moves &= cap_moves - 1;
-    }
     return all_moves;
 }
 

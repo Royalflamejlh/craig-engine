@@ -1,7 +1,7 @@
 #include "evaluator.h"
 #include "types.h"
 #include "util.h"
-#include "tables.h"
+#include "masks.h"
 #include "movement.h"
 #include "bitboard/bbutils.h"
 #include "bitboard/bitboard.h"
@@ -254,17 +254,22 @@ i32 PSTKing[3][64] = {
 i32 KnightAdjust[9] = { -200, -160, -120, -80, -40,  0,  40,  80, 120 };
 i32   RookAdjust[9] = { 150,   120,   90,  60,  30,  0, -30, -60, -90 };
 
+/* King Saftey Values */
+const i32 KingPawnDistancePenalty =  -20;
+const i32 OpenFileNearKingPenalty = -200;
+const i32 VirtKingMobilityPenalty =  -10;
+
 static const int SafetyTable[100] = {
-  0,  0,   1,   2,   3,   5,   7,   9,  12,  15,
-  18,  22,  26,  30,  35,  39,  44,  50,  56,  62,
-  68,  75,  82,  85,  89,  97, 105, 113, 122, 131,
-  140, 150, 169, 180, 191, 202, 213, 225, 237, 248,
-  260, 272, 283, 295, 307, 319, 330, 342, 354, 366,
-  377, 389, 401, 412, 424, 436, 448, 459, 471, 483,
-  494, 500, 500, 500, 500, 500, 500, 500, 500, 500,
-  500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
-  500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
-  500, 500, 500, 500, 500, 500, 500, 500, 500, 500
+       0,    0,   10,   20,   30,   50,   70,   90,  120,  150,
+     180,  220,  260,  300,  350,  390,  440,  500,  560,  620,
+     680,  750,  820,  850,  890,  970, 1050, 1130, 1220, 1310,
+    1400, 1500, 1690, 1800, 1910, 2020, 2130, 2250, 2370, 2480,
+    2600, 2720, 2830, 2950, 3070, 3190, 3300, 3420, 3540, 3660,
+    3770, 3890, 4010, 4120, 4240, 4360, 4480, 4590, 4710, 4830,
+    4940, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000,
+    5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000,
+    5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000,
+    5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000
 };
 
 /* Mobility Bonus Values */
@@ -300,7 +305,7 @@ const i32 QueenAttackedByLesser  = -100;
 /* Pawn Specific Values */
 const i32 DoubledPawnPenalty  = -100;
 const i32 IsolatedPawnPenalty =  -50;
-const i32 RammedPawnPenalty   =  -20; 
+const i32 RammedPawnPenalty   =  -20;
 const i32 PassedPawnBonus     =  300;
 
 /* Knight Specific Values */
@@ -316,59 +321,66 @@ const i32 TwoRookPenalty      = -20;
 
 /* Queen Specific Values */
 
-/* King Saftey Values */
-const i32 KingPawnDistancePenalty = -20;
-
 /* Positional Values */
 const i32 CastleAbilityBonus = 60;
 
 /* Returns a material-only based evaluation */
 i32 eval_material(Position* pos){
-    i32 eval_val = 0;
+    i32 eval = 0;
     Turn turn = pos->flags & TURN_MASK;
-    eval_val += KingValue   * (count_bits(pos->king[turn])   - count_bits(pos->king[!turn]));
-    eval_val += QueenValue  * (count_bits(pos->queen[turn])  - count_bits(pos->queen[!turn]));
-    eval_val += RookValue   * (count_bits(pos->rook[turn])   - count_bits(pos->rook[!turn]));
-    eval_val += BishopValue * (count_bits(pos->bishop[turn]) - count_bits(pos->bishop[!turn]));
-    eval_val += KnightValue * (count_bits(pos->knight[turn]) - count_bits(pos->knight[!turn]));
-    eval_val += PawnValue   * (count_bits(pos->pawn[turn])   - count_bits(pos->pawn[!turn]));
-    return eval_val;
+    eval += KingValue   * (count_bits(pos->king[turn])   - count_bits(pos->king[!turn]));
+    eval += QueenValue  * (count_bits(pos->queen[turn])  - count_bits(pos->queen[!turn]));
+    eval += RookValue   * (count_bits(pos->rook[turn])   - count_bits(pos->rook[!turn]));
+    eval += BishopValue * (count_bits(pos->bishop[turn]) - count_bits(pos->bishop[!turn]));
+    eval += KnightValue * (count_bits(pos->knight[turn]) - count_bits(pos->knight[!turn]));
+    eval += PawnValue   * (count_bits(pos->pawn[turn])   - count_bits(pos->pawn[!turn]));
+    return eval;
 };
 
 /* 
  * Evaluates a position
  */
 i32 eval_position(Position* pos){
-    Turn turn = pos->flags & TURN_MASK;
-    i32 stage = pos->stage;
     EvalData eval_data = {0};
-    // Start with the material
-    i32 eval_val = 0;
+    Turn turn = pos->flags & TURN_MASK;
+    i32 eval = 0;
 
     // Check for insufficient material
     if(isInsufficient(pos)) return 0;
 
-    eval_val +=   eval_pawns(pos, &eval_data, WHITE) -   eval_pawns(pos, &eval_data, BLACK);
-    eval_val += eval_knights(pos, &eval_data, WHITE) - eval_knights(pos, &eval_data, BLACK);
-    eval_val += eval_bishops(pos, &eval_data, WHITE) - eval_bishops(pos, &eval_data, BLACK);
-    eval_val +=   eval_rooks(pos, &eval_data, WHITE) -   eval_rooks(pos, &eval_data, BLACK);
-    eval_val +=  eval_queens(pos, &eval_data, WHITE) -  eval_queens(pos, &eval_data, BLACK);
-    eval_val +=   eval_kings(pos, &eval_data, WHITE) -   eval_pawns(pos, &eval_data, BLACK);
+    eval +=   eval_pawns(pos, &eval_data, WHITE) - eval_pawns(pos, &eval_data, BLACK);
+    //printf("Eval after pawns %d\n", eval);
 
-    return eval_val;
+    eval += eval_knights(pos, &eval_data, WHITE) - eval_knights(pos, &eval_data, BLACK);
+    //printf("Eval after knights %d\n", eval);
+
+    eval += eval_bishops(pos, &eval_data, WHITE) - eval_bishops(pos, &eval_data, BLACK);
+    //printf("Eval after bishops %d\n", eval);
+
+    eval +=   eval_rooks(pos, &eval_data, WHITE) - eval_rooks(pos, &eval_data, BLACK);
+    //printf("Eval after rooks %d\n", eval);
+
+    eval +=  eval_queens(pos, &eval_data, WHITE) - eval_queens(pos, &eval_data, BLACK);
+    //printf("Eval after queens %d\n", eval);
+
+    eval +=   eval_kings(pos, &eval_data, WHITE) - eval_kings(pos, &eval_data, BLACK);
+    //printf("Eval after kings %d\n", eval);
+
+    return turn ? eval : -eval;
 }
 
 i32 eval_pawns(Position * pos, EvalData* eval_data, Turn turn){
     const Stage stage = pos->stage;
-    const PieceIndex piece    = turn ? WHITE_PAWN : BLACK_PAWN;
-    const PieceIndex piece_op = turn ? BLACK_PAWN : WHITE_PAWN;
-    eval_data->pawn_count = 0;
+    const PieceIndex piece = turn ? WHITE_PAWN : BLACK_PAWN;
+    eval_data->pawn_count[turn] = 0;
     i32 eval = 0;
 
     // Iterate through the pawns
     u64 pieces = pos->pawn[turn];
     while (pieces) {
         i32 square = getlsb(pieces);
+        u32 file = square % 8;
+        u32 promo_square = turn ? A8 + file : A1 + file;
 
         // Material Value
         eval += PawnValue;
@@ -376,32 +388,53 @@ i32 eval_pawns(Position * pos, EvalData* eval_data, Turn turn){
         // PST
         eval += PST[stage][piece][square];
 
-        // Mobility Bonus
-        getPawnMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces, u64 enPassant, char flags, Move *moveList, i32 *idx)
+        // Passed Pawn Bonus
+        if((PassedPawnMask[turn][square] & pos->pawn[!turn]))
+            eval += PassedPawnBonus;
+
+        // Doubled Pawn Penalty
+        // Applied for the pawn in the back
+        if(!(betweenMask[square][promo_square] & pos->pawn[turn]))
+            eval += DoubledPawnPenalty;
+
+        // Isolated pawn penalty
+        // When there are no pawns on either of the neighboring files
+        if(     ( file == 0 && !(fileMask[file + 1] & pos->pawn[turn]) )
+            ||  ( file == 7 && !(fileMask[file - 1] & pos->pawn[turn]) )
+            ||  ( !(fileMask[file + 1] & pos->pawn[turn] || fileMask[file - 1] & pos->pawn[turn]) ) )
+            eval += IsolatedPawnPenalty;
+        
 
         // Update evaluation data
-        eval_data->pawn_count++;
+        eval_data->pawn_count[turn]++;
 
         pieces &= pieces - 1;
     }
-
-    
-
 
     return eval;
 }
 
 i32 eval_knights(Position * pos, EvalData* eval_data, Turn turn){
     const Stage stage = pos->stage;
-    const PieceIndex piece    = turn ? WHITE_KNIGHT : BLACK_KNIGHT;
-    const PieceIndex piece_op = turn ? BLACK_KNIGHT : WHITE_KNIGHT;
+    const PieceIndex piece = turn ? WHITE_KNIGHT : BLACK_KNIGHT;
     i32 eval = 0;
 
-    // PST Values
+   
     u64 pieces = pos->knight[turn];
     while (pieces) {
         i32 square = getlsb(pieces);
+
+        // Knight material value
+        // Changes with the number of pawns we have
+        eval += KnightValue + KnightAdjust[eval_data->pawn_count[turn]];
+
+        // PST Values
         eval += PST[stage][piece][square];
+
+        // Knight Outpost Bonus
+
+        // Knight Forking bonus
+
         pieces &= pieces - 1;
     }
 
@@ -411,58 +444,80 @@ i32 eval_knights(Position * pos, EvalData* eval_data, Turn turn){
 
 i32 eval_bishops(Position * pos, EvalData* eval_data, Turn turn){
     const Stage stage = pos->stage;
-    const PieceIndex piece    = turn ? WHITE_BISHOP : BLACK_BISHOP;
-    const PieceIndex piece_op = turn ? BLACK_BISHOP : WHITE_BISHOP;
-    i32 eval = 0;
+    const PieceIndex piece = turn ? WHITE_BISHOP : BLACK_BISHOP;
+    i32 eval = 0, light_bishops = 0, dark_bishops = 0;
 
-    // PST Values
+    
     u64 pieces = pos->bishop[turn];
     while (pieces) {
         i32 square = getlsb(pieces);
+
+        // Material Value
+        eval += BishopValue;
+
+        // PST Values
         eval += PST[stage][piece][square];
+
+        // Give a bonus if the bishops square colors is opposite that of the majority of pawns
+        
+        //Update evaluation info
+        if(is_square_light(square)) light_bishops++;
+        else                         dark_bishops++;
+
         pieces &= pieces - 1;
     }
 
-    if (count_bits(pos->bishop[turn]) == 2)  eval += OppositeBishopBonus;
+
+    // Give a bonus if there are bishops on opposite colors
+    if (light_bishops >= 1 && dark_bishops >= 1) eval += OppositeBishopBonus;
 
     return eval;
 }
 
 i32 eval_rooks(Position * pos, EvalData* eval_data, Turn turn){
     const Stage stage = pos->stage;
-    const PieceIndex piece    = turn ? WHITE_ROOK : BLACK_ROOK;
-    const PieceIndex piece_op = turn ? BLACK_ROOK : WHITE_ROOK;
+    const PieceIndex piece = turn ? WHITE_ROOK : BLACK_ROOK;
     i32 eval = 0;
 
     // PST Values
     u64 pieces = pos->rook[turn];
     while (pieces) {
         i32 square = getlsb(pieces);
+
+        // Rook material value
+        // Changes with the number of pawns we have
+        eval += RookValue + RookAdjust[eval_data->pawn_count[turn]];
+
         eval += PST[stage][piece][square];
         pieces &= pieces - 1;
     }
 
     // Connected Rook Bonus
+    // Given if one of the rooks is attacking the other
     u64 rook1 = pos->rook[turn] & -pos->rook[turn];
     if(getRookAttacks(rook1, pos->color[turn], pos->color[!turn]) & (pos->rook[turn] & ~rook1))  eval += ConnectedRookBonus;
 
     // Double Rook Penalty
-    if (count_bits(pos->rook[turn]) >= 2) eval -= TwoRookPenalty;
+    if (count_bits(pos->rook[turn]) >= 2) eval += TwoRookPenalty;
 
     return eval;
 }
 
 i32 eval_queens(Position * pos, EvalData* eval_data, Turn turn){
     const Stage stage = pos->stage;
-    const PieceIndex piece    = turn ? WHITE_QUEEN : BLACK_QUEEN;
-    const PieceIndex piece_op = turn ? BLACK_QUEEN : WHITE_QUEEN;
+    const PieceIndex piece = turn ? WHITE_QUEEN : BLACK_QUEEN;
     i32 eval = 0;
-
-    // PST Values
+    
     u64 pieces = pos->queen[turn];
     while (pieces) {
         i32 square = getlsb(pieces);
+
+        // Material Value
+        eval += QueenValue;
+
+        // PST Values
         eval += PST[stage][piece][square];
+
         pieces &= pieces - 1;
     }
 
@@ -471,8 +526,7 @@ i32 eval_queens(Position * pos, EvalData* eval_data, Turn turn){
 
 i32 eval_kings(Position * pos, EvalData* eval_data, Turn turn){
     const Stage stage = pos->stage;
-    const PieceIndex piece    = turn ? WHITE_KING : BLACK_KING;
-    const PieceIndex piece_op = turn ? BLACK_KING : WHITE_KING;
+    const PieceIndex piece = turn ? WHITE_KING : BLACK_KING;
     const u32 square = getlsb(pos->king[turn]);
     i32 eval = 0;
 
@@ -480,7 +534,7 @@ i32 eval_kings(Position * pos, EvalData* eval_data, Turn turn){
     eval += PST[stage][piece][square];
 
     // Mobility
-    i32 move_count;
+    i32 move_count = 0;
     u64 king_move_sq = getKingMoves(pos, turn, &move_count);
     if (turn  && pos->flags & W_SHORT_CASTLE) move_count++;
     if (turn  && pos->flags & W_LONG_CASTLE ) move_count++;
@@ -494,7 +548,6 @@ i32 eval_kings(Position * pos, EvalData* eval_data, Turn turn){
 
     // Nearby Enemies
     // if(NearbyMask[square] & pos->queen[!turn]) eval += EnemyNearKingPenalty;
-
 
     return eval;
 }

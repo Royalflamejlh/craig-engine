@@ -4,7 +4,7 @@
 #define TRACE 0
 
 struct EvalData{
-    u32 pawn_count;
+    u32 pawn_count[2];
 };
 
 // Evaluation functions for a single position
