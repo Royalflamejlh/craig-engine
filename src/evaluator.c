@@ -272,54 +272,64 @@ static const int SafetyTable[100] = {
     5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000, 5000
 };
 
-/* Mobility Bonus Values */
-const i32 PawnMobilityBonus   =  10;
-const i32 KnightMobilityBonus =  30;
-const i32 BishopMobilityBonus =  35;
-const i32 RookMobilityBonus   =  50;
-const i32 QueenMobilityBonus  =  60;
-const i32 KingMobilityBonus   =  90;
-
-/* Hanging Penalty Values */
-const i32 PawnHangingPenalty   =   -5;
-const i32 KnightHangingPenalty =  -10;
-const i32 BishopHangingPenalty =  -10;
-const i32 RookHangingPenalty   =  -15;
-const i32 QueenHangingPenalty  =  -20;
-const i32 KingHangingPenalty   =    0;
-
-/* Bonus for number of squares under attack */
-const i32 PawnAttackSquareBonus   = 50;
-const i32 KnightAttackSquareBonus = 25;
-const i32 BishopAttackSquareBonus = 10;
-const i32 RookAttackSquareBonus   =  5;
-const i32 QueenAttackSquareBonus  =  1;
-const i32 KingAttackSquareBonus   =  0;
-
-/* Penalties for being attacked by a lesser piece */
-const i32 KnightAttackedByLesser = -10;
-const i32 BishopAttackedByLesser = -10;
-const i32 RookAttackedByLesser   = -30;
-const i32 QueenAttackedByLesser  = -100;
-
 /* Pawn Specific Values */
-const i32 DoubledPawnPenalty  = -100;
-const i32 IsolatedPawnPenalty =  -50;
-const i32 RammedPawnPenalty   =  -20;
-const i32 PassedPawnBonus     =  300;
+
+const i32 PawnHangingPenalty = -5;
+
+const i32 PawnAttackSquareBonus = 50;
+
+const i32 DoubledPawnPenalty = -100;
+
+const i32 IsolatedPawnPenalty = -50;
+
+const i32 RammedPawnPenalty = -20;
+
+const i32 PassedPawnBonus = 300;
+
+const i32 ConnectedPawnBonus = 100;
 
 /* Knight Specific Values */
+
+const i32 KnightHangingPenalty =  -10;
+
+const i32 KnightMobility[9] = { -1040, -450, -220, -80, 60, 110, 190, 300, 430 };
+
+const i32 KnightAttackedByLesser = -10;
+
 const i32 OutpostKnightBonus = 100;
 
 /* Bishop Specific Values */
-const i32 OutpostBishopBonus  =  20;
+
+const i32 BishopHangingPenalty = -10;
+
+const i32 BishopMobility[14] = { -990, -460, -160, -40, 60, 140, 170, 190, 190, 270, 260, 520, 550, 830 };
+
+const i32 OutpostBishopBonus = 20;
+
 const i32 OppositeBishopBonus = 200;
 
 /* Rook Specific Values */
-const i32 ConnectedRookBonus  = 100;
-const i32 TwoRookPenalty      = -20;
+
+const i32 RookHangingPenalty = -15;
+
+const i32 RookMobility[15] = { -1270, -560, -250, -120, -100, -120, -110, -40, 40, 90, 110, 190, 190, 370, 970 };
+
+const i32 ConnectedRookBonus = 100;
+
+const i32 TwoRookPenalty = -20;
 
 /* Queen Specific Values */
+
+const i32 QueenHangingPenalty = -20;
+
+const i32 QueenMobility[28] = 
+{
+    -1110, -2530, -1270, -460, -200, -90, -10,  20,  80, 100, 150, 170,  200,  230,
+      220,   210,   240,  160,  130, 180, 250, 380, 340, 280, 100,  70, -420, -230,
+};
+
+const i32 QueenPinPenalty = -200;
+
 
 /* Positional Values */
 const i32 CastleAbilityBonus = 60;
@@ -540,11 +550,6 @@ i32 eval_kings(Position * pos, EvalData* eval_data, Turn turn){
     if (turn  && pos->flags & W_LONG_CASTLE ) move_count++;
     if (!turn && pos->flags & B_SHORT_CASTLE) move_count++;
     if (!turn && pos->flags & B_LONG_CASTLE ) move_count++;
-
-    eval += move_count * KingMobilityBonus;
-
-    // Hanging
-    if(pos->king[turn] & pos->attack_mask[turn]) eval += KingHangingPenalty;
 
     // Nearby Enemies
     // if(NearbyMask[square] & pos->queen[!turn]) eval += EnemyNearKingPenalty;
