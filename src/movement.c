@@ -42,12 +42,12 @@ u16 generateLegalMoves(Position* position,  Move* moveList){
 /* Generate Moves that capture pieces, and put the opponents king in check */
 u16 generateThreatMoves(Position* position,  Move* moveList){
     i32 size[] = {0};
-    i32 turn = position->flags & TURN;
+    i32 turn = position->flags & TURN_MASK;
     u64 ownPos = position->color[turn];
     u64 oppPos = position->color[!turn];
     u64 oppAttackMask = position->attack_mask[!turn];
 
-    i32 kingSq = __builtin_ctzll(position->king[!turn]);
+    i32 kingSq = getlsb(position->king[!turn]);
     u64 r_check_squares = rookAttacks(  ownPos | oppPos, kingSq) & ~(ownPos | oppPos);
     u64 b_check_squares = bishopAttacks(ownPos | oppPos, kingSq) & ~(ownPos | oppPos);
 
@@ -284,7 +284,7 @@ i32 makeMove(Position *pos, Move move){
 
     //Double Check Flag
     if(pos->flags & IN_CHECK){
-       i32 king_sq = __builtin_ctzll(pos->king[!turn]);
+       i32 king_sq = getlsb(pos->king[!turn]);
        u64 attackers = getAttackers(pos, king_sq, turn);
        attackers &= attackers - 1;
        if(attackers) pos->flags |= IN_D_CHECK;
@@ -325,9 +325,9 @@ i32 makeMove(Position *pos, Move move){
 i32 makeNullMove(Position *pos){
 
     pos->halfmove_clock++;
-    if(!(pos->flags & TURN)) pos->fullmove_number++;
+    if(!(pos->flags & TURN_MASK)) pos->fullmove_number++;
 
-    pos->flags ^= TURN;
+    pos->flags ^= TURN_MASK;
 
     // If there was an en passant square we have to regen pinned pieces
     if(pos->en_passant){
@@ -348,7 +348,7 @@ void unmakeMove(Position *position, Move move){
 
 static u64 generatePinnedPiecesColor(Position* pos, i32 turn){
     u64 pos_pinners;
-    i32 k_square = __builtin_ctzll(pos->king[turn]);
+    i32 k_square = getlsb(pos->king[turn]);
 
     //Contains all the initial pieces
     u64 all_pieces = pos->color[0] | pos->color[1];  
@@ -380,7 +380,7 @@ static u64 generatePinnedPiecesColor(Position* pos, i32 turn){
     h_attack_mask = rookAttacks(all_pieces & ~pinned & ~ep_pawn_square, k_square);
     pos_pinners = h_attack_mask & (pos->queen[!turn] | pos->rook[!turn]);
     while(pos_pinners){
-        i32 pinner_sq = __builtin_ctzll(pos_pinners);
+        i32 pinner_sq = getlsb(pos_pinners);
         pin_directions |= betweenMask[k_square][pinner_sq];
         pos_pinners &= pos_pinners - 1;
     }
@@ -388,7 +388,7 @@ static u64 generatePinnedPiecesColor(Position* pos, i32 turn){
     d_attack_mask = bishopAttacks(all_pieces & ~pinned, k_square);
     pos_pinners = d_attack_mask & (pos->queen[!turn] | pos->bishop[!turn]);
     while(pos_pinners){
-        i32 pinner_sq = __builtin_ctzll(pos_pinners);
+        i32 pinner_sq = getlsb(pos_pinners);
         pin_directions |= betweenMask[k_square][pinner_sq];
         pos_pinners &= pos_pinners - 1;
     }

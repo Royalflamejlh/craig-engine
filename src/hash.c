@@ -48,7 +48,7 @@ u64 hashPosition(Position pos){
     }
 
     //Hash the enpassant file
-    if(pos.en_passant) hash ^= zobristEnPassant[__builtin_ctzll(pos.en_passant) % 8];
+    if(pos.en_passant) hash ^= zobristEnPassant[getlsb(pos.en_passant) % 8];
     
     //Hash the turn
     if(pos.flags & WHITE_TURN) hash ^= zobristTurn;

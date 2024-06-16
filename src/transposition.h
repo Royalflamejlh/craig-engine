@@ -3,12 +3,15 @@
 #include "types.h"
 #include <stdatomic.h>
 #include <stdalign.h>
+#include <stdint.h>
 
 enum {
-    NO_NODE,
-    PV_NODE,
-    CUT_NODE,
-    ALL_NODE,
+    NO_NODE  = 0,
+    PV_NODE  = 1,
+    CUT_NODE = 2,
+    ALL_NODE = 3,
+
+    TT_ROTATION = 3,
 };
 
 #pragma pack(1)
@@ -33,16 +36,10 @@ typedef union {
 _Static_assert(sizeof(TTEntryData)   == 8, "Size of TTEntryData is not 64 bits");
 _Static_assert(sizeof(TTEntryFields) == 8, "Size of TTEntryFields is not 64 bits");
 
-i32 initTT();
-i32 freeTT();
+i32 init_tt(i32 size_mb);
+i32 tt_free();
+void tt_clear();
+void store_tt_entry(u64 hash, char depth, i32 eval, char node_type, Move move);
 
-TTEntryData getTTEntry(u64 hash);
-
-void storeTTEntry(u64 hash, char depth, i32 eval, char node_type, Move move);
-
-#ifdef DEBUG
-void startTTDebug(void);
-void printTTDebug(void);
-#endif
-
+TTEntryData get_tt_entry(u64 hash);
 #endif

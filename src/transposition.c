@@ -1,68 +1,78 @@
 #include "transposition.h"
+#include "types.h"
 #include <stdatomic.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
-#define TRANS_BITS 28
-
-#define KEY_MASK (((1ULL << TRANS_BITS))-1)
-
-#define ROTATION 3 //How many slots to rotate to try to insert / find
-
-#ifdef DEBUG
-static u64 get_suc, get_rej, store_cnt, store_rej;
-void startTTDebug(void){
-    get_suc = 0;
-    get_rej = 0;
-    store_cnt = 0;
-    store_rej = 0;
-}
-void printTTDebug(void){
-    printf("TT GET Suc: %" PRIu64 " Fail: %" PRIu64 ", TT STORE Suc: %" PRIu64 " Fail: %" PRIu64 "\n", get_suc, get_rej, store_cnt, store_rej);
-}
+#if defined(__linux__)
+    #include <sys/mman.h>
 #endif
 
-static TTEntry* table;
+TTEntry* table = NULL;
+u64 key_mask = 0;
 
-i32 initTT(){
-    table = (TTEntry*)calloc((KEY_MASK + 1), sizeof(TTEntry));
-    if(!table) return -1;
-    long long tt_size = (KEY_MASK + 1)* sizeof(TTEntry);
-    printf("info string TTEntry Size: %d, Transposition table size: %lld Mb\n", (int)sizeof(TTEntry), tt_size/1000000);
+i32 init_tt(i32 size_mb){
+    const uint64_t MB = 1ull << 20;
+    if(table) tt_free();
+
+    // Calculate the table size that is less than or equal to the requested size in MB
+    u64 table_size = 1;
+    while ((table_size) * sizeof(TTEntry) <= size_mb * MB / 2) table_size = table_size << 1;
+    key_mask = table_size - 1;
+
+    // On linux systems we want to specify the page for better perfomance
+#if defined(__linux__) && !defined(__ANDROID__)
+    if(size_mb >= 2){
+        table = aligned_alloc(2 * MB, table_size * sizeof(TTEntry));
+        madvise(table, table_size * sizeof(TTEntry), MADV_HUGEPAGE);
+    }
+    else table = (TTEntry*)calloc(table_size, sizeof(TTEntry));
+#else
+    table = (TTEntry*)calloc(table_size, sizeof(TTEntry));
+#endif
+    
+    if(!table){
+        printf("info string Failure to allocate Transposition table");
+        return -1;
+    }
+    
+    tt_clear();
+
+    long long tt_size = table_size * sizeof(TTEntry);
+    printf("info string TTEntry Size: %d, Transposition table size: %lld Mb\n", (int)sizeof(TTEntry), tt_size/MB);
     return 0;
 }
 
-i32 freeTT(){
+i32 tt_free(){
     free(table);
     return 0;
 }
 
-TTEntryData getTTEntry(u64 hash){
+void tt_clear(){
+    memset(table, 0, (key_mask+1)*sizeof(TTEntry));
+}
+
+TTEntryData get_tt_entry(u64 hash){
     TTEntryData tt_data;
     TTEntry tt_entry;
-    for(i32 i = 0; i < ROTATION; i++){
-        u64 key = (hash + i) & KEY_MASK;
+    for(i32 i = 0; i < TT_ROTATION; i++){
+        u64 key = (hash + i) & key_mask;
         tt_entry.data = atomic_load(&table[key].data);
         tt_entry.hash = atomic_load(&table[key].hash);
         if((tt_entry.data ^ tt_entry.hash) == hash){
-            #ifdef DEBUG
-            get_suc++;
-            #endif
             tt_data.data = tt_entry.data;
             return tt_data;
         }   
     }
-    #ifdef DEBUG
-    get_rej++;
-    #endif
     tt_data.data = 0;
     return tt_data;
 }
 
-void storeTTEntry(u64 hash, char depth, i32 eval, char node_type, Move move){
+void store_tt_entry(u64 hash, char depth, i32 eval, char node_type, Move move){
     TTEntryData tt_data;
-    for(i32 i = 0; i < ROTATION; i++){
-        u64 key = (hash + i) & KEY_MASK; // Ensure wrapping around
+    for(i32 i = 0; i < TT_ROTATION; i++){
+        u64 key = (hash + i) & key_mask;
         tt_data.data = atomic_load(&table[key].data);
         if(node_type != PV_NODE && (tt_data.fields.node_type == PV_NODE)){
             continue;
@@ -70,9 +80,6 @@ void storeTTEntry(u64 hash, char depth, i32 eval, char node_type, Move move){
         if(depth < tt_data.fields.depth){
             continue;
         }
-        #ifdef DEBUG
-        store_cnt++;
-        #endif
         tt_data.fields.eval = eval;
         tt_data.fields.depth = depth;
         tt_data.fields.move = move;
@@ -82,9 +89,6 @@ void storeTTEntry(u64 hash, char depth, i32 eval, char node_type, Move move){
         atomic_store(&table[key].hash, hash);
         return;
     }
-    #ifdef DEBUG
-    store_rej++;
-    #endif
 }
 
     

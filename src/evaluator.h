@@ -3,11 +3,25 @@
 
 #define TRACE 0
 
-i32 eval_material(Position* pos);
+struct EvalData{
+    u32 pawn_count;
+};
+
+// Evaluation functions for a single position
 i32 eval_position(Position* pos);
-i32 see(Position* pos, u32 toSq, PieceIndex target, u32 frSq, PieceIndex aPiece);
-i32 eval_move(Move move, Position* pos);
-void eval_movelist(Position* pos, Move* moveList, i32* moveVals, i32 size);
+i32 eval_pawns(Position * pos, EvalData* eval_data, Turn turn);
+i32 eval_knights(Position * pos, EvalData* eval_data, Turn turn);
+i32 eval_bishops(Position * pos, EvalData* eval_data, Turn turn);
+i32 eval_rooks(Position * pos, EvalData* eval_data, Turn turn);
+i32 eval_queens(Position * pos, EvalData* eval_data, Turn turn);
+i32 eval_kings(Position * pos, EvalData* eval_data, Turn turn);
+
+// Quickly evaluate a position based on the material
+i32 eval_material(Position* pos);
+
 void init_pst();
+
+// Global data
+extern i32 PST[3][12][64];
 
 

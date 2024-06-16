@@ -103,12 +103,12 @@ Position fen_to_position(char* FEN) {
 
     //Double Check Flag
     if(pos.flags & IN_CHECK){
-       i32 kign_sq = __builtin_ctzll(pos.king[1]);
+       i32 kign_sq = getlsb(pos.king[1]);
        u64 attackers = getAttackers(&pos, kign_sq, 0);
        attackers &= attackers - 1; // Allow underflow
        if(attackers) pos.flags |= IN_D_CHECK;
        
-       kign_sq = __builtin_ctzll(pos.king[0]);
+       kign_sq = getlsb(pos.king[0]);
        attackers = getAttackers(&pos, kign_sq, WHITE_TURN);
        attackers &= attackers - 1; // Allow underflow
        if(attackers) pos.flags |= IN_D_CHECK;
@@ -171,7 +171,7 @@ i32 PositionToFen(Position pos, char* FEN) {
     // En passant target square
     FEN[index++] = ' ';
     if (pos.en_passant) {
-        i32 square = __builtin_ctzll(pos.en_passant);
+        i32 square = getlsb(pos.en_passant);
         FEN[index++] = 'a' + (square % 8);
         FEN[index++] = '1' + (square / 8);
     } else {

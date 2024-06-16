@@ -6,51 +6,16 @@
 #include "bitboard/bbutils.h"
 #include "bitboard/bitboard.h"
 
-
-//Piece values defined in header
-
-#define BASE_ATTACK_BONUS   5  // Eval for each enemy piece under attack
-#define BASE_DEFEND_BONUS  10  // Eval for each defended piece
-#define BASE_HANGING_PEN   90  // Eval lost for hanging a piece
-
-#define TO_MOVE_BONUS      0  // Eval bonus for being your turn
-
-#define CHECK_PEN         100  // Eval lost under check
-
-#define LOW_PAWN_PEN      500  // Eval lost for having 2 or less pawns
-#define DOUBLE_PAWN_PEN   200  // Eval lost for double pawns
-#define ISO_PAWN_PEN      100  // Eval lost for isolated pawns
-
-#define PAWN_MOB      15  // Mobility bonus for Pawns in Eval
-#define KNIGHT_MOB    35  // Mobility bonus for Knights in Eval
-#define BISHOP_MOB    30  // Mobility bonus for Bishop in Eval
-#define QUEEN_MOB     10  // Mobility bonus for Queen in Eval
-#define ROOK_MOB      10  // Mobility bonus for Rook in Eval
-#define KING_MOB      50  // Mobility bonus for King in Eval
-
-#define CAN_CASTLE_BONUS 10 // Bonus for being able to Castle
-
-#define KING_SAFTEY_FRIEND 4 // Eval for each friendly piece next to king
-
-#define CONNECTED_ROOK_BONUS  100 // Eval for rooks being connected
-
-#define DOUBLE_BISHOP_BONUS   700  // Bonus for having both bishops
-#define DOUBLE_ROOK_PEN       100  // Penality for having both rooks
-
-// Defines for Movement Eval
-#define MOVE_CASTLE_BONUS  300  // Eval bonus for castling
-#define MOVE_OPN_QUEEN_PEN   5  // Pen for moving queen in the opening
-
 i32 PST[3][12][64];
 
 /* Material Values */
 
-const int PawnValue   =   1000;
-const int KnightValue =   3500;
-const int BishopValue =   3600;
-const int RookValue   =   5000;
-const int QueenValue  =  10000;
-const int KingValue   = 100000;
+const i32 PawnValue   =   1000;
+const i32 KnightValue =   3500;
+const i32 BishopValue =   3600;
+const i32 RookValue   =   5000;
+const i32 QueenValue  =  10000;
+const i32 KingValue   = 100000;
 
 static const i32 pieceValues[] = {
     [WHITE_PAWN  ] = PawnValue,
@@ -285,6 +250,255 @@ i32 PSTKing[3][64] = {
     }
 };
 
+/* Adjustment of piece values based on the number of pawns */
+i32 KnightAdjust[9] = { -200, -160, -120, -80, -40,  0,  40,  80, 120 };
+i32   RookAdjust[9] = { 150,   120,   90,  60,  30,  0, -30, -60, -90 };
+
+static const int SafetyTable[100] = {
+  0,  0,   1,   2,   3,   5,   7,   9,  12,  15,
+  18,  22,  26,  30,  35,  39,  44,  50,  56,  62,
+  68,  75,  82,  85,  89,  97, 105, 113, 122, 131,
+  140, 150, 169, 180, 191, 202, 213, 225, 237, 248,
+  260, 272, 283, 295, 307, 319, 330, 342, 354, 366,
+  377, 389, 401, 412, 424, 436, 448, 459, 471, 483,
+  494, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+  500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+  500, 500, 500, 500, 500, 500, 500, 500, 500, 500,
+  500, 500, 500, 500, 500, 500, 500, 500, 500, 500
+};
+
+/* Mobility Bonus Values */
+const i32 PawnMobilityBonus   =  10;
+const i32 KnightMobilityBonus =  30;
+const i32 BishopMobilityBonus =  35;
+const i32 RookMobilityBonus   =  50;
+const i32 QueenMobilityBonus  =  60;
+const i32 KingMobilityBonus   =  90;
+
+/* Hanging Penalty Values */
+const i32 PawnHangingPenalty   =   -5;
+const i32 KnightHangingPenalty =  -10;
+const i32 BishopHangingPenalty =  -10;
+const i32 RookHangingPenalty   =  -15;
+const i32 QueenHangingPenalty  =  -20;
+const i32 KingHangingPenalty   =    0;
+
+/* Bonus for number of squares under attack */
+const i32 PawnAttackSquareBonus   = 50;
+const i32 KnightAttackSquareBonus = 25;
+const i32 BishopAttackSquareBonus = 10;
+const i32 RookAttackSquareBonus   =  5;
+const i32 QueenAttackSquareBonus  =  1;
+const i32 KingAttackSquareBonus   =  0;
+
+/* Penalties for being attacked by a lesser piece */
+const i32 KnightAttackedByLesser = -10;
+const i32 BishopAttackedByLesser = -10;
+const i32 RookAttackedByLesser   = -30;
+const i32 QueenAttackedByLesser  = -100;
+
+/* Pawn Specific Values */
+const i32 DoubledPawnPenalty  = -100;
+const i32 IsolatedPawnPenalty =  -50;
+const i32 RammedPawnPenalty   =  -20; 
+const i32 PassedPawnBonus     =  300;
+
+/* Knight Specific Values */
+const i32 OutpostKnightBonus = 100;
+
+/* Bishop Specific Values */
+const i32 OutpostBishopBonus  =  20;
+const i32 OppositeBishopBonus = 200;
+
+/* Rook Specific Values */
+const i32 ConnectedRookBonus  = 100;
+const i32 TwoRookPenalty      = -20;
+
+/* Queen Specific Values */
+
+/* King Saftey Values */
+const i32 KingPawnDistancePenalty = -20;
+
+/* Positional Values */
+const i32 CastleAbilityBonus = 60;
+
+/* Returns a material-only based evaluation */
+i32 eval_material(Position* pos){
+    i32 eval_val = 0;
+    Turn turn = pos->flags & TURN_MASK;
+    eval_val += KingValue   * (count_bits(pos->king[turn])   - count_bits(pos->king[!turn]));
+    eval_val += QueenValue  * (count_bits(pos->queen[turn])  - count_bits(pos->queen[!turn]));
+    eval_val += RookValue   * (count_bits(pos->rook[turn])   - count_bits(pos->rook[!turn]));
+    eval_val += BishopValue * (count_bits(pos->bishop[turn]) - count_bits(pos->bishop[!turn]));
+    eval_val += KnightValue * (count_bits(pos->knight[turn]) - count_bits(pos->knight[!turn]));
+    eval_val += PawnValue   * (count_bits(pos->pawn[turn])   - count_bits(pos->pawn[!turn]));
+    return eval_val;
+};
+
+/* 
+ * Evaluates a position
+ */
+i32 eval_position(Position* pos){
+    Turn turn = pos->flags & TURN_MASK;
+    i32 stage = pos->stage;
+    EvalData eval_data = {0};
+    // Start with the material
+    i32 eval_val = 0;
+
+    // Check for insufficient material
+    if(isInsufficient(pos)) return 0;
+
+    eval_val +=   eval_pawns(pos, &eval_data, WHITE) -   eval_pawns(pos, &eval_data, BLACK);
+    eval_val += eval_knights(pos, &eval_data, WHITE) - eval_knights(pos, &eval_data, BLACK);
+    eval_val += eval_bishops(pos, &eval_data, WHITE) - eval_bishops(pos, &eval_data, BLACK);
+    eval_val +=   eval_rooks(pos, &eval_data, WHITE) -   eval_rooks(pos, &eval_data, BLACK);
+    eval_val +=  eval_queens(pos, &eval_data, WHITE) -  eval_queens(pos, &eval_data, BLACK);
+    eval_val +=   eval_kings(pos, &eval_data, WHITE) -   eval_pawns(pos, &eval_data, BLACK);
+
+    return eval_val;
+}
+
+i32 eval_pawns(Position * pos, EvalData* eval_data, Turn turn){
+    const Stage stage = pos->stage;
+    const PieceIndex piece    = turn ? WHITE_PAWN : BLACK_PAWN;
+    const PieceIndex piece_op = turn ? BLACK_PAWN : WHITE_PAWN;
+    eval_data->pawn_count = 0;
+    i32 eval = 0;
+
+    // Iterate through the pawns
+    u64 pieces = pos->pawn[turn];
+    while (pieces) {
+        i32 square = getlsb(pieces);
+
+        // Material Value
+        eval += PawnValue;
+
+        // PST
+        eval += PST[stage][piece][square];
+
+        // Mobility Bonus
+        getPawnMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces, u64 enPassant, char flags, Move *moveList, i32 *idx)
+
+        // Update evaluation data
+        eval_data->pawn_count++;
+
+        pieces &= pieces - 1;
+    }
+
+    
+
+
+    return eval;
+}
+
+i32 eval_knights(Position * pos, EvalData* eval_data, Turn turn){
+    const Stage stage = pos->stage;
+    const PieceIndex piece    = turn ? WHITE_KNIGHT : BLACK_KNIGHT;
+    const PieceIndex piece_op = turn ? BLACK_KNIGHT : WHITE_KNIGHT;
+    i32 eval = 0;
+
+    // PST Values
+    u64 pieces = pos->knight[turn];
+    while (pieces) {
+        i32 square = getlsb(pieces);
+        eval += PST[stage][piece][square];
+        pieces &= pieces - 1;
+    }
+
+
+    return eval;
+}
+
+i32 eval_bishops(Position * pos, EvalData* eval_data, Turn turn){
+    const Stage stage = pos->stage;
+    const PieceIndex piece    = turn ? WHITE_BISHOP : BLACK_BISHOP;
+    const PieceIndex piece_op = turn ? BLACK_BISHOP : WHITE_BISHOP;
+    i32 eval = 0;
+
+    // PST Values
+    u64 pieces = pos->bishop[turn];
+    while (pieces) {
+        i32 square = getlsb(pieces);
+        eval += PST[stage][piece][square];
+        pieces &= pieces - 1;
+    }
+
+    if (count_bits(pos->bishop[turn]) == 2)  eval += OppositeBishopBonus;
+
+    return eval;
+}
+
+i32 eval_rooks(Position * pos, EvalData* eval_data, Turn turn){
+    const Stage stage = pos->stage;
+    const PieceIndex piece    = turn ? WHITE_ROOK : BLACK_ROOK;
+    const PieceIndex piece_op = turn ? BLACK_ROOK : WHITE_ROOK;
+    i32 eval = 0;
+
+    // PST Values
+    u64 pieces = pos->rook[turn];
+    while (pieces) {
+        i32 square = getlsb(pieces);
+        eval += PST[stage][piece][square];
+        pieces &= pieces - 1;
+    }
+
+    // Connected Rook Bonus
+    u64 rook1 = pos->rook[turn] & -pos->rook[turn];
+    if(getRookAttacks(rook1, pos->color[turn], pos->color[!turn]) & (pos->rook[turn] & ~rook1))  eval += ConnectedRookBonus;
+
+    // Double Rook Penalty
+    if (count_bits(pos->rook[turn]) >= 2) eval -= TwoRookPenalty;
+
+    return eval;
+}
+
+i32 eval_queens(Position * pos, EvalData* eval_data, Turn turn){
+    const Stage stage = pos->stage;
+    const PieceIndex piece    = turn ? WHITE_QUEEN : BLACK_QUEEN;
+    const PieceIndex piece_op = turn ? BLACK_QUEEN : WHITE_QUEEN;
+    i32 eval = 0;
+
+    // PST Values
+    u64 pieces = pos->queen[turn];
+    while (pieces) {
+        i32 square = getlsb(pieces);
+        eval += PST[stage][piece][square];
+        pieces &= pieces - 1;
+    }
+
+    return eval;
+}
+
+i32 eval_kings(Position * pos, EvalData* eval_data, Turn turn){
+    const Stage stage = pos->stage;
+    const PieceIndex piece    = turn ? WHITE_KING : BLACK_KING;
+    const PieceIndex piece_op = turn ? BLACK_KING : WHITE_KING;
+    const u32 square = getlsb(pos->king[turn]);
+    i32 eval = 0;
+
+    // PST Values
+    eval += PST[stage][piece][square];
+
+    // Mobility
+    i32 move_count;
+    u64 king_move_sq = getKingMoves(pos, turn, &move_count);
+    if (turn  && pos->flags & W_SHORT_CASTLE) move_count++;
+    if (turn  && pos->flags & W_LONG_CASTLE ) move_count++;
+    if (!turn && pos->flags & B_SHORT_CASTLE) move_count++;
+    if (!turn && pos->flags & B_LONG_CASTLE ) move_count++;
+
+    eval += move_count * KingMobilityBonus;
+
+    // Hanging
+    if(pos->king[turn] & pos->attack_mask[turn]) eval += KingHangingPenalty;
+
+    // Nearby Enemies
+    // if(NearbyMask[square] & pos->queen[!turn]) eval += EnemyNearKingPenalty;
+
+
+    return eval;
+}
+
 void init_pst(){
     for (int i = 0; i < 64; i++) {
         for(int stage = 0; stage < 3; stage++){
@@ -308,463 +522,4 @@ void init_pst(){
             PST[stage][BLACK_KING][63 - i]   = PSTKing[stage][i];
         }
     }
-}
-
-/* Helper function for the Static Exchange Evaluator */
-static u64 least_valuable_attacker(Position* pos, u64 attadef, Turn turn, PieceIndex* piece){
-    u64 subset = attadef & pos->pawn[turn]; // Pawn
-    if (subset){
-        *piece = WHITE_PAWN + 6*turn;
-        return subset & -subset;
-    }
-    subset = attadef & pos->knight[turn]; // Knight
-    if (subset){
-        *piece = WHITE_KNIGHT + 6*turn;
-        return subset & -subset;
-    }
-    subset = attadef & pos->bishop[turn]; // Bishops
-    if (subset){
-        *piece = WHITE_BISHOP + 6*turn;
-        return subset & -subset;
-    }
-    subset = attadef & pos->rook[turn]; // Rooks
-    if (subset){
-        *piece = WHITE_ROOK + 6*turn;
-        return subset & -subset;
-    }
-    subset = attadef & pos->queen[turn]; // Queens
-    if (subset){
-        *piece = WHITE_QUEEN + 6*turn;
-        return subset & -subset;
-    }
-    subset = attadef & pos->king[turn]; // Kings
-    if (subset){
-        *piece = WHITE_KING + 6*turn;
-        return subset & -subset;
-    }
-   return 0; // None were found
-}
-
-/* 
- * Static Exchange Evaluator 
- * As described on the chess programming wiki
- */
-i32 see(Position* pos, u32 toSq, PieceIndex target, u32 frSq, PieceIndex aPiece){
-    i32 gain[32], d = 0;
-    Turn turn = pos->flags & TURN;
-    u64 mayXray = pos->pawn[0] | pos->pawn[1] | pos->bishop[0] | pos->bishop[1] | pos->rook[0] | pos->rook[1] | pos->queen[0] | pos->queen[1];
-    u64 removed = 0;
-    u64 fromSet = 1ULL << frSq;
-    u64 attadef = getAttackers(pos, toSq, 0) | getAttackers(pos, toSq, 1);
-    gain[d]     = pieceValues[target];
-    while (fromSet) {
-        d++;
-        gain[d]  = pieceValues[aPiece] - gain[d-1];
-        attadef ^= fromSet;
-        removed |= fromSet;
-        if ( fromSet & mayXray ){
-            attadef |= getXRayAttackers(pos, toSq, 0, removed) | getXRayAttackers( pos, toSq, 1, removed);
-        }
-        fromSet  = least_valuable_attacker(pos, attadef, (turn + d) & 1, &aPiece);
-    }
-    while (--d){
-        if(gain[d] >= -gain[d-1]) gain[d-1] = -gain[d];
-    }
-    return gain[0];
-}
-
-/* Returns a material-only based evaluation */
-i32 eval_material(Position* pos){
-    i32 eval_val = 0;
-    Turn turn = pos->flags & TURN;
-    eval_val += KingValue   * (count_bits(pos->king[turn])   - count_bits(pos->king[!turn]));
-    eval_val += QueenValue  * (count_bits(pos->queen[turn])  - count_bits(pos->queen[!turn]));
-    eval_val += RookValue   * (count_bits(pos->rook[turn])   - count_bits(pos->rook[!turn]));
-    eval_val += BishopValue * (count_bits(pos->bishop[turn]) - count_bits(pos->bishop[!turn]));
-    eval_val += KnightValue * (count_bits(pos->knight[turn]) - count_bits(pos->knight[!turn]));
-    eval_val += PawnValue   * (count_bits(pos->pawn[turn])   - count_bits(pos->pawn[!turn]));
-    return eval_val;
-};
-
-i32 eval_mobility(Position* position){
-    i32 score = 0;
-    i32 size[] = {0};
-    Turn turn = position->flags & TURN;
-    u64 ownPos = position->color[turn];
-    u64 oppPos = position->color[!turn];
-    u64 oppAttackMask = position->attack_mask[!turn];
-    Move moveList[MAX_MOVES];
-
-
-    if(!(position->flags & IN_CHECK) && !(position->pinned & ownPos)){
-        getBishopMovesAppend(position->queen[turn],  ownPos, oppPos, moveList, size);
-        getRookMovesAppend(  position->queen[turn],  ownPos, oppPos, moveList, size);
-        score += QUEEN_MOB * *size;
-        *size = 0;
-
-        getRookMovesAppend(  position->rook[turn],   ownPos, oppPos, moveList, size);
-        score += ROOK_MOB * *size;
-        *size = 0;
-
-        getBishopMovesAppend(position->bishop[turn], ownPos, oppPos, moveList, size);
-        score += BISHOP_MOB * *size;
-        *size = 0;
-
-        getKnightMovesAppend(position->knight[turn], ownPos, oppPos, moveList, size);
-        score += KNIGHT_MOB * *size;
-        *size = 0;
-
-        getKingMovesAppend(  position->king[turn],   ownPos, oppPos, oppAttackMask, moveList, size);
-        score += KING_MOB * *size;
-        *size = 0;
-
-        getPawnMovesAppend(  position->pawn[turn],   ownPos, oppPos, position->en_passant, position->flags, moveList, size);
-        score += PAWN_MOB * *size;
-        *size = 0;
-    }
-
-    return score;
-}
-
-/*
- * Evaluates a move in a position
- */
-i32 eval_move(Move move, Position* pos){
-
-    i32 eval = 0;
-
-    // Get the piece information from the move and the position.
-    Square fr_sq = GET_FROM(move);
-    Square to_sq = GET_TO(move);
-    char fr_piece = pos->charBoard[fr_sq];
-    char to_piece = pos->charBoard[to_sq];
-    i32 fr_piece_i = pieceToIndex[(int)fr_piece];
-    i32 to_piece_i = pieceToIndex[(int)to_piece];
-
-    #ifdef DEBUG
-    if(fr_piece_i >= 12 || to_piece_i >= 12){
-        printf("Warning illegal piece found at:");
-        printPosition(*pos, TRUE);
-        printf("from piece: %d", pos->charBoard[fr_sq]);
-        printf(" to piece: %d", pos->charBoard[to_sq]);
-    }
-    #endif
-
-    // Add on the PST values
-    eval += PST[pos->stage][fr_piece_i][to_sq] - PST[pos->stage][fr_piece_i][fr_sq];
-    
-    // Add on calculated values depending on the flag
-    switch(GET_FLAGS(move)){
-        // Promotion Capture Moves
-        case QUEEN_PROMO_CAPTURE:
-            eval += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + QueenValue - PawnValue;
-            eval += PST[pos->stage][to_piece_i][to_sq];
-            break;
-        case ROOK_PROMO_CAPTURE:
-            eval += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + RookValue - PawnValue;
-            eval += PST[pos->stage][to_piece_i][to_sq];
-            break;
-        case BISHOP_PROMO_CAPTURE:
-            eval += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + BishopValue - PawnValue;
-            eval += PST[pos->stage][to_piece_i][to_sq];
-            break;
-        case KNIGHT_PROMO_CAPTURE:
-            eval += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + KnightValue - PawnValue;
-            eval += PST[pos->stage][to_piece_i][to_sq];
-            break;
-        // Capture Moves
-        case EP_CAPTURE:
-            eval += see(pos, to_sq, ( WHITE_PAWN + ((pos->flags & TURN) * 6) ), fr_sq, fr_piece_i);
-            eval += PST[pos->stage][to_piece_i][to_sq];
-            break;
-        case CAPTURE:
-            eval += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i);
-            eval += PST[pos->stage][to_piece_i][to_sq];
-            break;
-        // Promotion Moves
-        case QUEEN_PROMOTION:
-            eval += (QueenValue - PawnValue);    
-            break;
-        case ROOK_PROMOTION:
-            eval += (RookValue - PawnValue);    
-            break;
-        case BISHOP_PROMOTION:
-            eval += (BishopValue - PawnValue);    
-            break;
-        case KNIGHT_PROMOTION:
-            eval += (KnightValue - PawnValue);    
-            break;
-        // Castle Moves
-        case QUEEN_CASTLE:
-        case KING_CASTLE:
-            eval += MOVE_CASTLE_BONUS;
-            break;
-        default:
-            break;
-    }
-
-    return eval;
-}
-
-/*
- * Evaluates a list of moves
- * Used in the q-search.
- */
-void eval_movelist(Position* pos, Move* moveList, i32* moveVals, i32 size){
-    for(i32 i = 0; i < size; i++){
-        moveVals[i] = 0;
-        Move move = moveList[i];
-        Square fr_sq = GET_FROM(move);
-        Square to_sq = GET_TO(move);
-
-        i32 fr_piece = (i32)pos->charBoard[fr_sq];
-        i32 to_piece = (i32)pos->charBoard[to_sq];
-
-        i32 fr_piece_i = pieceToIndex[fr_piece];
-        i32 to_piece_i = pieceToIndex[to_piece];
-
-        switch(GET_FLAGS(move)){
-            case QUEEN_PROMO_CAPTURE:
-                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + QueenValue;
-                moveVals[i] += PST[pos->stage][to_piece_i][to_sq];
-                break;
-            case ROOK_PROMO_CAPTURE:
-                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + RookValue;
-                moveVals[i] += PST[pos->stage][to_piece_i][to_sq];
-                break;
-            case BISHOP_PROMO_CAPTURE:
-                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + BishopValue;
-                moveVals[i] += PST[pos->stage][to_piece_i][to_sq];
-                break;
-            case KNIGHT_PROMO_CAPTURE:
-                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + KnightValue;
-                moveVals[i] += PST[pos->stage][to_piece_i][to_sq];
-                break;
-            case EP_CAPTURE:
-                moveVals[i] += see(pos, to_sq, ( WHITE_PAWN + ((pos->flags & TURN) * 6) ), fr_sq, fr_piece_i);
-                moveVals[i] += PST[pos->stage][to_piece_i][to_sq];
-                break;
-            case CAPTURE:
-                moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i);
-                moveVals[i] += PST[pos->stage][to_piece_i][to_sq];
-                break;
-            default:
-                break;
-        }
-    }
-    return;
-}
-
-/* 
- * Evaluates a position
- */
-i32 eval_position(Position* pos){
-    Turn turn = pos->flags & TURN;
-    i32 stage = pos->stage;
-
-    // Start with the material
-    i32 eval_val = pos->material_eval;
-    
-    // Check if the game is unwinnable due to insufficient material
-    if(isInsufficient(pos)) return 0;
-    if(TRACE) printf("\nEval for stage: %d, Starting at: %d\n", stage, eval_val);
- 
-    // Determine the total mobility bonus in a position
-    Position tempPos = *pos;
-    eval_val += eval_mobility(pos);
-    makeNullMove(pos);
-    eval_val -= eval_mobility(pos);
-    *pos = tempPos;
-    if(TRACE) printf("After Mobility Bonus: %d\n", eval_val);
-
-
-    //
-    // Can Castle
-    //
-    if (pos->flags & W_SHORT_CASTLE) eval_val += CAN_CASTLE_BONUS;
-    if (pos->flags & W_LONG_CASTLE ) eval_val += CAN_CASTLE_BONUS;
-    if (pos->flags & B_SHORT_CASTLE) eval_val -= CAN_CASTLE_BONUS;
-    if (pos->flags & B_LONG_CASTLE ) eval_val -= CAN_CASTLE_BONUS;
-    if(TRACE) printf("After Can Castle Bonus: %d\n", eval_val);
-
-
-    //
-    // Penalities
-    //
-    if(pos->flags & IN_CHECK) eval_val -= CHECK_PEN; // Penalty for being in check
-    if(TRACE) printf("After Penalties: %d\n", eval_val);
-
-    //
-    // Pairing
-    //
-    if (count_bits(pos->bishop[turn]) == 2)  eval_val += DOUBLE_BISHOP_BONUS;
-    if (count_bits(pos->bishop[!turn]) == 2) eval_val -= DOUBLE_BISHOP_BONUS;
-
-    if (count_bits(pos->rook[turn])  == 2) eval_val -= DOUBLE_ROOK_PEN;
-    if (count_bits(pos->rook[!turn]) == 2) eval_val += DOUBLE_ROOK_PEN;
-
-    if(pos->stage != END_GAME){
-        u64 rook1 = pos->rook[turn] & -pos->rook[turn];
-        if(getRookAttacks(rook1, pos->color[turn], pos->color[!turn]) & (pos->rook[turn] & ~rook1))  eval_val += CONNECTED_ROOK_BONUS;
-        rook1 = pos->rook[!turn] & -pos->rook[!turn];
-        if(getRookAttacks(rook1, pos->color[!turn], pos->color[turn]) & (pos->rook[!turn] & ~rook1)) eval_val -= CONNECTED_ROOK_BONUS;
-    }
-
-    //
-    // Defense
-    //
-    eval_val += BASE_DEFEND_BONUS * count_bits(pos->color[turn] & pos->attack_mask[turn]);
-    eval_val -= BASE_DEFEND_BONUS * count_bits(pos->color[!turn] & pos->attack_mask[!turn]);
-    if(TRACE) printf("After Defend Bonus: %d\n", eval_val);
-
-
-    //
-    // Attack
-    //
-    eval_val += BASE_ATTACK_BONUS * count_bits(pos->color[!turn] &  pos->attack_mask[turn]);
-    eval_val -= BASE_ATTACK_BONUS * count_bits(pos->color[turn] &  pos->attack_mask[!turn]);
-    if(TRACE) printf("After Attack Bonus: %d\n", eval_val);
- 
-    //
-    // Hanging
-    //
-    eval_val -= BASE_HANGING_PEN * count_bits((pos->color[turn]  & ~pos->attack_mask[turn])  & pos->attack_mask[!turn]);
-    eval_val += BASE_HANGING_PEN * count_bits((pos->color[!turn] & ~pos->attack_mask[!turn]) & pos->attack_mask[turn]);
-    if(TRACE) printf("After Hanging Penalty: %d\n", eval_val);
-
-    //
-    // Pawn Evals
-    //
-    if(count_bits(pos->pawn[turn])  <= 2) eval_val -= LOW_PAWN_PEN; // Penalty for two or less pawns
-    if(count_bits(pos->pawn[!turn]) <= 2) eval_val += LOW_PAWN_PEN;
-    for(i32 i = 0; i < 8; i++){ //Double Pawn Check
-        i32 double_pawns = count_bits(pos->pawn[turn] & fileMask[i]) - 1;
-        if(double_pawns >= 1){
-            eval_val -= DOUBLE_PAWN_PEN * double_pawns;
-        }
-        double_pawns = count_bits(pos->pawn[!turn] & fileMask[i]) - 1;
-        if(double_pawns >= 1){
-            eval_val += DOUBLE_PAWN_PEN * double_pawns;
-        }
-    }
-    if(TRACE) printf("After Pawn Structure: %d\n", eval_val);
-
-    // 
-    // King Safety
-    //
-    if(pos->stage != END_GAME){
-        eval_val += (i32)count_bits(getKingAttacks(pos->king[turn])  | pos->color[turn])  * KING_SAFTEY_FRIEND;
-        eval_val -= (i32)count_bits(getKingAttacks(pos->king[!turn]) | pos->color[!turn]) * KING_SAFTEY_FRIEND;
-    }
-
-    //
-    // Piece Square Tables (PST)
-    //
-    //Pawns
-    i32 index = turn ? WHITE_PAWN : BLACK_PAWN;
-    i32 index_op = turn ? BLACK_PAWN : WHITE_PAWN;
-    u64 pieces = pos->pawn[turn];
-    while (pieces) {
-        i32 square = __builtin_ctzll(pieces);
-        eval_val += PST[stage][index][square];
-        pieces &= pieces - 1;
-    }
-    pieces = pos->pawn[!turn];
-    while (pieces) {
-        i32 square = __builtin_ctzll(pieces);
-        eval_val -= PST[stage][index_op][square];
-        pieces &= pieces - 1;
-    }
-
-    if(TRACE) printf("After Pawn PST: %d\n", eval_val);
-
-    //Knights
-    index = turn ? WHITE_KNIGHT : BLACK_KNIGHT;
-    index_op = turn ? BLACK_KNIGHT : WHITE_KNIGHT;
-    pieces = pos->knight[turn];
-    while (pieces) {
-        i32 square = __builtin_ctzll(pieces);
-        eval_val += PST[stage][index][square];
-        pieces &= pieces - 1;
-    }
-    pieces = pos->knight[!turn];
-    while (pieces) {
-        i32 square = __builtin_ctzll(pieces);
-        eval_val -= PST[stage][index_op][square];
-        pieces &= pieces - 1;
-    }
-
-    if(TRACE) printf("After Knight PST: %d\n", eval_val);
-
-    //Bishops
-    index = turn ? WHITE_BISHOP : BLACK_BISHOP;
-    index_op = turn ? BLACK_BISHOP : WHITE_BISHOP;
-    pieces = pos->bishop[turn];
-    while (pieces) {
-        i32 square = __builtin_ctzll(pieces);
-        eval_val += PST[stage][index][square];
-        pieces &= pieces - 1;
-    }
-    pieces = pos->bishop[!turn];
-    while (pieces) {
-        i32 square = __builtin_ctzll(pieces);
-        eval_val -= PST[stage][index_op][square];
-        pieces &= pieces - 1;
-    }
-    if(TRACE) printf("After Bishop PST: %d\n", eval_val);
-
-
-    //Rooks
-    index = turn ? WHITE_ROOK : BLACK_ROOK;
-    index_op = turn ? BLACK_ROOK : WHITE_ROOK;
-    pieces = pos->rook[turn];
-    while (pieces) {
-        i32 square = __builtin_ctzll(pieces);
-        eval_val += PST[stage][index][square];
-        pieces &= pieces - 1;
-    }
-    pieces = pos->rook[!turn];
-    while (pieces) {
-        i32 square = __builtin_ctzll(pieces);
-        eval_val -= PST[stage][index_op][square];
-        pieces &= pieces - 1;
-    }
-    if(TRACE) printf("After Rook PST: %d\n", eval_val);
-
-    //Queens
-    index = turn ? WHITE_QUEEN : BLACK_QUEEN;
-    index_op = turn ? BLACK_QUEEN : WHITE_QUEEN;
-    pieces = pos->queen[turn];
-    while (pieces) {
-        i32 square = __builtin_ctzll(pieces);
-        eval_val += PST[stage][index][square];
-        pieces &= pieces - 1;
-    }
-    pieces = pos->queen[!turn];
-    while (pieces) {
-        i32 square = __builtin_ctzll(pieces);
-        eval_val -= PST[stage][index_op][square];
-        pieces &= pieces - 1;
-    }
-    if(TRACE) printf("After Queen PST: %d\n", eval_val);
-
-
-    //King
-    index = turn ? WHITE_KING : BLACK_KING; // 5 : 11
-    index_op = turn ? BLACK_KING : WHITE_KING;
-    pieces = pos->king[turn];
-    while (pieces) {
-        i32 square = __builtin_ctzll(pieces);
-        eval_val += PST[stage][index][square];
-        pieces &= pieces - 1;
-    }
-    pieces = pos->king[!turn];
-    while (pieces) {
-        i32 square = __builtin_ctzll(pieces);
-        eval_val -= PST[stage][index_op][square];
-        pieces &= pieces - 1;
-    }
-    if(TRACE) printf("After King PST: %d\n", eval_val);
-
-    return eval_val;
 }

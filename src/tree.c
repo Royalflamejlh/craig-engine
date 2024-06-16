@@ -1,17 +1,22 @@
-#include "tree.h"
+
 #include <stdio.h>
 #include <string.h>
-#include "bitboard/bbutils.h"
+#include <pthread.h>
+#include <time.h>
+
+#include "tree.h"
+
 #include "search.h"
 #include "movement.h"
 #include "types.h"
 #include "util.h"
 #include "evaluator.h"
+#include "moveorder.h"
 #include "transposition.h"
 #include "globals.h"
 #include "tables.h"
-#include <pthread.h>
-#include <time.h>
+#include "bitboard/bbutils.h"
+
 
 #define ID_STEP 1 //Changing this may break Aspiration windows (it will)
 
@@ -282,7 +287,7 @@ static inline u32 helper_select_sort(u32 i, u32 evalIdx, Position* pos, Move *mo
  */
 static inline void pvFill(Position pos, Move* pv_array, u8 depth){
    u8 ply = 0;
-   TTEntryData ttEntry = getTTEntry(pos.hash);
+   TTEntryData ttEntry = get_tt_entry(pos.hash);
    while(ttEntry.data && ttEntry.fields.depth > 0 && ply < depth){
       pv_array[ply] = ttEntry.fields.move;
       #ifdef DEBUG
@@ -290,7 +295,7 @@ static inline void pvFill(Position pos, Move* pv_array, u8 depth){
       #endif
       makeMove(&pos, ttEntry.fields.move);
       ply++;
-      ttEntry = getTTEntry(pos.hash);
+      ttEntry = get_tt_entry(pos.hash);
    }
 }
 
@@ -342,10 +347,6 @@ i32 search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 ev
       printf("info string Warning: No PV Array found!\n");
       return 0;
    }
-   #ifdef DEBUG
-   startTreeDebug();
-   startTTDebug();
-   #endif
 
    startStats(stats);
 
@@ -402,7 +403,6 @@ i32 search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 ev
    printPV(pv_array, depth);
    printf(" found with score %d\n", eval);
    printTreeDebug();
-   printTTDebug();
    printf("\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
    #endif // DEBUG
 
@@ -512,7 +512,7 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
    }
 
    //Test the TT table
-   TTEntryData ttEntry = getTTEntry(pos->hash);
+   TTEntryData ttEntry = get_tt_entry(pos->hash);
    Move ttMove = NO_MOVE;
    if (ttEntry.data) {
       #ifdef DEBUG
@@ -551,9 +551,9 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
 
    if( depth <= 0 ) {
       i32 q_eval = q_search(pos, alpha, beta, ply, 0, stats);
-      if     (q_eval < alpha) storeTTEntry(pos->hash, 0, q_eval, ALL_NODE, NO_MOVE);
-      else if(q_eval >= beta) storeTTEntry(pos->hash, 0, q_eval, CUT_NODE, NO_MOVE);
-      else                    storeTTEntry(pos->hash, 0, q_eval,  PV_NODE, NO_MOVE);
+      if     (q_eval < alpha) store_tt_entry(pos->hash, 0, q_eval, ALL_NODE, NO_MOVE);
+      else if(q_eval >= beta) store_tt_entry(pos->hash, 0, q_eval, CUT_NODE, NO_MOVE);
+      else                    store_tt_entry(pos->hash, 0, q_eval,  PV_NODE, NO_MOVE);
       return q_eval;
    }
 
@@ -615,7 +615,7 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
       *pos = prevPos; //Unmake Move
 
       if( score >= beta ) { //Beta cutoff
-         storeTTEntry(pos->hash, depth, score, CUT_NODE, moveList[i]);
+         store_tt_entry(pos->hash, depth, score, CUT_NODE, moveList[i]);
          storeKillerMove(km, ply, moveList[i]);
          //storeHistoryMove(pos->flags, moveList[i], depth);
       
@@ -642,10 +642,10 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
    }
    if (exact) {
       // PV Node (exact value)
-      storeTTEntry(pos->hash, depth, alpha, PV_NODE, pv_array[ply]);
+      store_tt_entry(pos->hash, depth, alpha, PV_NODE, pv_array[ply]);
    } else {
       // ALL Node (upper bound)
-      storeTTEntry(pos->hash, depth, bestScore, ALL_NODE, bestMove);
+      store_tt_entry(pos->hash, depth, bestScore, ALL_NODE, bestMove);
    }
    #ifdef DEBUG
    debug[PVS][NODE_ALPHA_RET]++;
@@ -676,7 +676,7 @@ i32 helper_pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move
    }
 
    //Test the TT table
-   TTEntryData ttEntry = getTTEntry(pos->hash);
+   TTEntryData ttEntry = get_tt_entry(pos->hash);
    Move ttMove = NO_MOVE;
    if (ttEntry.data) {
       #ifdef DEBUG
@@ -705,9 +705,9 @@ i32 helper_pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move
    }
    if( depth <= 0 ) {
       i32 q_eval = q_search(pos, alpha, beta, ply, 0, stats);
-      if     (q_eval < alpha) storeTTEntry(pos->hash, 0, q_eval, ALL_NODE, NO_MOVE);
-      else if(q_eval >= beta) storeTTEntry(pos->hash, 0, q_eval, CUT_NODE, NO_MOVE);
-      else                    storeTTEntry(pos->hash, 0, q_eval,  PV_NODE, NO_MOVE);
+      if     (q_eval < alpha) store_tt_entry(pos->hash, 0, q_eval, ALL_NODE, NO_MOVE);
+      else if(q_eval >= beta) store_tt_entry(pos->hash, 0, q_eval, CUT_NODE, NO_MOVE);
+      else                    store_tt_entry(pos->hash, 0, q_eval,  PV_NODE, NO_MOVE);
       return q_eval;
    }
    
@@ -733,7 +733,7 @@ i32 helper_pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move
       }
       *pos = prevPos;
       if( score >= beta ) {
-         storeTTEntry(pos->hash, depth, score, CUT_NODE, moveList[i]);
+         store_tt_entry(pos->hash, depth, score, CUT_NODE, moveList[i]);
          storeKillerMove(km, ply, moveList[i]);
          return beta;
       }
@@ -748,9 +748,9 @@ i32 helper_pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move
       }
    }
    if (exact) {
-      storeTTEntry(pos->hash, depth, alpha, PV_NODE, pv_array[ply]);
+      store_tt_entry(pos->hash, depth, alpha, PV_NODE, pv_array[ply]);
    } else {
-      storeTTEntry(pos->hash, depth, bestScore, ALL_NODE, bestMove);
+      store_tt_entry(pos->hash, depth, bestScore, ALL_NODE, bestMove);
    }
    return alpha;
 }
@@ -782,7 +782,7 @@ i32 zw_search( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, Searc
       else return 0;
    }
 
-   TTEntryData ttEntry = getTTEntry(pos->hash);
+   TTEntryData ttEntry = get_tt_entry(pos->hash);
    Move ttMove = NO_MOVE;
    if (ttEntry.data) {
       #ifdef DEBUG
@@ -822,8 +822,8 @@ i32 zw_search( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, Searc
 
    if( depth <= 0 ){
       i32 q_eval = q_search(pos, beta-1, beta, ply, 0, stats);
-      if     (q_eval < beta-1) storeTTEntry(pos->hash, 0, q_eval, ALL_NODE, NO_MOVE);
-      else if(q_eval >= beta)  storeTTEntry(pos->hash, 0, q_eval, CUT_NODE, NO_MOVE);
+      if     (q_eval < beta-1) store_tt_entry(pos->hash, 0, q_eval, ALL_NODE, NO_MOVE);
+      else if(q_eval >= beta)  store_tt_entry(pos->hash, 0, q_eval, CUT_NODE, NO_MOVE);
       return q_eval;
    }
 
@@ -880,7 +880,7 @@ i32 zw_search( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, Searc
       *pos = prevPos; // Unmake Move
 
       if( score >= beta ){ // Beta Cutoff
-         storeTTEntry(pos->hash, depth, score, CUT_NODE, moveList[i]);
+         store_tt_entry(pos->hash, depth, score, CUT_NODE, moveList[i]);
          storeKillerMove(km, ply, moveList[i]);
          //storeHistoryMove(pos->flags, moveList[i], depth);
          #ifdef DEBUG

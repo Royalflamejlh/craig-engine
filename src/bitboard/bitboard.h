@@ -31,6 +31,7 @@ u64 getPawnMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces,  u64 enPassant, 
 u64 getPawnThreatMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces,  u64 enPassant, char flags, i32 opp_king_square, Move* moveList, i32* idx);
 
 u64 getKingAttacks(u64 kings);
+u64 getKingMoves(Position* pos, Turn turn, i32* count);
 u64 getKingMovesAppend(u64 kings, u64 ownPieces, u64 oppPieces, u64 oppAttackMask, Move* moveList, i32* idx);
 u64 getKingThreatMovesAppend(u64 kings, u64 ownPieces, u64 oppPieces, u64 oppAttackMask, Move* moveList, i32* idx);
 

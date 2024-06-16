@@ -41,7 +41,7 @@ i32 main(void) {
     generateMagics();
     initZobrist();
     init_pst();
-    if(initTT()){
+    if(init_tt(20)){
         printf("info string Warning failed to create transposition table, exiting.\n");
         return -1;
     }
@@ -65,7 +65,7 @@ i32 main(void) {
     stopSearch();
     printf("info string All threads have finished.\n");
     free_globals();
-    freeTT();
+    tt_free();
     printf("info string All memory freed\n");
     printf("info string Goodbye! :)\n");
     return 0;

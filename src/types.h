@@ -1,12 +1,4 @@
-//
-//  types.h
-//  godengine
-//
-//  Created by John Howard on 11/21/23.
-//
-
-#ifndef TYPES_H
-#define TYPES_H
+#pragma once
 #include <stdint.h>
 #include <stddef.h>
 #include <inttypes.h>
@@ -157,11 +149,13 @@ static inline Move MAKE_MOVE(i32 from, i32 to, i32 flags) {
 #define W_LONG_CASTLE  0x08
 #define B_SHORT_CASTLE 0x04 
 #define B_LONG_CASTLE  0x02 
-#define TURN           0x01 
+#define TURN_MASK      0x01 
 
 typedef enum{
-    BLACK_TURN,
-    WHITE_TURN
+    BLACK_TURN = 0,
+    WHITE_TURN = 1,
+    BLACK = 0,
+    WHITE = 1,
 } Turn;
 
 typedef enum {
@@ -251,8 +245,6 @@ typedef enum {
 } Square;
 
 
-
-
 typedef struct{
     struct timespec start_time;
     struct timespec end_time;
@@ -288,4 +280,5 @@ typedef enum {
     HALT_TIME
 } TimePreference;
 
-#endif // TYPES_H
+// Forward definitions
+typedef struct EvalData EvalData;

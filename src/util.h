@@ -33,6 +33,10 @@ void printPVInfo(SearchData data);
 
 u64 millis();
 
+static inline i32 getlsb(uint64_t bb) {
+    return __builtin_ctzll(bb);
+}
+
 static inline i32 count_bits(u64 v){
     u32 c;
     for (c = 0; v; c++){
