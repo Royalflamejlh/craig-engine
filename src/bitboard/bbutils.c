@@ -596,16 +596,6 @@ void printBB(u64 BB) {
     }
 }
 
-u64 northOne(u64 bb) { return bb << 8;  }
-u64 northTwo(u64 bb) { return bb << 16; }
-u64 noEaOne (u64 bb) { return (bb & ~0x8080808080808080ULL) << 9; }
-u64 noWeOne (u64 bb) { return (bb & ~0x0101010101010101ULL) << 7; }
-
-u64 southOne(u64 bb) { return bb >> 8; }
-u64 southTwo(u64 bb) { return bb >> 16; }
-u64 soEaOne(u64 bb) { return (bb & ~0x8080808080808080ULL) >> 7; } 
-u64 soWeOne(u64 bb) { return (bb & ~0x0101010101010101ULL) >> 9; }
-
 
 
 

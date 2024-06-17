@@ -1,6 +1,7 @@
 #include "moveorder.h"
 #include "evaluator.h"
 #include "bitboard/bitboard.h"
+#include "types.h"
 
 /* Material Values for move ordering */
 const i32 MovePawnValue   =   1000;
@@ -54,35 +55,36 @@ i32 eval_move(Move move, Position* pos){
     #endif
 
     // Add on the PST values
-    eval += PST[pos->stage][fr_piece_i][to_sq] - PST[pos->stage][fr_piece_i][fr_sq];
+    u32 phase = pos->stage == END_GAME ? 1 : 0;
+    eval += PST[phase][fr_piece_i][to_sq] - PST[phase][fr_piece_i][fr_sq];
     
     // Add on calculated values depending on the flag
     switch(GET_FLAGS(move)){
         // Promotion Capture Moves
         case QUEEN_PROMO_CAPTURE:
             eval += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + MoveQueenValue - MovePawnValue;
-            eval += PST[pos->stage][to_piece_i][to_sq];
+            eval += PST[phase][to_piece_i][to_sq];
             break;
         case ROOK_PROMO_CAPTURE:
             eval += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + MoveRookValue - MovePawnValue;
-            eval += PST[pos->stage][to_piece_i][to_sq];
+            eval += PST[phase][to_piece_i][to_sq];
             break;
         case BISHOP_PROMO_CAPTURE:
             eval += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + MoveBishopValue - MovePawnValue;
-            eval += PST[pos->stage][to_piece_i][to_sq];
+            eval += PST[phase][to_piece_i][to_sq];
             break;
         case KNIGHT_PROMO_CAPTURE:
             eval += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + MoveKnightValue - MovePawnValue;
-            eval += PST[pos->stage][to_piece_i][to_sq];
+            eval += PST[phase][to_piece_i][to_sq];
             break;
         // Capture Moves
         case EP_CAPTURE:
             eval += see(pos, to_sq, ( WHITE_PAWN + ((pos->flags & TURN_MASK) * 6) ), fr_sq, fr_piece_i);
-            eval += PST[pos->stage][to_piece_i][to_sq];
+            eval += PST[phase][to_piece_i][to_sq];
             break;
         case CAPTURE:
             eval += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i);
-            eval += PST[pos->stage][to_piece_i][to_sq];
+            eval += PST[phase][to_piece_i][to_sq];
             break;
         // Promotion Moves
         case QUEEN_PROMOTION:

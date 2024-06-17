@@ -224,9 +224,21 @@ u64 getRookMovesAppend(u64 rooks, u64 ownPieces, u64 oppPieces, Move* moveList, 
 /*
 * The worst piece in chess (in many ways) is below here.
 */
-u64 getPawnAttacks(u64 pawns, char flags){
+
+u64 pawnAttacks(u64 square, char turn){
     u64 moves = 0ULL;
-    i32 pawn_mask_idx = (flags & WHITE_TURN) ? 0 : 4;
+    i32 pawn_mask_idx = (turn & TURN_MASK) ? 0 : 4;
+
+    moves |= pawnMoves[square][pawn_mask_idx + 2];
+    moves |= pawnMoves[square][pawn_mask_idx + 3];
+
+    return moves;
+}
+
+
+u64 getPawnAttacks(u64 pawns, char turn){
+    u64 moves = 0ULL;
+    i32 pawn_mask_idx = (turn & TURN_MASK) ? 0 : 4;
 
     while (pawns) {
         i32 square = getlsb(pawns);
@@ -449,6 +461,10 @@ u64 getPawnThreatMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces,  u64 enPas
 /*
 * Jumpity jump these bad boys are the easiest thing to implement in chess somehow
 */
+u64 knightAttacks(i32 square) {
+    return knightMoves[square];
+}
+
 u64 getKnightAttacks(u64 knights) {
     u64 moves = 0ULL;
 
@@ -459,6 +475,25 @@ u64 getKnightAttacks(u64 knights) {
     }
 
     return moves;
+}
+
+u64 getKnightMoves(Position* pos, Turn turn, i32* move_count) {
+    u64 all_moves = 0ULL;
+    u64 knights = pos->knight[turn];
+    u64 ownPieces = pos->color[turn];
+
+    while (knights) {
+        i32 square = getlsb(knights);
+        all_moves |= knightMoves[square] & ~ownPieces;
+        u64 temp = all_moves;
+        while(temp){
+            (*move_count)++;
+            temp &= temp - 1;
+        }
+        knights &= knights - 1;
+    }
+
+    return all_moves;
 }
 
 u64 getKnightMovesAppend(u64 knights, u64 ownPieces, u64 oppPieces, Move* moveList, i32* idx) {
@@ -526,6 +561,10 @@ u64 getKnightThreatMovesAppend(u64 knights, u64 ownPieces, u64 oppPieces, i32 op
 }
 
 //King
+u64 kingAttacks(Square sq) {
+    return kingMoves[sq];
+}
+
 u64 getKingAttacks(u64 kings) {
     i32 square = getlsb(kings);
     return kingMoves[square];

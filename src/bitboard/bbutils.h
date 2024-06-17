@@ -78,15 +78,19 @@ Position fen_to_position(char* FEN);
 i32 PositionToFen(Position pos, char* FEN);
 void printPosition(Position position, char verbose);
 void printDebug(Position position);
-u64 northOne(u64 bb);
-u64 northTwo(u64 bb);
-u64 noEaOne(u64 bb);
-u64 noWeOne(u64 bb);
 
-u64 southOne(u64 bb);
-u64 southTwo(u64 bb);
-u64 soEaOne(u64 bb);
-u64 soWeOne(u64 bb);
+static inline u64 northOne(u64 bb) { return (bb & ~0xFF00000000000000ULL) << 8;  }
+static inline u64 northTwo(u64 bb) { return (bb & ~0xFFFF000000000000ULL) << 16; }
+static inline u64 noEaOne (u64 bb) { return (bb & ~0xFF80808080808080ULL) << 9; }
+static inline u64 noWeOne (u64 bb) { return (bb & ~0xFF01010101010101ULL) << 7; }
+
+static inline u64 southOne(u64 bb) { return (bb & ~0x00000000000000FFULL) >> 8; }
+static inline u64 southTwo(u64 bb) { return (bb & ~0x000000000000FFFFULL) >> 16; }
+static inline u64 soEaOne(u64 bb) { return  (bb & ~0x80808080808080FFULL) >> 7; } 
+static inline u64 soWeOne(u64 bb) { return  (bb & ~0x01010101010101FFULL) >> 9; }
+
+static inline u64 eastTwo(u64 bb) { return (bb & ~0xC0C0C0C0C0C0C0C0ULL) << 2; }
+static inline u64 westTwo(u64 bb) { return (bb & ~0x0303030303030303ULL) >> 2; }
 
 static inline u64 setBit(u64 bb, i32 square) {
     return bb | (1ULL << square);

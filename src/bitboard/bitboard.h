@@ -14,7 +14,9 @@
 
 void generateMasks(void);
 
+u64 knightAttacks(i32 square);
 u64 getKnightAttacks(u64 knights);
+u64 getKnightMoves(Position* pos, Turn turn, i32* move_count);
 u64 getKnightMovesAppend(u64 knights, u64 ownPieces, u64 oppPieces, Move* moveList, i32* idx);
 u64 getKnightThreatMovesAppend(u64 knights, u64 ownPieces, u64 oppPieces, i32 opp_king_square, Move* moveList, i32* idx);
 
@@ -26,10 +28,12 @@ u64 getRookAttacks(u64 rooks, u64 ownPieces, u64 oppPieces);
 u64 getRookMovesAppend(u64 rooks, u64 ownPieces, u64 oppPieces, Move* moveList, i32* idx);
 u64 getRookThreatMovesAppend(u64 rooks, u64 ownPieces, u64 oppPieces, u64 checkSquares, Move* moveList, i32* idx);
 
+u64 pawnAttacks(u64 square, char turn);
 u64 getPawnAttacks(u64 pawns, char flags);
 u64 getPawnMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces,  u64 enPassant, char flags, Move* moveList, i32* idx);
 u64 getPawnThreatMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces,  u64 enPassant, char flags, i32 opp_king_square, Move* moveList, i32* idx);
 
+u64 kingAttacks(Square sq);
 u64 getKingAttacks(u64 kings);
 u64 getKingMoves(Position* pos, Turn turn, i32* count);
 u64 getKingMovesAppend(u64 kings, u64 ownPieces, u64 oppPieces, u64 oppAttackMask, Move* moveList, i32* idx);
