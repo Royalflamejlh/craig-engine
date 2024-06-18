@@ -48,10 +48,6 @@ i32 main(void) {
     }
     init_masks();
     init_globals();
-    
-    #ifndef DEBUG
-    search_opening(10);
-    #endif
 
     printf("info string Finished start up!\n");
 
