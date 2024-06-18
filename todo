@@ -1,0 +1,4 @@
+- Implement an unmake move function
+- Increment the hash with the moves
+- Add better understanding of pawn structures to the engine
+- Run a testing / puzzle suite to understand strenght with each iteration
