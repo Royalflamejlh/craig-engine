@@ -42,7 +42,7 @@ i32 main(void) {
     generateMagics();
     initZobrist();
     init_pst();
-    if(init_tt(20)){
+    if(init_tt(2)){
         printf("info string Warning failed to create transposition table, exiting.\n");
         return -1;
     }

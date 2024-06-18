@@ -203,8 +203,8 @@ const i32 VirtualMobility[2][28] = {
 };
 
 const i32 PawnsInKingArea[2][9] = {
-    { -500, -100, 25, 200, 300, 300, 300, 300, 300 },
-    { -100,  -50,  0,   0,   0,   0,   0,   0,   0 },
+    {  -50, -10, 25,  20,  30,  30,  30,  30,  30 },
+    { -100, -50,  0,   0,   0,   0,   0,   0,   0 },
 };
 
 enum AttackUnits {
@@ -256,7 +256,7 @@ const i32 RammedPawnPenalty[2] = { -20, -100 };
 
 const i32 PassedPawnBonus[2] = { 25, 500 };
 
-const i32 ConnectedPawnBonus[2] = { 120, 150 };
+const i32 ConnectedPawnBonus[2] = { 20, 60 };
 
 /* Knight Specific Values {Mid game, End game} */
 
@@ -264,7 +264,7 @@ const i32 KnightHangingPenalty[2] =  { -20, 0 };
 
 const i32 KnightMobility[2][9] = 
 {
-    { -1040, -450, -220, -80, 60, 110, 190, 300, 430 },
+    {  -104,  -45,  -22,  -8,  6,  11,  19,  30,  43 },
     { -1040, -450, -220, -80, 60, 110, 190, 300, 430 }
 };
 
@@ -278,7 +278,7 @@ const i32 BishopHangingPenalty[2] = { -10, 0 };
 
 const i32 BishopMobility[2][14] = 
 {
-    { -990, -460, -160, -40, 60, 140, 170, 190, 190, 270, 260, 520, 550, 830 },
+    {  -99,  -46,  -16,  -4,  6,  14,  17,  19,  19 , 27 , 26,  52,  55,  83 },
     { -990, -460, -160, -40, 60, 140, 170, 190, 190, 270, 260, 520, 550, 830 },
 };
 
@@ -296,7 +296,7 @@ const i32 RookHangingPenalty[2] = { -15, 0 };
 
 const i32 RookMobility[2][15] = 
 {
-    { -1270, -560, -250, -120, -100, -120, -110, -40, 40, 90, 110, 190, 190, 370, 970 },
+    {  -127,  -56,  -25,  -12,  -10,  -12,  -11,  -4,  4,  9,  11,  19,  19,  37,  97 },
     { -1270, -560, -250, -120, -100, -120, -110, -40, 40, 90, 110, 190, 190, 370, 970 },
 };
 
@@ -311,8 +311,8 @@ const i32 QueenHangingPenalty[2] = { -60, 0 };
 const i32 QueenMobility[2][28] = 
 {
     {
-        -1110, -2530, -1270, -460, -200, -90, -10,  20,  80, 100, 150, 170,  200,  230,
-        220,   210,   240,  160,  130, 180, 250, 380, 340, 280, 100,  70, -420, -230,
+        -111, -111, -104, -46, -20, -9, -1,  2,  8, 10, 15, 17,  20,  23,
+        22,   21,   24,  16,  13, 18, 25, 38, 34, 28, 10,  7, -42, -23,
     },
     {
         -1110, -2530, -1270, -460, -200, -90, -10,  20,  80, 100, 150, 170,  200,  230,
@@ -746,17 +746,37 @@ i32 eval_position(Position* pos){
     eval_pawns(pos, &eval_data, WHITE);
     eval_pawns(pos, &eval_data, BLACK);
 
+    // i32 print_mg_score = eval_data.eval[PHASE_MG][WHITE_TURN] - eval_data.eval[PHASE_MG][BLACK_TURN];
+    // i32 print_eg_score = eval_data.eval[PHASE_EG][WHITE_TURN] - eval_data.eval[PHASE_EG][BLACK_TURN];
+    // printf("after pawns: mg_score %d  eg_score %d \n", print_mg_score, print_eg_score);
+
     eval_knights(pos, &eval_data, WHITE);
     eval_knights(pos, &eval_data, BLACK);
+
+    // print_mg_score = eval_data.eval[PHASE_MG][WHITE_TURN] - eval_data.eval[PHASE_MG][BLACK_TURN];
+    // print_eg_score = eval_data.eval[PHASE_EG][WHITE_TURN] - eval_data.eval[PHASE_EG][BLACK_TURN];
+    // printf("after knights: mg_score %d  eg_score %d \n", print_mg_score, print_eg_score);
 
     eval_bishops(pos, &eval_data, WHITE);
     eval_bishops(pos, &eval_data, BLACK);
 
+    // print_mg_score = eval_data.eval[PHASE_MG][WHITE_TURN] - eval_data.eval[PHASE_MG][BLACK_TURN];
+    // print_eg_score = eval_data.eval[PHASE_EG][WHITE_TURN] - eval_data.eval[PHASE_EG][BLACK_TURN];
+    // printf("after bishops: mg_score %d  eg_score %d \n", print_mg_score, print_eg_score);
+
     eval_rooks(pos, &eval_data, WHITE);
     eval_rooks(pos, &eval_data, BLACK);
 
+    // print_mg_score = eval_data.eval[PHASE_MG][WHITE_TURN] - eval_data.eval[PHASE_MG][BLACK_TURN];
+    // print_eg_score = eval_data.eval[PHASE_EG][WHITE_TURN] - eval_data.eval[PHASE_EG][BLACK_TURN];
+    // printf("after rooks: mg_score %d  eg_score %d \n", print_mg_score, print_eg_score);
+
     eval_queens(pos, &eval_data, WHITE);
     eval_queens(pos, &eval_data, BLACK);
+
+    // print_mg_score = eval_data.eval[PHASE_MG][WHITE_TURN] - eval_data.eval[PHASE_MG][BLACK_TURN];
+    // print_eg_score = eval_data.eval[PHASE_EG][WHITE_TURN] - eval_data.eval[PHASE_EG][BLACK_TURN];
+    // printf("after queens: mg_score %d  eg_score %d \n", print_mg_score, print_eg_score);
 
     eval_kings(pos, &eval_data, WHITE);
     eval_kings(pos, &eval_data, BLACK);
@@ -769,7 +789,7 @@ i32 eval_position(Position* pos){
     i32 eg_weight = TOTAL_PHASE_VALUE - mg_weight;
     eval += ((mg_score * mg_weight) + (eg_score * eg_weight)) / TOTAL_PHASE_VALUE;
 
-    printf("mg_score %d mg_wieght %d     eg_score %d eg_weight %d\n", mg_score, mg_weight, eg_score, eg_weight);
+    //printf("at the end: mg_score %d mg_wieght %d eg_score %d eg_weight %d\n", mg_score, mg_weight, eg_score, eg_weight);
     
     return turn ? eval : -eval;
 }

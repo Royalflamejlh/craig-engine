@@ -27,7 +27,7 @@
 
 #define LMR_DEPTH 3       // LMR not performed if depth < LMR_DEPTH
 
-#define ASP_EDGE         250         // Buffer size of aspiration window
+#define ASP_EDGE         250  // Buffer size of aspiration window
 #define HELPER_ASP_EDGE  500  // Buffer size of aspiration window in helper search
 
 #define PV_FUTIL_MARGIN 300 // Score difference for a node to be futility pruned
@@ -374,6 +374,7 @@ i32 search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 ev
          if(eval <= q-asp_lower){
             asp_upper = ASP_EDGE;
             asp_lower = (asp_lower + ASP_EDGE) * 2;
+            if(time_preference) *time_preference = EXTEND_TIME; // Extend time if we miss the window low
          }
          else if(eval >= q+asp_upper){
             asp_upper = (asp_upper + ASP_EDGE) * 2;
@@ -383,7 +384,7 @@ i32 search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 ev
             asp_upper = (asp_upper + ASP_EDGE) * 2;
             asp_lower = (asp_lower + ASP_EDGE) * 2;
          }
-         if(time_preference) *time_preference = EXTEND_TIME; // Extend time if we miss the window
+         
          #ifdef DEBUG
          printf("Running again with window: %d, %d (eval: %d, q: %d, move: ", q-asp_lower, q+asp_upper, eval, q);
          printMove(pv_array[0]);
