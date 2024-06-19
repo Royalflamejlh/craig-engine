@@ -21,6 +21,7 @@ W_LIBS += $(LIBS) -static-libgcc -static-libstdc++
 
 L_DOBJS = $(SRC:.c=.ld.o)
 L_ROBJS = $(SRC:.c=.lr.o)
+L_POBJS = $(SRC:.c=.lp.o)
 W_DOBJS = $(SRC:.c=.wd.o)
 W_ROBJS = $(SRC:.c=.wr.o)
 
@@ -33,6 +34,7 @@ SAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined -fsa
 
 DFLAGS = -O0 $(WRN_FLAGS) -g -gdwarf-2 -DVERBOSE -DDEBUG
 RFLAGS = -O3 $(WRN_FLAGS) -Ofast -funroll-loops -flto -finline-functions -fomit-frame-pointer -march=native
+PFLAGS = -O3 $(WRN_FLAGS) -pg -Ofast -funroll-loops -flto -finline-functions -march=native
 
 
 ##
@@ -45,12 +47,17 @@ l_debug: $(L_DOBJS)
 l_release: $(L_ROBJS)
 	$(L_CC) $(L_ROBJS) $(L_LIBS) $(RFLAGS) -o $(EXE).engine
 
+l_profile: $(L_POBJS)
+	$(L_CC) $(L_POBJS) $(L_LIBS) $(PFLAGS) -o $(EXE)-prof.engine
+
 %.ld.o: %.c
 	$(L_CC) $(DFLAGS) $(SAN_FLAGS) -c $< -o $@
 
 %.lr.o: %.c
 	$(L_CC) $(RFLAGS) -c $< -o $@
 
+%.lp.o: %.c
+	$(L_CC) $(PFLAGS) -c $< -o $@
 ##
 # Build Targets for Windows
 ##
@@ -70,17 +77,19 @@ w_release: $(W_ROBJS)
 ##
 # General
 ##
-linux: l_debug l_release
+linux: l_debug l_release l_profile
 
 windows: w_debug w_release
 
 debug: l_debug w_debug
+
+profile: l_profile
 
 release: l_release w_release
 
 all: linux windows
 
 clean:
-	rm -f *.engine *.exe *.ld.o *.lr.o *.wd.o *.wr.o
-	rm -f ./bitboard/*.ld.o ./bitboard/*.lr.o ./bitboard/*.wd.o ./bitboard/*.wr.o
-	rm -f ./tests/*.ld.o ./tests/*.lr.o ./tests/*.wd.o ./tests/*.wr.o
+	rm -f *.engine *.exe *.ld.o *.lr.o *.lp.o *.wd.o *.wr.o *.out
+	rm -f ./bitboard/*.ld.o ./bitboard/*.lr.o ./bitboard/*.lp.o ./bitboard/*.wd.o ./bitboard/*.wr.o
+	rm -f ./tests/*.ld.o ./tests/*.lr.o ./tests/*.lp.o ./tests/*.wd.o ./tests/*.wr.o
