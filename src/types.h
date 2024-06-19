@@ -208,7 +208,7 @@ typedef struct {            //Each size of 2 array contains {Black, White}
     u64 color[2];  // {White Pieces, Black Pieces}
 
     u64 en_passant;  //En Passant squares
-    char flags;  //Castle aval as bit flags, in order : w_long_castle | w_short_castle | b_long_castle | b_short_castle | turn | in_check | in_double_check
+    u8 flags;  //Castle aval as bit flags, in order : w_long_castle | w_short_castle | b_long_castle | b_short_castle | turn | in_check | in_double_check
     //1 means avaliable / white's turn
 
     char charBoard[64];  //Character Board
@@ -219,7 +219,7 @@ typedef struct {            //Each size of 2 array contains {Black, White}
 
     i32 material_eval;
 
-    HashStack hashStack; //Pointer to the gamestate position is in
+    i32 hash_stack_idx; // Index of the position in the local hash stack
 
     Stage stage; //The stage of the game
 
@@ -227,6 +227,36 @@ typedef struct {            //Each size of 2 array contains {Black, White}
     i32 fullmove_number;
 } Position;
 
+typedef struct {
+    u64 pawn[2];     
+    u64 bishop[2];
+    u64 knight[2];
+    u64 rook[2];
+    u64 queen[2];
+    u64 king[2];
+
+    u64 attack_mask[2]; 
+
+    u64 color[2]; 
+
+    u64 en_passant;
+    u8 flags;
+
+    char charBoard[64];  
+
+    u64 pinned;
+
+    u64 hash; 
+
+    i32 material_eval;
+
+    i32 hash_stack_idx;
+
+    Stage stage;
+
+    i32 halfmove_clock;
+    i32 fullmove_number;
+} Undo;
 
 typedef struct {
     u16 move;

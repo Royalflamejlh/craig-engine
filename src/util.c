@@ -316,30 +316,6 @@ u32 calculate_max_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 move
     return (time / 5) + 1;
 }
 
-/*
-*
-* Hash Stack Stuff
-*
-*/
-
-HashStack createHashStack(void){
-    u64 *ptr = malloc(sizeof(u64) * HASHSTACK_SIZE);
-    if (ptr == NULL) {
-        printf("info string Warning: Failed to allocate space for the Hash Stack.\n");
-    }
-    HashStack hashStack = {ptr, 0, 0};
-    return hashStack;
-}
-
-
-i32 remove_hash_stack(HashStack *hashStack){
-    if (hashStack && hashStack->ptr) {
-        free(hashStack->ptr);
-        hashStack->ptr = NULL;
-    }
-    return 0;
-}
-
 #ifdef PYTHON
 i32 python_init() {
     system("rm /tmp/chess_fifo_in");

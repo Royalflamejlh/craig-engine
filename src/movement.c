@@ -301,7 +301,8 @@ i32 makeMove(Position *pos, Move move){
 
     pos->hash = hashPosition(*pos);
 
-    HashStack *hs = &pos->hashStack;
+    pos->hash_stack_idx++;
+
     hs->current_idx = (hs->current_idx + 1) % HASHSTACK_SIZE;
     if(pos->halfmove_clock == 0) hs->last_reset_idx = hs->current_idx;
     hs->ptr[hs->current_idx] = pos->hash;    

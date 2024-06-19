@@ -101,14 +101,7 @@ static inline i32 isRepetition(Position* pos){
    return 0;
 }
 
-/*
-*
-* Hash Stack Stuff
-*
-*/
 
-HashStack createHashStack(void);
-i32 remove_hash_stack(HashStack *hashStack);
 
 
 
