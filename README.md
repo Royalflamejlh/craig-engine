@@ -11,7 +11,7 @@ This is a chess engine program that I have been working on for a while in a comp
 - Transposition
   
 ## Installation
-The engine should work both on UNIX and Windows systems. The project is built by running make release in the base directory, and it should produce executables for all platforms.
+The engine should work both on UNIX and Windows systems. The project is built by running make release in the src directory, and it should produce executables for all platforms.
 
 ## Acknowledgements
 Shout out to the [Chess Programming WIKI](https://chessprogramming.org/)
