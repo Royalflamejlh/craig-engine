@@ -123,11 +123,6 @@ Position fen_to_position(char* FEN) {
 
     pos.hash = hashPosition(pos);
 
-    pos.hashStack = createHashStack();
-    pos.hashStack.current_idx = 0;
-    pos.hashStack.last_reset_idx = 0;
-    pos.hashStack.ptr[0] = pos.hash;
-
     return pos;
 }
 

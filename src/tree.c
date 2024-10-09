@@ -301,45 +301,6 @@ static inline void pvFill(Position pos, Move* pv_array, u8 depth){
 
 
 /*
- * Does a brief search on the opening position to get some values in the hashtable
- */
-void search_opening(u32 depth){
-   #ifdef DEBUG
-   printf("Searching all opening positions\n");
-   #endif
-   run_get_best_move = TRUE;
-   Position pos = fen_to_position(START_FEN);
-   SearchStats stats;
-   Move pv_array[MAX_DEPTH] = {0};
-   KillerMoves km = {0};
-
-   search_tree(pos, depth, pv_array, &km, 0, &stats, NULL); // Generate for white
-
-   Move moveList[MAX_MOVES];
-   i32 moveVals[MAX_MOVES];
-   
-   i32 size = generateLegalMoves(&pos, moveList);
-
-   eval_movelist(&pos, moveList, moveVals, size);
-   
-   Position prevPos = pos;
-   for (i32 i = 0; i < size; i++)  {
-      q_select_sort(i, moveList, moveVals, size); 
-      if(moveVals[i] <= 0) break;
-      makeMove(&pos, moveList[i]);
-      search_tree(pos, depth, pv_array, &km, 0, &stats, NULL);
-      pos = prevPos;
-   }
-
-   remove_hash_stack(&pos.hashStack);
-   run_get_best_move = FALSE;
-   #ifdef DEBUG
-   printf("All opening positions searched\n");
-   #endif
-}
-
-
-/*
 * Sets up the aspiration window, then searches the 
 */
 i32 search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 eval, SearchStats* stats, TimePreference* time_preference){

@@ -70,8 +70,6 @@ i32 testBB(void) {
                 break;
             }
         }
-
-        remove_hash_stack(&pos.hashStack);
     }
 
     fclose(file);
@@ -108,7 +106,6 @@ i32 testBB(void) {
                 }
             }
         }
-        remove_hash_stack(&pos.hashStack);
     }
     printf("Check Complete.\n");
 
@@ -124,7 +121,6 @@ i32 testBB(void) {
         u64 num_moves = perft(depth, pos);
         printf("Perft output is %ld for depth %d\n", (long)num_moves, depth);
     }
-    remove_hash_stack(&pos.hashStack);
 
     printf("\nComplete, running perft suite.\n");
 
@@ -143,7 +139,6 @@ i32 testBB(void) {
             //i64 num_moves = perft(depth, pos);
             //printf("D%d: %lld |", depth, (long long i32)num_moves);
         }
-        remove_hash_stack(&pos.hashStack);
         //printf("\n\n");
     }
     printf("\nPerft Suite Complete\n");

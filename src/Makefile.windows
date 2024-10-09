@@ -1,0 +1,57 @@
+##
+# Compilers and Project Setup
+##
+
+W_CC = gcc
+SRC  = $(wildcard *.c bitboard/*.c tests/*.c)
+EXE  = craig
+
+##
+# Libraries
+##
+
+# Windows doesn't need -lm or -lpthread, remove them
+W_LIBS += -static-libgcc -static-libstdc++
+
+##
+# Object Files
+##
+
+W_DOBJS = $(SRC:.c=.wd.o)
+W_ROBJS = $(SRC:.c=.wr.o)
+
+##
+# Compilation Flags
+##
+
+WRN_FLAGS = -std=gnu11 -Wall -Wextra -Wshadow -Winline -Wno-format-security
+
+DFLAGS = -O0 $(WRN_FLAGS) -g -DVERBOSE -DDEBUG
+RFLAGS = -O3 $(WRN_FLAGS) -Ofast -funroll-loops -flto -finline-functions -fomit-frame-pointer
+
+##
+# Build Targets for Windows
+##
+
+w_debug: $(W_DOBJS)
+	$(W_CC) $(W_DOBJS) $(W_LIBS) $(DFLAGS) -o $(EXE)-debug.exe
+
+w_release: $(W_ROBJS)
+	$(W_CC) $(W_ROBJS) $(W_LIBS) $(RFLAGS) -o $(EXE).exe
+
+%.wd.o: %.c
+	$(W_CC) $(DFLAGS) -c $< -o $@
+
+%.wr.o: %.c
+	$(W_CC) $(RFLAGS) -c $< -o $@
+
+##
+# General
+##
+
+windows: w_debug w_release
+
+clean:
+	del /F /Q *.exe *.wd.o *.wr.o
+	del /F /Q .\bitboard\*.wd.o .\bitboard\*.wr.o
+	del /F /Q .\tests\*.wd.o .\tests\*.wr.o

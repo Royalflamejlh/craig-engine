@@ -299,13 +299,9 @@ i32 makeMove(Position *pos, Move move){
 
     pos->material_eval = eval_material(pos);
 
-    pos->hash = hashPosition(*pos);
+    pos->hash = hashPosition(*pos); // TODO, iterate the hash from the previous position combined with move
 
     pos->hash_stack_idx++;
-
-    hs->current_idx = (hs->current_idx + 1) % HASHSTACK_SIZE;
-    if(pos->halfmove_clock == 0) hs->last_reset_idx = hs->current_idx;
-    hs->ptr[hs->current_idx] = pos->hash;    
 
 
     #ifdef DEBUG

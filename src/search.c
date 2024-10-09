@@ -237,7 +237,6 @@ i32 search_loop(u32 thread_num){
     #endif
 
 exit_search_loop:
-    remove_hash_stack(&search_pos.hashStack);
     is_searching = FALSE;
     quit_thread();
     return 0;
@@ -245,7 +244,6 @@ exit_search_loop:
 
 //exit thread function
 void exit_search(Position* pos){
-   remove_hash_stack(&pos->hashStack);
    is_searching = FALSE;
    quit_thread();
 }

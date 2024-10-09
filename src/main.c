@@ -25,6 +25,9 @@ void playSelfInfinite(void);
 
 #ifdef __PROFILE
 void playSelfInfinite(void){
+
+    
+
     Position tempPos = get_global_position();
     
     while(generateLegalMoves(tempPos, moveList)){

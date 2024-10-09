@@ -51,8 +51,6 @@ void init_globals(){
 void free_globals(){
     pthread_mutex_lock(&mutex_global_position);
 
-    remove_hash_stack(&global_position.hashStack);
-
     pthread_mutex_lock(&mutex_global_PV);
     free(global_sd.pv_array);
     global_sd.pv_array = NULL;
@@ -107,7 +105,6 @@ u8 update_global_pv(u32 depth, Move* pv_array, i32 eval, SearchStats stats){
  */
 void set_global_position(Position pos){
     pthread_mutex_lock(&mutex_global_position);
-    if(pos.hashStack.ptr != global_position.hashStack.ptr) remove_hash_stack(&global_position.hashStack);
     global_position = pos;
     reset_global_pv_data();
     pthread_mutex_unlock(&mutex_global_position);
@@ -129,10 +126,6 @@ Position get_global_position(){
 Position copy_global_position(){
     pthread_mutex_lock(&mutex_global_position);
     Position pos = global_position;
-    pos.hashStack = createHashStack();
-    memcpy(pos.hashStack.ptr, global_position.hashStack.ptr, sizeof(u64)*HASHSTACK_SIZE);
-    pos.hashStack.current_idx    = global_position.hashStack.current_idx;
-    pos.hashStack.last_reset_idx = global_position.hashStack.last_reset_idx;
     pthread_mutex_unlock(&mutex_global_position);
     return pos;
 }

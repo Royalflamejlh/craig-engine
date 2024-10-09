@@ -95,15 +95,8 @@ static inline u8 isInsufficient(Position* pos){
 * Returns whether the position is a Repetition
 */
 static inline i32 isRepetition(Position* pos){
-   for(i32 i = pos->hashStack.last_reset_idx; i != pos->hashStack.current_idx; i = (i + 1) % HASHSTACK_SIZE){
-      if(pos->hashStack.ptr[i] == pos->hashStack.ptr[pos->hashStack.current_idx]) return 1;
-   }
+   //TODO: Implement
    return 0;
 }
-
-
-
-
-
 
 #endif

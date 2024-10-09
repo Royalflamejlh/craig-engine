@@ -2,8 +2,6 @@
 #define tree_h
 #include "types.h"
 
-void search_opening(u32 depth);
-
 i32 search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 eval_prev, SearchStats* stats, TimePreference* time_preference);
 i32 helper_search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 eval, SearchStats* stats, u32 thread_num);
 
