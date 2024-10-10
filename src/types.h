@@ -228,23 +228,17 @@ typedef struct {            //Each size of 2 array contains {Black, White}
     i32 fullmove_number;
 } Position;
 
-typedef struct {            //Each size of 2 array contains {Black, White}
-    u64 attack_mask[2]; // {Attacked by Black, Attacked by White}
+typedef struct {
+    u64 attack_mask[2];
 
-    u64 color[2];  // {White Pieces, Black Pieces}
-
-    u64 en_passant;  //En Passant squares
+    u64 en_passant;
     u8 flags;  
 
-    u64 pinned; //Absolutely pinned pieces
+    u64 pinned;
 
-    u64 hash; //Hash of the position
+    u64 hash;
 
     i32 material_eval;
-
-    i32 hash_stack_idx; // Index of the position in the local hash stack
-
-    Stage stage; //The stage of the game
 
     i32 halfmove_clock;
  
@@ -309,7 +303,8 @@ typedef struct{
     KillerMoves km;
     u32 depth;
     Position pos; 
-    HashStack hashstack;
+    HashStack hash_stack;
+    Undo undo_stack[MAX_DEPTH];
     Move found_move[MAX_DEPTH];
     i32  found_eval[MAX_DEPTH];
     i32 avg_eval;

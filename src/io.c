@@ -119,6 +119,15 @@ void processGoCommand(char* input) {
             if (token != NULL) {
                 params.depth = atol(token);
             }
+        }else if (strcmp(token, "perft") == 0) {
+            token = strtok_r(NULL, " ", &saveptr);
+            if (token != NULL) {
+                perft(atol(token), copy_global_position());
+            }
+            return;
+        } else if (strncmp(token, "perft", 5) == 0) {
+            perft(MAX_DEPTH, copy_global_position());
+            return;
         }
         token = strtok_r(NULL, " ", &saveptr);
     }
