@@ -293,7 +293,7 @@ static inline void pvFill(Position pos, Move* pv_array, u8 depth){
       #ifdef DEBUG
       if(ttEntry.fields.move == NO_MOVE) printf("NO MOVE FOUND IN PV");
       #endif
-      makeMove(&pos, ttEntry.fields.move);
+      make_move(&pos, ttEntry.fields.move);
       ply++;
       ttEntry = get_tt_entry(pos.hash);
    }
@@ -546,7 +546,7 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
       assert(prevPos.hash == pos->hash);
       #endif
       evalIdx = select_sort(i, evalIdx, pos, moveList, moveVals, size, &td->km, ttMove, ply);
-      makeMove(pos, moveList[i]);
+      make_move(pos, moveList[i]);
       // Update Prunability PVS
       u8 prunable_move = prunable;
       if(i <= PV_PRUNE_MOVE_IDX || pos->flags & IN_CHECK || (GET_FLAGS(moveList[i]) > DOUBLE_PAWN_PUSH) || pos->stage == END_GAME ) prunable_move = FALSE;
@@ -682,7 +682,7 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
 //       assert(prevPos.hash == pos->hash);
 //       #endif
 //       evalIdx = helper_select_sort(i, evalIdx, pos, moveList, moveVals, size, km, ttMove, ply, thread_num);
-//       makeMove(pos, moveList[i]);
+//       make_move(pos, moveList[i]);
 //       i32 score;
 //       if ( i == 0 ) {
 //          score = -helper_pv_search(pos, -beta, -alpha, depth - 1, ply + 1, pv_array, km, stats, thread_num);
@@ -817,7 +817,7 @@ i32 zw_search( ThreadData* td, i32 beta, i8 depth, u8 ply, u8 isNull) {
       #endif
       
       evalIdx = select_sort(i, evalIdx, pos, moveList, moveVals, size, &td->km, ttMove, ply);
-      makeMove(pos, moveList[i]);
+      make_move(pos, moveList[i]);
 
       // Set Move prunability prunability ZWS
       u8 prunable_move = prunable;
@@ -933,9 +933,10 @@ i32 q_search(ThreadData *td, i32 alpha, i32 beta, u8 ply, u8 q_ply) {
          continue;
       }
 
-      makeMove(pos, moveList[i]);
+      make_move(pos, moveList[i]);
       i32 score = -q_search(td, -beta, -alpha, ply + 1, q_ply + 1);
-      *pos = prev_pos; //Unmake Move
+      *pos = prev_pos;
+      //unmake_move(pos, moveList[i]);
 
       if( score >= beta ){
          // storeKillerMove(ply, moveList[i]);

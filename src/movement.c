@@ -76,6 +76,9 @@ u16 generateThreatMoves(Position* position,  Move* moveList){
 
 
 static void movePiece(Position *pos, i32 turn, i32 from, i32 to){
+    pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[(int)pos->charBoard[from]]);
+    pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[(int)pos->charBoard[from]]);
+
     switch(toupper(pos->charBoard[from])){
         case 'Q':
             pos->queen[turn] = clearBit(pos->queen[turn], from);
@@ -103,6 +106,7 @@ static void movePiece(Position *pos, i32 turn, i32 from, i32 to){
             pos->halfmove_clock = 0;
             break;
     }
+
     pos->charBoard[to] = pos->charBoard[from];
     pos->charBoard[from] = 0;
 
@@ -112,6 +116,7 @@ static void movePiece(Position *pos, i32 turn, i32 from, i32 to){
 
 /* Used to remove the captured piece */
 static void removeCaptured(Position *pos, i32 square){
+    pos->hash = hash_update_piece(pos->hash, square, pieceToIndex[(int)pos->charBoard[square]]);
     i32 turn = pos->flags & WHITE_TURN;
     switch(toupper(pos->charBoard[square])){
         case 'Q':
@@ -145,13 +150,17 @@ static void removeCaptured(Position *pos, i32 square){
     pos->halfmove_clock = 0;
 }
 
-i32 makeMove(Position *pos, Move move){
+i32 make_move(Position *pos, Move move){
     #ifdef DEBUG
     if(move == NO_MOVE) printf("WARNING ILLEGAL NO-MOVE IN MAKE MOVE\n");
     #endif
     i32 turn = pos->flags & WHITE_TURN;
+    u8 prev_flags = pos->flags;
     i32 from = GET_FROM(move);
     i32 to   = GET_TO(move);
+
+    pos->hash = hash_update_turn(pos->hash);
+    if(pos->en_passant) pos->hash = hash_update_enpassant(pos->hash, getlsb(pos->en_passant));
     
     pos->halfmove_clock++;
     pos->en_passant = 0ULL;
@@ -160,6 +169,8 @@ i32 makeMove(Position *pos, Move move){
     switch(GET_FLAGS(move)){
         case QUEEN_PROMO_CAPTURE:
             removeCaptured(pos, to);
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'Q' : 'q']);
             pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
             pos->charBoard[from] = 0;
             pos->queen[turn] = setBit(pos->queen[turn], to); 
@@ -170,6 +181,8 @@ i32 makeMove(Position *pos, Move move){
             break;
         case ROOK_PROMO_CAPTURE:
             removeCaptured(pos, to);
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'R' : 'r']);
             pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
             pos->charBoard[from] = 0;
             pos->rook[turn] = setBit(pos->rook[turn], to); 
@@ -180,6 +193,8 @@ i32 makeMove(Position *pos, Move move){
             break;
         case BISHOP_PROMO_CAPTURE:
             removeCaptured(pos, to);
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'B' : 'b']);
             pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
             pos->charBoard[from] = 0;
             pos->bishop[turn] = setBit(pos->bishop[turn], to); 
@@ -190,6 +205,8 @@ i32 makeMove(Position *pos, Move move){
             break;
         case KNIGHT_PROMO_CAPTURE:
             removeCaptured(pos, to);
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'N' : 'n']);
             pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
             pos->charBoard[from] = 0;
             pos->knight[turn] = setBit(pos->knight[turn], to); 
@@ -209,6 +226,8 @@ i32 makeMove(Position *pos, Move move){
             break;
 
         case QUEEN_PROMOTION:
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'Q' : 'q']);
             pos->color[turn] = clearBit(pos->color[turn], from);
             pos->color[turn] = setBit(pos->color[turn], to);
             pos->queen[turn] = setBit(pos->queen[turn], to);
@@ -218,6 +237,8 @@ i32 makeMove(Position *pos, Move move){
             pos->halfmove_clock = 0;
             break;
         case ROOK_PROMOTION:
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'R' : 'r']);
             pos->color[turn] = clearBit(pos->color[turn], from);
             pos->color[turn] = setBit(pos->color[turn], to);
             pos->rook[turn] = setBit(pos->rook[turn], to);
@@ -227,6 +248,8 @@ i32 makeMove(Position *pos, Move move){
             pos->halfmove_clock = 0;
             break;
         case BISHOP_PROMOTION:
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'B' : 'b']);
             pos->color[turn] = clearBit(pos->color[turn], from);
             pos->color[turn] = setBit(pos->color[turn], to);
             pos->bishop[turn] = setBit(pos->bishop[turn], to);
@@ -236,6 +259,8 @@ i32 makeMove(Position *pos, Move move){
             pos->halfmove_clock = 0;
             break;
         case KNIGHT_PROMOTION:
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'N' : 'n']);
             pos->color[turn] = clearBit(pos->color[turn], from);
             pos->color[turn] = setBit(pos->color[turn], to);
             pos->knight[turn] = setBit(pos->knight[turn], to);
@@ -244,13 +269,14 @@ i32 makeMove(Position *pos, Move move){
             pos->charBoard[to] = turn ? 'N' : 'n';
             pos->halfmove_clock = 0;
             break;
-            
         case QUEEN_CASTLE:
             pos->flags &= ~(turn ? W_LONG_CASTLE : B_LONG_CASTLE);
+            pos->flags &= ~(turn ? W_SHORT_CASTLE : B_SHORT_CASTLE);
             movePiece(pos, turn, from, to);
             movePiece(pos, turn, turn ? 0 : 56, turn ? 3 : 59);
             break;
         case KING_CASTLE:
+            pos->flags &= ~(turn ? W_LONG_CASTLE : B_LONG_CASTLE);
             pos->flags &= ~(turn ? W_SHORT_CASTLE : B_SHORT_CASTLE);
             movePiece(pos, turn, from, to);
             movePiece(pos, turn, turn ? 7 : 63, turn ? 5 : 61);
@@ -258,6 +284,7 @@ i32 makeMove(Position *pos, Move move){
 
         case DOUBLE_PAWN_PUSH:
             pos->en_passant = 1ULL << (turn ? to - 8 : to + 8);
+            pos->hash = hash_update_enpassant(pos->hash, turn ? to - 8 : to + 8);
             // Fall through
         case QUIET:
         default:
@@ -266,14 +293,25 @@ i32 makeMove(Position *pos, Move move){
     }
 
     //Castle Aval Rooks Moves
-    if(to == 0 || from == 0)   pos->flags &= ~W_LONG_CASTLE;
-    if(to == 7 || from == 7)   pos->flags &= ~W_SHORT_CASTLE;
-    if(to == 56 || from == 56) pos->flags &= ~B_LONG_CASTLE;
-    if(to == 63 || from == 63) pos->flags &= ~B_SHORT_CASTLE;
+    if((to == 0  || from == 0) ) pos->flags &= ~W_LONG_CASTLE;
+    if((to == 7  || from == 7) ) pos->flags &= ~W_SHORT_CASTLE;
+    if((to == 56 || from == 56)) pos->flags &= ~B_LONG_CASTLE;
+    if((to == 63 || from == 63)) pos->flags &= ~B_SHORT_CASTLE;
 
     //King Moves
-    if(from == 4)  pos->flags &= ~(W_LONG_CASTLE | W_SHORT_CASTLE);
-    if(from == 60) pos->flags &= ~(B_LONG_CASTLE | B_SHORT_CASTLE);
+    if(from == 4){
+        pos->flags &= ~W_LONG_CASTLE;
+        pos->flags &= ~W_SHORT_CASTLE;
+    }
+    if(from == 60){
+        pos->flags &= ~B_LONG_CASTLE;
+        pos->flags &= ~B_SHORT_CASTLE;
+    } 
+    
+    if((prev_flags & W_LONG_CASTLE ) != (pos->flags & W_LONG_CASTLE )) pos->hash = hash_update_castle(pos->hash, W_LONG_CASTLE );
+    if((prev_flags & W_SHORT_CASTLE) != (pos->flags & W_SHORT_CASTLE)) pos->hash = hash_update_castle(pos->hash, W_SHORT_CASTLE);
+    if((prev_flags & B_LONG_CASTLE ) != (pos->flags & B_LONG_CASTLE )) pos->hash = hash_update_castle(pos->hash, B_LONG_CASTLE );
+    if((prev_flags & B_SHORT_CASTLE) != (pos->flags & B_SHORT_CASTLE)) pos->hash = hash_update_castle(pos->hash, B_SHORT_CASTLE);
 
     if(!turn) pos->fullmove_number++;
 
@@ -299,8 +337,6 @@ i32 makeMove(Position *pos, Move move){
 
     pos->material_eval = eval_material(pos);
 
-    pos->hash = hashPosition(*pos); // TODO, iterate the hash from the previous position combined with move
-
     pos->hash_stack_idx++;
 
 
@@ -313,6 +349,240 @@ i32 makeMove(Position *pos, Move move){
         printMove(move);
         printf(".\r\n");
         fflush(stdout);
+    }
+
+    u64 actualHash = hashPosition(*pos);
+    if(pos->hash != actualHash){
+        printf("Incremental hash does not match correct hash!\n");
+        printf("Found Hash:    %" PRIu64 "\n", pos->hash);
+        printf("Expected Hash: %" PRIu64 "\n", actualHash);
+        printf("Difference:    %" PRIu64 "\n", pos->hash ^ actualHash);
+        debug_hash_difference(pos->hash, actualHash);
+        printPosition(*pos, TRUE);
+        printf("From move: ");
+        printMove(move);
+        printf(".\r\n");
+        fflush(stdout);
+        while(1);
+    }
+    #endif
+
+    return 0;
+}
+
+i32 unmake_move(Position *pos, Move move){
+    #ifdef DEBUG
+    if(move == NO_MOVE) printf("WARNING ILLEGAL NO-MOVE IN MAKE MOVE\n");
+    #endif
+    i32 turn = pos->flags & WHITE_TURN;
+    u8 prev_flags = pos->flags;
+    i32 from = GET_FROM(move);
+    i32 to   = GET_TO(move);
+
+    pos->hash = hash_update_turn(pos->hash);
+    if(pos->en_passant) pos->hash = hash_update_enpassant(pos->hash, getlsb(pos->en_passant));
+    
+    pos->halfmove_clock++;
+    pos->en_passant = 0ULL;
+
+    // Handle move flags
+    switch(GET_FLAGS(move)){
+        case QUEEN_PROMO_CAPTURE:
+            removeCaptured(pos, to);
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'Q' : 'q']);
+            pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
+            pos->charBoard[from] = 0;
+            pos->queen[turn] = setBit(pos->queen[turn], to); 
+            pos->charBoard[to] = turn ? 'Q' : 'q';
+            pos->color[turn] = clearBit(pos->color[turn], from);
+            pos->color[turn] = setBit(pos->color[turn], to);
+            pos->halfmove_clock = 0;
+            break;
+        case ROOK_PROMO_CAPTURE:
+            removeCaptured(pos, to);
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'R' : 'r']);
+            pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
+            pos->charBoard[from] = 0;
+            pos->rook[turn] = setBit(pos->rook[turn], to); 
+            pos->charBoard[to] = turn ? 'R' : 'r';
+            pos->color[turn] = clearBit(pos->color[turn], from);
+            pos->color[turn] = setBit(pos->color[turn], to);
+            pos->halfmove_clock = 0;
+            break;
+        case BISHOP_PROMO_CAPTURE:
+            removeCaptured(pos, to);
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'B' : 'b']);
+            pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
+            pos->charBoard[from] = 0;
+            pos->bishop[turn] = setBit(pos->bishop[turn], to); 
+            pos->charBoard[to] = turn ? 'B' : 'b';
+            pos->color[turn] = clearBit(pos->color[turn], from);
+            pos->color[turn] = setBit(pos->color[turn], to);
+            pos->halfmove_clock = 0;
+            break;
+        case KNIGHT_PROMO_CAPTURE:
+            removeCaptured(pos, to);
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'N' : 'n']);
+            pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
+            pos->charBoard[from] = 0;
+            pos->knight[turn] = setBit(pos->knight[turn], to); 
+            pos->charBoard[to] = turn ? 'N' : 'n';
+            pos->color[turn] = clearBit(pos->color[turn], from);
+            pos->color[turn] = setBit(pos->color[turn], to);
+            pos->halfmove_clock = 0;
+            break;
+            
+        case EP_CAPTURE:
+            removeCaptured(pos, (turn ? to - 8 : to + 8));
+            movePiece(pos, turn, from, to);
+            break;
+        case CAPTURE:
+            removeCaptured(pos, to);
+            movePiece(pos, turn, from, to);
+            break;
+
+        case QUEEN_PROMOTION:
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'Q' : 'q']);
+            pos->color[turn] = clearBit(pos->color[turn], from);
+            pos->color[turn] = setBit(pos->color[turn], to);
+            pos->queen[turn] = setBit(pos->queen[turn], to);
+            pos->pawn[turn] = clearBit(pos->pawn[turn], from);
+            pos->charBoard[from] = 0;
+            pos->charBoard[to] = turn ? 'Q' : 'q';
+            pos->halfmove_clock = 0;
+            break;
+        case ROOK_PROMOTION:
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex['R']);
+            pos->color[turn] = clearBit(pos->color[turn], from);
+            pos->color[turn] = setBit(pos->color[turn], to);
+            pos->rook[turn] = setBit(pos->rook[turn], to);
+            pos->pawn[turn] = clearBit(pos->pawn[turn], from);
+            pos->charBoard[from] = 0;
+            pos->charBoard[to] = turn ? 'R' : 'r';
+            pos->halfmove_clock = 0;
+            break;
+        case BISHOP_PROMOTION:
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'B' : 'b']);
+            pos->color[turn] = clearBit(pos->color[turn], from);
+            pos->color[turn] = setBit(pos->color[turn], to);
+            pos->bishop[turn] = setBit(pos->bishop[turn], to);
+            pos->pawn[turn] = clearBit(pos->pawn[turn], from);
+            pos->charBoard[from] = 0;
+            pos->charBoard[to] = turn ? 'B' : 'b';
+            pos->halfmove_clock = 0;
+            break;
+        case KNIGHT_PROMOTION:
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'N' : 'n']);
+            pos->color[turn] = clearBit(pos->color[turn], from);
+            pos->color[turn] = setBit(pos->color[turn], to);
+            pos->knight[turn] = setBit(pos->knight[turn], to);
+            pos->pawn[turn] = clearBit(pos->pawn[turn], from);
+            pos->charBoard[from] = 0;
+            pos->charBoard[to] = turn ? 'N' : 'n';
+            pos->halfmove_clock = 0;
+            break;
+        case QUEEN_CASTLE:
+            pos->flags &= ~(turn ? W_LONG_CASTLE : B_LONG_CASTLE);
+            pos->flags &= ~(turn ? W_SHORT_CASTLE : B_SHORT_CASTLE);
+            movePiece(pos, turn, from, to);
+            movePiece(pos, turn, turn ? 0 : 56, turn ? 3 : 59);
+            break;
+        case KING_CASTLE:
+            pos->flags &= ~(turn ? W_LONG_CASTLE : B_LONG_CASTLE);
+            pos->flags &= ~(turn ? W_SHORT_CASTLE : B_SHORT_CASTLE);
+            movePiece(pos, turn, from, to);
+            movePiece(pos, turn, turn ? 7 : 63, turn ? 5 : 61);
+            break;
+
+        case DOUBLE_PAWN_PUSH:
+            pos->en_passant = 1ULL << (turn ? to - 8 : to + 8);
+            pos->hash = hash_update_enpassant(pos->hash, turn ? to - 8 : to + 8);
+            // Fall through
+        case QUIET:
+        default:
+            movePiece(pos, turn, from, to);
+            break;
+    }
+
+    //Castle Aval Rooks Moves
+    if((to == 0  || from == 0) ) pos->flags &= ~W_LONG_CASTLE;
+    if((to == 7  || from == 7) ) pos->flags &= ~W_SHORT_CASTLE;
+    if((to == 56 || from == 56)) pos->flags &= ~B_LONG_CASTLE;
+    if((to == 63 || from == 63)) pos->flags &= ~B_SHORT_CASTLE;
+
+    //King Moves
+    if(from == 4){
+        pos->flags &= ~W_LONG_CASTLE;
+        pos->flags &= ~W_SHORT_CASTLE;
+    }
+    if(from == 60){
+        pos->flags &= ~B_LONG_CASTLE;
+        pos->flags &= ~B_SHORT_CASTLE;
+    } 
+    
+    if((prev_flags & W_LONG_CASTLE ) != (pos->flags & W_LONG_CASTLE )) pos->hash = hash_update_castle(pos->hash, W_LONG_CASTLE );
+    if((prev_flags & W_SHORT_CASTLE) != (pos->flags & W_SHORT_CASTLE)) pos->hash = hash_update_castle(pos->hash, W_SHORT_CASTLE);
+    if((prev_flags & B_LONG_CASTLE ) != (pos->flags & B_LONG_CASTLE )) pos->hash = hash_update_castle(pos->hash, B_LONG_CASTLE );
+    if((prev_flags & B_SHORT_CASTLE) != (pos->flags & B_SHORT_CASTLE)) pos->hash = hash_update_castle(pos->hash, B_SHORT_CASTLE);
+
+    if(!turn) pos->fullmove_number++;
+
+    setAttackMasks(pos);
+
+    //Check Flag
+    pos->flags = pos->attack_mask[turn] & pos->king[!turn] ? (pos->flags | IN_CHECK) : (pos->flags & ~IN_CHECK);
+
+    //Double Check Flag
+    if(pos->flags & IN_CHECK){
+       i32 king_sq = getlsb(pos->king[!turn]);
+       u64 attackers = getAttackers(pos, king_sq, turn);
+       attackers &= attackers - 1;
+       if(attackers) pos->flags |= IN_D_CHECK;
+    }
+    else pos->flags &= ~IN_D_CHECK;
+
+    pos->flags ^= WHITE_TURN;
+
+    pos->pinned = generatePinnedPieces(pos);
+
+    pos->stage = calculateStage(*pos);
+
+    pos->material_eval = eval_material(pos);
+
+    pos->hash_stack_idx--;
+
+    #ifdef DEBUG
+    if(count_bits(pos->king[0]) != 1 || count_bits(pos->king[1]) != 1){
+        printf("Illegal Position found without correct number of kings.\n");
+        printPosition(*pos, TRUE);
+
+        printf("From unmaking move: ");
+        printMove(move);
+        printf(".\r\n");
+        fflush(stdout);
+    }
+
+    u64 actualHash = hashPosition(*pos);
+    if(pos->hash != actualHash){
+        printf("Incremental hash does not match correct hash!\n");
+        printf("Found Hash:    %" PRIu64 "\n", pos->hash);
+        printf("Expected Hash: %" PRIu64 "\n", actualHash);
+        printf("Difference:    %" PRIu64 "\n", pos->hash ^ actualHash);
+        debug_hash_difference(pos->hash, actualHash);
+        printPosition(*pos, TRUE);
+        printf("From unmaking move: ");
+        printMove(move);
+        printf(".\r\n");
+        fflush(stdout);
+        while(1);
     }
     #endif
 
@@ -335,12 +605,6 @@ i32 makeNullMove(Position *pos){
     pos->hash = hashPosition(*pos);
 
     return 0;
-}
-
-void unmakeMove(Position *position, Move move){
-    // Suppress errors until I implement this ;P
-    (void)*position;
-    (void)move;
 }
 
 static u64 generatePinnedPiecesColor(Position* pos, i32 turn){

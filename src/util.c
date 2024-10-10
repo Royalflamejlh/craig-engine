@@ -175,7 +175,7 @@ u64 perft(i32 depth, Position pos){
 
   for (i = 0; i < n_moves; i++) {
     Position prevPos = pos;
-    makeMove(&pos, move_list[i]);
+    make_move(&pos, move_list[i]);
     
     #ifdef PYTHON
     checkMoveCount(pos);

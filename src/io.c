@@ -57,7 +57,7 @@ static void processMoves(char* str) {
         }
         //printf("Move String found: %s", moveStr);
         Position cur = get_global_position();
-        makeMove(&cur, moveStrToType(&cur, moveStr));
+        make_move(&cur, moveStrToType(&cur, moveStr));
         set_global_position(cur);
 get_next_token:
         pch = strtok_r(NULL, " ", &rest);
@@ -220,7 +220,7 @@ static i32 processInput(char* input){
             printMove(get_global_best_move());
             printf("\n");
             Position tempPos = get_global_position();
-            makeMove(&tempPos, get_global_best_move());
+            make_move(&tempPos, get_global_best_move());
             set_global_position(tempPos);
         }
 

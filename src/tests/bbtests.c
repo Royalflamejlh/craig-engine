@@ -92,7 +92,7 @@ i32 testBB(void) {
         size = generateLegalMoves(&pos, moveList);
         while(size != 0 && pos.halfmove_clock < 50){
             i32 randMove = rand() % size;
-            makeMove(&pos, moveList[randMove]);
+            make_move(&pos, moveList[randMove]);
             size = generateLegalMoves(&pos, moveList);
             threatSize = generateThreatMoves(&pos, threatMoveList);
             for(i32 k = 0; k < threatSize; k++){
@@ -179,7 +179,7 @@ i32 testBB(void) {
         printMove(best_move);
         printf("Press Enter to Continue\n");
         while( getchar() != '\n' && getchar() != '\r');
-        makeMove(&pos, best_move);
+        make_move(&pos, best_move);
         printf("Pos after move: \n");
         printPosition(pos, FALSE);
         best_move = getBestMove(pos);
@@ -202,7 +202,7 @@ i32 testBB(void) {
         size_hash = generateLegalMoves(pos, moveList_hash);
         evalMoves(moveList_hash, moveVals, size_hash, NO_MOVE, NULL, 0, pos);
         select_sort(0, moveList_hash, moveVals, size_hash);
-        makeMove(&pos, moveList_hash[0]);
+        make_move(&pos, moveList_hash[0]);
         printf("Hash %d is: %" PRIu64 "\n", i+1, pos.hash);
     }
 

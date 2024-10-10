@@ -142,14 +142,16 @@ static inline Move MAKE_MOVE(i32 from, i32 to, i32 flags) {
     SET_FLAGS(move, flags);
     return move;
 }
-// Masks for Position Flags
-#define IN_D_CHECK     0x40
-#define IN_CHECK       0x20
-#define W_SHORT_CASTLE 0x10
-#define W_LONG_CASTLE  0x08
-#define B_SHORT_CASTLE 0x04 
-#define B_LONG_CASTLE  0x02 
-#define TURN_MASK      0x01 
+
+typedef enum {
+    IN_D_CHECK     = 0x40,
+    IN_CHECK       = 0x20,
+    W_SHORT_CASTLE = 0x10,
+    W_LONG_CASTLE  = 0x08,
+    B_SHORT_CASTLE = 0x04,
+    B_LONG_CASTLE  = 0x02,
+    TURN_MASK      = 0x01
+} PositionFlag;
 
 typedef enum{
     BLACK_TURN = 0,
@@ -226,34 +228,26 @@ typedef struct {            //Each size of 2 array contains {Black, White}
     i32 fullmove_number;
 } Position;
 
-typedef struct {
-    u64 pawn[2];     
-    u64 bishop[2];
-    u64 knight[2];
-    u64 rook[2];
-    u64 queen[2];
-    u64 king[2];
+typedef struct {            //Each size of 2 array contains {Black, White}
+    u64 attack_mask[2]; // {Attacked by Black, Attacked by White}
 
-    u64 attack_mask[2]; 
+    u64 color[2];  // {White Pieces, Black Pieces}
 
-    u64 color[2]; 
+    u64 en_passant;  //En Passant squares
+    u8 flags;  
 
-    u64 en_passant;
-    u8 flags;
+    u64 pinned; //Absolutely pinned pieces
 
-    char charBoard[64];  
-
-    u64 pinned;
-
-    u64 hash; 
+    u64 hash; //Hash of the position
 
     i32 material_eval;
 
-    i32 hash_stack_idx;
+    i32 hash_stack_idx; // Index of the position in the local hash stack
 
-    Stage stage;
+    Stage stage; //The stage of the game
 
     i32 halfmove_clock;
+ 
     i32 fullmove_number;
 } Undo;
 
