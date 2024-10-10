@@ -155,7 +155,7 @@ void *search_thread_entry(void *arg) {
     printf("info string Search Thread Starting\n");
     fflush(stdout);
     #endif
-
+    
     search_loop(thread_num);
     return NULL;
 }

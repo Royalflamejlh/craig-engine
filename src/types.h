@@ -181,9 +181,8 @@ static const i32 pieceToIndex[128] = {
 #define HASHSTACK_SIZE 100
 
 typedef struct {
-    u64* ptr; //A stack of hashes of player positions
-    i32 current_idx; //An index to the current hash
-    i32 last_reset_idx; //An index to the last move which reset halfmove clock
+    u64 hash[HASHSTACK_SIZE]; //A stack of hashes of player positions
+    i32 reset_idx; //An index to the last move which reset halfmove clock
 } HashStack;
 
 #define OPN_GAME_MOVES     8 //Moves that count as early game (fullmoves)
@@ -309,6 +308,20 @@ typedef enum {
     REDUCE_TIME,
     HALT_TIME
 } TimePreference;
+
+typedef struct{
+    u32 thread_num;
+    Move pv_array[MAX_DEPTH];
+    KillerMoves km;
+    u32 depth;
+    Position pos; 
+    HashStack hashstack;
+    Move found_move[MAX_DEPTH];
+    i32  found_eval[MAX_DEPTH];
+    i32 avg_eval;
+    TimePreference time_pref;
+    SearchStats stats;
+} ThreadData;
 
 // Forward definitions
 typedef struct EvalData EvalData;

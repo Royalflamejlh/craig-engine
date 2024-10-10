@@ -126,97 +126,108 @@ static inline void helper_wait(){ // TODO: abstract away in threads.h or somethi
     pthread_mutex_unlock(&helper_lock);
 }
 
-static void helper_loop(Position* pos, Move* pv_array, KillerMoves* km, u32 thread_num){
-    SearchStats stats;
-    helpers_run = TRUE;
-    helper_wait();
-    while(helpers_run && helpers_search_depth + (thread_num % 3) <= search_depth){
-        //printf("Helper thread searching at depth %d\n", helpers_search_depth + (thread_num % 3));
-        helper_search_tree(*pos, helpers_search_depth + (thread_num % 3), pv_array, km, helper_eval, &stats, thread_num);
-        helper_wait();
+i32 enter_loop(ThreadData *td){
+
+    if(td->thread_num >= NUM_MAIN_THREADS){
+        // helper_loop(td);
     }
-    return;
+    else{
+        search_loop(td);
+    }
+    quit_thread();
+    return 0;
+}
+
+// static i32 helper_loop(ThreadData *td){
+//     Move pv_array[MAX_DEPTH] = {0};
+//     KillerMoves km = {0};
+//     Position pos = copy_global_position(); 
+//     HashStack hashstack = {0};
+//     SearchStats stats = {0};
+
+//     helpers_run = TRUE;
+//     helper_wait();
+//     while(helpers_run && helpers_search_depth + (thread_num % 3) <= search_depth){
+//         //printf("Helper thread searching at depth %d\n", helpers_search_depth + (thread_num % 3));
+//         helper_search_tree(pos, helpers_search_depth + (thread_num % 3), pv_array, &km, helper_eval, &stats, thread_num);
+//         helper_wait();
+//     }
+//     return 0;
+// }
+
+/*
+ * Function to update the search time for the search loop
+ * Returns 0
+ */
+static u8 update_search_time(ThreadData *td, u8 updated){
+    if(!can_shorten) return 0;
+
+    // If we are have found a checkmate then we want to stop searching
+    if(td->time_pref == HALT_TIME       ||  
+        td->found_eval[td->depth] >= (CHECKMATE_VALUE-MAX_MOVES)){
+        search_time = 0;
+        return 0;
+    }
+
+    // If we have a good evaluation and we are in the endgame, extend to look for mate
+    if(!updated && td->pos.stage == END_GAME && td->found_eval[td->depth] >= 5){
+        td->time_pref = EXTEND_TIME;
+    }
+
+    // In the case of normal time we look at the past moves/evals to see if we need to continue or we can stop
+    if(td->time_pref == NORMAL_TIME){        
+        if(td->depth >= 7){
+            Move prev_move = NO_MOVE;
+            i32 move_changes = 0;
+            i32 min_eval = MAX_EVAL;
+            i32 max_eval = 0;
+            for(u32 i = td->depth; i >= td->depth - 6; i--){
+                if(td->found_eval[i] == 0 && td->found_move[i] == NO_MOVE) continue;
+                if(td->found_eval[i] > max_eval) max_eval = td->found_eval[i];
+                if(td->found_eval[i] < min_eval) min_eval = td->found_eval[i];
+                if(prev_move != td->found_move[i]) move_changes++;
+                prev_move = td->found_move[i];
+            }  
+            if( (move_changes == 0) || (abs(min_eval - max_eval) <= ( 100)))    td->time_pref = REDUCE_TIME;
+            if( (move_changes >  3) || (abs(min_eval - max_eval) >= (1000)))    td->time_pref = EXTEND_TIME;
+        }
+    }
+
+    // Update the search time.
+    if(td->time_pref == REDUCE_TIME){
+        search_time = (u32)((double)search_time * SEARCH_REDUCTION_LEVEL);
+    }
+    if(td->time_pref == EXTEND_TIME){
+        search_time = (u32)((double)search_time * SEARCH_EXTENSION_LEVEL);
+    }
 }
 
 /*
  * Loop Function for Search Threads
  */
-i32 search_loop(u32 thread_num){
+static i32 search_loop(ThreadData *td){
     #ifdef DEBUG
     printf("thread number is %d\n", thread_num);
     #endif
-    // Set up local thread info
-    Move pv_array[MAX_DEPTH] = {0};
-    KillerMoves km = {0};
-
     if(search_depth == 0){
         printf("info string Warning search depth was 0\n");
         return -1;
     }
 
-    u32 cur_depth = (1 + (thread_num % NUM_MAIN_THREADS)) % search_depth;
-    u8 is_helper_thread = (thread_num >= NUM_MAIN_THREADS);
-
-    Position search_pos = copy_global_position(); 
-
-    if(is_helper_thread){ // If the thread is a helper thread enter the helper loop
-        helper_loop(&search_pos, pv_array, &km, thread_num);
-        goto exit_search_loop;
-    }
-
-    Move found_move[MAX_DEPTH] = {0};   // Arrays of the previous evals and moves found in search
-    i32  found_eval[MAX_DEPTH] = {0};
+    // Set up local thread info
+    ThreadData td = {0};
 
     // Begin Search
     is_searching = TRUE;
 
-    while(run_get_best_move && cur_depth <= search_depth){
+    while(run_get_best_move && td->depth <= search_depth){
+        if(td->depth >= 2) td->avg_eval = (td->found_eval[td->depth-1] + td->found_eval[td->depth-2]) / 2;
+        if(td->depth > MIN_HELPER_DEPTH) resume_helpers(td->depth, td->avg_eval); // Run Search
+        td->found_eval[td->depth] = search_tree(&td);
+        td->found_move[td->depth] = td->pv_array[0];
+        u8 updated = update_global_pv(td->depth, td->pv_array, td->found_eval[td->depth], td->stats);
 
-        SearchStats stats; // Set up for iteration
-        i32 avg_eval = 0;
-        if(cur_depth >= 2) avg_eval = (found_eval[cur_depth-1] + found_eval[cur_depth-2]) / 2;
-        TimePreference time_preference = NORMAL_TIME;
-
-        if(cur_depth > MIN_HELPER_DEPTH) resume_helpers(cur_depth, avg_eval); // Run Search
-        found_eval[cur_depth] = search_tree(search_pos, cur_depth, pv_array, &km, avg_eval, &stats, &time_preference);
-        found_move[cur_depth] = pv_array[0];
-        u8 updated = update_global_pv(cur_depth, pv_array, found_eval[cur_depth], stats);
-
-        /*
-         * Below here is my god awful time calculation code :) 
-         */
-        if(can_shorten && updated){ // Continue searching if we can't shorten or we didn't find a better move
-            if( time_preference == HALT_TIME       ||   // If we should stop the search early
-                found_eval[cur_depth] >= (CHECKMATE_VALUE-MAX_MOVES)){
-                search_time = 0;
-            }
-            if(time_preference == NORMAL_TIME){        // In the case of normal time we look at the past moves/evals to see if we need to continue or we can stop
-                if(cur_depth >= 7){
-                    Move prev_move = NO_MOVE;
-                    i32 move_changes = 0;
-                    i32 min_eval = MAX_EVAL;
-                    i32 max_eval = 0;
-                    for(u32 i = cur_depth; i >= cur_depth - 6; i--){
-                        if(found_eval[i] == 0 && found_move[i] == NO_MOVE) continue;
-                        if(found_eval[i] > max_eval) max_eval = found_eval[i];
-                        if(found_eval[i] < min_eval) min_eval = found_eval[i];
-                        if(prev_move != found_move[i]) move_changes++;
-                        prev_move = found_move[i];
-                    }  
-                    if( (move_changes == 0) || (abs(min_eval - max_eval) <= ( 100)))    time_preference = REDUCE_TIME;
-                    if( (move_changes >  3) || (abs(min_eval - max_eval) >= (1000)))    time_preference = EXTEND_TIME;
-                }
-            }
-            if(time_preference == REDUCE_TIME){
-                search_time = (u32)((double)search_time * SEARCH_REDUCTION_LEVEL);
-            }
-            if(time_preference == EXTEND_TIME){
-                search_time = (u32)((double)search_time * SEARCH_EXTENSION_LEVEL);
-            }
-        }
-        if(can_shorten && search_pos.stage == END_GAME && found_eval[cur_depth] >= 5){
-            time_preference = EXTEND_TIME;
-        }
+        update_search_time(&td, updated);
 
         if(can_shorten && updated && ((u32)(millis() - start_time) >= (search_time) / 2) ){ // If over 50% of the time has elapsed we stop the search
             stopTimerThread();
@@ -224,26 +235,16 @@ i32 search_loop(u32 thread_num){
             print_best_move = TRUE;
             break;
         }
-        cur_depth++;
+        td->depth++;
     }
     stop_helpers();
 
-    if(run_get_best_move && cur_depth > search_depth && print_on_depth){ // Print best move in the case we reached max depth
+    if(run_get_best_move && td->depth > search_depth && print_on_depth){ // Print best move in the case we reached max depth
         print_on_depth = FALSE;
         print_best_move = TRUE;
     }
     #ifdef DEBUG
     printf("info string Completed search thread, freeing and exiting.\n");
     #endif
-
-exit_search_loop:
-    is_searching = FALSE;
-    quit_thread();
     return 0;
-}
-
-//exit thread function
-void exit_search(Position* pos){
-   is_searching = FALSE;
-   quit_thread();
 }

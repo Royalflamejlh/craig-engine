@@ -275,7 +275,7 @@ static inline void q_select_sort(i32 i, Move *moveList, i32 *moveVals, i32 size)
 /*
  * Select sort for the helper search with slighly different ordering
  */
-static inline u32 helper_select_sort(u32 i, u32 evalIdx, Position* pos, Move *moveList, i32 *moveVals, u32 size, KillerMoves* km, Move ttMove, u32 ply, u32 thread_num) {
+static inline u32 helper_select_sort(u32 i, u32 evalIdx, Position *pos, Move *moveList, i32 *moveVals, u32 size, KillerMoves* km, Move ttMove, u32 ply, u32 thread_num) {
    i32 thread_dif = (thread_num % 2) ? -1 : 1;
    moveVals[i] += ((i32)i * HELPER_MOVE_DISORDER) + (thread_dif * (i32)thread_num * HELPER_THREAD_DISORDER);
    select_sort(i, evalIdx, pos, moveList, moveVals, size, km, ttMove, ply);
@@ -302,21 +302,18 @@ static inline void pvFill(Position pos, Move* pv_array, u8 depth){
 
 /*
 * Sets up the aspiration window, then searches the 
+* Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 eval, SearchStats* stats, TimePreference* time_preference
+* search_tree(search_pos, cur_depth, pv_array, &km, avg_eval, &stats, &time_preference);
 */
-i32 search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 eval, SearchStats* stats, TimePreference* time_preference){
-   if(!pv_array){
-      printf("info string Warning: No PV Array found!\n");
-      return 0;
-   }
-
-   startStats(stats);
-
-   Position searchPos = pos;
+i32 search_tree(ThreadData *td){
+   startStats(&td->stats);
+   i32 eval = td->avg_eval;
+   Position prev_pos = td->pos;
 
    //printf("Running pv search at depth %d\n", i);
-   if(depth <= 2){
-      eval = pv_search(&searchPos, MIN_EVAL+1, MAX_EVAL-1, depth, 0, pv_array, km, stats, time_preference);
-      searchPos = pos;
+   if(td->depth <= 2){
+      eval = pv_search(td, MIN_EVAL+1, MAX_EVAL-1, td->depth, 0);
+      td->pos = prev_pos;
       #ifdef DEBUG
       printf("Result from depth window: %d, %d i: %d eval: %d\n", MIN_EVAL+1, MAX_EVAL, depth, eval);
       #endif
@@ -328,20 +325,20 @@ i32 search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 ev
       #ifdef DEBUG
       printf("Running with window: %d, %d (eval_prev: %d, depth: %d)\n", q-asp_lower, q+asp_upper, eval, depth);
       #endif
-      eval = pv_search(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pv_array, km, stats, time_preference);
-      searchPos = pos;
-      while(eval <= q-asp_lower || eval >= q+asp_upper || pv_array[0] == NO_MOVE){
+      eval = pv_search(td, q-asp_lower, q+asp_upper, td->depth, 0);
+      td->pos = prev_pos;
+      while(eval <= q-asp_lower || eval >= q+asp_upper || td->pv_array[0] == NO_MOVE){
          if(abs(eval) == CHECKMATE_VALUE) break;
          if(eval <= q-asp_lower){
             asp_upper = ASP_EDGE;
             asp_lower = (asp_lower + ASP_EDGE) * 2;
-            if(time_preference) *time_preference = EXTEND_TIME; // Extend time if we miss the window low
+            td->time_pref = EXTEND_TIME; // Extend time if we miss the window low
          }
          else if(eval >= q+asp_upper){
             asp_upper = (asp_upper + ASP_EDGE) * 2;
             asp_lower = ASP_EDGE;
          }
-         else if(pv_array[0] == NO_MOVE){
+         else if(td->pv_array[0] == NO_MOVE){
             asp_upper = (asp_upper + ASP_EDGE) * 2;
             asp_lower = (asp_lower + ASP_EDGE) * 2;
          }
@@ -354,11 +351,11 @@ i32 search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 ev
          #endif
 
          q = eval;
-         eval = pv_search(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pv_array, km, stats, NULL);
-         searchPos = pos;
+         eval = pv_search(td, q-asp_lower, q+asp_upper, td->depth, 0);
+         td->pos = prev_pos;
       }
    }
-   pvFill(searchPos, pv_array, depth);
+   pvFill(td->pos, td->pv_array, td->depth);
 
    #ifdef DEBUG
    printf("Principal Variation at depth %d: ", depth);
@@ -368,40 +365,40 @@ i32 search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 ev
    printf("\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
    #endif // DEBUG
 
-   stopStats(stats);
+   stopStats(&td->stats);
    return eval;
 }
 
-/*
- * Search tree function called from a helper thread with slighly different bounds and move sorting
- */
-i32 helper_search_tree(Position pos, u32 depth, Move *pv_array, KillerMoves* km, i32 eval, SearchStats* stats, u32 thread_num){
-   Position searchPos = pos;
-   i32 asp_lower, asp_upper;
-   asp_upper = asp_lower = HELPER_ASP_EDGE;
-   i32 q = eval;
-   eval = helper_pv_search(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pv_array, km, stats, thread_num);
-   searchPos = pos;
-   while(eval <= q-asp_lower || eval >= q+asp_upper || pv_array[0] == NO_MOVE){
-      if(abs(eval) == CHECKMATE_VALUE) break;
-      if(eval <= q-asp_lower){
-         asp_upper = HELPER_ASP_EDGE;
-         asp_lower = (asp_lower + HELPER_ASP_EDGE) * 2;
-      }
-      else if(eval >= q+asp_upper){
-         asp_upper = (asp_upper + HELPER_ASP_EDGE) * 2;
-         asp_lower = HELPER_ASP_EDGE;
-      }
-      else if(pv_array[0] == NO_MOVE){
-         asp_upper = (asp_upper + HELPER_ASP_EDGE) * 2;
-         asp_lower = (asp_lower + HELPER_ASP_EDGE) * 2;
-      }
-      q = eval;
-      eval = helper_pv_search(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pv_array, km, stats, thread_num);
-      searchPos = pos;
-   }
-   return eval;
-}
+// /*
+//  * Search tree function called from a helper thread with slighly different bounds and move sorting
+//  */
+// i32 helper_search_tree(ThreadData *td){
+//    Position prev_pos = td->pos;
+//    i32 asp_lower, asp_upper;
+//    asp_upper = asp_lower = HELPER_ASP_EDGE;
+//    i32 q = eval;
+//    eval = helper_pv_search(&searchPos, q-asp_lower, q+asp_upper, depth, 0, pv_array, km, stats, thread_num);
+//    searchPos = pos;
+//    while(eval <= q-asp_lower || eval >= q+asp_upper || pv_array[0] == NO_MOVE){
+//       if(abs(eval) == CHECKMATE_VALUE) break;
+//       if(eval <= q-asp_lower){
+//          asp_upper = HELPER_ASP_EDGE;
+//          asp_lower = (asp_lower + HELPER_ASP_EDGE) * 2;
+//       }
+//       else if(eval >= q+asp_upper){
+//          asp_upper = (asp_upper + HELPER_ASP_EDGE) * 2;
+//          asp_lower = HELPER_ASP_EDGE;
+//       }
+//       else if(pv_array[0] == NO_MOVE){
+//          asp_upper = (asp_upper + HELPER_ASP_EDGE) * 2;
+//          asp_lower = (asp_lower + HELPER_ASP_EDGE) * 2;
+//       }
+//       q = eval;
+//       eval = helper_pv_search(td, q-asp_lower, q+asp_upper, depth, 0);
+//       searchPos = pos;
+//    }
+//    return eval;
+// }
 
 
 /*
@@ -433,15 +430,16 @@ static inline u8 getLMRDepth(u8 curDepth, u8 moveIdx, u8 moveCount, Move move, i
 *  PRINCIPAL VARIATION SEARCH
 *
 */
-i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_array, KillerMoves* km, SearchStats* stats, TimePreference* time_preference) {
+i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
    //printf("Depth = %d, Ply = %d, Depth+ply = %d\n", depth, ply, depth+ply);
+   Position* pos = &td->pos;
    if(!run_get_best_move) exit_search(pos);
 
-   stats->node_count++;
+   td->stats.node_count++;
    #ifdef DEBUG
    debug[PVS][NODE_COUNT]++;
    #endif
-   pv_array[ply] = NO_MOVE;
+   td->pv_array[ply] = NO_MOVE;
 
    if(ply != 0 && (pos->halfmove_clock >= 100 || isInsufficient(pos) || isRepetition(pos))) return 0;
 
@@ -465,12 +463,12 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
 
    //Handle Draw, Mate, or single move
    if(size == 0){
-      if(time_preference && ply == 0) *time_preference = HALT_TIME;
+      if(td->time_pref && ply == 0) td->time_pref = HALT_TIME;
       if(pos->flags & IN_CHECK) return -(CHECKMATE_VALUE - ply);
       else return 0;
    }
-   else if(size == 1 && time_preference && ply == 0){
-      *time_preference = HALT_TIME;
+   else if(size == 1 && td->time_pref && ply == 0){
+      td->time_pref = HALT_TIME;
    }
 
    //Test the TT table
@@ -487,7 +485,7 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
                #ifdef DEBUG
                debug[PVS][NODE_TT_PVS_RET]++;
                #endif
-               pv_array[ply] = ttEntry.fields.move;
+               td->pv_array[ply] = ttEntry.fields.move;
                return ttEntry.fields.eval;
             case CUT_NODE: // Lower bound
                if (ttEntry.fields.eval >= beta){
@@ -512,7 +510,7 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
    }
 
    if( depth <= 0 ) {
-      i32 q_eval = q_search(pos, alpha, beta, ply, 0, stats);
+      i32 q_eval = q_search(td, alpha, beta, ply, 0);
       if     (q_eval < alpha) store_tt_entry(pos->hash, 0, q_eval, ALL_NODE, NO_MOVE);
       else if(q_eval >= beta) store_tt_entry(pos->hash, 0, q_eval, CUT_NODE, NO_MOVE);
       else                    store_tt_entry(pos->hash, 0, q_eval,  PV_NODE, NO_MOVE);
@@ -565,12 +563,12 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
 
       i32 score;
       if ( i == 0 ) { // Only do full PV on the first move
-         score = -pv_search(pos, -beta, -alpha, depth - 1, ply + 1, pv_array, km, stats, NULL);
+         score = -pv_search(td, -beta, -alpha, depth - 1, ply + 1);
          //printf("PV b search pv score = %d\n", score);
       } else {
-         score = -zw_search(pos, -alpha, depth - 1, ply + 1, km, stats, FALSE);
+         score = -zw_search(td, -alpha, depth - 1, ply + 1);
          if ( score > alpha ){
-            score = -pv_search(pos, -beta, -alpha, depth - 1, ply + 1, pv_array, km, stats, NULL);
+            score = -pv_search(td, -beta, -alpha, depth - 1, ply + 1);
          }
       }
 
@@ -595,7 +593,7 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
       if( score > alpha ) {  //Improved alpha
          alpha = score;
          exact = TRUE;
-         pv_array[ply] = moveList[i];
+         td->pv_array[ply] = moveList[i];
       }
       if( score > bestScore ){ //Improved best move
          bestMove = moveList[i];
@@ -604,7 +602,7 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
    }
    if (exact) {
       // PV Node (exact value)
-      store_tt_entry(pos->hash, depth, alpha, PV_NODE, pv_array[ply]);
+      store_tt_entry(pos->hash, depth, alpha, PV_NODE, td->pv_array[ply]);
    } else {
       // ALL Node (upper bound)
       store_tt_entry(pos->hash, depth, bestScore, ALL_NODE, bestMove);
@@ -621,101 +619,102 @@ i32 pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_ar
    return alpha;
 }
 
-i32 helper_pv_search( Position* pos, i32 alpha, i32 beta, i8 depth, u8 ply, Move* pv_array, KillerMoves* km, SearchStats* stats, u32 thread_num) {
-   if(!run_get_best_move) exit_search(pos);
-   pv_array[ply] = NO_MOVE;
-   if(ply != 0 && (pos->halfmove_clock >= 100 || isInsufficient(pos) || isRepetition(pos))) return 0;
+// i32 helper_pv_search(ThreadData* td, i32 alpha, i32 beta, i8 depth, u8 ply) {
+//    Position* pos = &td->pos;
+//    if(!run_get_best_move) exit_search(pos);
+//    td->pv_array[ply] = NO_MOVE;
+//    if(ply != 0 && (pos->halfmove_clock >= 100 || isInsufficient(pos) || isRepetition(pos))) return 0;
 
-   Move moveList[MAX_MOVES];
-   i32 moveVals[MAX_MOVES] = {0};
+//    Move moveList[MAX_MOVES];
+//    i32 moveVals[MAX_MOVES] = {0};
 
-   i32 size = generateLegalMoves(pos, moveList);
+//    i32 size = generateLegalMoves(pos, moveList);
 
-   //Handle Draw or Mate
-   if(size == 0){
-      if(pos->flags & IN_CHECK) return -(CHECKMATE_VALUE - ply);
-      else return 0;
-   }
+//    //Handle Draw or Mate
+//    if(size == 0){
+//       if(pos->flags & IN_CHECK) return -(CHECKMATE_VALUE - ply);
+//       else return 0;
+//    }
 
-   //Test the TT table
-   TTEntryData ttEntry = get_tt_entry(pos->hash);
-   Move ttMove = NO_MOVE;
-   if (ttEntry.data) {
-      #ifdef DEBUG
-      debug[PVS][NODE_TT_HIT]++;
-      #endif
-      ttMove = ttEntry.fields.move;
-      if(ttEntry.fields.depth >= depth){
-         switch (ttEntry.fields.node_type) {
-            case PV_NODE: // Exact value
-               pv_array[ply] = ttEntry.fields.move;
-               return ttEntry.fields.eval;
-            case CUT_NODE: // Lower bound
-               if (ttEntry.fields.eval >= beta){
-                  return beta;
-               }
-               break;
-            case ALL_NODE: // Upper bound
-               if (ttEntry.fields.eval < alpha){
-                  return alpha;
-               }
-               break;
-            default:
-               break;
-         }
-      }
-   }
-   if( depth <= 0 ) {
-      i32 q_eval = q_search(pos, alpha, beta, ply, 0, stats);
-      if     (q_eval < alpha) store_tt_entry(pos->hash, 0, q_eval, ALL_NODE, NO_MOVE);
-      else if(q_eval >= beta) store_tt_entry(pos->hash, 0, q_eval, CUT_NODE, NO_MOVE);
-      else                    store_tt_entry(pos->hash, 0, q_eval,  PV_NODE, NO_MOVE);
-      return q_eval;
-   }
+//    //Test the TT table
+//    TTEntryData ttEntry = get_tt_entry(pos->hash);
+//    Move ttMove = NO_MOVE;
+//    if (ttEntry.data) {
+//       #ifdef DEBUG
+//       debug[PVS][NODE_TT_HIT]++;
+//       #endif
+//       ttMove = ttEntry.fields.move;
+//       if(ttEntry.fields.depth >= depth){
+//          switch (ttEntry.fields.node_type) {
+//             case PV_NODE: // Exact value
+//                td->pv_array[ply] = ttEntry.fields.move;
+//                return ttEntry.fields.eval;
+//             case CUT_NODE: // Lower bound
+//                if (ttEntry.fields.eval >= beta){
+//                   return beta;
+//                }
+//                break;
+//             case ALL_NODE: // Upper bound
+//                if (ttEntry.fields.eval < alpha){
+//                   return alpha;
+//                }
+//                break;
+//             default:
+//                break;
+//          }
+//       }
+//    }
+//    if( depth <= 0 ) {
+//       i32 q_eval = q_search(td, alpha, beta, ply, 0);
+//       if     (q_eval < alpha) store_tt_entry(pos->hash, 0, q_eval, ALL_NODE, NO_MOVE);
+//       else if(q_eval >= beta) store_tt_entry(pos->hash, 0, q_eval, CUT_NODE, NO_MOVE);
+//       else                    store_tt_entry(pos->hash, 0, q_eval,  PV_NODE, NO_MOVE);
+//       return q_eval;
+//    }
    
-   Move bestMove = NO_MOVE;
-   i32 bestScore = MIN_EVAL;
-   u8 exact = FALSE;
-   u32 evalIdx = 0; // Used for select sort
-   Position prevPos = *pos;
-   for (i32 i = 0; i < size; i++)  {
-      #ifdef DEBUG
-      assert(prevPos.hash == pos->hash);
-      #endif
-      evalIdx = helper_select_sort(i, evalIdx, pos, moveList, moveVals, size, km, ttMove, ply, thread_num);
-      makeMove(pos, moveList[i]);
-      i32 score;
-      if ( i == 0 ) {
-         score = -helper_pv_search(pos, -beta, -alpha, depth - 1, ply + 1, pv_array, km, stats, thread_num);
-      } else {
-         score = -zw_search(pos, -alpha, depth - 1, ply + 1, km, stats, FALSE);
-         if ( score > alpha ){
-            score = -helper_pv_search(pos, -beta, -alpha, depth - 1, ply + 1, pv_array, km, stats, thread_num);
-         }
-      }
-      *pos = prevPos;
-      if( score >= beta ) {
-         store_tt_entry(pos->hash, depth, score, CUT_NODE, moveList[i]);
-         storeKillerMove(km, ply, moveList[i]);
-         return beta;
-      }
-      if( score > alpha ) {
-         alpha = score;
-         exact = TRUE;
-         pv_array[ply] = moveList[i];
-      }
-      if( score > bestScore ){
-         bestMove = moveList[i];
-         bestScore = score;
-      }
-   }
-   if (exact) {
-      store_tt_entry(pos->hash, depth, alpha, PV_NODE, pv_array[ply]);
-   } else {
-      store_tt_entry(pos->hash, depth, bestScore, ALL_NODE, bestMove);
-   }
-   return alpha;
-}
+//    Move bestMove = NO_MOVE;
+//    i32 bestScore = MIN_EVAL;
+//    u8 exact = FALSE;
+//    u32 evalIdx = 0; // Used for select sort
+//    Position prevPos = *pos;
+//    for (i32 i = 0; i < size; i++)  {
+//       #ifdef DEBUG
+//       assert(prevPos.hash == pos->hash);
+//       #endif
+//       evalIdx = helper_select_sort(i, evalIdx, pos, moveList, moveVals, size, km, ttMove, ply, thread_num);
+//       makeMove(pos, moveList[i]);
+//       i32 score;
+//       if ( i == 0 ) {
+//          score = -helper_pv_search(pos, -beta, -alpha, depth - 1, ply + 1, pv_array, km, stats, thread_num);
+//       } else {
+//          score = -zw_search(pos, -alpha, depth - 1, ply + 1, km, stats, FALSE);
+//          if ( score > alpha ){
+//             score = -helper_pv_search(pos, -beta, -alpha, depth - 1, ply + 1, pv_array, km, stats, thread_num);
+//          }
+//       }
+//       *pos = prevPos;
+//       if( score >= beta ) {
+//          store_tt_entry(pos->hash, depth, score, CUT_NODE, moveList[i]);
+//          storeKillerMove(km, ply, moveList[i]);
+//          return beta;
+//       }
+//       if( score > alpha ) {
+//          alpha = score;
+//          exact = TRUE;
+//          pv_array[ply] = moveList[i];
+//       }
+//       if( score > bestScore ){
+//          bestMove = moveList[i];
+//          bestScore = score;
+//       }
+//    }
+//    if (exact) {
+//       store_tt_entry(pos->hash, depth, alpha, PV_NODE, pv_array[ply]);
+//    } else {
+//       store_tt_entry(pos->hash, depth, bestScore, ALL_NODE, bestMove);
+//    }
+//    return alpha;
+// }
 
 
 /*
@@ -861,9 +860,10 @@ i32 zw_search( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, Searc
 }
 
 //quisce search
-i32 q_search( Position* pos, i32 alpha, i32 beta, u8 ply, u8 q_ply, SearchStats* stats) {
+i32 q_search(ThreadData *td, i32 alpha, i32 beta, u8 ply, u8 q_ply) {
+   Position prev_pos = td->pos;
    if(!run_get_best_move) exit_search(pos);
-   stats->node_count++;
+   td->stats.node_count++;
    #ifdef DEBUG
    debug[QS][NODE_COUNT]++;
    //printf("Pos->Eval in q search: %d\n", pos->eval);
