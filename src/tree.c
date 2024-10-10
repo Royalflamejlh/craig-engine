@@ -315,7 +315,7 @@ i32 search_tree(ThreadData *td){
       eval = pv_search(td, MIN_EVAL+1, MAX_EVAL-1, td->depth, 0);
       td->pos = prev_pos;
       #ifdef DEBUG
-      printf("Result from depth window: %d, %d i: %d eval: %d\n", MIN_EVAL+1, MAX_EVAL, depth, eval);
+      printf("Result from depth window: %d, %d i: %d eval: %d\n", MIN_EVAL+1, MAX_EVAL, td->depth, eval);
       #endif
    } else {
       i32 asp_lower, asp_upper;
@@ -323,7 +323,7 @@ i32 search_tree(ThreadData *td){
       asp_upper = asp_lower = ASP_EDGE;
       i32 q = eval;
       #ifdef DEBUG
-      printf("Running with window: %d, %d (eval_prev: %d, depth: %d)\n", q-asp_lower, q+asp_upper, eval, depth);
+      printf("Running with window: %d, %d (eval_prev: %d, depth: %d)\n", q-asp_lower, q+asp_upper, eval, td->depth);
       #endif
       eval = pv_search(td, q-asp_lower, q+asp_upper, td->depth, 0);
       td->pos = prev_pos;
@@ -345,8 +345,8 @@ i32 search_tree(ThreadData *td){
          
          #ifdef DEBUG
          printf("Running again with window: %d, %d (eval: %d, q: %d, move: ", q-asp_lower, q+asp_upper, eval, q);
-         printMove(pv_array[0]);
-         printf(", depth: %d", depth);
+         printMove(td->pv_array[0]);
+         printf(", depth: %d", td->depth);
          printf(")\n");
          #endif
 
@@ -358,10 +358,10 @@ i32 search_tree(ThreadData *td){
    pvFill(td->pos, td->pv_array, td->depth);
 
    #ifdef DEBUG
-   printf("Principal Variation at depth %d: ", depth);
-   printPV(pv_array, depth);
+   printf("Principal Variation at depth %d: ", td->depth);
+   printPV(td->pv_array, td->depth);
    printf(" found with score %d\n", eval);
-   printTreeDebug();
+   printTreeDebug();  
    printf("\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
    #endif // DEBUG
 
@@ -406,11 +406,11 @@ i32 search_tree(ThreadData *td){
 */
 
 // Null Move Search
-static inline i32 pruneNullMoves(Position* pos, i32 beta, i32 depth, i32 ply, KillerMoves* km, SearchStats* stats){
-   Position prevPos = *pos;
-   makeNullMove(pos);
-   i32 score = -zw_search(pos, 1-beta, depth - NULL_PRUNE_R - 1, ply + 1, km, stats, TRUE);
-   *pos = prevPos;
+static inline i32 pruneNullMoves(ThreadData *td, i32 beta, i32 depth, i32 ply){
+   Position prev_pos = td->pos;
+   makeNullMove(&td->pos);
+   i32 score = -zw_search(td, 1-beta, depth - NULL_PRUNE_R - 1, ply + 1, TRUE);
+   td->pos = prev_pos;
    return score;
 }
 
@@ -432,8 +432,8 @@ static inline u8 getLMRDepth(u8 curDepth, u8 moveIdx, u8 moveCount, Move move, i
 */
 i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
    //printf("Depth = %d, Ply = %d, Depth+ply = %d\n", depth, ply, depth+ply);
-   Position* pos = &td->pos;
-   if(!run_get_best_move) exit_search(pos);
+   Position *pos = &td->pos;
+   if(!run_get_best_move) exit_search();
 
    td->stats.node_count++;
    #ifdef DEBUG
@@ -545,7 +545,7 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
       #ifdef DEBUG
       assert(prevPos.hash == pos->hash);
       #endif
-      evalIdx = select_sort(i, evalIdx, pos, moveList, moveVals, size, km, ttMove, ply);
+      evalIdx = select_sort(i, evalIdx, pos, moveList, moveVals, size, &td->km, ttMove, ply);
       makeMove(pos, moveList[i]);
       // Update Prunability PVS
       u8 prunable_move = prunable;
@@ -566,7 +566,7 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
          score = -pv_search(td, -beta, -alpha, depth - 1, ply + 1);
          //printf("PV b search pv score = %d\n", score);
       } else {
-         score = -zw_search(td, -alpha, depth - 1, ply + 1);
+         score = -zw_search(td, -alpha, depth - 1, ply + 1, FALSE);
          if ( score > alpha ){
             score = -pv_search(td, -beta, -alpha, depth - 1, ply + 1);
          }
@@ -576,7 +576,7 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
 
       if( score >= beta ) { //Beta cutoff
          store_tt_entry(pos->hash, depth, score, CUT_NODE, moveList[i]);
-         storeKillerMove(km, ply, moveList[i]);
+         storeKillerMove(&td->km, ply, moveList[i]);
          //storeHistoryMove(pos->flags, moveList[i], depth);
       
          #ifdef DEBUG
@@ -621,7 +621,7 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
 
 // i32 helper_pv_search(ThreadData* td, i32 alpha, i32 beta, i8 depth, u8 ply) {
 //    Position* pos = &td->pos;
-//    if(!run_get_best_move) exit_search(pos);
+//    if(!run_get_best_move) exit_search();
 //    td->pv_array[ply] = NO_MOVE;
 //    if(ply != 0 && (pos->halfmove_clock >= 100 || isInsufficient(pos) || isRepetition(pos))) return 0;
 
@@ -722,12 +722,13 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
 *  ZERO WINDOW SEARCH
 *
 */
-i32 zw_search( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, SearchStats* stats, u8 isNull) {
-   if(!run_get_best_move) exit_search(pos);
+i32 zw_search( ThreadData* td, i32 beta, i8 depth, u8 ply, u8 isNull) {
+   Position *pos = &td->pos;
+   if(!run_get_best_move) exit_search();
    // alpha == beta - 1
    // this is either a cut- or all-node
 
-   stats->node_count++;
+   td->stats.node_count++;
    #ifdef DEBUG
    debug[ZWS][NODE_COUNT]++;
    #endif
@@ -782,7 +783,7 @@ i32 zw_search( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, Searc
    }
 
    if( depth <= 0 ){
-      i32 q_eval = q_search(pos, beta-1, beta, ply, 0, stats);
+      i32 q_eval = q_search(td, beta-1, beta, ply, 0);
       if     (q_eval < beta-1) store_tt_entry(pos->hash, 0, q_eval, ALL_NODE, NO_MOVE);
       else if(q_eval >= beta)  store_tt_entry(pos->hash, 0, q_eval, CUT_NODE, NO_MOVE);
       return q_eval;
@@ -796,7 +797,7 @@ i32 zw_search( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, Searc
    if(prunable && !isNull 
                && depth > NULL_PRUNE_R + 1 
                && pos->material_eval >= (beta - NMR_MARGIN)){
-      if(pruneNullMoves(pos, beta, depth, ply, km, stats) >= beta){
+      if(pruneNullMoves(td, beta, depth, ply) >= beta){
          #ifdef DEBUG
          debug[ZWS][NODE_PRUNED_NULL]++;
          #endif
@@ -815,7 +816,7 @@ i32 zw_search( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, Searc
       assert(prevPos.hash == pos->hash);
       #endif
       
-      evalIdx = select_sort(i, evalIdx, pos, moveList, moveVals, size, km, ttMove, ply);
+      evalIdx = select_sort(i, evalIdx, pos, moveList, moveVals, size, &td->km, ttMove, ply);
       makeMove(pos, moveList[i]);
 
       // Set Move prunability prunability ZWS
@@ -837,12 +838,12 @@ i32 zw_search( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, Searc
       debug[ZWS][NODE_LMR_REDUCTIONS] += MAX(((depth - 1) - search_depth), 0);
       //printf("zws further search score %d\n", score);
       #endif
-      i32 score = -zw_search(pos, 1-beta, search_depth, ply + 1, km, stats, FALSE);
+      i32 score = -zw_search(td, 1-beta, search_depth, ply + 1, FALSE);
       *pos = prevPos; // Unmake Move
 
       if( score >= beta ){ // Beta Cutoff
          store_tt_entry(pos->hash, depth, score, CUT_NODE, moveList[i]);
-         storeKillerMove(km, ply, moveList[i]);
+         storeKillerMove(&td->km, ply, moveList[i]);
          //storeHistoryMove(pos->flags, moveList[i], depth);
          #ifdef DEBUG
          debug[ZWS][NODE_BETA_CUT]++;
@@ -861,8 +862,8 @@ i32 zw_search( Position* pos, i32 beta, i8 depth, u8 ply, KillerMoves* km, Searc
 
 //quisce search
 i32 q_search(ThreadData *td, i32 alpha, i32 beta, u8 ply, u8 q_ply) {
-   Position prev_pos = td->pos;
-   if(!run_get_best_move) exit_search(pos);
+   Position *pos = &td->pos;
+   if(!run_get_best_move) exit_search();
    td->stats.node_count++;
    #ifdef DEBUG
    debug[QS][NODE_COUNT]++;
@@ -915,10 +916,10 @@ i32 q_search(ThreadData *td, i32 alpha, i32 beta, u8 ply, u8 q_ply) {
    #ifdef DEBUG
    if(size > 0) debug[QS][NODE_LOOP_CHILDREN]++;
    #endif
-   Position prevPos = *pos;
+   Position prev_pos = td->pos;
    for (i32 i = 0; i < size; i++)  {
       #ifdef DEBUG
-      assert(prevPos.hash == pos->hash);
+      assert(prev_pos.hash == pos->hash);
       #endif
       q_select_sort(i, moveList, moveVals, size); 
 
@@ -933,8 +934,8 @@ i32 q_search(ThreadData *td, i32 alpha, i32 beta, u8 ply, u8 q_ply) {
       }
 
       makeMove(pos, moveList[i]);
-      i32 score = -q_search(pos, -beta, -alpha, ply + 1, q_ply + 1, stats);
-      *pos = prevPos; //Unmake Move
+      i32 score = -q_search(td, -beta, -alpha, ply + 1, q_ply + 1);
+      *pos = prev_pos; //Unmake Move
 
       if( score >= beta ){
          // storeKillerMove(ply, moveList[i]);

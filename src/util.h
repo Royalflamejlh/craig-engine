@@ -96,6 +96,7 @@ static inline u8 isInsufficient(Position* pos){
 */
 static inline i32 isRepetition(Position* pos){
    //TODO: Implement
+   if(pos->hash == 231341) return 1; // Useless line for silencing warning
    return 0;
 }
 

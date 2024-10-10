@@ -101,6 +101,14 @@ void stopSearch(){
     #endif
 }
 
+/**
+ * Call back function from search loop to cancel the thread
+ */
+void exit_search(){
+    is_searching = FALSE;
+    quit_thread();
+}
+
 /*
  * Resumes the helpers at the current depth and ecal
  */
@@ -126,17 +134,6 @@ static inline void helper_wait(){ // TODO: abstract away in threads.h or somethi
     pthread_mutex_unlock(&helper_lock);
 }
 
-i32 enter_loop(ThreadData *td){
-
-    if(td->thread_num >= NUM_MAIN_THREADS){
-        // helper_loop(td);
-    }
-    else{
-        search_loop(td);
-    }
-    quit_thread();
-    return 0;
-}
 
 // static i32 helper_loop(ThreadData *td){
 //     Move pv_array[MAX_DEPTH] = {0};
@@ -200,6 +197,7 @@ static u8 update_search_time(ThreadData *td, u8 updated){
     if(td->time_pref == EXTEND_TIME){
         search_time = (u32)((double)search_time * SEARCH_EXTENSION_LEVEL);
     }
+    return 0;
 }
 
 /*
@@ -207,15 +205,12 @@ static u8 update_search_time(ThreadData *td, u8 updated){
  */
 static i32 search_loop(ThreadData *td){
     #ifdef DEBUG
-    printf("thread number is %d\n", thread_num);
+    printf("thread number is %d\n", td->thread_num);
     #endif
     if(search_depth == 0){
         printf("info string Warning search depth was 0\n");
         return -1;
     }
-
-    // Set up local thread info
-    ThreadData td = {0};
 
     // Begin Search
     is_searching = TRUE;
@@ -223,11 +218,11 @@ static i32 search_loop(ThreadData *td){
     while(run_get_best_move && td->depth <= search_depth){
         if(td->depth >= 2) td->avg_eval = (td->found_eval[td->depth-1] + td->found_eval[td->depth-2]) / 2;
         if(td->depth > MIN_HELPER_DEPTH) resume_helpers(td->depth, td->avg_eval); // Run Search
-        td->found_eval[td->depth] = search_tree(&td);
+        td->found_eval[td->depth] = search_tree(td);
         td->found_move[td->depth] = td->pv_array[0];
         u8 updated = update_global_pv(td->depth, td->pv_array, td->found_eval[td->depth], td->stats);
 
-        update_search_time(&td, updated);
+        update_search_time(td, updated);
 
         if(can_shorten && updated && ((u32)(millis() - start_time) >= (search_time) / 2) ){ // If over 50% of the time has elapsed we stop the search
             stopTimerThread();
@@ -246,5 +241,21 @@ static i32 search_loop(ThreadData *td){
     #ifdef DEBUG
     printf("info string Completed search thread, freeing and exiting.\n");
     #endif
+    return 0;
+}
+
+/**
+ * Enters the main loop for a Thread
+ * depending on the thread type
+ */
+i32 enter_loop(ThreadData *td){
+    td->pos = copy_global_position();
+    if(td->thread_num >= NUM_MAIN_THREADS){
+        // helper_loop(td);
+    }
+    else{
+        search_loop(td);
+    }
+    quit_thread();
     return 0;
 }

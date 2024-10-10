@@ -147,16 +147,22 @@ void *output_thread_entry(void *arg) {
     return NULL;
 }
 
+/**
+ * Creates the search thread and initializes
+ * the search thread data structure
+ */
 void *search_thread_entry(void *arg) {
     u32 thread_num = *(u32*)arg;
     free(arg);
+    ThreadData td = {0};
+    td.thread_num = thread_num;
 
     #ifdef DEBUG
     printf("info string Search Thread Starting\n");
     fflush(stdout);
     #endif
     
-    search_loop(thread_num);
+    enter_loop(&td);
     return NULL;
 }
 
