@@ -341,49 +341,46 @@ u32 calculate_max_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 move
     return (time / 5) + 1;
 }
 
-#include <stdio.h>  // For printf
-
-
 /**
  * Returns true if the positions are equal
  */
 i8 compare_positions(Position *pos1, Position *pos2) {
     for (int i = 0; i < 2; i++) {
         if (pos1->pawn[i] != pos2->pawn[i]) {
-            printf("Mismatch at pawn[%d]: %d != %d\n", i, pos1->pawn[i], pos2->pawn[i]);
+            printf("Mismatch at pawn[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->pawn[i], pos2->pawn[i]);
             return FALSE;
         }
         if (pos1->bishop[i] != pos2->bishop[i]) {
-            printf("Mismatch at bishop[%d]: %d != %d\n", i, pos1->bishop[i], pos2->bishop[i]);
+            printf("Mismatch at bishop[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->bishop[i], pos2->bishop[i]);
             return FALSE;
         }
         if (pos1->knight[i] != pos2->knight[i]) {
-            printf("Mismatch at knight[%d]: %d != %d\n", i, pos1->knight[i], pos2->knight[i]);
+            printf("Mismatch at knight[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->knight[i], pos2->knight[i]);
             return FALSE;
         }
         if (pos1->rook[i] != pos2->rook[i]) {
-            printf("Mismatch at rook[%d]: %d != %d\n", i, pos1->rook[i], pos2->rook[i]);
+            printf("Mismatch at rook[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->rook[i], pos2->rook[i]);
             return FALSE;
         }
         if (pos1->queen[i] != pos2->queen[i]) {
-            printf("Mismatch at queen[%d]: %d != %d\n", i, pos1->queen[i], pos2->queen[i]);
+            printf("Mismatch at queen[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->queen[i], pos2->queen[i]);
             return FALSE;
         }
         if (pos1->king[i] != pos2->king[i]) {
-            printf("Mismatch at king[%d]: %d != %d\n", i, pos1->king[i], pos2->king[i]);
+            printf("Mismatch at king[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->king[i], pos2->king[i]);
             return FALSE;
         }
         if (pos1->attack_mask[i] != pos2->attack_mask[i]) {
-            printf("Mismatch at attack_mask[%d]: %d != %d\n", i, pos1->attack_mask[i], pos2->attack_mask[i]);
+            printf("Mismatch at attack_mask[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->attack_mask[i], pos2->attack_mask[i]);
             return FALSE;
         }
         if (pos1->color[i] != pos2->color[i]) {
-            printf("Mismatch at color[%d]: %d != %d\n", i, pos1->color[i], pos2->color[i]);
+            printf("Mismatch at color[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->color[i], pos2->color[i]);
             return FALSE;
         }
     }
     if (pos1->en_passant != pos2->en_passant) {
-        printf("Mismatch at en_passant: %d != %d\n", pos1->en_passant, pos2->en_passant);
+        printf("Mismatch at en_passant: %" PRIu64 " != %" PRIu64 "\n", pos1->en_passant, pos2->en_passant);
         return FALSE;
     }
     if (pos1->flags != pos2->flags) {
@@ -391,11 +388,11 @@ i8 compare_positions(Position *pos1, Position *pos2) {
         return FALSE;
     }
     if (pos1->pinned != pos2->pinned) {
-        printf("Mismatch at pinned: %d != %d\n", pos1->pinned, pos2->pinned);
+        printf("Mismatch at pinned: %" PRIu64 " != %" PRIu64 "\n", pos1->pinned, pos2->pinned);
         return FALSE;
     }
     if (pos1->hash != pos2->hash) {
-        printf("Mismatch at hash: %ld != %ld\n", pos1->hash, pos2->hash);
+        printf("Mismatch at hash: %" PRIu64 "!= %" PRIu64 "\n", pos1->hash, pos2->hash);
         return FALSE;
     }
     if (pos1->material_eval != pos2->material_eval) {

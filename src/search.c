@@ -127,12 +127,12 @@ static inline void stop_helpers(){
     resume_helpers(0, MAX_DEPTH+1);
 }
 
-static inline void helper_wait(){ // TODO: abstract away in threads.h or something for windows
-    pthread_mutex_lock(&helper_lock);
-    do_helper_search = FALSE;
-    while (!do_helper_search) pthread_cond_wait(&helper_cond, &helper_lock); // Block until the helpers are released
-    pthread_mutex_unlock(&helper_lock);
-}
+// static inline void helper_wait(){ // TODO: abstract away in threads.h or something for windows
+//     pthread_mutex_lock(&helper_lock);
+//     do_helper_search = FALSE;
+//     while (!do_helper_search) pthread_cond_wait(&helper_cond, &helper_lock); // Block until the helpers are released
+//     pthread_mutex_unlock(&helper_lock);
+// }
 
 
 // static i32 helper_loop(ThreadData *td){
