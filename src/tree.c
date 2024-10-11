@@ -272,15 +272,15 @@ static inline void q_select_sort(i32 i, Move *moveList, i32 *moveVals, i32 size)
    }
 }
 
-/*
- * Select sort for the helper search with slighly different ordering
- */
-static inline u32 helper_select_sort(u32 i, u32 evalIdx, Position *pos, Move *moveList, i32 *moveVals, u32 size, KillerMoves* km, Move ttMove, u32 ply, u32 thread_num) {
-   i32 thread_dif = (thread_num % 2) ? -1 : 1;
-   moveVals[i] += ((i32)i * HELPER_MOVE_DISORDER) + (thread_dif * (i32)thread_num * HELPER_THREAD_DISORDER);
-   select_sort(i, evalIdx, pos, moveList, moveVals, size, km, ttMove, ply);
-   return evalIdx;
-}
+// /*
+//  * Select sort for the helper search with slighly different ordering
+//  */
+// static inline u32 helper_select_sort(u32 i, u32 evalIdx, Position *pos, Move *moveList, i32 *moveVals, u32 size, KillerMoves* km, Move ttMove, u32 ply, u32 thread_num) {
+//    i32 thread_dif = (thread_num % 2) ? -1 : 1;
+//    moveVals[i] += ((i32)i * HELPER_MOVE_DISORDER) + (thread_dif * (i32)thread_num * HELPER_THREAD_DISORDER);
+//    select_sort(i, evalIdx, pos, moveList, moveVals, size, km, ttMove, ply);
+//    return evalIdx;
+// }
 
 /*
  * On a TT hit in the mainline fills the pv array with the PV for printing
@@ -540,10 +540,12 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
    i32 bestScore = MIN_EVAL;
    u8 exact = FALSE;
    u32 evalIdx = 0; // Used for select sort
-   Position prevPos = *pos;
+   #ifdef DEBUG
+   Position prev_pos = td->pos;
+   #endif
    for (i32 i = 0; i < size; i++)  {
       #ifdef DEBUG
-      assert(prevPos.hash == pos->hash);
+      assert(prev_pos.hash == pos->hash);
       #endif
       evalIdx = select_sort(i, evalIdx, pos, moveList, moveVals, size, &td->km, ttMove, ply);
       make_move(&td->pos, &td->undo_stack, moveList[i]);
@@ -552,12 +554,20 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
       if(i <= PV_PRUNE_MOVE_IDX || pos->flags & IN_CHECK || (GET_FLAGS(moveList[i]) > DOUBLE_PAWN_PUSH) || pos->stage == END_GAME ) prunable_move = FALSE;
 
       if( prunable_move && depth == 1 && abs(alpha) < (CHECKMATE_VALUE/2) && abs(beta) < (CHECKMATE_VALUE/2)){ // Futility Pruning
-         if(prevPos.material_eval + moveVals[i] < alpha - PV_FUTIL_MARGIN){ 
+         if(td->undo_stack.undo[td->undo_stack.idx].material_eval + moveVals[i] < alpha - PV_FUTIL_MARGIN){ 
+            unmake_move(&td->pos, &td->undo_stack, moveList[i]);
             #ifdef DEBUG
             debug[PVS][NODE_PRUNED_FUTIL]++;
+            if(!compare_positions(&td->pos, &prev_pos)){
+               printf("Error, unmake move did not properly return the position: ");
+               printMove(moveList[i]);
+               printf("\n\nCorrect Position:\n");
+               printPosition(prev_pos, TRUE);
+               printf("\n\nFound Position:\n");
+               printPosition(td->pos, TRUE);
+               while(1);
+            }
             #endif
-            unmake_move(&td->pos, &td->undo_stack, moveList[i]);
-            *pos = prevPos; //Unmake Move
             continue;
          }
       }
@@ -574,8 +584,18 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
       }
 
       unmake_move(&td->pos, &td->undo_stack, moveList[i]);
-      *pos = prevPos; //Unmake Move
-
+      #ifdef DEBUG
+      if(!compare_positions(&td->pos, &prev_pos)){
+         printf("Error, unmake move did not properly return the position: ");
+         printMove(moveList[i]);
+         printf("\n\nCorrect Position:\n");
+         printPosition(prev_pos, TRUE);
+         printf("\n\nFound Position:\n");
+         printPosition(td->pos, TRUE);
+         while(1);
+      }
+      #endif
+      
       if( score >= beta ) { //Beta cutoff
          store_tt_entry(pos->hash, depth, score, CUT_NODE, moveList[i]);
          storeKillerMove(&td->km, ply, moveList[i]);
@@ -809,13 +829,13 @@ i32 zw_search( ThreadData* td, i32 beta, i8 depth, u8 ply, u8 isNull) {
 
    #ifdef DEBUG
    if(size > 0) debug[ZWS][NODE_LOOP_CHILDREN]++;
+   Position prev_pos = td->pos;
    #endif
 
-   Position prevPos = *pos;
    u32 evalIdx = 0;
    for (i32 i = 0; i < size; i++)  {
       #ifdef DEBUG
-      assert(prevPos.hash == pos->hash);
+      assert(prev_pos.hash == pos->hash);
       #endif
       
       evalIdx = select_sort(i, evalIdx, pos, moveList, moveVals, size, &td->km, ttMove, ply);
@@ -826,12 +846,20 @@ i32 zw_search( ThreadData* td, i32 beta, i8 depth, u8 ply, u8 isNull) {
       if(i <= PRUNE_MOVE_IDX || pos->flags & IN_CHECK || (GET_FLAGS(moveList[i]) > DOUBLE_PAWN_PUSH) || pos->stage == END_GAME) prunable_move = FALSE;
 
       if( prunable_move && depth == 1 && abs(beta) < (CHECKMATE_VALUE/2) ){ // Futility Pruning
-         if((prevPos.material_eval + moveVals[i]) < ((beta-1) - ZW_FUTIL_MARGIN)){ 
+         if((td->undo_stack.undo[td->undo_stack.idx].material_eval + moveVals[i]) < ((beta-1) - ZW_FUTIL_MARGIN)){ 
+            unmake_move(&td->pos, &td->undo_stack, moveList[i]);
             #ifdef DEBUG
             debug[ZWS][NODE_PRUNED_FUTIL]++;
-            #endif // Unmake Move
-            unmake_move(&td->pos, &td->undo_stack, moveList[i]);
-            *pos = prevPos;
+            if(!compare_positions(&td->pos, &prev_pos)){
+               printf("Error, unmake move did not properly return the position: ");
+               printMove(moveList[i]);
+               printf("\n\nCorrect Position:\n");
+               printPosition(prev_pos, TRUE);
+               printf("\n\nFound Position:\n");
+               printPosition(td->pos, TRUE);
+               while(1);
+            }
+            #endif
             continue;
          }
       }
@@ -843,7 +871,17 @@ i32 zw_search( ThreadData* td, i32 beta, i8 depth, u8 ply, u8 isNull) {
       #endif
       i32 score = -zw_search(td, 1-beta, search_depth, ply + 1, FALSE);
       unmake_move(&td->pos, &td->undo_stack, moveList[i]);
-      *pos = prevPos; // Unmake Move
+      #ifdef DEBUG
+      if(!compare_positions(&td->pos, &prev_pos)){
+         printf("Error, unmake move did not properly return the position: ");
+         printMove(moveList[i]);
+         printf("\n\nCorrect Position:\n");
+         printPosition(prev_pos, TRUE);
+         printf("\n\nFound Position:\n");
+         printPosition(td->pos, TRUE);
+         while(1);
+      }
+      #endif
 
       if( score >= beta ){ // Beta Cutoff
          store_tt_entry(pos->hash, depth, score, CUT_NODE, moveList[i]);
@@ -920,7 +958,9 @@ i32 q_search(ThreadData *td, i32 alpha, i32 beta, u8 ply, u8 q_ply) {
    #ifdef DEBUG
    if(size > 0) debug[QS][NODE_LOOP_CHILDREN]++;
    #endif
+   #ifdef DEBUG
    Position prev_pos = td->pos;
+   #endif
    for (i32 i = 0; i < size; i++)  {
       #ifdef DEBUG
       assert(prev_pos.hash == pos->hash);
@@ -940,7 +980,17 @@ i32 q_search(ThreadData *td, i32 alpha, i32 beta, u8 ply, u8 q_ply) {
       make_move(&td->pos, &td->undo_stack, moveList[i]);
       i32 score = -q_search(td, -beta, -alpha, ply + 1, q_ply + 1);
       unmake_move(&td->pos, &td->undo_stack, moveList[i]);
-      *pos = prev_pos;
+      #ifdef DEBUG
+      if(!compare_positions(&td->pos, &prev_pos)){
+         printf("Error, unmake move did not properly return the position: ");
+         printMove(moveList[i]);
+         printf("\n\nCorrect Position:\n");
+         printPosition(prev_pos, TRUE);
+         printf("\n\nFound Position:\n");
+         printPosition(td->pos, TRUE);
+         while(1);
+      }
+      #endif
 
       if( score >= beta ){
          // storeKillerMove(ply, moveList[i]);

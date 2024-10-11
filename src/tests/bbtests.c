@@ -134,12 +134,13 @@ i32 testBB(void) {
     while (fgets(line, sizeof(line), file)) {
         char *fen = line;
         temp_td.pos = fen_to_position(fen);
-        printf("Testing: %s", fen);
-        for(i32 depth = 1; depth < 6; depth++){
-            i64 num_moves = perft(&temp_td, depth, FALSE);
-            printf("D%d: %lld |", depth, (long long int)num_moves);
+        //printf("Testing: %s", fen);
+        for(i32 depth = 1; depth < 2; depth++){
+            perft(&temp_td, depth, FALSE);
+            // i64 num_moves = 
+            // printf("D%d: %lld |", depth, (long long int)num_moves);
         }
-        printf("\n\n");
+        //printf("\n\n");
     }
     printf("\nPerft Suite Complete\n");
 

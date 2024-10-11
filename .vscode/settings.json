@@ -14,7 +14,8 @@
     "string_view": "c",
     "unordered_map": "c",
     "ios": "c",
-    "__bit_reference": "c"
+    "__bit_reference": "c",
+    "utility": "c"
   },
   "makefile.launchConfigurations": [
     {
