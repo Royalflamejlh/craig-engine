@@ -34,7 +34,7 @@ SAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined -fsa
 
 DFLAGS = -O0 $(WRN_FLAGS) -g -gdwarf-2 -DVERBOSE -DDEBUG
 RFLAGS = -O3 $(WRN_FLAGS) -Ofast -funroll-loops -flto -finline-functions -fomit-frame-pointer -march=native
-PFLAGS = -O3 $(WRN_FLAGS) -pg -Ofast -funroll-loops -flto -finline-functions -march=native
+PFLAGS = -O3 $(WRN_FLAGS) -pg -Ofast -funroll-loops -flto -finline-functions -march=native -D__PROFILE
 
 
 ##
