@@ -176,8 +176,10 @@ u64 perft(ThreadData *td, i32 depth, u8 print){
   for (i = 0; i < n_moves; i++) {
     #ifdef DEBUG
     Position prev_pos = td->pos;
+    i32 prev_hash_cur_idx = td->hash_stack.cur_idx;
+    i32 prev_hash_reset_idx = td->hash_stack.reset_idx;
     #endif
-    make_move(&td->pos, &td->undo_stack, move_list[i]);
+    make_move(&td->pos, td, move_list[i]);
 
     #ifdef PYTHON
     checkMoveCount(pos);
@@ -187,7 +189,7 @@ u64 perft(ThreadData *td, i32 depth, u8 print){
         printMoveShort(move_list[i]);
         printf(": %" PRIu64 "\n", count);
     }
-    unmake_move(&td->pos, &td->undo_stack, move_list[i]);
+    unmake_move(&td->pos, td, move_list[i]);
 
     #ifdef DEBUG
     if(!compare_positions(&td->pos, &prev_pos)){
@@ -197,6 +199,14 @@ u64 perft(ThreadData *td, i32 depth, u8 print){
         printPosition(prev_pos, TRUE);
         printf("\n\nFound Position:\n");
         printPosition(td->pos, TRUE);
+        while(1);
+    }
+    if(prev_hash_cur_idx != td->hash_stack.cur_idx){
+        printf("Hash stack cur_idx doesnt match previous hash stack!\n");
+        while(1);
+    }
+    if(prev_hash_reset_idx != td->hash_stack.reset_idx){
+        printf("Hash stack cur_idx doesnt match previous hash stack!\n");
         while(1);
     }
     td->pos = prev_pos;
@@ -397,10 +407,6 @@ i8 compare_positions(Position *pos1, Position *pos2) {
     }
     if (pos1->material_eval != pos2->material_eval) {
         printf("Mismatch at material_eval: %d != %d\n", pos1->material_eval, pos2->material_eval);
-        return FALSE;
-    }
-    if (pos1->hash_stack_idx != pos2->hash_stack_idx) {
-        printf("Mismatch at hash_stack_idx: %d != %d\n", pos1->hash_stack_idx, pos2->hash_stack_idx);
         return FALSE;
     }
     if (pos1->stage != pos2->stage) {

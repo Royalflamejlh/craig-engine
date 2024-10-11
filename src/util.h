@@ -96,9 +96,10 @@ static inline u8 isInsufficient(Position* pos){
 /*
 * Returns whether the position is a Repetition
 */
-static inline i32 isRepetition(Position* pos){
-   //TODO: Implement
-   if(pos->hash == 231341) return 1; // Useless line for silencing warning
+static inline i32 isRepetition(ThreadData *td){
+   for(i32 i = td->hash_stack.reset_idx; i != td->hash_stack.cur_idx; i = (i + 1) % HASHSTACK_SIZE){
+      if(td->hash_stack.hash[i] == td->hash_stack.hash[td->hash_stack.cur_idx]) return 1;
+   }
    return 0;
 }
 

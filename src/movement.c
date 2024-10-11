@@ -217,7 +217,7 @@ static void replaceCaptured(Position *pos, i32 square, char piece){
     return;
 }
 
-i32 make_move(Position *pos, UndoStack *undo_stack, Move move){
+i32 make_move(Position *pos, ThreadData *td, Move move){
     #ifdef DEBUG
     if(move == NO_MOVE) printf("WARNING ILLEGAL NO-MOVE IN MAKE MOVE\n");
     #endif
@@ -226,8 +226,8 @@ i32 make_move(Position *pos, UndoStack *undo_stack, Move move){
     i32 from = GET_FROM(move);
     i32 to   = GET_TO(move);
 
-    if(undo_stack){
-        Undo *undo = &undo_stack->undo[++undo_stack->idx];
+    if(td){
+        Undo *undo = &td->undo_stack.undo[++td->undo_stack.idx];
         undo->attack_mask[0] = pos->attack_mask[0];
         undo->attack_mask[1] = pos->attack_mask[1];
         undo->pinned         = pos->pinned;
@@ -237,6 +237,8 @@ i32 make_move(Position *pos, UndoStack *undo_stack, Move move){
         undo->hash           = pos->hash;
         undo->material_eval  = pos->material_eval;
         undo->captured       = pos->charBoard[to];
+
+        undo->hash_reset_idx = td->hash_stack.reset_idx;
     }
 
     pos->hash = hash_update_turn(pos->hash);
@@ -417,8 +419,11 @@ i32 make_move(Position *pos, UndoStack *undo_stack, Move move){
 
     pos->material_eval = eval_material(pos);
 
-    pos->hash_stack_idx++;
-
+    if(td){
+        td->hash_stack.cur_idx = (td->hash_stack.cur_idx + 1) % HASHSTACK_SIZE;
+        if(pos->halfmove_clock == 0) td->hash_stack.reset_idx = td->hash_stack.cur_idx;
+        td->hash_stack.hash[td->hash_stack.cur_idx] = pos->hash;    
+    }
 
     #ifdef DEBUG
     if(count_bits(pos->king[0]) != 1 || count_bits(pos->king[1]) != 1){
@@ -450,12 +455,12 @@ i32 make_move(Position *pos, UndoStack *undo_stack, Move move){
     return 0;
 }
 
-i32 unmake_move(Position *pos, UndoStack *undo_stack, Move move){
+i32 unmake_move(Position *pos, ThreadData *td, Move move){
     #ifdef DEBUG
     if(move == NO_MOVE) printf("WARNING ILLEGAL NO-MOVE IN UNMAKE MOVE\n");
-    if(!undo_stack) printf("NO UNDO STACK FOUND IN UNMAKE MOVE!\n");
+    if(!td) printf("NO THREAD DATA FOUND IN UNMAKE MOVE!\n");
     #endif
-    Undo undo = undo_stack->undo[undo_stack->idx--];
+    Undo undo = td->undo_stack.undo[td->undo_stack.idx--];
     i32 turn = pos->flags & WHITE_TURN;
     i32 from = GET_FROM(move);
     i32 to   = GET_TO(move);
@@ -470,19 +475,8 @@ i32 unmake_move(Position *pos, UndoStack *undo_stack, Move move){
     pos->material_eval  = undo.material_eval;
     pos->hash           = undo.hash;
 
-/**
- *             removeCaptured(pos, to);
-            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
-            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'Q' : 'q']);
-            pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
-            pos->charBoard[from] = 0;
-            pos->queen[turn] = setBit(pos->queen[turn], to); 
-            pos->charBoard[to] = turn ? 'Q' : 'q';
-            pos->color[turn] = clearBit(pos->color[turn], from);
-            pos->color[turn] = setBit(pos->color[turn], to);
-            pos->halfmove_clock = 0;
-            break;
- */
+    td->hash_stack.reset_idx = undo.hash_reset_idx;
+
     // Handle move flags
     switch(GET_FLAGS(move)){
         case QUEEN_PROMO_CAPTURE:
@@ -521,7 +515,6 @@ i32 unmake_move(Position *pos, UndoStack *undo_stack, Move move){
             pos->pawn[!turn] = setBit(pos->pawn[!turn], from); 
             replaceCaptured(pos, to, undo.captured);
             break;
-            
         case EP_CAPTURE:
             unmovePiece(pos, turn, to, from);
             replaceCaptured(pos, (turn ? to + 8 : to - 8), turn ? 'P' : 'p');
@@ -530,16 +523,6 @@ i32 unmake_move(Position *pos, UndoStack *undo_stack, Move move){
             unmovePiece(pos, turn, to, from);
             replaceCaptured(pos, to, undo.captured);
             break;
-
-/**
- *             pos->color[turn] = clearBit(pos->color[turn], from);
-            pos->color[turn] = setBit(pos->color[turn], to);
-            pos->queen[turn] = setBit(pos->queen[turn], to);
-            pos->pawn[turn] = clearBit(pos->pawn[turn], from);
-            pos->charBoard[from] = 0;
-            pos->charBoard[to] = turn ? 'Q' : 'q';
-            
- */
         case QUEEN_PROMOTION:
             pos->charBoard[from] = !turn ? 'P' : 'p';
             pos->charBoard[to] = 0;
@@ -590,7 +573,7 @@ i32 unmake_move(Position *pos, UndoStack *undo_stack, Move move){
 
     if(turn) pos->fullmove_number--;
     pos->stage = calculateStage(*pos);
-    pos->hash_stack_idx--;
+    td->hash_stack.cur_idx = (td->hash_stack.cur_idx - 1) % HASHSTACK_SIZE;
 
     #ifdef DEBUG
     if(count_bits(pos->king[0]) != 1 || count_bits(pos->king[1]) != 1){

@@ -32,3 +32,4 @@ src/craig-debug.engine
 .vscode/settings.json
 src/craig.engine
 src/craig.exe
+src/craig-debug.exe

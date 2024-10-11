@@ -184,6 +184,7 @@ static const i32 pieceToIndex[128] = {
 
 typedef struct {
     u64 hash[HASHSTACK_SIZE]; //A stack of hashes of player positions
+    i32 cur_idx;
     i32 reset_idx; //An index to the last move which reset halfmove clock
 } HashStack;
 
@@ -220,8 +221,6 @@ typedef struct {            //Each size of 2 array contains {Black, White}
 
     i32 material_eval;
 
-    i32 hash_stack_idx; // Index of the position in the local hash stack
-
     Stage stage; //The stage of the game
 
     i32 halfmove_clock;
@@ -240,6 +239,8 @@ typedef struct {
     i32 material_eval;
 
     i32 halfmove_clock;
+
+    i32 hash_reset_idx;
 
     u64 hash;
 } Undo;

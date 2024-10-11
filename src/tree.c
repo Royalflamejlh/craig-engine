@@ -441,7 +441,7 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
    #endif
    td->pv_array[ply] = NO_MOVE;
 
-   if(ply != 0 && (pos->halfmove_clock >= 100 || isInsufficient(pos) || isRepetition(pos))) return 0;
+   if(ply != 0 && (pos->halfmove_clock >= 100 || isInsufficient(pos) || isRepetition(td))) return 0;
 
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES];
@@ -548,14 +548,14 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
       assert(prev_pos.hash == pos->hash);
       #endif
       evalIdx = select_sort(i, evalIdx, pos, moveList, moveVals, size, &td->km, ttMove, ply);
-      make_move(&td->pos, &td->undo_stack, moveList[i]);
+      make_move(&td->pos, td, moveList[i]);
       // Update Prunability PVS
       u8 prunable_move = prunable;
       if(i <= PV_PRUNE_MOVE_IDX || pos->flags & IN_CHECK || (GET_FLAGS(moveList[i]) > DOUBLE_PAWN_PUSH) || pos->stage == END_GAME ) prunable_move = FALSE;
 
       if( prunable_move && depth == 1 && abs(alpha) < (CHECKMATE_VALUE/2) && abs(beta) < (CHECKMATE_VALUE/2)){ // Futility Pruning
          if(td->undo_stack.undo[td->undo_stack.idx].material_eval + moveVals[i] < alpha - PV_FUTIL_MARGIN){ 
-            unmake_move(&td->pos, &td->undo_stack, moveList[i]);
+            unmake_move(&td->pos, td, moveList[i]);
             #ifdef DEBUG
             debug[PVS][NODE_PRUNED_FUTIL]++;
             if(!compare_positions(&td->pos, &prev_pos)){
@@ -583,7 +583,7 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
          }
       }
 
-      unmake_move(&td->pos, &td->undo_stack, moveList[i]);
+      unmake_move(&td->pos, td, moveList[i]);
       #ifdef DEBUG
       if(!compare_positions(&td->pos, &prev_pos)){
          printf("Error, unmake move did not properly return the position: ");
@@ -755,7 +755,7 @@ i32 zw_search( ThreadData* td, i32 beta, i8 depth, u8 ply, u8 isNull) {
    debug[ZWS][NODE_COUNT]++;
    #endif
 
-   if(pos->halfmove_clock >= 100 || isInsufficient(pos) || isRepetition(pos)) return 0;
+   if(pos->halfmove_clock >= 100 || isInsufficient(pos) || isRepetition(td)) return 0;
 
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES];
@@ -839,7 +839,7 @@ i32 zw_search( ThreadData* td, i32 beta, i8 depth, u8 ply, u8 isNull) {
       #endif
       
       evalIdx = select_sort(i, evalIdx, pos, moveList, moveVals, size, &td->km, ttMove, ply);
-      make_move(&td->pos, &td->undo_stack, moveList[i]);
+      make_move(&td->pos, td, moveList[i]);
 
       // Set Move prunability prunability ZWS
       u8 prunable_move = prunable;
@@ -847,7 +847,7 @@ i32 zw_search( ThreadData* td, i32 beta, i8 depth, u8 ply, u8 isNull) {
 
       if( prunable_move && depth == 1 && abs(beta) < (CHECKMATE_VALUE/2) ){ // Futility Pruning
          if((td->undo_stack.undo[td->undo_stack.idx].material_eval + moveVals[i]) < ((beta-1) - ZW_FUTIL_MARGIN)){ 
-            unmake_move(&td->pos, &td->undo_stack, moveList[i]);
+            unmake_move(&td->pos, td, moveList[i]);
             #ifdef DEBUG
             debug[ZWS][NODE_PRUNED_FUTIL]++;
             if(!compare_positions(&td->pos, &prev_pos)){
@@ -870,7 +870,7 @@ i32 zw_search( ThreadData* td, i32 beta, i8 depth, u8 ply, u8 isNull) {
       //printf("zws further search score %d\n", score);
       #endif
       i32 score = -zw_search(td, 1-beta, search_depth, ply + 1, FALSE);
-      unmake_move(&td->pos, &td->undo_stack, moveList[i]);
+      unmake_move(&td->pos, td, moveList[i]);
       #ifdef DEBUG
       if(!compare_positions(&td->pos, &prev_pos)){
          printf("Error, unmake move did not properly return the position: ");
@@ -914,7 +914,7 @@ i32 q_search(ThreadData *td, i32 alpha, i32 beta, u8 ply, u8 q_ply) {
    // Check the bounds
    if(q_ply >= MAX_QUIESCE_PLY) return alpha;
    // Handle Draw or Mate
-   if(pos->halfmove_clock >= 100 || isInsufficient(pos) || isRepetition(pos)) return 0;
+   if(pos->halfmove_clock >= 100 || isInsufficient(pos) || isRepetition(td)) return 0;
 
    // Check to see if the player can opt to not move and be better
    i32 stand_pat = eval_position(pos); 
@@ -977,9 +977,9 @@ i32 q_search(ThreadData *td, i32 alpha, i32 beta, u8 ply, u8 q_ply) {
          continue;
       }
 
-      make_move(&td->pos, &td->undo_stack, moveList[i]);
+      make_move(&td->pos, td, moveList[i]);
       i32 score = -q_search(td, -beta, -alpha, ply + 1, q_ply + 1);
-      unmake_move(&td->pos, &td->undo_stack, moveList[i]);
+      unmake_move(&td->pos, td, moveList[i]);
       #ifdef DEBUG
       if(!compare_positions(&td->pos, &prev_pos)){
          printf("Error, unmake move did not properly return the position: ");
