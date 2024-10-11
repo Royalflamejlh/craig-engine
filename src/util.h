@@ -18,7 +18,7 @@ void printMove(Move move);
 void printBestMove(Move move);
 void printMoveShort(Move move);
 void printMoveSpaced(Move move);
-u64 perft(Position *pos, i32 depth, u8 print);
+u64 perft(ThreadData *td, i32 depth, u8 print);
 i32 checkMoveCount(Position pos);
 i32 python_init();
 i32 python_close();
@@ -27,6 +27,8 @@ Move moveStrToType(Position* pos, char* str);
 Stage calculateStage(Position pos);
 u32 calculate_rec_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 moves_remain, u8 turn);
 u32 calculate_max_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 moves_remain, u8 turn);
+
+i8 compare_positions(Position *pos1, Position *pos2);
 
 void printPV(Move *pv_array, i32 depth);
 void printPVInfo(SearchData data);

@@ -233,12 +233,15 @@ typedef struct {
 
     u64 en_passant;
     u8 flags;  
+    u8 captured;
 
     u64 pinned;
 
     i32 material_eval;
 
     i32 halfmove_clock;
+
+    u64 hash;
 } Undo;
 
 typedef struct {

@@ -122,13 +122,15 @@ void processGoCommand(char* input) {
         }else if (strcmp(token, "perft") == 0) {
             token = strtok_r(NULL, " ", &saveptr);
             if (token != NULL) {
-                Position temp_pos = copy_global_position();
-                perft(&temp_pos, atol(token), FALSE);
+                ThreadData temp_td = {0};
+                temp_td.pos = copy_global_position();
+                perft(&temp_td, atol(token), FALSE);
             }
             return;
         } else if (strncmp(token, "perft", 5) == 0) {
-            Position temp_pos = copy_global_position();
-            perft(&temp_pos, MAX_DEPTH, FALSE);
+            ThreadData temp_td = {0};
+            temp_td.pos = copy_global_position();
+            perft(&temp_td, MAX_DEPTH, FALSE);
             return;
         }
         token = strtok_r(NULL, " ", &saveptr);

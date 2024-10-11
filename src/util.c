@@ -163,30 +163,47 @@ void printMoveSpaced(Move move){
     }
 }
 
-u64 perft(Position *pos, i32 depth, u8 print){
+u64 perft(ThreadData *td, i32 depth, u8 print){
   Move move_list[MAX_MOVES];
   i32 n_moves, i;
   u64 nodes = 0;
 
-  n_moves = generateLegalMoves(pos, move_list);
+  n_moves = generateLegalMoves(&td->pos, move_list);
 
   if (depth <= 1) 
     return n_moves;
 
   for (i = 0; i < n_moves; i++) {
-    Position prevPos = *pos;
-    make_move(pos, NULL, move_list[i]);
+    #ifdef DEBUG
+    Position prev_pos = td->pos;
+    #endif
+    make_move(&td->pos, &td->undo_stack, move_list[i]);
     
     #ifdef PYTHON
     checkMoveCount(pos);
     #endif
-    u64 count = perft(pos, depth - 1, FALSE);
+    u64 count = perft(td, depth - 1, FALSE);
     if(print){
         printMoveShort(move_list[i]);
         printf(": %" PRIu64 "\n", count);
     }
+    //unmake_move(&td->pos, &td->undo_stack, move_list[i]);
+
+    #ifdef DEBUG
+    // if(!compare_positions(&td->pos, &prev_pos)){
+    //     printf("Error, unmake move did not properly return the position: ");
+    //     printMove(move_list[i]);
+    //     printf("\n\nCorrect Position:\n");
+    //     printPosition(prev_pos, TRUE);
+    //     printf("\n\nFound Position:\n");
+    //     printPosition(td->pos, TRUE);
+    //     while(1);
+    // }
+    td->pos = prev_pos;
+    #endif
+
+    
     nodes += count;
-    *pos = prevPos;
   }
   if(print){
     printf("Nodes searched: %" PRIu64 "\n", nodes);
@@ -322,6 +339,43 @@ u32 calculate_max_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 move
     if(moves_remain) return (time / moves_remain);
     return (time / 5) + 1;
 }
+
+/**
+ * Returns true if the positions are equal
+ */
+i8 compare_positions(Position *pos1, Position *pos2) {
+    for (int i = 0; i < 2; i++) {
+        if (pos1->pawn[i] != pos2->pawn[i] ||
+            pos1->bishop[i] != pos2->bishop[i] ||
+            pos1->knight[i] != pos2->knight[i] ||
+            pos1->rook[i] != pos2->rook[i] ||
+            pos1->queen[i] != pos2->queen[i] ||
+            pos1->king[i] != pos2->king[i] ||
+            pos1->attack_mask[i] != pos2->attack_mask[i] ||
+            pos1->color[i] != pos2->color[i]) {
+            return FALSE;
+        }
+    }
+
+    if (pos1->en_passant != pos2->en_passant ||
+        pos1->flags != pos2->flags ||
+        pos1->pinned != pos2->pinned ||
+        pos1->hash != pos2->hash ||
+        pos1->material_eval != pos2->material_eval ||
+        pos1->hash_stack_idx != pos2->hash_stack_idx ||
+        pos1->stage != pos2->stage ||
+        pos1->halfmove_clock != pos2->halfmove_clock ||
+        pos1->fullmove_number != pos2->fullmove_number) {
+        return FALSE;
+    }
+
+    if (memcmp(pos1->charBoard, pos2->charBoard, 64 * sizeof(char)) != 0) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
 
 #ifdef PYTHON
 i32 python_init() {

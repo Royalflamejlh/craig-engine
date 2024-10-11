@@ -116,9 +116,10 @@ i32 testBB(void) {
     printf("\n---------------------------------- PERFT TESTING ----------------------------------\n\n");
 
     printf("Perft from default position:\n");
-    pos = fen_to_position(START_FEN);
+    ThreadData temp_td = {0};
+    temp_td.pos = fen_to_position(START_FEN);
     for(i32 depth = 1; depth < 4; depth++){
-        u64 num_moves = perft(&pos, depth, FALSE);
+        u64 num_moves = perft(&temp_td, depth, FALSE);
         printf("Perft output is %ld for depth %d\n", (long)num_moves, depth);
     }
 
@@ -132,10 +133,10 @@ i32 testBB(void) {
 
     while (fgets(line, sizeof(line), file)) {
         char *fen = line;
-        pos = fen_to_position(fen);
+        temp_td.pos = fen_to_position(fen);
         //printf("Testing: %s", fen);
         for(i32 depth = 1; depth < 2; depth++){
-            perft(&pos, depth, FALSE);
+            perft(&temp_td, depth, FALSE);
             //i64 num_moves = perft(depth, pos);
             //printf("D%d: %lld |", depth, (long long i32)num_moves);
         }
