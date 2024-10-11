@@ -163,27 +163,34 @@ void printMoveSpaced(Move move){
     }
 }
 
-u64 perft(i32 depth, Position pos){
-  Move move_list[256];
+u64 perft(Position *pos, i32 depth, u8 print){
+  Move move_list[MAX_MOVES];
   i32 n_moves, i;
   u64 nodes = 0;
 
-  if (depth == 0) 
-    return 1ULL;
+  n_moves = generateLegalMoves(pos, move_list);
 
-  n_moves = generateLegalMoves(&pos, move_list);
+  if (depth <= 1) 
+    return n_moves;
 
   for (i = 0; i < n_moves; i++) {
-    Position prevPos = pos;
-    make_move(&pos, move_list[i]);
+    Position prevPos = *pos;
+    make_move(pos, NULL, move_list[i]);
     
     #ifdef PYTHON
     checkMoveCount(pos);
     #endif
-    nodes += perft(depth - 1, pos);
-    pos = prevPos;
+    u64 count = perft(pos, depth - 1, FALSE);
+    if(print){
+        printMoveShort(move_list[i]);
+        printf(": %" PRIu64 "\n", count);
+    }
+    nodes += count;
+    *pos = prevPos;
   }
-  
+  if(print){
+    printf("Nodes searched: %" PRIu64 "\n", nodes);
+  }
   return nodes;
 }
 

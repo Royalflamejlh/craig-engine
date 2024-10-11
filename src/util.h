@@ -18,7 +18,7 @@ void printMove(Move move);
 void printBestMove(Move move);
 void printMoveShort(Move move);
 void printMoveSpaced(Move move);
-u64 perft(i32 depth, Position pos);
+u64 perft(Position *pos, i32 depth, u8 print);
 i32 checkMoveCount(Position pos);
 i32 python_init();
 i32 python_close();

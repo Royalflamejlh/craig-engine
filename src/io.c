@@ -57,7 +57,7 @@ static void processMoves(char* str) {
         }
         //printf("Move String found: %s", moveStr);
         Position cur = get_global_position();
-        make_move(&cur, moveStrToType(&cur, moveStr));
+        make_move(&cur, NULL, moveStrToType(&cur, moveStr));
         set_global_position(cur);
 get_next_token:
         pch = strtok_r(NULL, " ", &rest);
@@ -122,11 +122,13 @@ void processGoCommand(char* input) {
         }else if (strcmp(token, "perft") == 0) {
             token = strtok_r(NULL, " ", &saveptr);
             if (token != NULL) {
-                perft(atol(token), copy_global_position());
+                Position temp_pos = copy_global_position();
+                perft(&temp_pos, atol(token), FALSE);
             }
             return;
         } else if (strncmp(token, "perft", 5) == 0) {
-            perft(MAX_DEPTH, copy_global_position());
+            Position temp_pos = copy_global_position();
+            perft(&temp_pos, MAX_DEPTH, FALSE);
             return;
         }
         token = strtok_r(NULL, " ", &saveptr);
@@ -229,7 +231,7 @@ static i32 processInput(char* input){
             printMove(get_global_best_move());
             printf("\n");
             Position tempPos = get_global_position();
-            make_move(&tempPos, get_global_best_move());
+            make_move(&tempPos, NULL, get_global_best_move());
             set_global_position(tempPos);
         }
 

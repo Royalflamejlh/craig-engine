@@ -92,7 +92,7 @@ i32 testBB(void) {
         size = generateLegalMoves(&pos, moveList);
         while(size != 0 && pos.halfmove_clock < 50){
             i32 randMove = rand() % size;
-            make_move(&pos, moveList[randMove]);
+            make_move(&pos, NULL, moveList[randMove]);
             size = generateLegalMoves(&pos, moveList);
             threatSize = generateThreatMoves(&pos, threatMoveList);
             for(i32 k = 0; k < threatSize; k++){
@@ -118,7 +118,7 @@ i32 testBB(void) {
     printf("Perft from default position:\n");
     pos = fen_to_position(START_FEN);
     for(i32 depth = 1; depth < 4; depth++){
-        u64 num_moves = perft(depth, pos);
+        u64 num_moves = perft(&pos, depth, FALSE);
         printf("Perft output is %ld for depth %d\n", (long)num_moves, depth);
     }
 
@@ -135,7 +135,7 @@ i32 testBB(void) {
         pos = fen_to_position(fen);
         //printf("Testing: %s", fen);
         for(i32 depth = 1; depth < 2; depth++){
-            perft(depth, pos);
+            perft(&pos, depth, FALSE);
             //i64 num_moves = perft(depth, pos);
             //printf("D%d: %lld |", depth, (long long i32)num_moves);
         }

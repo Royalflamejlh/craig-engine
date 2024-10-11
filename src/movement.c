@@ -150,10 +150,20 @@ static void removeCaptured(Position *pos, i32 square){
     pos->halfmove_clock = 0;
 }
 
-i32 make_move(Position *pos, Move move){
+i32 make_move(Position *pos, UndoStack *undo_stack, Move move){
     #ifdef DEBUG
     if(move == NO_MOVE) printf("WARNING ILLEGAL NO-MOVE IN MAKE MOVE\n");
     #endif
+    if(undo_stack){
+        Undo undo;
+        undo.attack_mask[0] = pos->attack_mask[0];
+        undo.attack_mask[1] = pos->attack_mask[1];
+        undo.en_passant     = pos->en_passant;
+        undo.flags          = pos->flags;
+        undo.halfmove_clock = pos->halfmove_clock;
+
+        undo_stack->undo[++undo_stack->idx] = undo;
+    }
     i32 turn = pos->flags & WHITE_TURN;
     u8 prev_flags = pos->flags;
     i32 from = GET_FROM(move);
@@ -370,20 +380,15 @@ i32 make_move(Position *pos, Move move){
     return 0;
 }
 
-i32 unmake_move(Position *pos, Move move){
+i32 unmake_move(Position *pos, UndoStack *undo_stack, Move move){
     #ifdef DEBUG
-    if(move == NO_MOVE) printf("WARNING ILLEGAL NO-MOVE IN MAKE MOVE\n");
+    if(move == NO_MOVE) printf("WARNING ILLEGAL NO-MOVE IN UNMAKE MOVE\n");
+    if(!undo_stack) printf("NO UNDO STACK FOUND IN UNMAKE MOVE!\n")
     #endif
+    Undo undo = undo_stack->undo[undo_stack->idx--];
     i32 turn = pos->flags & WHITE_TURN;
-    u8 prev_flags = pos->flags;
     i32 from = GET_FROM(move);
     i32 to   = GET_TO(move);
-
-    pos->hash = hash_update_turn(pos->hash);
-    if(pos->en_passant) pos->hash = hash_update_enpassant(pos->hash, getlsb(pos->en_passant));
-    
-    pos->halfmove_clock++;
-    pos->en_passant = 0ULL;
 
     // Handle move flags
     switch(GET_FLAGS(move)){
@@ -409,7 +414,6 @@ i32 unmake_move(Position *pos, Move move){
             pos->charBoard[to] = turn ? 'R' : 'r';
             pos->color[turn] = clearBit(pos->color[turn], from);
             pos->color[turn] = setBit(pos->color[turn], to);
-            pos->halfmove_clock = 0;
             break;
         case BISHOP_PROMO_CAPTURE:
             removeCaptured(pos, to);
@@ -421,7 +425,6 @@ i32 unmake_move(Position *pos, Move move){
             pos->charBoard[to] = turn ? 'B' : 'b';
             pos->color[turn] = clearBit(pos->color[turn], from);
             pos->color[turn] = setBit(pos->color[turn], to);
-            pos->halfmove_clock = 0;
             break;
         case KNIGHT_PROMO_CAPTURE:
             removeCaptured(pos, to);
@@ -433,16 +436,15 @@ i32 unmake_move(Position *pos, Move move){
             pos->charBoard[to] = turn ? 'N' : 'n';
             pos->color[turn] = clearBit(pos->color[turn], from);
             pos->color[turn] = setBit(pos->color[turn], to);
-            pos->halfmove_clock = 0;
             break;
             
         case EP_CAPTURE:
-            removeCaptured(pos, (turn ? to - 8 : to + 8));
-            movePiece(pos, turn, from, to);
+            movePiece(pos, turn, to, from);
+            placeCaptured(pos, (turn ? to - 8 : to + 8));
             break;
         case CAPTURE:
-            removeCaptured(pos, to);
-            movePiece(pos, turn, from, to);
+            movePiece(pos, turn, to, from);
+            placeCaptured(pos, to);
             break;
 
         case QUEEN_PROMOTION:
@@ -454,7 +456,6 @@ i32 unmake_move(Position *pos, Move move){
             pos->pawn[turn] = clearBit(pos->pawn[turn], from);
             pos->charBoard[from] = 0;
             pos->charBoard[to] = turn ? 'Q' : 'q';
-            pos->halfmove_clock = 0;
             break;
         case ROOK_PROMOTION:
             pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
@@ -465,7 +466,6 @@ i32 unmake_move(Position *pos, Move move){
             pos->pawn[turn] = clearBit(pos->pawn[turn], from);
             pos->charBoard[from] = 0;
             pos->charBoard[to] = turn ? 'R' : 'r';
-            pos->halfmove_clock = 0;
             break;
         case BISHOP_PROMOTION:
             pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
@@ -476,30 +476,22 @@ i32 unmake_move(Position *pos, Move move){
             pos->pawn[turn] = clearBit(pos->pawn[turn], from);
             pos->charBoard[from] = 0;
             pos->charBoard[to] = turn ? 'B' : 'b';
-            pos->halfmove_clock = 0;
             break;
         case KNIGHT_PROMOTION:
-            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
-            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'N' : 'n']);
             pos->color[turn] = clearBit(pos->color[turn], from);
             pos->color[turn] = setBit(pos->color[turn], to);
             pos->knight[turn] = setBit(pos->knight[turn], to);
             pos->pawn[turn] = clearBit(pos->pawn[turn], from);
             pos->charBoard[from] = 0;
             pos->charBoard[to] = turn ? 'N' : 'n';
-            pos->halfmove_clock = 0;
             break;
         case QUEEN_CASTLE:
-            pos->flags &= ~(turn ? W_LONG_CASTLE : B_LONG_CASTLE);
-            pos->flags &= ~(turn ? W_SHORT_CASTLE : B_SHORT_CASTLE);
-            movePiece(pos, turn, from, to);
-            movePiece(pos, turn, turn ? 0 : 56, turn ? 3 : 59);
+            movePiece(pos, turn, to, from);
+            movePiece(pos, turn, turn ? 3 : 59, turn ? 0 : 56);
             break;
         case KING_CASTLE:
-            pos->flags &= ~(turn ? W_LONG_CASTLE : B_LONG_CASTLE);
-            pos->flags &= ~(turn ? W_SHORT_CASTLE : B_SHORT_CASTLE);
-            movePiece(pos, turn, from, to);
-            movePiece(pos, turn, turn ? 7 : 63, turn ? 5 : 61);
+            movePiece(pos, turn, to, from);
+            movePiece(pos, turn, turn ? 5 : 61, turn ? 7 : 63);
             break;
 
         case DOUBLE_PAWN_PUSH:
@@ -508,54 +500,13 @@ i32 unmake_move(Position *pos, Move move){
             // Fall through
         case QUIET:
         default:
-            movePiece(pos, turn, from, to);
+            movePiece(pos, turn, to, from);
             break;
     }
 
-    //Castle Aval Rooks Moves
-    if((to == 0  || from == 0) ) pos->flags &= ~W_LONG_CASTLE;
-    if((to == 7  || from == 7) ) pos->flags &= ~W_SHORT_CASTLE;
-    if((to == 56 || from == 56)) pos->flags &= ~B_LONG_CASTLE;
-    if((to == 63 || from == 63)) pos->flags &= ~B_SHORT_CASTLE;
-
-    //King Moves
-    if(from == 4){
-        pos->flags &= ~W_LONG_CASTLE;
-        pos->flags &= ~W_SHORT_CASTLE;
-    }
-    if(from == 60){
-        pos->flags &= ~B_LONG_CASTLE;
-        pos->flags &= ~B_SHORT_CASTLE;
-    } 
-    
-    if((prev_flags & W_LONG_CASTLE ) != (pos->flags & W_LONG_CASTLE )) pos->hash = hash_update_castle(pos->hash, W_LONG_CASTLE );
-    if((prev_flags & W_SHORT_CASTLE) != (pos->flags & W_SHORT_CASTLE)) pos->hash = hash_update_castle(pos->hash, W_SHORT_CASTLE);
-    if((prev_flags & B_LONG_CASTLE ) != (pos->flags & B_LONG_CASTLE )) pos->hash = hash_update_castle(pos->hash, B_LONG_CASTLE );
-    if((prev_flags & B_SHORT_CASTLE) != (pos->flags & B_SHORT_CASTLE)) pos->hash = hash_update_castle(pos->hash, B_SHORT_CASTLE);
-
-    if(!turn) pos->fullmove_number++;
-
-    setAttackMasks(pos);
-
-    //Check Flag
-    pos->flags = pos->attack_mask[turn] & pos->king[!turn] ? (pos->flags | IN_CHECK) : (pos->flags & ~IN_CHECK);
-
-    //Double Check Flag
-    if(pos->flags & IN_CHECK){
-       i32 king_sq = getlsb(pos->king[!turn]);
-       u64 attackers = getAttackers(pos, king_sq, turn);
-       attackers &= attackers - 1;
-       if(attackers) pos->flags |= IN_D_CHECK;
-    }
-    else pos->flags &= ~IN_D_CHECK;
-
-    pos->flags ^= WHITE_TURN;
-
-    pos->pinned = generatePinnedPieces(pos);
+    if(!turn) pos->fullmove_number--;
 
     pos->stage = calculateStage(*pos);
-
-    pos->material_eval = eval_material(pos);
 
     pos->hash_stack_idx--;
 

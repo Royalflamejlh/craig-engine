@@ -236,14 +236,15 @@ typedef struct {
 
     u64 pinned;
 
-    u64 hash;
-
     i32 material_eval;
 
     i32 halfmove_clock;
- 
-    i32 fullmove_number;
 } Undo;
+
+typedef struct {
+    Undo undo[MAX_DEPTH];
+    i32 idx;
+} UndoStack;
 
 typedef struct {
     u16 move;
@@ -304,7 +305,7 @@ typedef struct{
     u32 depth;
     Position pos; 
     HashStack hash_stack;
-    Undo undo_stack[MAX_DEPTH];
+    UndoStack undo_stack;
     Move found_move[MAX_DEPTH];
     i32  found_eval[MAX_DEPTH];
     i32 avg_eval;
