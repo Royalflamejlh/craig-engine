@@ -556,6 +556,7 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
             #ifdef DEBUG
             debug[PVS][NODE_PRUNED_FUTIL]++;
             #endif
+            unmake_move(&td->pos, &td->undo_stack, moveList[i]);
             *pos = prevPos; //Unmake Move
             continue;
          }
@@ -572,6 +573,7 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
          }
       }
 
+      unmake_move(&td->pos, &td->undo_stack, moveList[i]);
       *pos = prevPos; //Unmake Move
 
       if( score >= beta ) { //Beta cutoff
@@ -828,6 +830,7 @@ i32 zw_search( ThreadData* td, i32 beta, i8 depth, u8 ply, u8 isNull) {
             #ifdef DEBUG
             debug[ZWS][NODE_PRUNED_FUTIL]++;
             #endif // Unmake Move
+            unmake_move(&td->pos, &td->undo_stack, moveList[i]);
             *pos = prevPos;
             continue;
          }
@@ -839,6 +842,7 @@ i32 zw_search( ThreadData* td, i32 beta, i8 depth, u8 ply, u8 isNull) {
       //printf("zws further search score %d\n", score);
       #endif
       i32 score = -zw_search(td, 1-beta, search_depth, ply + 1, FALSE);
+      unmake_move(&td->pos, &td->undo_stack, moveList[i]);
       *pos = prevPos; // Unmake Move
 
       if( score >= beta ){ // Beta Cutoff
@@ -935,8 +939,8 @@ i32 q_search(ThreadData *td, i32 alpha, i32 beta, u8 ply, u8 q_ply) {
 
       make_move(&td->pos, &td->undo_stack, moveList[i]);
       i32 score = -q_search(td, -beta, -alpha, ply + 1, q_ply + 1);
+      unmake_move(&td->pos, &td->undo_stack, moveList[i]);
       *pos = prev_pos;
-      //unmake_move(pos, moveList[i]);
 
       if( score >= beta ){
          // storeKillerMove(ply, moveList[i]);

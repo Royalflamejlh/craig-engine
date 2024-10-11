@@ -178,7 +178,7 @@ u64 perft(ThreadData *td, i32 depth, u8 print){
     Position prev_pos = td->pos;
     #endif
     make_move(&td->pos, &td->undo_stack, move_list[i]);
-    
+
     #ifdef PYTHON
     checkMoveCount(pos);
     #endif
@@ -187,20 +187,21 @@ u64 perft(ThreadData *td, i32 depth, u8 print){
         printMoveShort(move_list[i]);
         printf(": %" PRIu64 "\n", count);
     }
-    //unmake_move(&td->pos, &td->undo_stack, move_list[i]);
+    unmake_move(&td->pos, &td->undo_stack, move_list[i]);
 
     #ifdef DEBUG
-    // if(!compare_positions(&td->pos, &prev_pos)){
-    //     printf("Error, unmake move did not properly return the position: ");
-    //     printMove(move_list[i]);
-    //     printf("\n\nCorrect Position:\n");
-    //     printPosition(prev_pos, TRUE);
-    //     printf("\n\nFound Position:\n");
-    //     printPosition(td->pos, TRUE);
-    //     while(1);
-    // }
+    if(!compare_positions(&td->pos, &prev_pos)){
+        printf("Error, unmake move did not properly return the position: ");
+        printMove(move_list[i]);
+        printf("\n\nCorrect Position:\n");
+        printPosition(prev_pos, TRUE);
+        printf("\n\nFound Position:\n");
+        printPosition(td->pos, TRUE);
+        while(1);
+    }
     td->pos = prev_pos;
     #endif
+    
 
     
     nodes += count;
@@ -340,41 +341,91 @@ u32 calculate_max_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 move
     return (time / 5) + 1;
 }
 
+#include <stdio.h>  // For printf
+
+
 /**
  * Returns true if the positions are equal
  */
 i8 compare_positions(Position *pos1, Position *pos2) {
     for (int i = 0; i < 2; i++) {
-        if (pos1->pawn[i] != pos2->pawn[i] ||
-            pos1->bishop[i] != pos2->bishop[i] ||
-            pos1->knight[i] != pos2->knight[i] ||
-            pos1->rook[i] != pos2->rook[i] ||
-            pos1->queen[i] != pos2->queen[i] ||
-            pos1->king[i] != pos2->king[i] ||
-            pos1->attack_mask[i] != pos2->attack_mask[i] ||
-            pos1->color[i] != pos2->color[i]) {
+        if (pos1->pawn[i] != pos2->pawn[i]) {
+            printf("Mismatch at pawn[%d]: %d != %d\n", i, pos1->pawn[i], pos2->pawn[i]);
+            return FALSE;
+        }
+        if (pos1->bishop[i] != pos2->bishop[i]) {
+            printf("Mismatch at bishop[%d]: %d != %d\n", i, pos1->bishop[i], pos2->bishop[i]);
+            return FALSE;
+        }
+        if (pos1->knight[i] != pos2->knight[i]) {
+            printf("Mismatch at knight[%d]: %d != %d\n", i, pos1->knight[i], pos2->knight[i]);
+            return FALSE;
+        }
+        if (pos1->rook[i] != pos2->rook[i]) {
+            printf("Mismatch at rook[%d]: %d != %d\n", i, pos1->rook[i], pos2->rook[i]);
+            return FALSE;
+        }
+        if (pos1->queen[i] != pos2->queen[i]) {
+            printf("Mismatch at queen[%d]: %d != %d\n", i, pos1->queen[i], pos2->queen[i]);
+            return FALSE;
+        }
+        if (pos1->king[i] != pos2->king[i]) {
+            printf("Mismatch at king[%d]: %d != %d\n", i, pos1->king[i], pos2->king[i]);
+            return FALSE;
+        }
+        if (pos1->attack_mask[i] != pos2->attack_mask[i]) {
+            printf("Mismatch at attack_mask[%d]: %d != %d\n", i, pos1->attack_mask[i], pos2->attack_mask[i]);
+            return FALSE;
+        }
+        if (pos1->color[i] != pos2->color[i]) {
+            printf("Mismatch at color[%d]: %d != %d\n", i, pos1->color[i], pos2->color[i]);
             return FALSE;
         }
     }
-
-    if (pos1->en_passant != pos2->en_passant ||
-        pos1->flags != pos2->flags ||
-        pos1->pinned != pos2->pinned ||
-        pos1->hash != pos2->hash ||
-        pos1->material_eval != pos2->material_eval ||
-        pos1->hash_stack_idx != pos2->hash_stack_idx ||
-        pos1->stage != pos2->stage ||
-        pos1->halfmove_clock != pos2->halfmove_clock ||
-        pos1->fullmove_number != pos2->fullmove_number) {
+    if (pos1->en_passant != pos2->en_passant) {
+        printf("Mismatch at en_passant: %d != %d\n", pos1->en_passant, pos2->en_passant);
         return FALSE;
     }
-
+    if (pos1->flags != pos2->flags) {
+        printf("Mismatch at flags: %d != %d\n", pos1->flags, pos2->flags);
+        return FALSE;
+    }
+    if (pos1->pinned != pos2->pinned) {
+        printf("Mismatch at pinned: %d != %d\n", pos1->pinned, pos2->pinned);
+        return FALSE;
+    }
+    if (pos1->hash != pos2->hash) {
+        printf("Mismatch at hash: %ld != %ld\n", pos1->hash, pos2->hash);
+        return FALSE;
+    }
+    if (pos1->material_eval != pos2->material_eval) {
+        printf("Mismatch at material_eval: %d != %d\n", pos1->material_eval, pos2->material_eval);
+        return FALSE;
+    }
+    if (pos1->hash_stack_idx != pos2->hash_stack_idx) {
+        printf("Mismatch at hash_stack_idx: %d != %d\n", pos1->hash_stack_idx, pos2->hash_stack_idx);
+        return FALSE;
+    }
+    if (pos1->stage != pos2->stage) {
+        printf("Mismatch at stage: %d != %d\n", pos1->stage, pos2->stage);
+        return FALSE;
+    }
+    if (pos1->halfmove_clock != pos2->halfmove_clock) {
+        printf("Mismatch at halfmove_clock: %d != %d\n", pos1->halfmove_clock, pos2->halfmove_clock);
+        return FALSE;
+    }
+    if (pos1->fullmove_number != pos2->fullmove_number) {
+        printf("Mismatch at fullmove_number: %d != %d\n", pos1->fullmove_number, pos2->fullmove_number);
+        return FALSE;
+    }
     if (memcmp(pos1->charBoard, pos2->charBoard, 64 * sizeof(char)) != 0) {
+        printf("Mismatch at charBoard\n");
         return FALSE;
     }
 
     return TRUE;
 }
+
 
 
 #ifdef PYTHON

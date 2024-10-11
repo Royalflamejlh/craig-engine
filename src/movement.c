@@ -114,6 +114,39 @@ static void movePiece(Position *pos, i32 turn, i32 from, i32 to){
     pos->color[turn] = setBit(pos->color[turn], to);
 }
 
+static void unmovePiece(Position *pos, i32 turn, i32 from, i32 to){
+    switch(toupper(pos->charBoard[from])){
+        case 'Q':
+            pos->queen[!turn] = clearBit(pos->queen[!turn], from);
+            pos->queen[!turn] = setBit(pos->queen[!turn], to);
+            break;
+        case 'K':
+            pos->king[!turn] = clearBit(pos->king[!turn], from);
+            pos->king[!turn] = setBit(pos->king[!turn], to);
+            break;
+        case 'N':
+            pos->knight[!turn] = clearBit(pos->knight[!turn], from);
+            pos->knight[!turn] = setBit(pos->knight[!turn], to);
+            break;
+        case 'B':
+            pos->bishop[!turn] = clearBit(pos->bishop[!turn], from);
+            pos->bishop[!turn] = setBit(pos->bishop[!turn], to);
+            break;
+        case 'R':
+            pos->rook[!turn] = clearBit(pos->rook[!turn], from);
+            pos->rook[!turn] = setBit(pos->rook[!turn], to);
+            break;
+        case 'P':
+            pos->pawn[!turn] = clearBit(pos->pawn[!turn], from);
+            pos->pawn[!turn] = setBit(pos->pawn[!turn], to);
+            break;
+    }
+    pos->charBoard[to] = pos->charBoard[from];
+    pos->charBoard[from] = 0;
+    pos->color[!turn] = clearBit(pos->color[!turn], from);
+    pos->color[!turn] = setBit(pos->color[!turn], to);
+}
+
 /* Used to remove the captured piece */
 static void removeCaptured(Position *pos, i32 square){
     pos->hash = hash_update_piece(pos->hash, square, pieceToIndex[(int)pos->charBoard[square]]);
@@ -151,9 +184,36 @@ static void removeCaptured(Position *pos, i32 square){
 }
 
 static void replaceCaptured(Position *pos, i32 square, char piece){
-    (void) pos;
-    (void) square;
-    (void) piece;
+    i32 turn = pos->flags & WHITE_TURN;
+    switch(toupper(piece)){
+        case 'Q':
+            pos->queen[!turn] = setBit(pos->queen[!turn], square);
+            break;
+        case 'K':
+            //pos->king[!turn] = clearBit(pos->king[!turn], square);
+            #ifdef DEBUG
+            printf("WARNING ATTEMPTED TO PLACE A KING AT POS:\n");
+            printPosition(*pos, TRUE);
+            while(TRUE){};
+            #else
+            printf("info string Found illegal position during search - King Replacement.\n");
+            #endif
+            break;
+        case 'N':
+            pos->knight[!turn] = setBit(pos->knight[!turn], square);
+            break;
+        case 'B':
+            pos->bishop[!turn] = setBit(pos->bishop[!turn], square);
+            break;
+        case 'R':
+            pos->rook[!turn] = setBit(pos->rook[!turn], square);
+            break;
+        case 'P':
+            pos->pawn[!turn] = setBit(pos->pawn[!turn], square);
+            break;
+    }
+    pos->color[!turn] = setBit(pos->color[!turn], square);
+    pos->charBoard[square] = piece;
     return;
 }
 
@@ -161,21 +221,23 @@ i32 make_move(Position *pos, UndoStack *undo_stack, Move move){
     #ifdef DEBUG
     if(move == NO_MOVE) printf("WARNING ILLEGAL NO-MOVE IN MAKE MOVE\n");
     #endif
-    if(undo_stack){
-        Undo undo;
-        undo.attack_mask[0] = pos->attack_mask[0];
-        undo.attack_mask[1] = pos->attack_mask[1];
-        undo.en_passant     = pos->en_passant;
-        undo.flags          = pos->flags;
-        undo.halfmove_clock = pos->halfmove_clock;
-        undo.hash           = pos->hash;
-
-        undo_stack->undo[++undo_stack->idx] = undo;
-    }
     i32 turn = pos->flags & WHITE_TURN;
     u8 prev_flags = pos->flags;
     i32 from = GET_FROM(move);
     i32 to   = GET_TO(move);
+
+    if(undo_stack){
+        Undo *undo = &undo_stack->undo[++undo_stack->idx];
+        undo->attack_mask[0] = pos->attack_mask[0];
+        undo->attack_mask[1] = pos->attack_mask[1];
+        undo->pinned         = pos->pinned;
+        undo->en_passant     = pos->en_passant;
+        undo->flags          = pos->flags;
+        undo->halfmove_clock = pos->halfmove_clock;
+        undo->hash           = pos->hash;
+        undo->material_eval  = pos->material_eval;
+        undo->captured       = pos->charBoard[to];
+    }
 
     pos->hash = hash_update_turn(pos->hash);
     if(pos->en_passant) pos->hash = hash_update_enpassant(pos->hash, getlsb(pos->en_passant));
@@ -400,109 +462,133 @@ i32 unmake_move(Position *pos, UndoStack *undo_stack, Move move){
 
     pos->attack_mask[0] = undo.attack_mask[0];
     pos->attack_mask[1] = undo.attack_mask[1]; 
-    pos->pinned = undo.pinned;
-    pos->material_eval = undo.material_eval;
-    pos->flags = undo.flags;
+    pos->pinned         = undo.pinned;
+    pos->material_eval  = undo.material_eval;
+    pos->flags          = undo.flags;
     pos->halfmove_clock = undo.halfmove_clock;
-    pos->en_passant = undo.en_passant;
-    pos->hash = undo.hash;
+    pos->en_passant     = undo.en_passant;
+    pos->material_eval  = undo.material_eval;
+    pos->hash           = undo.hash;
 
+/**
+ *             removeCaptured(pos, to);
+            pos->hash = hash_update_piece(pos->hash, from, pieceToIndex[turn ? 'P' : 'p']);
+            pos->hash = hash_update_piece(pos->hash, to, pieceToIndex[turn ? 'Q' : 'q']);
+            pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
+            pos->charBoard[from] = 0;
+            pos->queen[turn] = setBit(pos->queen[turn], to); 
+            pos->charBoard[to] = turn ? 'Q' : 'q';
+            pos->color[turn] = clearBit(pos->color[turn], from);
+            pos->color[turn] = setBit(pos->color[turn], to);
+            pos->halfmove_clock = 0;
+            break;
+ */
     // Handle move flags
     switch(GET_FLAGS(move)){
         case QUEEN_PROMO_CAPTURE:
-            pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
-            pos->charBoard[from] = turn ? 'P' : 'p';
-            pos->queen[turn] = clearBit(pos->queen[turn], to); 
-            pos->color[turn] = setBit(pos->color[turn], from);
-            pos->color[turn] = clearBit(pos->color[turn], to);
+            pos->color[!turn] = clearBit(pos->color[!turn], to);
+            pos->color[!turn] = setBit(pos->color[!turn], from);
+            pos->charBoard[to] = undo.captured;
+            pos->queen[!turn] = clearBit(pos->queen[!turn], to); 
+            pos->charBoard[from] = !turn ? 'P' : 'p';
+            pos->pawn[!turn] = setBit(pos->pawn[!turn], from); 
             replaceCaptured(pos, to, undo.captured);
             break;
         case ROOK_PROMO_CAPTURE:
+            pos->color[!turn] = clearBit(pos->color[!turn], to);
+            pos->color[!turn] = setBit(pos->color[!turn], from);
+            pos->charBoard[to] = undo.captured;
+            pos->rook[!turn] = clearBit(pos->rook[!turn], to); 
+            pos->charBoard[from] = !turn ? 'P' : 'p';
+            pos->pawn[!turn] = setBit(pos->pawn[!turn], from); 
             replaceCaptured(pos, to, undo.captured);
-            pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
-            pos->charBoard[from] = 0;
-            pos->rook[turn] = setBit(pos->rook[turn], to); 
-            pos->charBoard[to] = turn ? 'R' : 'r';
-            pos->color[turn] = clearBit(pos->color[turn], from);
-            pos->color[turn] = setBit(pos->color[turn], to);
             break;
         case BISHOP_PROMO_CAPTURE:
+            pos->color[!turn] = clearBit(pos->color[!turn], to);
+            pos->color[!turn] = setBit(pos->color[!turn], from);
+            pos->charBoard[to] = undo.captured;
+            pos->bishop[!turn] = clearBit(pos->bishop[!turn], to); 
+            pos->charBoard[from] = !turn ? 'P' : 'p';
+            pos->pawn[!turn] = setBit(pos->pawn[!turn], from); 
             replaceCaptured(pos, to, undo.captured);
-            pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
-            pos->charBoard[from] = 0;
-            pos->bishop[turn] = setBit(pos->bishop[turn], to); 
-            pos->charBoard[to] = turn ? 'B' : 'b';
-            pos->color[turn] = clearBit(pos->color[turn], from);
-            pos->color[turn] = setBit(pos->color[turn], to);
             break;
         case KNIGHT_PROMO_CAPTURE:
+            pos->color[!turn] = clearBit(pos->color[!turn], to);
+            pos->color[!turn] = setBit(pos->color[!turn], from);
+            pos->charBoard[to] = undo.captured;
+            pos->knight[!turn] = clearBit(pos->knight[!turn], to); 
+            pos->charBoard[from] = !turn ? 'P' : 'p';
+            pos->pawn[!turn] = setBit(pos->pawn[!turn], from); 
             replaceCaptured(pos, to, undo.captured);
-            pos->pawn[turn] = clearBit(pos->pawn[turn], from); 
-            pos->charBoard[from] = 0;
-            pos->knight[turn] = setBit(pos->knight[turn], to); 
-            pos->charBoard[to] = turn ? 'N' : 'n';
-            pos->color[turn] = clearBit(pos->color[turn], from);
-            pos->color[turn] = setBit(pos->color[turn], to);
             break;
             
         case EP_CAPTURE:
-            movePiece(pos, turn, to, from);
-            replaceCaptured(pos, (turn ? to - 8 : to + 8), undo.captured);
+            unmovePiece(pos, turn, to, from);
+            replaceCaptured(pos, (turn ? to + 8 : to - 8), turn ? 'P' : 'p');
             break;
         case CAPTURE:
-            movePiece(pos, turn, to, from);
+            unmovePiece(pos, turn, to, from);
             replaceCaptured(pos, to, undo.captured);
             break;
 
-        case QUEEN_PROMOTION:
-            pos->color[turn] = clearBit(pos->color[turn], from);
+/**
+ *             pos->color[turn] = clearBit(pos->color[turn], from);
             pos->color[turn] = setBit(pos->color[turn], to);
             pos->queen[turn] = setBit(pos->queen[turn], to);
             pos->pawn[turn] = clearBit(pos->pawn[turn], from);
             pos->charBoard[from] = 0;
             pos->charBoard[to] = turn ? 'Q' : 'q';
+            
+ */
+        case QUEEN_PROMOTION:
+            pos->charBoard[from] = !turn ? 'P' : 'p';
+            pos->charBoard[to] = 0;
+            pos->pawn[!turn] = setBit(pos->pawn[!turn], from);
+            pos->queen[!turn] = clearBit(pos->queen[!turn], to);
+            pos->color[!turn] = clearBit(pos->color[!turn], to);
+            pos->color[!turn] = setBit(pos->color[!turn], from);
             break;
         case ROOK_PROMOTION:
-            pos->color[turn] = clearBit(pos->color[turn], from);
-            pos->color[turn] = setBit(pos->color[turn], to);
-            pos->rook[turn] = setBit(pos->rook[turn], to);
-            pos->pawn[turn] = clearBit(pos->pawn[turn], from);
-            pos->charBoard[from] = 0;
-            pos->charBoard[to] = turn ? 'R' : 'r';
+            pos->charBoard[from] = !turn ? 'P' : 'p';
+            pos->charBoard[to] = 0;
+            pos->pawn[!turn] = setBit(pos->pawn[!turn], from);
+            pos->rook[!turn] = clearBit(pos->rook[!turn], to);
+            pos->color[!turn] = clearBit(pos->color[!turn], to);
+            pos->color[!turn] = setBit(pos->color[!turn], from);
             break;
         case BISHOP_PROMOTION:
-            pos->color[turn] = clearBit(pos->color[turn], from);
-            pos->color[turn] = setBit(pos->color[turn], to);
-            pos->bishop[turn] = setBit(pos->bishop[turn], to);
-            pos->pawn[turn] = clearBit(pos->pawn[turn], from);
-            pos->charBoard[from] = 0;
-            pos->charBoard[to] = turn ? 'B' : 'b';
+            pos->charBoard[from] = !turn ? 'P' : 'p';
+            pos->charBoard[to] = 0;
+            pos->pawn[!turn] = setBit(pos->pawn[!turn], from);
+            pos->bishop[!turn] = clearBit(pos->bishop[!turn], to);
+            pos->color[!turn] = clearBit(pos->color[!turn], to);
+            pos->color[!turn] = setBit(pos->color[!turn], from);
             break;
         case KNIGHT_PROMOTION:
-            pos->color[turn] = clearBit(pos->color[turn], from);
-            pos->color[turn] = setBit(pos->color[turn], to);
-            pos->knight[turn] = setBit(pos->knight[turn], to);
-            pos->pawn[turn] = clearBit(pos->pawn[turn], from);
-            pos->charBoard[from] = 0;
-            pos->charBoard[to] = turn ? 'N' : 'n';
+            pos->charBoard[from] = !turn ? 'P' : 'p';
+            pos->charBoard[to] = 0;
+            pos->pawn[!turn] = setBit(pos->pawn[!turn], from);
+            pos->knight[!turn] = clearBit(pos->knight[!turn], to);
+            pos->color[!turn] = clearBit(pos->color[!turn], to);
+            pos->color[!turn] = setBit(pos->color[!turn], from);
             break;
         case QUEEN_CASTLE:
-            movePiece(pos, turn, to, from);
-            movePiece(pos, turn, turn ? 3 : 59, turn ? 0 : 56);
+            unmovePiece(pos, turn, to, from);
+            unmovePiece(pos, turn, !turn ? 3 : 59, !turn ? 0 : 56);
             break;
         case KING_CASTLE:
-            movePiece(pos, turn, to, from);
-            movePiece(pos, turn, turn ? 5 : 61, turn ? 7 : 63);
+            unmovePiece(pos, turn, to, from);
+            unmovePiece(pos, turn, !turn ? 5 : 61, !turn ? 7 : 63);
             break;
 
         case DOUBLE_PAWN_PUSH:
         case QUIET:
         default:
-            movePiece(pos, turn, to, from);
+            unmovePiece(pos, turn, to, from);
             break;
     }
 
-    if(!turn) pos->fullmove_number--;
+    if(turn) pos->fullmove_number--;
     pos->stage = calculateStage(*pos);
     pos->hash_stack_idx--;
 

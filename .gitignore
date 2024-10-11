@@ -27,3 +27,5 @@ releases/0.3.1/chess
 releases/0.3.1/chess.exe
 releases/0.4/craig.engine
 releases/0.4/craig.exe
+*.o
+src/craig-debug.engine
