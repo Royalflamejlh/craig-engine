@@ -69,6 +69,8 @@ void stopStats(SearchStats* stats){
 #include <assert.h>
 #include <time.h>
 
+u8 debug_print_search = 0;
+
 #define DEBUG_TIME
 static struct timespec start_time, end_time;
 
@@ -315,7 +317,9 @@ i32 search_tree(ThreadData *td){
       eval = pv_search(td, MIN_EVAL+1, MAX_EVAL-1, td->depth, 0);
       td->pos = prev_pos;
       #ifdef DEBUG
-      printf("Result from depth window: %d, %d i: %d eval: %d\n", MIN_EVAL+1, MAX_EVAL, td->depth, eval);
+      if(debug_print_search){
+         printf("Result from depth window: %d, %d i: %d eval: %d\n", MIN_EVAL+1, MAX_EVAL, td->depth, eval);
+      }
       #endif
    } else {
       i32 asp_lower, asp_upper;
@@ -323,7 +327,9 @@ i32 search_tree(ThreadData *td){
       asp_upper = asp_lower = ASP_EDGE;
       i32 q = eval;
       #ifdef DEBUG
-      printf("Running with window: %d, %d (eval_prev: %d, depth: %d)\n", q-asp_lower, q+asp_upper, eval, td->depth);
+      if(debug_print_search){
+         printf("Running with window: %d, %d (eval_prev: %d, depth: %d)\n", q-asp_lower, q+asp_upper, eval, td->depth);
+      }
       #endif
       eval = pv_search(td, q-asp_lower, q+asp_upper, td->depth, 0);
       td->pos = prev_pos;
@@ -344,10 +350,12 @@ i32 search_tree(ThreadData *td){
          }
          
          #ifdef DEBUG
-         printf("Running again with window: %d, %d (eval: %d, q: %d, move: ", q-asp_lower, q+asp_upper, eval, q);
-         printMove(td->pv_array[0]);
-         printf(", depth: %d", td->depth);
-         printf(")\n");
+         if(debug_print_search){
+            printf("Running again with window: %d, %d (eval: %d, q: %d, move: ", q-asp_lower, q+asp_upper, eval, q);
+            printMove(td->pv_array[0]);
+            printf(", depth: %d", td->depth);
+            printf(")\n");
+         }
          #endif
 
          q = eval;
@@ -358,11 +366,13 @@ i32 search_tree(ThreadData *td){
    pvFill(td->pos, td->pv_array, td->depth);
 
    #ifdef DEBUG
-   printf("Principal Variation at depth %d: ", td->depth);
-   printPV(td->pv_array, td->depth);
-   printf(" found with score %d\n", eval);
-   printTreeDebug();  
-   printf("\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
+   if(debug_print_search){
+      printf("Principal Variation at depth %d: ", td->depth);
+      printPV(td->pv_array, td->depth);
+      printf(" found with score %d\n", eval);
+      printTreeDebug();  
+      printf("\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+\n");
+   }
    #endif // DEBUG
 
    stopStats(&td->stats);

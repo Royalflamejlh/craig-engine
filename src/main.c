@@ -60,7 +60,11 @@ i32 main(void) {
     printf("info string In profile mode, playing forever.\r\n");
     fflush(stdout);
     playSelfInfinite();
-    #endif  
+    #endif
+
+    #ifdef DEBUG
+    debug_print_search = 1;
+    #endif
 
     launch_threads();
     stopSearch();

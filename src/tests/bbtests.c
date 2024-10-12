@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
+#include "../tree.h"
 #include "../bitboard/bitboard.h"
 #include "../bitboard/magic.h"
 #include "../tree.h"
@@ -19,12 +21,14 @@
 #include "../transposition.h"
 #include "../evaluator.h"
 #include "../globals.h"
+#include "../search.h"
 
+#define DEBUG
 #define MOVE_GEN_TEST
 #define MOVE_MAKE_TEST
 #define PERF_TEST
+#define PUZZLE_TEST
 //#define SEE_TEST
-//#define PUZZLE_TEST
 
 i32 testBB(void) {
     #ifdef PYTHON
@@ -46,7 +50,6 @@ i32 testBB(void) {
         perror("Error opening file");
         return -1;
     }
-
     while (fgets(line, sizeof(line), file)) {
         char *fenEnd = strchr(line, ';');
         if (fenEnd) *fenEnd = '\0';
@@ -71,9 +74,7 @@ i32 testBB(void) {
             }
         }
     }
-
     fclose(file);
-
     printf("Finished Depth 1 Position Check \n");
     #endif
 
@@ -226,7 +227,7 @@ i32 testBB(void) {
 
     printf("\nRunning ERET puzzles.\n");
 
-    file = fopen("puzzles/ERET.epd", "r");
+    file = fopen("../puzzles/ERET.epd", "r");
     if (file == NULL) {
         perror("Error opening file");
         return -1;
@@ -235,22 +236,24 @@ i32 testBB(void) {
 
     while (fgets(line, sizeof(line), file)) {
         char *fen = line;
-        pos = fen_to_position(fen);
-        getBestMove(pos, 5);
-        Move best_move = global_best_move;
-        remove_hash_stack(&pos.hashStack);
+        set_global_position(fen_to_position(fen));
+        SearchParameters sp = {0};
+        sp.depth = MAX_DEPTH - 1;
+        sp.can_shorten = FALSE;
 
-        printPosition(pos, FALSE);
+        start_search(sp);
+        sleep(5);
+        stopSearch();
+
+        printPosition(fen_to_position(fen), FALSE);
         printf(fen);
         printf("\nBest move is: ");
-        printMove(best_move);
+        printMove(get_global_best_move());
         printf("\n");
         printf("Press Enter to Continue\n");
         while( getchar() != '\n' && getchar() != '\r');
     }
 
-    run_get_best_move = FALSE;
-    global_best_move = NO_MOVE;
     printf("\nPuzzle Tests Complete\n");
 
     fclose(file);
