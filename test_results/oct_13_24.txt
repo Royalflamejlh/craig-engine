@@ -1,0 +1,37 @@
+---------------------------------- MOVE GEN TESTING ----------------------------------
+
+Finished Quick Movegen Check 
+
+---------------------------------- MOVE MAKING TESTING ----------------------------------
+
+Starting Move Making Check
+Move Making Check Complete.
+
+---------------------------------- PERFT TESTING ----------------------------------
+
+Running perft suite to depth: 5
+..........................................................................................................................................................
+Perft Suite Completed Successfully!
+
+----------------------------- MOVE SORT TESTING ------------------------------
+
+Running 1000 move sort tests, each with a search time of 1 seconds
+.xxxx..xx.xxxxx.xx...xx.x..x.x..x.xxx..x..xx.x..xxx...x.x..xxx.xx.xxx.xxxxxxxx..x...x...xx..x.xx.x..xxx..xxxxx..x....x.xxx.xxxxxxxx.x.xxxxxx...xxx.x...x.xxx.x..xxxx.xx.x.xx.xx.x....xxx.x..xxx.xxxxx.xxx..xxxxxxxxxxxxxx.......x.x...xx..xx.xxx.x.xx.xx.xxxxxxxxxxxx.xx...x..x..xxxxxx.xxx.xxxx.x.xx.x...xxx.x..x....xxx.xxxxx...xxxxxx..x....x..xx.xxxxx...xxxxxxx..x.xx.xx.xxxx..x.xxxxxx.x.xxxx...x.x...xxxx..xxxx.xxxxxxx..x.x.xx...xx.xx.xx.x..x.xxxxxxx..x.x....xxx..xx.x..xxxx.xxxxx...xxxxx.x...xxxxx..x.xxxxx.xx.xxxx.xxxx.xx.x..xx.x.x.xxx.xx.xx.xx.xx.xx.x.x..xx.xxxxxxx.x.xx..x.x.x..x.xx.x..xx.xx.xxx.x.xx..xxx.x..xx.x.x.x..x..xx...x..xx.xxx.x....xx..x..xxxxx....xx.xx.xxxxx..xxx.xxx..x.x..x.x..x...x.xxxxx....xx.xx..x...xxx.xx.xxxxxxxxxxx..x.xx.xxxx.xxx.xxxxx.xxxx.x.x.x.xx..xxx.......x.x...xxxx..xx.xx.x.x.xx....xx.xx...xxx..x.xxxx...x...x.x.xx...xxxx..xxxxx.xxx.x..xx.x..xx.xx.xxxxxxxx...x..xxx..xxxx...xxxx.xx...xxxxx..xxx.....x.xx.x.xx..xx...xxxx...x..x..xxxxx..xx.xxxx.xxxxxx.xxxxxxx..x.xxxxxxx.xxx.
+Percent of Moves Sorted Correctly: 40.200001 (402/1000)
+
+Move Sorting Test Complete
+
+--------------------------------- PUZZLE TESTING ----------------------------------
+
+
+Running Puzzle test each with a search time of 10 seconds
+xxxxxxxxxx.xxxxxxx.xxxx.xxxxxxxxxxx.xxxxxxxxxxxx..xxxx.xx.xxx.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Percent of Puzzles Correct: 8.490566 (9/106)
+
+Puzzle Tests Complete
+
+---------------------------------- SEE TESTING ------------------------------------
+
+Static exchange tests passed!
+
+--------------------------------------------------------------------------
