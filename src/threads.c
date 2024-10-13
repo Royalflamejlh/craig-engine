@@ -118,7 +118,7 @@ void stopTimerThread() {
     pthread_cond_signal(&timer_cond);
     pthread_mutex_unlock(&timer_mutex);
 
-    #ifdef DEBUG
+    #ifdef DEBUG_PRINT
     printf("info string Timer thread stopped\n");
     fflush(stdout);
     #endif
@@ -128,7 +128,7 @@ void stopTimerThread() {
 void *input_thread_entry(void *arg) {
     (void)arg;
 
-    #ifdef DEBUG
+    #ifdef DEBUG_PRINT
     printf("info string Input Thread running...\n");
     #endif
 
@@ -139,7 +139,7 @@ void *input_thread_entry(void *arg) {
 void *output_thread_entry(void *arg) {
     (void)arg;
 
-    #ifdef DEBUG
+    #ifdef DEBUG_PRINT
     printf("info string Output Thread running...\n");
     #endif
 
@@ -183,7 +183,7 @@ void start_search_threads(){
 }
 
 void stopSearchThreads(){
-    #ifdef DEBUG
+    #ifdef DEBUG_PRINT
     printf("info string stopping search threads\n");
     #endif
     run_get_best_move = false;

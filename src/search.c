@@ -69,13 +69,13 @@ void start_search(SearchParameters params){
  */
 void search_timed_out(void){
     if(best_move_found == FALSE){
-        #ifdef DEBUG
+        #ifdef DEBUG_PRINT
         printf("info string Max time hit setting searchtime to 0\n");
         #endif
         search_time = 0;
     }
     else if(run_get_best_move){
-        #ifdef DEBUG
+        #ifdef DEBUG_PRINT
         printf("info string Max time hit stopping search\n");
         #endif
         stopSearchThreads();
@@ -204,7 +204,7 @@ static u8 update_search_time(ThreadData *td, u8 updated){
  * Loop Function for Search Threads
  */
 static i32 search_loop(ThreadData *td){
-    #ifdef DEBUG
+    #ifdef DEBUG_PRINT
     printf("thread number is %d\n", td->thread_num);
     #endif
     if(search_depth == 0){

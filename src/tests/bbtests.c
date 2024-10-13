@@ -190,13 +190,14 @@ i32 testBB(void) {
     }
     run_get_best_move = TRUE;
 
+    i32 correct = 0;
+    i32 incorrect = 0;
+
     while (fgets(line, sizeof(line), file)) {
         char *fen = line;
         Position puzzle_pos = fen_to_position(fen);
         char* move_str = get_move_from_epd_line(fen);
         if(!move_str){
-            printf("Couldn't get move string from fen: \n %s \n", fen);
-            while(1);
             continue;
         }
         Move correct_move = move_from_str_alg(move_str, &puzzle_pos);
@@ -214,17 +215,28 @@ i32 testBB(void) {
         sp.can_shorten = FALSE;
 
         start_search(sp);
-        sleep(5);
+        sleep(1);
         stopSearch();
 
-        //printPosition(fen_to_position(fen), FALSE);
-        printf(fen);
-        printf("Best move found to be: ");
-        printMove(get_global_best_move());
-        printf("\nBest move is actually: ");
-        printMove(correct_move);
-        printf("\n");
+        Move found_move = get_global_best_move();
+        
+        #ifdef PUZZLE_TEST_VERBOSE
+        if (found_move != correct_move) {
+            printf("\n-------------\n\nTest Failed: Found move ");
+            printMove(found_move);
+            printf(", Correct Move ");
+            printMove(correct_move);
+            printf("\n%s", fen);
+        }
+        #else
+        if (found_move != correct_move) printf("x");
+        else printf(".");
+        #endif
+        if(found_move != correct_move) incorrect++;
+        else correct++;
+        
     }
+    printf("\nPercent Correct: %f (%d/%d)\n", (float)correct / ((float)(incorrect + correct)) * 100.f, correct, incorrect + correct);
 
     printf("\nPuzzle Tests Complete\n");
 
@@ -267,7 +279,7 @@ i32 testBB(void) {
     } 
 
     printf("Static exchange tests passed!\n");
-    #endif //SEE_TEST
+    #endif //SEE_TEST 
 
     #ifdef PYTHON
     python_close();
