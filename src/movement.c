@@ -586,20 +586,20 @@ i32 unmake_move(Position *pos, ThreadData *td, Move move){
         fflush(stdout);
     }
 
-    // u64 actualHash = hashPosition(*pos);
-    // if(pos->hash != actualHash){
-    //     printf("Incremental hash does not match correct hash!\n");
-    //     printf("Found Hash:    %" PRIu64 "\n", pos->hash);
-    //     printf("Expected Hash: %" PRIu64 "\n", actualHash);
-    //     printf("Difference:    %" PRIu64 "\n", pos->hash ^ actualHash);
-    //     debug_hash_difference(pos->hash, actualHash);
-    //     printPosition(*pos, TRUE);
-    //     printf("From unmaking move: ");
-    //     printMove(move);
-    //     printf(".\r\n");
-    //     fflush(stdout);
-    //     while(1);
-    // }
+    u64 actualHash = hashPosition(*pos);
+    if(pos->hash != actualHash){
+        printf("Incremental hash does not match correct hash!\n");
+        printf("Found Hash:    %" PRIu64 "\n", pos->hash);
+        printf("Expected Hash: %" PRIu64 "\n", actualHash);
+        printf("Difference:    %" PRIu64 "\n", pos->hash ^ actualHash);
+        debug_hash_difference(pos->hash, actualHash);
+        printPosition(*pos, TRUE);
+        printf("From unmaking move: ");
+        printMove(move);
+        printf(".\r\n");
+        fflush(stdout);
+        while(1);
+    }
     #endif
 
     return 0;

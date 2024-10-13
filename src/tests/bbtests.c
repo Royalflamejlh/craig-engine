@@ -28,7 +28,7 @@
 #define MOVE_MAKE_TEST
 #define PERF_TEST
 #define SEE_TEST
-//#define MOVE_SORT_TEST
+#define MOVE_SORT_TEST
 #define PUZZLE_TEST
 
 i32 testBB(void) {
@@ -150,38 +150,62 @@ i32 testBB(void) {
 
 
     #ifdef MOVE_SORT_TEST
-    printf("\n----------------------------- MOVE EVAL TESTING ------------------------------\n\n");
+    #define NUM_SORT_TESTS 100
+    #define MS_SEARCH_TIME 5
+    printf("\n----------------------------- MOVE SORT TESTING ------------------------------\n\n");
+    printf("Running %d move sort tests, each with a search time of %d seconds\n", NUM_SORT_TESTS, MS_SEARCH_TIME);
 
-    ThreadData me_td = {0};
-    me_td.pos = get_random_position();
-    Move me_move_list[MAX_MOVES] = {0};
-    i32 me_move_vals[MAX_MOVES] = {0};
-    u16 me_moves = generateLegalMoves(&me_td.pos, me_move_list);
-    eval_movelist(&me_td.pos, me_move_list, me_move_vals, me_moves);
+    i32 ms_correct = 0;
+    i32 ms_incorrect = 0;
 
-    remove_hash_stack(&pos.hashStack);
-    
-    pos = fen_to_position(START_FEN);
-    Move best_move = getBestMove(pos);
-    while(best_move != NO_MOVE){
-        printf("Best move found to be: \n");
-        printMove(best_move);
-        printf("Press Enter to Continue\n");
-        while( getchar() != '\n' && getchar() != '\r');
-        make_move(&pos, best_move);
-        printf("Pos after move: \n");
-        printPosition(pos, FALSE);
-        best_move = getBestMove(pos);
+    for(i32 i = 0; i < NUM_SORT_TESTS; i++){
+        Position ms_pos = get_random_position();
+        Move ms_move_list[MAX_MOVES] = {0};
+        i32 ms_move_vals[MAX_MOVES] = {0};
+        u16 ms_moves = generateLegalMoves(&ms_pos, ms_move_list);
+        eval_movelist(&ms_pos, ms_move_list, ms_move_vals, ms_moves);
+
+        i32 max = INT32_MIN;
+        i32 max_idx = -1;
+        for(i32 j = 0; j < ms_moves; j++){
+            if(ms_move_vals[j] > max){
+                max = ms_move_vals[j];
+                max_idx = j;
+            }
+        }
+        Move sorted_best_move = ms_move_list[max_idx];
+
+        set_global_position(ms_pos);
+        SearchParameters sp = {0};
+        sp.depth = MAX_DEPTH - 1;
+        sp.can_shorten = FALSE;
+
+        start_search(sp);
+        sleep(MS_SEARCH_TIME);
+        stopSearch();
+
+        Move found_move = get_global_best_move();
+        if (found_move != sorted_best_move){
+            printf("x");
+            ms_incorrect++;
+        }
+        else {
+            printf(".");
+            ms_correct++;
+        }
     }
+    printf("\nPercent of Moves Sorted Correctly: %f (%d/%d)\n", (float)ms_correct / ((float)(ms_incorrect + ms_correct)) * 100.f, ms_correct, ms_incorrect + ms_correct);
 
-    remove_hash_stack(&pos.hashStack);
+    printf("\nMove Sorting Test Complete\n");
+
     #endif
 
 
     #ifdef PUZZLE_TEST
+    #define PUZZLE_SEARCH_TIME 3
     printf("\n--------------------------------- PUZZLE TESTING ----------------------------------\n\n");
 
-    printf("\nRunning ERET puzzles.\n");
+    printf("\nRunning Puzzle test each with a search time of %d seconds\n", PUZZLE_SEARCH_TIME);
 
     file = fopen("../puzzles/ERET.epd", "r");
     if (file == NULL) {
@@ -215,7 +239,7 @@ i32 testBB(void) {
         sp.can_shorten = FALSE;
 
         start_search(sp);
-        sleep(1);
+        sleep(PUZZLE_SEARCH_TIME);
         stopSearch();
 
         Move found_move = get_global_best_move();
@@ -236,7 +260,7 @@ i32 testBB(void) {
         else correct++;
         
     }
-    printf("\nPercent Correct: %f (%d/%d)\n", (float)correct / ((float)(incorrect + correct)) * 100.f, correct, incorrect + correct);
+    printf("\nPercent of Puzzles Correct: %f (%d/%d)\n", (float)correct / ((float)(incorrect + correct)) * 100.f, correct, incorrect + correct);
 
     printf("\nPuzzle Tests Complete\n");
 

@@ -238,7 +238,7 @@ static i32 search_loop(ThreadData *td){
         print_on_depth = FALSE;
         print_best_move = TRUE;
     }
-    #ifdef DEBUG
+    #ifdef DEBUG_PRINT
     printf("info string Completed search thread, freeing and exiting.\n");
     #endif
     return 0;

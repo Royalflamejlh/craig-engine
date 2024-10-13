@@ -647,7 +647,17 @@ i8 compare_positions(Position *pos1, Position *pos2) {
     return TRUE;
 }
 
-
+Position get_random_position(){
+    Position pos = fen_to_position(START_FEN);
+    i32 num_moves = random_uint64() % 500;
+    Move move_list[MAX_MOVES] = {0};
+    for (int i = 0; i < num_moves; ++i) {
+        i32 move_count = generateLegalMoves(&pos, move_list);
+        if (move_count == 0) break;
+        make_move(&pos, NULL, move_list[rand() % move_count]);
+    }
+    return pos;
+}
 
 #ifdef PYTHON
 i32 python_init() {

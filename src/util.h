@@ -25,6 +25,7 @@ u32 calculate_rec_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 move
 u32 calculate_max_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 moves_remain, u8 turn);
 
 i8 compare_positions(Position *pos1, Position *pos2);
+Position get_random_position();
 
 void printPV(Move *pv_array, i32 depth);
 void printPVInfo(SearchData data);
