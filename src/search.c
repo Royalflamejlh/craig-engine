@@ -154,16 +154,14 @@ static inline void stop_helpers(){
 
 /*
  * Function to update the search time for the search loop
- * Returns 0
  */
-static u8 update_search_time(ThreadData *td, u8 updated){
-    if(!can_shorten) return 0;
+static void update_search_time(ThreadData *td, u8 updated){
+    if(!can_shorten) return;
 
     // If we are have found a checkmate then we want to stop searching
     if(td->time_pref == HALT_TIME       ||  
         td->found_eval[td->depth] >= (CHECKMATE_VALUE-MAX_MOVES)){
         search_time = 0;
-        return 0;
     }
 
     // If we have a good evaluation and we are in the endgame, extend to look for mate
@@ -197,7 +195,6 @@ static u8 update_search_time(ThreadData *td, u8 updated){
     if(td->time_pref == EXTEND_TIME){
         search_time = (u32)((double)search_time * SEARCH_EXTENSION_LEVEL);
     }
-    return 0;
 }
 
 /*
