@@ -26,10 +26,10 @@ void playSelfInfinite(void);
 #ifdef __PROFILE
 void playSelfInfinite(void){
 
-    Position tempPos = get_global_position();
+    Position tempPos = copy_global_position();
     
     while(generateLegalMoves(tempPos, moveList)){
-        make_move(&tempPos, NULL, get_global_best_move());
+        _make_move(&tempPos, get_global_best_move());
         set_global_position(tempPos);
     }
 }

@@ -5,7 +5,9 @@
 u16 generateLegalMoves(Position* pos,  Move* moveList);
 u16 generateThreatMoves(Position* pos,  Move* moveList);
 u64 generatePinnedPieces(Position* pos);
-i32 make_move(Position *pos, ThreadData *td, Move move);
-i32 unmake_move(Position *pos, ThreadData *td, Move move);
-i32 makeNullMove(Position *pos);
+void make_move(ThreadData *td, Move move);
+void _make_move(Position *pos,  Move move);
+void unmake_move(ThreadData *td, Move move);
+void make_null_move(ThreadData *td);
+void unmake_null_move(ThreadData *td);
 #endif

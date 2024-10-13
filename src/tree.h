@@ -3,7 +3,7 @@
 #include "types.h"
 
 i32 search_tree(ThreadData *td);
-i32 helper_search_tree(ThreadData *td);
+i32 helper_search_tree(ThreadData *td, u32 depth, i32 eval);
 
 i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply);
 i32 helper_pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply);

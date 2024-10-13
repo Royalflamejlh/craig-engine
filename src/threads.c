@@ -156,13 +156,15 @@ void *search_thread_entry(void *arg) {
     free(arg);
     ThreadData td = {0};
     td.thread_num = thread_num;
+    td.is_helper_thread = thread_num >= NUM_MAIN_THREADS;
+    td.pos = copy_global_position();
 
     #ifdef DEBUG_PRINT
     printf("info string Search Thread Starting\n");
     fflush(stdout);
     #endif
-    
-    enter_loop(&td);
+    if(td.is_helper_thread) helper_loop(&td); 
+    else search_loop(&td);
     return NULL;
 }
 

@@ -95,7 +95,7 @@ i32 testBB(void) {
         size = generateLegalMoves(&pos, moveList);
         while(size != 0 && pos.halfmove_clock < 50){
             i32 randMove = rand() % size;
-            make_move(&pos, NULL, moveList[randMove]);
+            _make_move(&pos, moveList[randMove]);
             size = generateLegalMoves(&pos, moveList);
             threatSize = generateThreatMoves(&pos, threatMoveList);
             for(i32 k = 0; k < threatSize; k++){
@@ -150,8 +150,8 @@ i32 testBB(void) {
 
 
     #ifdef MOVE_SORT_TEST
-    #define NUM_SORT_TESTS 100
-    #define MS_SEARCH_TIME 5
+    #define NUM_SORT_TESTS 1000
+    #define MS_SEARCH_TIME 1
     printf("\n----------------------------- MOVE SORT TESTING ------------------------------\n\n");
     printf("Running %d move sort tests, each with a search time of %d seconds\n", NUM_SORT_TESTS, MS_SEARCH_TIME);
 
@@ -202,7 +202,7 @@ i32 testBB(void) {
 
 
     #ifdef PUZZLE_TEST
-    #define PUZZLE_SEARCH_TIME 3
+    #define PUZZLE_SEARCH_TIME 10
     printf("\n--------------------------------- PUZZLE TESTING ----------------------------------\n\n");
 
     printf("\nRunning Puzzle test each with a search time of %d seconds\n", PUZZLE_SEARCH_TIME);

@@ -15,13 +15,13 @@ _Atomic volatile i32 best_move_found;
 _Atomic volatile i32 print_pv_info;
 _Atomic volatile i32 print_best_move;
 
-// Position Data
-static Position global_position;
+// Global Thread Data
+static ThreadData global_td;
 
 // PV Search Data
 static SearchData global_sd;
 
-static pthread_mutex_t mutex_global_position = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mutex_global_td = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t mutex_global_PV = PTHREAD_MUTEX_INITIALIZER;
 
 /*
@@ -34,29 +34,31 @@ void init_globals(){
     print_pv_info = FALSE;
     print_best_move = FALSE;
 
-    pthread_mutex_lock(&mutex_global_position);
-    global_position = fen_to_position(START_FEN);
+    pthread_mutex_lock(&mutex_global_td);
+    memset(&global_td, 0, sizeof(ThreadData));
+    global_td.thread_num = 1;
+    global_td.pos = fen_to_position(START_FEN);
     pthread_mutex_lock(&mutex_global_PV);
     global_sd.pv_array = calloc(MAX_DEPTH, sizeof(Move));
     global_sd.depth = 0;
     global_sd.best_move = NO_MOVE;
     global_sd.eval = 0;
     pthread_mutex_unlock(&mutex_global_PV);
-    pthread_mutex_unlock(&mutex_global_position);
+    pthread_mutex_unlock(&mutex_global_td);
 }
 
 /*
  * Frees Data Store for Global Data
  */
 void free_globals(){
-    pthread_mutex_lock(&mutex_global_position);
+    pthread_mutex_lock(&mutex_global_td);
 
     pthread_mutex_lock(&mutex_global_PV);
     free(global_sd.pv_array);
     global_sd.pv_array = NULL;
 
     pthread_mutex_unlock(&mutex_global_PV);
-    pthread_mutex_unlock(&mutex_global_position);
+    pthread_mutex_unlock(&mutex_global_td);
 }
 
 /*
@@ -101,36 +103,6 @@ u8 update_global_pv(u32 depth, Move* pv_array, i32 eval, SearchStats stats){
 }
 
 /*
- * Sets the global position to the supplied position
- */
-void set_global_position(Position pos){
-    pthread_mutex_lock(&mutex_global_position);
-    global_position = pos;
-    reset_global_pv_data();
-    pthread_mutex_unlock(&mutex_global_position);
-}
-
-/*
- * Gets the global position
- */
-Position get_global_position(){
-    pthread_mutex_lock(&mutex_global_position);
-    Position pos = global_position;
-    pthread_mutex_unlock(&mutex_global_position);
-    return pos;
-}
-
-/*
- * Returns a new copy of the global position
- */
-Position copy_global_position(){
-    pthread_mutex_lock(&mutex_global_position);
-    Position pos = global_position;
-    pthread_mutex_unlock(&mutex_global_position);
-    return pos;
-}
-
-/*
  * Returns the Global Best Move
  */
 Move get_global_best_move() {
@@ -140,6 +112,49 @@ Move get_global_best_move() {
     pthread_mutex_unlock(&mutex_global_PV);
     return move;
 }
+
+/*
+ * Sets the global position to the supplied position
+ * and clears the saved information
+ */
+void set_global_position(Position pos){
+    pthread_mutex_lock(&mutex_global_td);
+    memset(&global_td, 0, sizeof(ThreadData));
+    global_td.thread_num = 1;
+    global_td.pos = pos;
+    reset_global_pv_data();
+    pthread_mutex_unlock(&mutex_global_td);
+}
+
+/*
+ * Returns a new copy of the global position
+ */
+Position copy_global_position(){
+    pthread_mutex_lock(&mutex_global_td);
+    Position pos = global_td.pos;
+    pthread_mutex_unlock(&mutex_global_td);
+    return pos;
+}
+
+/*
+ * Returns a new copy of the global position
+ */
+void set_global_td(ThreadData td){
+    pthread_mutex_lock(&mutex_global_td);
+    global_td = td;
+    pthread_mutex_unlock(&mutex_global_td);
+}
+
+/*
+ * Returns a new copy of the global position
+ */
+ThreadData copy_global_td(){
+    pthread_mutex_lock(&mutex_global_td);
+    ThreadData pos = global_td;
+    pthread_mutex_unlock(&mutex_global_td);
+    return pos;
+}
+
 
 /*
  * Returns the Global PV Data (ALLOCATES MEMORY IN RETURNED PV ARRAY)

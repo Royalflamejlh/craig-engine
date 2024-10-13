@@ -127,30 +127,12 @@ static inline void stop_helpers(){
     resume_helpers(0, MAX_DEPTH+1);
 }
 
-// static inline void helper_wait(){ // TODO: abstract away in threads.h or something for windows
-//     pthread_mutex_lock(&helper_lock);
-//     do_helper_search = FALSE;
-//     while (!do_helper_search) pthread_cond_wait(&helper_cond, &helper_lock); // Block until the helpers are released
-//     pthread_mutex_unlock(&helper_lock);
-// }
-
-
-// static i32 helper_loop(ThreadData *td){
-//     Move pv_array[MAX_DEPTH] = {0};
-//     KillerMoves km = {0};
-//     Position pos = copy_global_position(); 
-//     HashStack hashstack = {0};
-//     SearchStats stats = {0};
-
-//     helpers_run = TRUE;
-//     helper_wait();
-//     while(helpers_run && helpers_search_depth + (thread_num % 3) <= search_depth){
-//         //printf("Helper thread searching at depth %d\n", helpers_search_depth + (thread_num % 3));
-//         helper_search_tree(pos, helpers_search_depth + (thread_num % 3), pv_array, &km, helper_eval, &stats, thread_num);
-//         helper_wait();
-//     }
-//     return 0;
-// }
+static inline void helper_wait(){ // TODO: abstract away in threads.h or something for windows
+    pthread_mutex_lock(&helper_lock);
+    do_helper_search = FALSE;
+    while (!do_helper_search) pthread_cond_wait(&helper_cond, &helper_lock); // Block until the helpers are released
+    pthread_mutex_unlock(&helper_lock);
+}
 
 /*
  * Function to update the search time for the search loop
@@ -197,10 +179,25 @@ static void update_search_time(ThreadData *td, u8 updated){
     }
 }
 
+i32 helper_loop(ThreadData *td){
+    #ifdef DEBUG_PRINT
+    printf("info string entered helper thread, number is %d\n", td->thread_num);
+    #endif
+    helpers_run = TRUE;
+    helper_wait();
+    u32 helper_depth = helpers_search_depth + (td->thread_num % 3);
+    while(helpers_run && helper_depth <= search_depth){
+        //printf("Helper thread searching at depth %d\n", helpers_search_depth + (thread_num % 3));
+        helper_search_tree(td, helper_depth, helper_eval);
+        helper_wait();
+    }
+    return 0;
+}
+
 /*
  * Loop Function for Search Threads
  */
-static i32 search_loop(ThreadData *td){
+i32 search_loop(ThreadData *td){
     #ifdef DEBUG_PRINT
     printf("thread number is %d\n", td->thread_num);
     #endif
@@ -238,21 +235,5 @@ static i32 search_loop(ThreadData *td){
     #ifdef DEBUG_PRINT
     printf("info string Completed search thread, freeing and exiting.\n");
     #endif
-    return 0;
-}
-
-/**
- * Enters the main loop for a Thread
- * depending on the thread type
- */
-i32 enter_loop(ThreadData *td){
-    td->pos = copy_global_position();
-    if(td->thread_num >= NUM_MAIN_THREADS){
-        // helper_loop(td);
-    }
-    else{
-        search_loop(td);
-    }
-    quit_thread();
     return 0;
 }

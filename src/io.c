@@ -56,9 +56,9 @@ static void processMoves(char* str) {
             goto get_next_token;
         }
         //printf("Move String found: %s", moveStr);
-        Position cur = get_global_position();
-        make_move(&cur, NULL, moveStrToType(&cur, moveStr));
-        set_global_position(cur);
+        ThreadData td = copy_global_td();
+        make_move(&td, moveStrToType(&td.pos, moveStr));
+        set_global_td(td);
 get_next_token:
         pch = strtok_r(NULL, " ", &rest);
     }
@@ -145,8 +145,8 @@ void processGoCommand(char* input) {
         params.max_time = 0;
         params.can_shorten = FALSE;
     } else{ 
-        params.max_time = calculate_max_search_time(wtime, winc, btime, binc, movestogo, get_global_position().flags & WHITE_TURN);
-        params.rec_time = calculate_rec_search_time(wtime, winc, btime, binc, movestogo, get_global_position().flags & WHITE_TURN);
+        params.max_time = calculate_max_search_time(wtime, winc, btime, binc, movestogo, copy_global_position().flags & WHITE_TURN);
+        params.rec_time = calculate_rec_search_time(wtime, winc, btime, binc, movestogo, copy_global_position().flags & WHITE_TURN);
         params.can_shorten = TRUE;
     }
     
@@ -207,7 +207,7 @@ static i32 processInput(char* input){
     else if (strncmp(input, "debug", 5) == 0){
         input += 6;
         if (strncmp(input, "pos", 3) == 0) {
-            printPosition(get_global_position(), TRUE);
+            printPosition(copy_global_position(), TRUE);
         }
         else if (strncmp(input, "bestmove", 8) == 0) {
             printf("Current bestmove is: ");
@@ -216,7 +216,7 @@ static i32 processInput(char* input){
         }
         else if (strncmp(input, "list moves", 10) == 0) {
             Move debug_moves[MAX_MOVES];
-            Position tempPos = get_global_position();
+            Position tempPos = copy_global_position();
             u32 size = generateLegalMoves(&tempPos, debug_moves);
             printf("Moves: \n");
             for(u32 i = 0; i < size; i++){
@@ -225,16 +225,16 @@ static i32 processInput(char* input){
             }
         }
         else if (strncmp(input, "eval", 4) == 0){
-            Position tempPos = get_global_position();
+            Position tempPos = copy_global_position();
             printf("Eval: %d\n", eval_position(&tempPos));
         }
         else if (strncmp(input, "play move", 4) == 0){
             printf("Making move: ");
             printMove(get_global_best_move());
             printf("\n");
-            Position tempPos = get_global_position();
-            make_move(&tempPos, NULL, get_global_best_move());
-            set_global_position(tempPos);
+            ThreadData td = copy_global_td();
+            make_move(&td, get_global_best_move());
+            set_global_td(td);
         }
 
     }

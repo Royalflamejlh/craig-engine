@@ -397,7 +397,7 @@ u64 perft(ThreadData *td, i32 depth, u8 print){
     i32 prev_hash_cur_idx = td->hash_stack.cur_idx;
     i32 prev_hash_reset_idx = td->hash_stack.reset_idx;
     #endif
-    make_move(&td->pos, td, move_list[i]);
+    make_move(td, move_list[i]);
 
     #ifdef PYTHON
     checkMoveCount(pos);
@@ -407,11 +407,11 @@ u64 perft(ThreadData *td, i32 depth, u8 print){
         printMoveShort(move_list[i]);
         printf(": %" PRIu64 "\n", count);
     }
-    unmake_move(&td->pos, td, move_list[i]);
+    unmake_move(td, move_list[i]);
 
     #ifdef DEBUG
     if(!compare_positions(&td->pos, &prev_pos)){
-        printf("Error, unmake move did not properly return the position: ");
+        printf("Error in perft, unmake move did not properly return the position: ");
         printMove(move_list[i]);
         printf("\n\nCorrect Position:\n");
         printPosition(prev_pos, TRUE);
@@ -424,7 +424,7 @@ u64 perft(ThreadData *td, i32 depth, u8 print){
         while(1);
     }
     if(prev_hash_reset_idx != td->hash_stack.reset_idx){
-        printf("Hash stack cur_idx doesnt match previous hash stack!\n");
+        printf("Hash stack reset_idx doesnt match previous hash stack!\n");
         while(1);
     }
     td->pos = prev_pos;
@@ -573,14 +573,15 @@ u32 calculate_max_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 move
  * Returns true if the positions are equal
  */
 i8 compare_positions(Position *pos1, Position *pos2) {
+    u8 return_value = TRUE;
     for (i32 i = 0; i < 2; i++) {
         if (pos1->pawn[i] != pos2->pawn[i]) {
             printf("Mismatch at pawn[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->pawn[i], pos2->pawn[i]);
-            return FALSE;
+            return_value = FALSE;
         }
         if (pos1->bishop[i] != pos2->bishop[i]) {
             printf("Mismatch at bishop[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->bishop[i], pos2->bishop[i]);
-            return FALSE;
+            return_value = FALSE;
         }
         if (pos1->knight[i] != pos2->knight[i]) {
             printf("Mismatch at knight[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->knight[i], pos2->knight[i]);
@@ -588,73 +589,79 @@ i8 compare_positions(Position *pos1, Position *pos2) {
         }
         if (pos1->rook[i] != pos2->rook[i]) {
             printf("Mismatch at rook[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->rook[i], pos2->rook[i]);
-            return FALSE;
+            return_value = FALSE;
         }
         if (pos1->queen[i] != pos2->queen[i]) {
             printf("Mismatch at queen[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->queen[i], pos2->queen[i]);
-            return FALSE;
+            return_value = FALSE;
         }
         if (pos1->king[i] != pos2->king[i]) {
             printf("Mismatch at king[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->king[i], pos2->king[i]);
-            return FALSE;
+            return_value = FALSE;
         }
         if (pos1->attack_mask[i] != pos2->attack_mask[i]) {
             printf("Mismatch at attack_mask[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->attack_mask[i], pos2->attack_mask[i]);
-            return FALSE;
+            return_value = FALSE;
         }
         if (pos1->color[i] != pos2->color[i]) {
             printf("Mismatch at color[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->color[i], pos2->color[i]);
-            return FALSE;
+            return_value = FALSE;
         }
     }
     if (pos1->en_passant != pos2->en_passant) {
         printf("Mismatch at en_passant: %" PRIu64 " != %" PRIu64 "\n", pos1->en_passant, pos2->en_passant);
-        return FALSE;
+        return_value = FALSE;
     }
     if (pos1->flags != pos2->flags) {
         printf("Mismatch at flags: %d != %d\n", pos1->flags, pos2->flags);
-        return FALSE;
+        return_value = FALSE;
     }
     if (pos1->pinned != pos2->pinned) {
         printf("Mismatch at pinned: %" PRIu64 " != %" PRIu64 "\n", pos1->pinned, pos2->pinned);
-        return FALSE;
+        return_value = FALSE;
     }
     if (pos1->hash != pos2->hash) {
         printf("Mismatch at hash: %" PRIu64 "!= %" PRIu64 "\n", pos1->hash, pos2->hash);
-        return FALSE;
+        return_value = FALSE;
     }
     if (pos1->material_eval != pos2->material_eval) {
         printf("Mismatch at material_eval: %d != %d\n", pos1->material_eval, pos2->material_eval);
-        return FALSE;
+        return_value = FALSE;
     }
     if (pos1->stage != pos2->stage) {
         printf("Mismatch at stage: %d != %d\n", pos1->stage, pos2->stage);
-        return FALSE;
+        return_value = FALSE;
     }
     if (pos1->halfmove_clock != pos2->halfmove_clock) {
         printf("Mismatch at halfmove_clock: %d != %d\n", pos1->halfmove_clock, pos2->halfmove_clock);
-        return FALSE;
+        return_value = FALSE;
     }
     if (pos1->fullmove_number != pos2->fullmove_number) {
         printf("Mismatch at fullmove_number: %d != %d\n", pos1->fullmove_number, pos2->fullmove_number);
-        return FALSE;
+        return_value = FALSE;
     }
     if (memcmp(pos1->charBoard, pos2->charBoard, 64 * sizeof(char)) != 0) {
         printf("Mismatch at charBoard\n");
-        return FALSE;
+        return_value = FALSE;
     }
 
-    return TRUE;
+    return return_value;
 }
 
+/**
+ * Gets a random position with at least 1 move
+ */
 Position get_random_position(){
     Position pos = fen_to_position(START_FEN);
-    i32 num_moves = random_uint64() % 500;
+    i32 num_moves = random_uint64() % 100;
     Move move_list[MAX_MOVES] = {0};
     for (int i = 0; i < num_moves; ++i) {
         i32 move_count = generateLegalMoves(&pos, move_list);
-        if (move_count == 0) break;
-        make_move(&pos, NULL, move_list[rand() % move_count]);
+        if (move_count == 0) {
+            pos = fen_to_position(START_FEN);
+            continue;
+        }
+        _make_move(&pos, move_list[rand() % move_count]);
     }
     return pos;
 }

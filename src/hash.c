@@ -63,30 +63,30 @@ void debug_hash_difference(u64 hash1, u64 hash2){
 }
 #endif
 
-u64 hashPosition(Position pos){
+u64 hashPosition(Position *pos){
     u64 hash = 0;
 
     //Hash the board
     for (i32 i = 0; i < 64; i++) { 
-        if (pos.charBoard[i] != 0) { 
-            i32 piece = pieceToIndex[(int)pos.charBoard[i]];
+        if (pos->charBoard[i] != 0) { 
+            i32 piece = pieceToIndex[(int)pos->charBoard[i]];
             hash ^= zobristTable[i][piece];
         }
     }
 
     //Hash the enpassant file
-    if(pos.en_passant) {
-        i32 epFile = getlsb(pos.en_passant) % 8;
+    if(pos->en_passant) {
+        i32 epFile = getlsb(pos->en_passant) % 8;
         hash ^= zobristEnPassant[epFile];
     }
     //Hash the turn
-    if(pos.flags & WHITE_TURN) hash ^= zobristTurn;
+    if(pos->flags & WHITE_TURN) hash ^= zobristTurn;
 
     //Hash the castle flags
-    if(pos.flags & W_SHORT_CASTLE) hash ^= zobristCastle[0];
-    if(pos.flags & W_LONG_CASTLE)  hash ^= zobristCastle[1];
-    if(pos.flags & B_SHORT_CASTLE) hash ^= zobristCastle[2];
-    if(pos.flags & B_LONG_CASTLE)  hash ^= zobristCastle[3];
+    if(pos->flags & W_SHORT_CASTLE) hash ^= zobristCastle[0];
+    if(pos->flags & W_LONG_CASTLE)  hash ^= zobristCastle[1];
+    if(pos->flags & B_SHORT_CASTLE) hash ^= zobristCastle[2];
+    if(pos->flags & B_LONG_CASTLE)  hash ^= zobristCastle[3];
 
     return hash;
 }

@@ -19,8 +19,10 @@ void free_globals();
 u8 update_global_pv(u32 depth, Move* pv_array, i32 eval, SearchStats stats);
 
 void set_global_position(Position pos);
-Position get_global_position();
 Position copy_global_position();
+
+void set_global_td(ThreadData td);
+ThreadData copy_global_td();
 
 Move get_global_best_move();
 

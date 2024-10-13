@@ -121,7 +121,7 @@ Position fen_to_position(char* FEN) {
 
     pos.material_eval = eval_material(&pos);
 
-    pos.hash = hashPosition(pos);
+    pos.hash = hashPosition(&pos);
 
     return pos;
 }

@@ -1,7 +1,5 @@
-- Implement an unmake move function
-- Increment the hash with the moves
-- Add better understanding of pawn structures to the engineh
-- Run a testing / puzzle suite to understand strenght with each iteration
-- Move hash stack onto the stack and turn into struct with prev captures and such for unmake move
+# TODO
+
+- Add better understanding of pawn structures to the engine
 - Optimize make move function
 - Optimize pinned piece generation

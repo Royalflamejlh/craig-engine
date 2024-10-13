@@ -158,7 +158,7 @@ static void removeCaptured(Position *pos, i32 square){
         case 'K':
             //pos->king[!turn] = clearBit(pos->king[!turn], square);
             #ifdef DEBUG
-            printf("WARNING ATTEMPTED TO CAPTURE A KING AT POS:\n");
+            printf("\nWARNING ATTEMPTED TO CAPTURE A KING AT POS:\n");
             printPosition(*pos, TRUE);
             while(TRUE){};
             #else
@@ -217,7 +217,29 @@ static void replaceCaptured(Position *pos, i32 square, char piece){
     return;
 }
 
-i32 make_move(Position *pos, ThreadData *td, Move move){
+void make_move(ThreadData *td, Move move){
+    Undo *undo = &td->undo_stack.undo[++td->undo_stack.idx];
+    undo->attack_mask[0] = td->pos.attack_mask[0];
+    undo->attack_mask[1] = td->pos.attack_mask[1];
+    undo->pinned         = td->pos.pinned;
+    undo->en_passant     = td->pos.en_passant;
+    undo->flags          = td->pos.flags;
+    undo->halfmove_clock = td->pos.halfmove_clock;
+    undo->hash           = td->pos.hash;
+    undo->material_eval  = td->pos.material_eval;
+    undo->captured       = td->pos.charBoard[GET_TO(move)];
+
+    undo->hash_reset_idx = td->hash_stack.reset_idx;
+
+
+    _make_move(&td->pos, move);
+
+    td->hash_stack.cur_idx = (td->hash_stack.cur_idx + 1) % HASHSTACK_SIZE;
+    if(td->pos.halfmove_clock == 0) td->hash_stack.reset_idx = td->hash_stack.cur_idx;
+    td->hash_stack.hash[td->hash_stack.cur_idx] = td->pos.hash;    
+}
+
+void _make_move(Position *pos,  Move move){
     #ifdef DEBUG
     if(move == NO_MOVE) printf("WARNING ILLEGAL NO-MOVE IN MAKE MOVE\n");
     #endif
@@ -225,21 +247,6 @@ i32 make_move(Position *pos, ThreadData *td, Move move){
     u8 prev_flags = pos->flags;
     i32 from = GET_FROM(move);
     i32 to   = GET_TO(move);
-
-    if(td){
-        Undo *undo = &td->undo_stack.undo[++td->undo_stack.idx];
-        undo->attack_mask[0] = pos->attack_mask[0];
-        undo->attack_mask[1] = pos->attack_mask[1];
-        undo->pinned         = pos->pinned;
-        undo->en_passant     = pos->en_passant;
-        undo->flags          = pos->flags;
-        undo->halfmove_clock = pos->halfmove_clock;
-        undo->hash           = pos->hash;
-        undo->material_eval  = pos->material_eval;
-        undo->captured       = pos->charBoard[to];
-
-        undo->hash_reset_idx = td->hash_stack.reset_idx;
-    }
 
     pos->hash = hash_update_turn(pos->hash);
     if(pos->en_passant) pos->hash = hash_update_enpassant(pos->hash, getlsb(pos->en_passant));
@@ -419,15 +426,9 @@ i32 make_move(Position *pos, ThreadData *td, Move move){
     
     pos->stage = calculateStage(pos);
 
-    if(td){
-        td->hash_stack.cur_idx = (td->hash_stack.cur_idx + 1) % HASHSTACK_SIZE;
-        if(pos->halfmove_clock == 0) td->hash_stack.reset_idx = td->hash_stack.cur_idx;
-        td->hash_stack.hash[td->hash_stack.cur_idx] = pos->hash;    
-    }
-
     #ifdef DEBUG
     if(count_bits(pos->king[0]) != 1 || count_bits(pos->king[1]) != 1){
-        printf("Illegal Position found without correct number of kings.\n");
+        printf("Illegal Position found without correct number of kings after make move.\n");
         printPosition(*pos, TRUE);
 
         printf("From move: ");
@@ -436,9 +437,9 @@ i32 make_move(Position *pos, ThreadData *td, Move move){
         fflush(stdout);
     }
 
-    u64 actualHash = hashPosition(*pos);
+    u64 actualHash = hashPosition(pos);
     if(pos->hash != actualHash){
-        printf("Incremental hash does not match correct hash!\n");
+        printf("Incremental hash does not match correct hash after make move!\n");
         printf("Found Hash:    %" PRIu64 "\n", pos->hash);
         printf("Expected Hash: %" PRIu64 "\n", actualHash);
         printf("Difference:    %" PRIu64 "\n", pos->hash ^ actualHash);
@@ -451,15 +452,14 @@ i32 make_move(Position *pos, ThreadData *td, Move move){
         while(1);
     }
     #endif
-
-    return 0;
 }
 
-i32 unmake_move(Position *pos, ThreadData *td, Move move){
+void unmake_move(ThreadData *td, Move move){
     #ifdef DEBUG
     if(move == NO_MOVE) printf("WARNING ILLEGAL NO-MOVE IN UNMAKE MOVE\n");
     if(!td) printf("NO THREAD DATA FOUND IN UNMAKE MOVE!\n");
     #endif
+    Position *pos = &td->pos;
     Undo undo = td->undo_stack.undo[td->undo_stack.idx--];
     i32 turn = pos->flags & WHITE_TURN;
     i32 from = GET_FROM(move);
@@ -572,14 +572,14 @@ i32 unmake_move(Position *pos, ThreadData *td, Move move){
     }
 
     if(turn) pos->fullmove_number--;
+
+    td->hash_stack.cur_idx = (td->hash_stack.cur_idx - 1) % HASHSTACK_SIZE;
     
     pos->stage = calculateStage(pos);
 
-    td->hash_stack.cur_idx = (td->hash_stack.cur_idx - 1) % HASHSTACK_SIZE;
-
     #ifdef DEBUG
     if(count_bits(pos->king[0]) != 1 || count_bits(pos->king[1]) != 1){
-        printf("Illegal Position found without correct number of kings.\n");
+        printf("Illegal Position found without correct number of kings after unmake move!\n");
         printPosition(*pos, TRUE);
 
         printf("From unmaking move: ");
@@ -588,9 +588,9 @@ i32 unmake_move(Position *pos, ThreadData *td, Move move){
         fflush(stdout);
     }
 
-    u64 actualHash = hashPosition(*pos);
+    u64 actualHash = hashPosition(pos);
     if(pos->hash != actualHash){
-        printf("Incremental hash does not match correct hash!\n");
+        printf("Incremental hash does not match correct hash after unmake move!\n");
         printf("Found Hash:    %" PRIu64 "\n", pos->hash);
         printf("Expected Hash: %" PRIu64 "\n", actualHash);
         printf("Difference:    %" PRIu64 "\n", pos->hash ^ actualHash);
@@ -604,26 +604,98 @@ i32 unmake_move(Position *pos, ThreadData *td, Move move){
     }
     #endif
 
-    return 0;
 }
 
-i32 makeNullMove(Position *pos){
+void make_null_move(ThreadData *td){
+    Position *pos = &td->pos;
+    Undo *undo = &td->undo_stack.undo[++td->undo_stack.idx];
+    undo->pinned         = pos->pinned;
+    undo->en_passant     = pos->en_passant;
+    undo->hash_reset_idx = td->hash_stack.reset_idx;
 
     pos->halfmove_clock++;
     if(!(pos->flags & TURN_MASK)) pos->fullmove_number++;
 
     pos->flags ^= TURN_MASK;
 
-    // If there was an en passant square we have to regen pinned pieces
     if(pos->en_passant){
+        pos->hash = hash_update_enpassant(pos->hash, getlsb(pos->en_passant));
         pos->en_passant = 0ULL;
-        pos->pinned = generatePinnedPieces(pos);
+        pos->pinned = generatePinnedPieces(&td->pos);
     }
 
-    pos->hash = hashPosition(*pos);
+    pos->hash = hash_update_turn(pos->hash);
 
-    return 0;
+    pos->stage = calculateStage(pos);
+
+    #ifdef DEBUG
+    if(count_bits(pos->king[0]) != 1 || count_bits(pos->king[1]) != 1){
+        printf("Illegal Position found without correct number of kings after null move!\n");
+        printPosition(*pos, TRUE);
+
+        printf("From null move:.\r\n ");
+        fflush(stdout);
+    }
+
+    u64 actualHash = hashPosition(pos);
+    if(pos->hash != actualHash){
+        printf("Incremental hash does not match correct hash after null move!\n");
+        printf("Found Hash:    %" PRIu64 "\n", pos->hash);
+        printf("Expected Hash: %" PRIu64 "\n", actualHash);
+        printf("Difference:    %" PRIu64 "\n", pos->hash ^ actualHash);
+        debug_hash_difference(pos->hash, actualHash);
+        printPosition(*pos, TRUE);
+        printf("From null move: .\r\n");
+        fflush(stdout);
+        while(1);
+    }
+    #endif
 }
+
+
+void unmake_null_move(ThreadData *td){
+    Position *pos = &td->pos;
+    Undo undo = td->undo_stack.undo[td->undo_stack.idx--];
+    pos->pinned              = undo.pinned;
+    pos->en_passant          = undo.en_passant;
+    td->hash_stack.reset_idx = undo.hash_reset_idx;
+    
+    pos->hash = hash_update_turn(pos->hash);
+    pos->flags ^= TURN_MASK;
+
+    if(pos->en_passant){
+        pos->hash = hash_update_enpassant(pos->hash, getlsb(pos->en_passant));
+    }
+
+    if(!(pos->flags & TURN_MASK)) pos->fullmove_number--;
+    pos->halfmove_clock--;
+
+    pos->stage = calculateStage(pos);
+
+    #ifdef DEBUG
+    if(count_bits(pos->king[0]) != 1 || count_bits(pos->king[1]) != 1){
+        printf("Illegal Position found without correct number of kings after unmake null move!\n");
+        printPosition(*pos, TRUE);
+
+        printf("From null move:.\r\n ");
+        fflush(stdout);
+    }
+
+    u64 actualHash = hashPosition(pos);
+    if(pos->hash != actualHash){
+        printf("Incremental hash does not match correct hash after unmake null move!\n");
+        printf("Found Hash:    %" PRIu64 "\n", pos->hash);
+        printf("Expected Hash: %" PRIu64 "\n", actualHash);
+        printf("Difference:    %" PRIu64 "\n", pos->hash ^ actualHash);
+        debug_hash_difference(pos->hash, actualHash);
+        printPosition(*pos, TRUE);
+        printf("From null move: .\r\n");
+        fflush(stdout);
+        while(1);
+    }
+    #endif
+}
+
 
 static u64 generatePinnedPiecesColor(Position* pos, i32 turn){
     u64 pos_pinners;

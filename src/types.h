@@ -303,7 +303,8 @@ typedef enum {
 } TimePreference;
 
 typedef struct{
-    u32 thread_num;
+    i32 thread_num;
+    u8 is_helper_thread;
     Move pv_array[MAX_DEPTH];
     KillerMoves km;
     u32 depth;
