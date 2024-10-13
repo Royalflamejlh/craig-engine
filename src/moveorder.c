@@ -128,30 +128,33 @@ void eval_movelist(Position* pos, Move* moveList, i32* moveVals, i32 size){
         i32 fr_piece_i = pieceToIndex[fr_piece];
         i32 to_piece_i = pieceToIndex[to_piece];
 
+        i32 phase = pos->stage; // Use to mimic phase from the stage
+        if(phase) phase--;
+
         switch(GET_FLAGS(move)){
             case QUEEN_PROMO_CAPTURE:
                 moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + MoveQueenValue;
-                moveVals[i] += PST[pos->stage][to_piece_i][to_sq];
+                moveVals[i] += PST[phase][to_piece_i][to_sq];
                 break;
             case ROOK_PROMO_CAPTURE:
                 moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + MoveRookValue;
-                moveVals[i] += PST[pos->stage][to_piece_i][to_sq];
+                moveVals[i] += PST[phase][to_piece_i][to_sq];
                 break;
             case BISHOP_PROMO_CAPTURE:
                 moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + MoveBishopValue;
-                moveVals[i] += PST[pos->stage][to_piece_i][to_sq];
+                moveVals[i] += PST[phase][to_piece_i][to_sq];
                 break;
             case KNIGHT_PROMO_CAPTURE:
                 moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i) + MoveKnightValue;
-                moveVals[i] += PST[pos->stage][to_piece_i][to_sq];
+                moveVals[i] += PST[phase][to_piece_i][to_sq];
                 break;
             case EP_CAPTURE:
                 moveVals[i] += see(pos, to_sq, ( WHITE_PAWN + ((pos->flags & TURN_MASK) * 6) ), fr_sq, fr_piece_i);
-                moveVals[i] += PST[pos->stage][to_piece_i][to_sq];
+                moveVals[i] += PST[phase][to_piece_i][to_sq];
                 break;
             case CAPTURE:
                 moveVals[i] += see(pos, to_sq, to_piece_i, fr_sq, fr_piece_i);
-                moveVals[i] += PST[pos->stage][to_piece_i][to_sq];
+                moveVals[i] += PST[phase][to_piece_i][to_sq];
                 break;
             default:
                 break;
@@ -165,32 +168,32 @@ static u64 least_valuable_attacker(Position* pos, u64 attadef, Turn turn, PieceI
     u64 subset = attadef & pos->pawn[turn]; // Pawn
     if (subset){
         *piece = WHITE_PAWN + 6*turn;
-        return subset & -subset;
+        return subset & (~subset + 1);
     }
     subset = attadef & pos->knight[turn]; // Knight
     if (subset){
         *piece = WHITE_KNIGHT + 6*turn;
-        return subset & -subset;
+        return subset & (~subset + 1);
     }
     subset = attadef & pos->bishop[turn]; // Bishops
     if (subset){
         *piece = WHITE_BISHOP + 6*turn;
-        return subset & -subset;
+        return subset & (~subset + 1);
     }
     subset = attadef & pos->rook[turn]; // Rooks
     if (subset){
         *piece = WHITE_ROOK + 6*turn;
-        return subset & -subset;
+        return subset & (~subset + 1);
     }
     subset = attadef & pos->queen[turn]; // Queens
     if (subset){
         *piece = WHITE_QUEEN + 6*turn;
-        return subset & -subset;
+        return subset & (~subset + 1);
     }
     subset = attadef & pos->king[turn]; // Kings
     if (subset){
         *piece = WHITE_KING + 6*turn;
-        return subset & -subset;
+        return subset & (~subset + 1);
     }
    return 0; // None were found
 }

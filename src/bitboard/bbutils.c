@@ -186,6 +186,24 @@ i32 PositionToFen(Position pos, char* FEN) {
     return index;
 }
 
+i64 get_perft_fen_depth(const char *fen, int depth) {
+    char pattern[10];
+    snprintf(pattern, sizeof(pattern), "D%d", depth);
+    const char *pos = strstr(fen, pattern);
+
+    if (pos) {
+        pos += strlen(pattern);
+        while (*pos && isspace((unsigned char)*pos)) {
+            pos++;
+        }
+        return strtoll(pos, NULL, 10);
+    }
+
+    return -1;
+}
+
+
+
 
 void generateBetweenMasks() {
     for (i32 sq1 = 0; sq1 < 64; sq1++) {

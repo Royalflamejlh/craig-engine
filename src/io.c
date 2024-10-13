@@ -190,7 +190,7 @@ static i32 processInput(char* input){
         processGoCommand(input + 3);
     }
     else if (strncmp(input, "stop", 4) == 0){
-        #ifdef DEBUG
+        #ifdef DEBUG_PRINT
         printf("info string Stopping\n");
         #endif
         stopSearch();

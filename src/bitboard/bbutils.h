@@ -75,6 +75,7 @@ void generateDiagonalMasks();
 
 void printBB(u64 BB);
 Position fen_to_position(char* FEN);
+i64 get_perft_fen_depth(const char *fen, int depth);
 i32 PositionToFen(Position pos, char* FEN);
 void printPosition(Position position, char verbose);
 void printDebug(Position position);

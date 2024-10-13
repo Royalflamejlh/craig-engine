@@ -22,13 +22,14 @@
 #include "../evaluator.h"
 #include "../globals.h"
 #include "../search.h"
+#include "../moveorder.h"
 
-#define DEBUG
 #define MOVE_GEN_TEST
 #define MOVE_MAKE_TEST
 #define PERF_TEST
+#define SEE_TEST
+//#define MOVE_SORT_TEST
 #define PUZZLE_TEST
-//#define SEE_TEST
 
 i32 testBB(void) {
     #ifdef PYTHON
@@ -45,9 +46,9 @@ i32 testBB(void) {
     printf("\n---------------------------------- MOVE GEN TESTING ----------------------------------\n\n");
     
 
-    file = fopen("perftsuite.epd", "r");
+    file = fopen("../perftsuite.epd", "r");
     if (file == NULL) {
-        perror("Error opening file");
+        perror("Error opening file ../perftsuite.epd");
         return -1;
     }
     while (fgets(line, sizeof(line), file)) {
@@ -68,6 +69,7 @@ i32 testBB(void) {
                     for (i32 i = 0; i < size; i++) {
                         printMove(moveList[i]);
                     }
+                    while(1);
                     return -1;
                 }
                 break;
@@ -75,7 +77,7 @@ i32 testBB(void) {
         }
     }
     fclose(file);
-    printf("Finished Depth 1 Position Check \n");
+    printf("Finished Quick Movegen Check \n");
     #endif
 
     #ifdef MOVE_GEN_TEST
@@ -84,7 +86,7 @@ i32 testBB(void) {
     srand((unsigned) time(&t));
 
     
-    printf("Starting Quick Check\n");
+    printf("Starting Move Making Check\n");
     Move threatMoveList[MAX_MOVES];
     i32 threatSize;
     for(i32 j = 0; j < 100; j++){
@@ -108,69 +110,54 @@ i32 testBB(void) {
             }
         }
     }
-    printf("Check Complete.\n");
+    printf("Move Making Check Complete.\n");
 
     #endif
 
 
     #ifdef PERF_TEST
     printf("\n---------------------------------- PERFT TESTING ----------------------------------\n\n");
-
-    printf("Perft from default position:\n");
-    ThreadData temp_td = {0};
-    temp_td.pos = fen_to_position(START_FEN);
-    for(i32 depth = 1; depth < 4; depth++){
-        u64 num_moves = perft(&temp_td, depth, FALSE);
-        printf("Perft output is %ld for depth %d\n", (long)num_moves, depth);
-    }
-
-    printf("\nComplete, running perft suite.\n");
-
-    file = fopen("perftsuite.epd", "r");
+    int perft_depth = 5;
+    printf("Running perft suite to depth: %d\n", perft_depth);
+    file = fopen("../perftsuite.epd", "r");
     if (file == NULL) {
         perror("Error opening file");
         return -1;
     }
-
+    ThreadData temp_td = {0};
     while (fgets(line, sizeof(line), file)) {
         char *fen = line;
         temp_td.pos = fen_to_position(fen);
-        //printf("Testing: %s", fen);
-        for(i32 depth = 1; depth < 2; depth++){
-            perft(&temp_td, depth, FALSE);
-            // i64 num_moves = 
-            // printf("D%d: %lld |", depth, (long long int)num_moves);
+        for(int depth = 1; depth < perft_depth; depth++){
+            i64 num_moves = perft(&temp_td, depth, FALSE);
+            i64 real_num_moves = get_perft_fen_depth(fen, depth);
+            if(real_num_moves == -1) continue;
+            if(num_moves != real_num_moves){
+                printf("Incorrect number of moves found for fen: \n %s \n", fen);
+                printf("Found %" PRIi64 " moves, expected %" PRIi64 " moves at depth %d \n", num_moves, real_num_moves, depth);
+                fflush(stdout);
+                while(1);
+            }
         }
-        //printf("\n\n");
+        printf(".");
+        fflush(stdout);
     }
-    printf("\nPerft Suite Complete\n");
+
+    printf("\nPerft Suite Completed Successfully!\n");
 
     fclose(file);
     #endif
 
 
-    #ifdef NODE_TEST
-    printf("\n---------------------------------- NODE TESTING ----------------------------------\n\n");
+    #ifdef MOVE_SORT_TEST
+    printf("\n----------------------------- MOVE EVAL TESTING ------------------------------\n\n");
 
-    pos = fen_to_position("START_FEN");
-    printPosition(pos, FALSE);
-
-    Move moveListNode[MAX_MOVES];
-    i32 sizeNode = 0;
-    i32 moveVals[MAX_MOVES] = {0};
-    sizeNode = generateLegalMoves(pos, moveListNode);
-    evalMoves(moveListNode, moveVals, sizeNode, NO_MOVE, NULL, 0, pos);
-    for(i32 i = 0; i < sizeNode; i++){
-        printf("Move found with move value of %d:\n", moveVals[i]);
-        printMove(moveListNode[i]);
-    }
-    printf("\n----------------------------- SELECT SORT TESTING ------------------------------\n\n");
-    for (i32 i = 0; i < sizeNode; i++)  {
-        select_sort(i, moveListNode, moveVals, sizeNode);
-        printf("Move with value %d selected at pos %d\n", moveVals[i], i);
-        printMove(moveListNode[i]);
-    }
-    printf("\n--------------------------------------------------------------------------\n");
+    ThreadData me_td = {0};
+    me_td.pos = get_random_position();
+    Move me_move_list[MAX_MOVES] = {0};
+    i32 me_move_vals[MAX_MOVES] = {0};
+    u16 me_moves = generateLegalMoves(&me_td.pos, me_move_list);
+    eval_movelist(&me_td.pos, me_move_list, me_move_vals, me_moves);
 
     remove_hash_stack(&pos.hashStack);
     
@@ -190,39 +177,8 @@ i32 testBB(void) {
     remove_hash_stack(&pos.hashStack);
     #endif
 
-    #ifdef HASH_TEST
-    printf("\n---------------------------------- HASH TESTING ----------------------------------\n\n");
-
-    pos = fen_to_position(START_FEN);
-    printf("Hash %d is: %" PRIu64 "\n", 0, pos.hash);
-    Move moveList_hash[MAX_MOVES];
-    i32 size_hash = 0;
-    i32 moveVals[MAX_MOVES] = {0};
-    
-
-    for (i32 i = 0; i < 100; i++)  {
-        size_hash = generateLegalMoves(pos, moveList_hash);
-        evalMoves(moveList_hash, moveVals, size_hash, NO_MOVE, NULL, 0, pos);
-        select_sort(0, moveList_hash, moveVals, size_hash);
-        make_move(&pos, moveList_hash[0]);
-        printf("Hash %d is: %" PRIu64 "\n", i+1, pos.hash);
-    }
-
-    printf("Now going through Hash Table: (Size : %d) \n", pos.hashStack.current_idx);
-    for(i32 i = 0; i < pos.hashStack.current_idx; i++){
-        printf("HashTable[%d] : %" PRIu64 "\n", i, pos.hashStack.ptr[i]);
-    }
-
-    printf("Printing Hash Table Since Last Unique Move (at: %d): \n", pos.hashStack.last_reset_idx);
-    for(i32 i = pos.hashStack.last_reset_idx; i != pos.hashStack.current_idx; i = (i+1) % HASHSTACK_SIZE){
-        printf("HashTable[%d] : %" PRIu64 "\n", i, pos.hashStack.ptr[i]);
-    }
-
-    remove_hash_stack(&pos.hashStack);
-    #endif
 
     #ifdef PUZZLE_TEST
-    #ifdef DEBUG
     printf("\n--------------------------------- PUZZLE TESTING ----------------------------------\n\n");
 
     printf("\nRunning ERET puzzles.\n");
@@ -236,7 +192,23 @@ i32 testBB(void) {
 
     while (fgets(line, sizeof(line), file)) {
         char *fen = line;
-        set_global_position(fen_to_position(fen));
+        Position puzzle_pos = fen_to_position(fen);
+        char* move_str = get_move_from_epd_line(fen);
+        if(!move_str){
+            printf("Couldn't get move string from fen: \n %s \n", fen);
+            while(1);
+            continue;
+        }
+        Move correct_move = move_from_str_alg(move_str, &puzzle_pos);
+        if(correct_move == NO_MOVE){
+            printf("Move was not found from move string %s\n and fen %s \n", move_str, fen);
+            free(move_str);
+            while(1);
+            continue;
+        }
+        free(move_str);
+
+        set_global_position(puzzle_pos);
         SearchParameters sp = {0};
         sp.depth = MAX_DEPTH - 1;
         sp.can_shorten = FALSE;
@@ -245,49 +217,63 @@ i32 testBB(void) {
         sleep(5);
         stopSearch();
 
-        printPosition(fen_to_position(fen), FALSE);
+        //printPosition(fen_to_position(fen), FALSE);
         printf(fen);
-        printf("\nBest move is: ");
+        printf("Best move found to be: ");
         printMove(get_global_best_move());
+        printf("\nBest move is actually: ");
+        printMove(correct_move);
         printf("\n");
-        printf("Press Enter to Continue\n");
-        while( getchar() != '\n' && getchar() != '\r');
     }
 
     printf("\nPuzzle Tests Complete\n");
 
     fclose(file);
 
-    #endif //Debug
-    #endif //Puzzle Test
+    #endif
 
     #ifdef SEE_TEST
     printf("\n---------------------------------- SEE TESTING ------------------------------------\n\n");
     Position testpos = fen_to_position("1k1r4/1pp4p/p7/4p3/8/P5P1/1PP4P/2K1R3 w - -");
-    i32 val = see(testpos, E5, BLACK_PAWN, E1, WHITE_ROOK);
-    printf("See val: %d\n", val);
+    i32 val = see(&testpos, E5, BLACK_PAWN, E1, WHITE_ROOK);
+    if(val < 0){
+        printf("SEE returned incorrect exchange winner (see val: %d) at position: \n", val);
+        printPosition(testpos, TRUE);
+        while(1);
+    }
 
     testpos = fen_to_position("1k1r3q/1ppn3p/p4b2/4p3/8/P2N2P1/1PP1R1BP/2K1Q3 w - -");
-    val = see(testpos, E5, BLACK_PAWN, D3, WHITE_KNIGHT);
-    printf("See val: %d\n", val);
+    val = see(&testpos, E5, BLACK_PAWN, D3, WHITE_KNIGHT);
+    if(val > 0){
+        printf("SEE returned incorrect exchange winner (see val: %d) at position: \n", val);
+        printPosition(testpos, TRUE);
+        while(1);
+    }
 
     testpos = fen_to_position("1k1r3q/1ppn3p/p4b2/4P3/8/P2N2P1/1PP1R1BP/2K1Q3 b - -");
-    val = see(testpos, E5, WHITE_PAWN, D7, BLACK_KNIGHT);
-    printf("See val: %d\n", val);
+    val = see(&testpos, E5, WHITE_PAWN, D7, BLACK_KNIGHT);
+        if(val > 0){
+        printf("SEE returned incorrect exchange winner (see val: %d) at position: \n", val);
+        printPosition(testpos, TRUE);
+        while(1);
+    }
 
     testpos = fen_to_position("rnkr3b/6pp/2p1b3/p3p1N1/2q1N3/1R3Q2/P1PPPP1P/2BKR3 w - -");
-    val = see(testpos, E6, BLACK_BISHOP, G5, WHITE_KNIGHT);
-    printf("See val: %d\n", val);
+    val = see(&testpos, E6, BLACK_BISHOP, G5, WHITE_KNIGHT);
+    if(val < 0){
+        printf("SEE returned incorrect exchange winner (see val: %d) at position: \n", val);
+        printPosition(testpos, TRUE);
+        while(1);
+    } 
 
-    
-
-    printf("Press Enter to Continue\n");
-    while( getchar() != '\n' && getchar() != '\r');
+    printf("Static exchange tests passed!\n");
     #endif //SEE_TEST
 
     #ifdef PYTHON
     python_close();
     #endif
+
+    printf("\n--------------------------------------------------------------------------\n");
 
     return 0;
 }

@@ -5,14 +5,6 @@
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
-#ifdef DEBUG
-#include <stdio.h>
-#define DEBUG_PRINT(x) printf(x)
-#else
-#define DEBUG_PRINT(x) do {} while (0)
-#endif
-
-
 #include "types.h"
 void printMove(Move move);
 void printBestMove(Move move);
@@ -22,6 +14,10 @@ u64 perft(ThreadData *td, i32 depth, u8 print);
 i32 checkMoveCount(Position pos);
 i32 python_init();
 i32 python_close();
+
+
+char* get_move_from_epd_line(const char* line);
+Move move_from_str_alg(char* str, Position *pos);
 
 Move moveStrToType(Position* pos, char* str);
 Stage calculateStage(Position pos);

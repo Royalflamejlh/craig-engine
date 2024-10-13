@@ -109,7 +109,7 @@ i32 startTimerThread(i64 duration_ms) {
  * Cancels the timer thread
  */
 void stopTimerThread() {
-    #ifdef DEBUG
+    #ifdef DEBUG_PRINT
     printf("info string Stopping timer thread\n");
     fflush(stdout);
     #endif
@@ -157,7 +157,7 @@ void *search_thread_entry(void *arg) {
     ThreadData td = {0};
     td.thread_num = thread_num;
 
-    #ifdef DEBUG
+    #ifdef DEBUG_PRINT
     printf("info string Search Thread Starting\n");
     fflush(stdout);
     #endif
@@ -167,7 +167,7 @@ void *search_thread_entry(void *arg) {
 }
 
 void start_search_threads(){
-    #ifdef DEBUG
+    #ifdef DEBUG_PRINT
     printf("info string starting search threads\n");
     #endif
     run_get_best_move = TRUE;

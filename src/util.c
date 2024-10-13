@@ -163,6 +163,262 @@ void printMoveSpaced(Move move){
     }
 }
 
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdlib.h>
+
+/**
+ * Extracts the move(s) after the 'bm' operation in an EPD line.
+ * Returns a dynamically allocated string containing the move(s).
+ * The caller is responsible for freeing the allocated memory.
+ */
+char* get_move_from_epd_line(const char* line) {
+    const char* bm_pos = strstr(line, " bm ");
+    if (!bm_pos) {
+        bm_pos = strstr(line, "bm ");
+        if (!bm_pos) {
+            return NULL;
+        }
+    }
+    bm_pos += 3;
+    while (isspace((unsigned char)*bm_pos)) {
+        bm_pos++;
+    }
+    const char* semicolon_pos = strchr(bm_pos, ';');
+    if (!semicolon_pos) {
+        semicolon_pos = line + strlen(line);
+    }
+    size_t move_len = semicolon_pos - bm_pos;
+
+    char* move_str = (char*)malloc(move_len + 1);
+    if (!move_str) {
+        return NULL;
+    }
+    strncpy(move_str, bm_pos, move_len);
+    move_str[move_len] = '\0';
+
+    size_t end = move_len;
+    while (end > 0 && isspace((unsigned char)move_str[end - 1])) {
+        move_str[end - 1] = '\0';
+        end--;
+    }
+    return move_str;
+}
+
+
+/**
+ * Gets a move from an algebraic notation string, using a list of legal moves.
+ */
+Move move_from_str_alg(char* str, Position *pos){
+    i32 len = strlen(str);
+    printf("Parsing move string: %s (length: %d)\n", str, len);
+    i32 idx = 0;
+
+    Move move_list[MAX_MOVES] = {0};
+    i32 move_count = generateLegalMoves(pos, move_list);
+    printf("Generated %d legal moves.\n", move_count);
+
+    char piece_char = 'P'; // Default to pawn
+    i32 from_file = -1;    // 0-7
+    i32 from_rank = -1;    // 0-7
+    i32 to_file = -1;      // 0-7
+    i32 to_rank = -1;      // 0-7
+    u8 is_capture = 0;
+    char promotion_piece = '\0'; // 'N', 'B', 'R', 'Q'
+    u8 is_castling = 0;
+    i32 castling_type = 0;   // 1 for O-O, 2 for O-O-O
+
+    // Handle castling
+    if (strcmp(str, "O-O") == 0 || strcmp(str, "0-0") == 0) {
+        is_castling = 1;
+        castling_type = 1;
+        printf("Detected castling move: O-O (kingside)\n");
+    } else if (strcmp(str, "O-O-O") == 0 || strcmp(str, "0-0-0") == 0) {
+        is_castling = 1;
+        castling_type = 2;
+        printf("Detected castling move: O-O-O (queenside)\n");
+    }
+
+    if (is_castling) {
+        printf("Searching for castling move in move list.\n");
+        for (i32 i = 0; i < move_count; i++) {
+            Move m = move_list[i];
+            u16 flags = GET_FLAGS(m);
+            printf("Checking move %d: flags=%d\n", i, flags);
+            if ((castling_type == 1 && flags == KING_CASTLE) ||
+                (castling_type == 2 && flags == QUEEN_CASTLE)) {
+                printf("Found castling move at index %d.\n", i);
+                return m;
+            }
+        }
+        printf("Castling move not found.\n");
+        return 0;
+    }
+
+    // Parse piece character
+    if (isupper(str[idx]) && strchr("NBRQK", str[idx])) {
+        piece_char = str[idx];
+        idx++;
+        printf("Detected piece: %c\n", piece_char);
+    } else {
+        piece_char = 'P'; // Pawn move
+        printf("Detected pawn move.\n");
+    }
+
+    // Parse disambiguation (before 'x' or destination square)
+    while (idx < len && ( (str[idx] >= 'a' && str[idx] <= 'h') || (str[idx] >= '1' && str[idx] <= '8') )) {
+        if (str[idx] >= 'a' && str[idx] <= 'h') {
+            from_file = str[idx] - 'a';
+            printf("Detected disambiguation from file: %c\n", str[idx]);
+        } else if (str[idx] >= '1' && str[idx] <= '8') {
+            from_rank = str[idx] - '1';
+            printf("Detected disambiguation from rank: %c\n", str[idx]);
+        }
+        idx++;
+    }
+
+    // Check for capture indicator
+    if (idx < len && str[idx] == 'x') {
+        is_capture = 1;
+        printf("Detected capture move.\n");
+        idx++;
+    }
+
+    // Get destination square
+    if (idx + 1 <= len && str[idx] >= 'a' && str[idx] <= 'h' && str[idx+1] >= '1' && str[idx+1] <= '8') {
+        to_file = str[idx] - 'a';
+        to_rank = str[idx+1] - '1';
+        printf("Destination square: %c%c (file %d, rank %d)\n", str[idx], str[idx+1], to_file, to_rank);
+        idx += 2;
+    } else {
+        printf("Invalid destination square in move string.\n");
+        return 0;
+    }
+
+    // Handle promotion
+    if (idx < len && (str[idx] == '=' || str[idx] == '(')) {
+        idx++; // Skip '=' or '('
+        if (idx < len && strchr("NBRQ", toupper(str[idx]))) {
+            promotion_piece = toupper(str[idx]);
+            printf("Detected promotion to: %c\n", promotion_piece);
+            idx++;
+        }
+        if (idx < len && str[idx] == ')') idx++; // Skip closing ')'
+    } else if (idx < len && strchr("NBRQ", toupper(str[idx]))) {
+        // Some notations skip '=', e.g., 'e8Q'
+        promotion_piece = toupper(str[idx]);
+        printf("Detected promotion to: %c\n", promotion_piece);
+        idx++;
+    }
+
+    // Skip any trailing '+' or '#' symbols
+    while (idx < len && (str[idx] == '+' || str[idx] == '#')) {
+        idx++;
+    }
+
+    // Print parsed move components
+    printf("Parsed move components:\n");
+    printf("  Piece: %c\n", piece_char);
+    if (from_file != -1) printf("  From file: %c\n", 'a' + from_file);
+    if (from_rank != -1) printf("  From rank: %d\n", from_rank + 1);
+    printf("  To square: %c%d\n", 'a' + to_file, to_rank + 1);
+    if (is_capture) printf("  Is capture: Yes\n");
+    if (promotion_piece) printf("  Promotion piece: %c\n", promotion_piece);
+
+    // Now, loop through move_list and try to find a move that matches the components
+    for (i32 i = 0; i < move_count; i++) {
+        Move m = move_list[i];
+        i32 from_square = GET_FROM(m);
+        i32 to_square = GET_TO(m);
+        u16 flags = GET_FLAGS(m);
+
+        // Get moving piece from position
+        char moving_piece = pos->charBoard[from_square];
+        printf("Checking move %d: from %d (%c%d), to %d (%c%d), piece %c, flags %d\n", 
+               i, from_square, 'a' + (from_square % 8), (from_square / 8) + 1, 
+               to_square, 'a' + (to_square % 8), (to_square / 8) + 1,
+               moving_piece, flags);
+
+        if (toupper(moving_piece) != piece_char) {
+            printf("  Skipping move: piece type does not match (%c != %c)\n", toupper(moving_piece), piece_char);
+            continue;
+        }
+
+        i32 move_to_file = to_square % 8;
+        i32 move_to_rank = to_square / 8;
+        if (move_to_file != to_file || move_to_rank != to_rank) {
+            printf("  Skipping move: destination square does not match\n");
+            continue;
+        }
+
+        u8 is_move_capture = (flags == CAPTURE || flags == EP_CAPTURE ||
+                               flags == KNIGHT_PROMO_CAPTURE || flags == BISHOP_PROMO_CAPTURE ||
+                               flags == ROOK_PROMO_CAPTURE || flags == QUEEN_PROMO_CAPTURE);
+
+        if (is_capture != is_move_capture) {
+            printf("  Skipping move: capture status does not match\n");
+            continue;
+        }
+
+        if (promotion_piece) {
+            switch (promotion_piece) {
+                case 'N':
+                    if (!(flags == KNIGHT_PROMOTION || flags == KNIGHT_PROMO_CAPTURE)) {
+                        printf("  Skipping move: promotion piece does not match (expected N)\n");
+                        continue;
+                    }
+                    break;
+                case 'B':
+                    if (!(flags == BISHOP_PROMOTION || flags == BISHOP_PROMO_CAPTURE)) {
+                        printf("  Skipping move: promotion piece does not match (expected B)\n");
+                        continue;
+                    }
+                    break;
+                case 'R':
+                    if (!(flags == ROOK_PROMOTION || flags == ROOK_PROMO_CAPTURE)) {
+                        printf("  Skipping move: promotion piece does not match (expected R)\n");
+                        continue;
+                    }
+                    break;
+                case 'Q':
+                    if (!(flags == QUEEN_PROMOTION || flags == QUEEN_PROMO_CAPTURE)) {
+                        printf("  Skipping move: promotion piece does not match (expected Q)\n");
+                        continue;
+                    }
+                    break;
+                default:
+                    printf("  Skipping move: invalid promotion piece\n");
+                    continue;
+            }
+        } else {
+            if (flags == KNIGHT_PROMOTION || flags == BISHOP_PROMOTION ||
+                flags == ROOK_PROMOTION || flags == QUEEN_PROMOTION ||
+                flags == KNIGHT_PROMO_CAPTURE || flags == BISHOP_PROMO_CAPTURE ||
+                flags == ROOK_PROMO_CAPTURE || flags == QUEEN_PROMO_CAPTURE) {
+                printf("  Skipping move: move is a promotion but none expected\n");
+                continue;
+            }
+        }
+
+        i32 move_from_file = from_square % 8;
+        i32 move_from_rank = from_square / 8;
+        if (from_file != -1 && move_from_file != from_file) {
+            printf("  Skipping move: from file does not match\n");
+            continue;
+        }
+        if (from_rank != -1 && move_from_rank != from_rank) {
+            printf("  Skipping move: from rank does not match\n");
+            continue;
+        }
+
+        printf("Found matching move at index %d\n", i);
+        return m;
+    }
+    printf("No matching move found.\n");
+    return NO_MOVE;
+}
+
 u64 perft(ThreadData *td, i32 depth, u8 print){
   Move move_list[MAX_MOVES];
   i32 n_moves, i;
@@ -355,7 +611,7 @@ u32 calculate_max_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 move
  * Returns true if the positions are equal
  */
 i8 compare_positions(Position *pos1, Position *pos2) {
-    for (int i = 0; i < 2; i++) {
+    for (i32 i = 0; i < 2; i++) {
         if (pos1->pawn[i] != pos2->pawn[i]) {
             printf("Mismatch at pawn[%d]: %" PRIu64 " != %" PRIu64 "\n", i, pos1->pawn[i], pos2->pawn[i]);
             return FALSE;

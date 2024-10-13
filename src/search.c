@@ -91,12 +91,12 @@ void search_timed_out(void){
  * Called from the IO Thread
  */
 void stopSearch(){
-    #ifdef DEBUG
+    #ifdef DEBUG_PRINT
     printf("info string Stop search called, stopping search and timer threads\n");
     #endif
     stopSearchThreads();
     stopTimerThread();
-    #ifdef DEBUG
+    #ifdef DEBUG_PRINT
     printf("info string Stop search completed, search and timer threads closed\n");
     #endif
 }
