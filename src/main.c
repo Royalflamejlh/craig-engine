@@ -18,21 +18,6 @@
 #ifdef DEBUG
 #define RUN_TEST
 #include "tests/bbtests.h"
-#elif defined(__PROFILE)
-void playSelfInfinite(void);
-#endif
-
-
-#ifdef __PROFILE
-void playSelfInfinite(void){
-
-    Position tempPos = copy_global_position();
-    
-    while(generateLegalMoves(tempPos, moveList)){
-        _make_move(&tempPos, get_global_best_move());
-        set_global_position(tempPos);
-    }
-}
 #endif
 
 /*
@@ -59,7 +44,7 @@ i32 main(void) {
     #ifdef __PROFILE
     printf("info string In profile mode, playing forever.\r\n");
     fflush(stdout);
-    playSelfInfinite();
+    play_self_infinite();
     #endif
 
     #ifdef DEBUG

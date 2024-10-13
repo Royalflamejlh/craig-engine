@@ -460,6 +460,8 @@ void unmake_move(ThreadData *td, Move move){
     if(!td) printf("NO THREAD DATA FOUND IN UNMAKE MOVE!\n");
     #endif
     Position *pos = &td->pos;
+    printf("%d\n", td->undo_stack.idx);
+    fflush(stdout);
     Undo undo = td->undo_stack.undo[td->undo_stack.idx--];
     i32 turn = pos->flags & WHITE_TURN;
     i32 from = GET_FROM(move);

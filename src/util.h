@@ -100,4 +100,8 @@ static inline i32 isRepetition(ThreadData *td){
    return 0;
 }
 
+#ifdef __PROFILE
+void play_self_infinite(void);
+#endif
+
 #endif

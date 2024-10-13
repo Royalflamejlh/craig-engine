@@ -193,6 +193,7 @@ i32 testBB(void) {
             printf(".");
             ms_correct++;
         }
+        fflush(stdout);
     }
     printf("\nPercent of Moves Sorted Correctly: %f (%d/%d)\n", (float)ms_correct / ((float)(ms_incorrect + ms_correct)) * 100.f, ms_correct, ms_incorrect + ms_correct);
 

@@ -199,7 +199,7 @@ i32 helper_loop(ThreadData *td){
  */
 i32 search_loop(ThreadData *td){
     #ifdef DEBUG_PRINT
-    printf("thread number is %d\n", td->thread_num);
+    printf("info string thread number of search loop is %d\n", td->thread_num);
     #endif
     if(search_depth == 0){
         printf("info string Warning search depth was 0\n");
