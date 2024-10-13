@@ -20,7 +20,7 @@ char* get_move_from_epd_line(const char* line);
 Move move_from_str_alg(char* str, Position *pos);
 
 Move moveStrToType(Position* pos, char* str);
-Stage calculateStage(Position pos);
+Stage calculateStage(Position* pos);
 u32 calculate_rec_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 moves_remain, u8 turn);
 u32 calculate_max_search_time(u32 wtime, u32 winc, u32 btime, u32 binc, u32 moves_remain, u8 turn);
 

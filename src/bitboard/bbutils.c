@@ -117,7 +117,7 @@ Position fen_to_position(char* FEN) {
 
     pos.pinned = generatePinnedPieces(&pos);
 
-    pos.stage = calculateStage(pos);
+    pos.stage = calculateStage(&pos);
 
     pos.material_eval = eval_material(&pos);
 

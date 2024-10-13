@@ -415,9 +415,9 @@ i32 make_move(Position *pos, ThreadData *td, Move move){
 
     pos->pinned = generatePinnedPieces(pos);
 
-    pos->stage = calculateStage(*pos);
-
     pos->material_eval = eval_material(pos);
+    
+    pos->stage = calculateStage(pos);
 
     if(td){
         td->hash_stack.cur_idx = (td->hash_stack.cur_idx + 1) % HASHSTACK_SIZE;
@@ -572,7 +572,9 @@ i32 unmake_move(Position *pos, ThreadData *td, Move move){
     }
 
     if(turn) pos->fullmove_number--;
-    pos->stage = calculateStage(*pos);
+    
+    pos->stage = calculateStage(pos);
+
     td->hash_stack.cur_idx = (td->hash_stack.cur_idx - 1) % HASHSTACK_SIZE;
 
     #ifdef DEBUG

@@ -519,10 +519,10 @@ void printPVInfo(SearchData data){
     fflush(stdout);
 }
 
-Stage calculateStage(Position pos){
+Stage calculateStage(Position *pos){
     Stage stage = MID_GAME;
-    if(pos.fullmove_number < OPN_GAME_MOVES) stage = OPN_GAME; 
-    if(count_bits(pos.color[0] | pos.color[1]) <= END_GAME_PIECES) stage = END_GAME;
+    if(pos->fullmove_number < OPN_GAME_MOVES) stage = OPN_GAME; 
+    if(count_bits(pos->color[0] | pos->color[1]) <= END_GAME_PIECES) stage = END_GAME;
     return stage;
 }
 
