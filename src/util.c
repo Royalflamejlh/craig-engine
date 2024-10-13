@@ -663,6 +663,8 @@ Position get_random_position(){
         }
         _make_move(&pos, move_list[rand() % move_count]);
     }
+    i32 move_count = generateLegalMoves(&pos, move_list);
+    if (move_count == 0) pos = fen_to_position(START_FEN); // Return default if no legal moves
     return pos;
 }
 
