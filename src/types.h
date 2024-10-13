@@ -296,8 +296,8 @@ typedef struct{
 } SearchParameters;
 
 typedef enum {
-    EXTEND_TIME,
     NORMAL_TIME,
+    EXTEND_TIME,
     REDUCE_TIME,
     HALT_TIME
 } TimePreference;
