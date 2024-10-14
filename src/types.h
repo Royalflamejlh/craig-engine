@@ -26,10 +26,6 @@ typedef real64 d64;
 #define TRUE 1
 #define FALSE 0
 
-#if defined(__PROFILE)
-#define MAX_DEPTH 6
-#endif
-
 #ifndef MAX_DEPTH
 #define MAX_DEPTH 256
 #endif
