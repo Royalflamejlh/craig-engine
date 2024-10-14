@@ -33,3 +33,4 @@ src/craig-debug.engine
 src/craig.engine
 src/craig.exe
 src/craig-debug.exe
+src/craig-prof.engine

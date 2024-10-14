@@ -675,19 +675,22 @@ Position get_random_position(){
 void play_self_infinite(){
     Position pos = copy_global_position();
     Move move_list[MAX_MOVES];
-    while(generateLegalMoves(&pos, move_list)){
-        set_global_position(pos);
+    for(;;){
+        while(generateLegalMoves(&pos, move_list)){
+            set_global_position(pos);
 
-        SearchParameters sp = {0};
-        sp.depth = MAX_DEPTH - 1;
-        sp.can_shorten = FALSE;
-        start_search(sp);
-        sleep(10);
-        stopSearch();
+            SearchParameters sp = {0};
+            sp.depth = MAX_DEPTH - 1;
+            sp.can_shorten = FALSE;
+            start_search(sp);
+            sleep(5);
+            stopSearch();
 
-        Move move = get_global_best_move();
-        _make_move(&pos, move);
-        printPosition(pos, FALSE);
+            Move move = get_global_best_move();
+            _make_move(&pos, move);
+            printPosition(pos, FALSE);
+        }
+        pos = fen_to_position(START_FEN);
     }
 }
 #endif
