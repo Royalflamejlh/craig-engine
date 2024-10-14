@@ -48,7 +48,7 @@
     },
     "config_name": "",
     "output": 0,
-    "seed": 16007213717971403431,
+    "seed": 12123258996198805271,
     "variant": 0,
     "ratinginterval": 10,
     "scoreinterval": 1,
@@ -92,7 +92,7 @@
         {
             "name": "engine_BASE",
             "dir": "",
-            "cmd": "/home/john/Documents/Personal/godengine/src/craig.engine",
+            "cmd": "/home/john/Documents/Personal/godengine/versions/prev.engine",
             "args": "",
             "options": [],
             "limit": {
@@ -111,26 +111,26 @@
     ],
     "stats": {
         "engine_BASE vs engine_LMR": {
-            "wins": 64,
-            "losses": 73,
-            "draws": 1,
-            "penta_WW": 14,
+            "wins": 113,
+            "losses": 5,
+            "draws": 0,
+            "penta_WW": 54,
             "penta_WD": 0,
-            "penta_WL": 36,
+            "penta_WL": 5,
             "penta_DD": 0,
-            "penta_LD": 1,
-            "penta_LL": 18
+            "penta_LD": 0,
+            "penta_LL": 0
         },
         "engine_LMR vs engine_BASE": {
-            "wins": 52,
-            "losses": 65,
-            "draws": 1,
-            "penta_WW": 7,
+            "wins": 0,
+            "losses": 0,
+            "draws": 0,
+            "penta_WW": 0,
             "penta_WD": 0,
-            "penta_WL": 38,
+            "penta_WL": 0,
             "penta_DD": 0,
-            "penta_LD": 1,
-            "penta_LL": 13
+            "penta_LD": 0,
+            "penta_LL": 0
         }
     }
 }

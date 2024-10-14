@@ -268,6 +268,9 @@ i32 outputLoop(){
         if(print_best_move){
             Move move = get_global_best_move();
             if(move != NO_MOVE) printBestMove(move);
+            #ifdef DEBUG
+            else printf("NO BEST MOVE FOUND!");
+            #endif
             print_best_move = FALSE;
         }
     }

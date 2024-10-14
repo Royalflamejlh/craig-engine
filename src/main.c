@@ -15,8 +15,7 @@
 #include "util.h"
 #include "masks.h"
 
-#ifdef DEBUG
-#define RUN_TEST
+#ifdef RUN_TEST
 #include "tests/bbtests.h"
 #endif
 

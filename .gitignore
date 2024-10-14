@@ -2,6 +2,7 @@
 bin/
 obj/
 test/
+versions/
 CppProperties.json
 .vs/ProjectSettings.json
 .vs/slnx.sqlite
