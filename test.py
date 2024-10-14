@@ -1,97 +1,69 @@
-import chess
-import chess.engine
-import logging
+import os
+import sys
+import subprocess
+import urllib.request
+import zipfile
+import multiprocessing
 
-# Configuration
-craig_time = .9 # Time in seconds Craig has for each move
-fish_time = .9  # Time in seconds Stockfish has for each move
-num_games = 50  # Number of games to be played for the calculation
+def main():
+    if len(sys.argv) != 3:
+        print("Usage: python test.py engine1.exe engine2.exe")
+        sys.exit(1)
 
-#logging.basicConfig(level=logging.DEBUG)
+    engine1 = sys.argv[1]
+    engine2 = sys.argv[2]
 
+    engine1_path = os.path.abspath(engine1)
+    engine2_path = os.path.abspath(engine2)
 
-def play_game(white_engine, black_engine, white_time, black_time, turn):
-    board = chess.Board()
-    while not board.is_game_over():
-        if board.turn == chess.WHITE:
-            try:
-                result = white_engine.play(board, chess.engine.Limit(depth=white_time))
-            except TimeoutError:
-                print("White to move:")
-                print(board)
-                print(board.fen())
-                print(board.epd())
-                return TimeoutError
-        else:
-            try:
-                result = black_engine.play(board, chess.engine.Limit(depth=black_time))
-            except TimeoutError:
-                print("Black to move:")
-                print(board)
-                print(board.fen())
-                print(board.epd())
-                return TimeoutError
-        board.push(result.move)
-    return board.result()
+    test_dir = 'test'
+    if not os.path.exists(test_dir):
+        os.makedirs(test_dir)
 
-def calculate_elo_difference(games_won, games_lost, games_drawn):
-    """ Calculate the approximate Elo difference using a simple model. """
-    total_games = games_won + games_lost + games_drawn
-    if total_games == 0:
-        return 0  # Avoid division by zero if no games are played
-    
-    score = games_won + 0.5 * games_drawn
-    win_rate = score / total_games
+    # Download and unzip the opening book
+    pgn_zip_url = 'https://github.com/official-stockfish/books/raw/master/8moves_v3.pgn.zip'
+    pgn_zip_path = os.path.join(test_dir, '8moves_v3.pgn.zip')
+    pgn_file_path = os.path.join(test_dir, '8moves_v3.pgn')
 
-    if win_rate == 1:
-        return float('inf')  # Infinity, cannot calculate log10 of infinity
-    elif win_rate == 0:
-        return float('-inf')  # Negative infinity for complete loss
-    else:
-        return 400 * math.log10(win_rate / (1 - win_rate))
+    if not os.path.exists(pgn_file_path):
+        if not os.path.exists(pgn_zip_path):
+            print("Downloading 8moves_v3.pgn.zip...")
+            urllib.request.urlretrieve(pgn_zip_url, pgn_zip_path)
+        print("Unzipping 8moves_v3.pgn.zip...")
+        with zipfile.ZipFile(pgn_zip_path, 'r') as zip_ref:
+            zip_ref.extractall(test_dir)
 
+    # Download and build Fastchess
+    fastchess_dir = os.path.join(test_dir, 'fastchess')
+    fastchess_exe = os.path.join(fastchess_dir, 'fastchess')
 
-def main(db_engine_path, engine_path):
-    craig_wins = 0
-    fish_wins = 0
-    draws = 0
+    if not os.path.exists(fastchess_exe):
+        if not os.path.exists(fastchess_dir):
+            print("Cloning Fastchess repository...")
+            subprocess.run(['git', 'clone', 'https://github.com/Disservin/fastchess.git', fastchess_dir])
+        print("Building Fastchess...")
+        cwd = os.getcwd()
+        os.chdir(fastchess_dir)
+        subprocess.run(['make', '-j'])
+        os.chdir(cwd)
 
-    for i in range(num_games):
-        # Initialize engines
-        craig = chess.engine.SimpleEngine.popen_uci(db_engine_path)
-        fish = chess.engine.SimpleEngine.popen_uci(engine_path)
-        
-        # Alternate starting colors
-        if i % 2 == 0:
-            result = play_game(craig, fish, craig_time, fish_time, i)
-        else:
-            result = play_game(fish, craig, fish_time, craig_time, i)
-        
-        if result == "1-0":
-            craig_wins += 1 if i % 2 == 0 else 0
-            fish_wins += 1 if i % 2 != 0 else 0
-        elif result == "0-1":
-            fish_wins += 1 if i % 2 == 0 else 0
-            craig_wins += 1 if i % 2 != 0 else 0
-        else:
-            draws += 1
-        
-        # Close the engines
-        craig.quit()
-        fish.quit()
-        print(f"Game {i+1} completed. {craig_wins} wins for {engine1_name}, {fish_wins} wins for {engine2_name}")
+    threads = multiprocessing.cpu_count()
 
-    elo_diff = calculate_elo_difference(craig_wins, fish_wins, draws)
-    print(f"Elo difference: {elo_diff} (positive means {engine1_name} is stronger)")
-    print(f"Results: {craig_wins} wins for {engine1_name}, {fish_wins} wins for {engine2_name}, {draws} draws")
+    command = [
+        fastchess_exe,
+        '-engine', f'cmd={engine1_path}', 'name=engine_LMR',
+        '-engine', f'cmd={engine2_path}', 'name=engine_BASE',
+        '-each', 'tc=8+0.08',
+        '-rounds', '15000',
+        '-repeat',
+        '-concurrency', str(threads),
+        '-recover',
+        '-openings', f'file={pgn_file_path}', 'format=pgn',
+        '-sprt', 'elo0=0', 'elo1=5', 'alpha=0.05', 'beta=0.05'
+    ]
+
+    print("Running Fastchess tournament...")
+    subprocess.run(command)
 
 if __name__ == "__main__":
-    import sys
-    import math
-
-    engine1_path = "./bin/chess"
-    engine1_name = "Latest Build"
-    engine2_path = "./releases/0.3/chess"
-    engine2_name = "Latest Release"
-    
-    main(engine1_path, engine2_path)
+    main()

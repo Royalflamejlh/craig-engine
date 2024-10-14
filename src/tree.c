@@ -299,6 +299,10 @@ static inline void pvFill(Position pos, Move* pv_array, u8 depth){
       ply++;
       ttEntry = get_tt_entry(pos.hash);
    }
+   while(ply < depth){
+      pv_array[ply] = NO_MOVE;
+      ply++;
+   }
 }
 
 

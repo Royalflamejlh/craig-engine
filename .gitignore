@@ -1,6 +1,7 @@
 .DS_Store
 bin/
 obj/
+test/
 CppProperties.json
 .vs/ProjectSettings.json
 .vs/slnx.sqlite
