@@ -19,6 +19,7 @@ W_LIBS += -static-libgcc -static-libstdc++
 
 W_DOBJS = $(SRC:.c=.wd.o)
 W_ROBJS = $(SRC:.c=.wr.o)
+W_POBJS = $(SRC:.c=.wp.o)
 
 ##
 # Compilation Flags
@@ -28,6 +29,7 @@ WRN_FLAGS = -std=gnu11 -Wall -Wextra -Wshadow -Winline -Wno-format-security
 
 DFLAGS = -O0 $(WRN_FLAGS) -g -DVERBOSE -DDEBUG
 RFLAGS = -O3 $(WRN_FLAGS) -Ofast -funroll-loops -flto -finline-functions -fomit-frame-pointer
+PFLAGS = -O3 $(WRN_FLAGS) -g -pg -no-pie -D__PROFILE
 
 ##
 # Build Targets for Windows
@@ -39,19 +41,25 @@ w_debug: $(W_DOBJS)
 w_release: $(W_ROBJS)
 	$(W_CC) $(W_ROBJS) $(W_LIBS) $(RFLAGS) -o $(EXE).exe
 
+w_profile: $(W_POBJS)
+	$(W_CC) $(W_POBJS) $(W_LIBS) $(PFLAGS) -o $(EXE)-prof.exe
+
 %.wd.o: %.c
 	$(W_CC) $(DFLAGS) -c $< -o $@
 
 %.wr.o: %.c
 	$(W_CC) $(RFLAGS) -c $< -o $@
 
+%.wp.o: %.c
+	$(W_CC) $(PFLAGS) -c $< -o $@
+
 ##
 # General
 ##
 
-windows: w_debug w_release
+windows: w_debug w_release w_profile
 
 clean:
-	del /F /Q *.exe *.wd.o *.wr.o
-	del /F /Q .\bitboard\*.wd.o .\bitboard\*.wr.o
-	del /F /Q .\tests\*.wd.o .\tests\*.wr.o
+	del /F /Q *.exe *.wd.o *.wr.o *.wp.o
+	del /F /Q .\bitboard\*.wd.o .\bitboard\*.wr.o .\bitboard\*.wp.o
+	del /F /Q .\tests\*.wd.o .\tests\*.wr.o .\tests\*.wp.o

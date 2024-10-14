@@ -672,26 +672,24 @@ Position get_random_position(){
 #include "search.h"
 #include "globals.h"
 
-void play_self_infinite(){
-    Position pos = copy_global_position();
+void play_self(){
+    ThreadData td = {0};
+    td.pos = fen_to_position(START_FEN);
+    set_global_position(td.pos);
     Move move_list[MAX_MOVES];
-    for(;;){
-        while(generateLegalMoves(&pos, move_list)){
-            set_global_position(pos);
-
-            SearchParameters sp = {0};
-            sp.depth = MAX_DEPTH - 1;
-            sp.can_shorten = FALSE;
-            start_search(sp);
-            sleep(5);
-            stopSearch();
-
-            Move move = get_global_best_move();
-            _make_move(&pos, move);
-            printPosition(pos, FALSE);
-        }
-        pos = fen_to_position(START_FEN);
+    while(generateLegalMoves(&td.pos, move_list) && td.pos.halfmove_clock < 20){
+        SearchParameters sp = {0};
+        sp.depth = MAX_DEPTH - 1;
+        sp.can_shorten = FALSE;
+        start_search(sp);
+        sleep(1);
+        stopSearch();
+        Move move = get_global_best_move();
+        printPosition(td.pos, FALSE);
+        make_move(&td, move);
+        set_global_position(td.pos);
     }
+    printf("Finished playing self!");
 }
 #endif
 

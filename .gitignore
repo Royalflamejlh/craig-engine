@@ -34,3 +34,6 @@ src/craig.engine
 src/craig.exe
 src/craig-debug.exe
 src/craig-prof.engine
+src/craig-prof.exe
+src/craig.output
+src/gmon.out

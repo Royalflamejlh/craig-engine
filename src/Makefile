@@ -90,6 +90,6 @@ release: l_release w_release
 all: linux windows
 
 clean:
-	rm -f *.engine *.exe *.ld.o *.lr.o *.lp.o *.wd.o *.wr.o *.out
-	rm -f ./bitboard/*.ld.o ./bitboard/*.lr.o ./bitboard/*.lp.o ./bitboard/*.wd.o ./bitboard/*.wr.o
-	rm -f ./tests/*.ld.o ./tests/*.lr.o ./tests/*.lp.o ./tests/*.wd.o ./tests/*.wr.o
+	rm -f *.engine *.exe *.ld.o *.lr.o *.lp.o *.wd.o *.wr.o *.out *.wp.o
+	rm -f ./bitboard/*.ld.o ./bitboard/*.lr.o ./bitboard/*.lp.o ./bitboard/*.wd.o ./bitboard/*.wr.o ./bitboard/*.wp.o
+	rm -f ./tests/*.ld.o ./tests/*.lr.o ./tests/*.lp.o ./tests/*.wd.o ./tests/*.wr.o ./tests/*.wp.o
