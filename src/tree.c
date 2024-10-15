@@ -198,7 +198,7 @@ static double calculateEBF(){
 #define CAPTURE_MOVE_BONUS  2000000 // Bonus for move being a capture
 #define KILLER_MOVE_BONUS   1000000 // Bonus for move being killer move
 
-static inline u32 select_sort(ThreadData *td, u32 i, u32 evalIdx, Move *moveList, i32 *moveVals, u32 size, Move ttMove, u32 ply) {
+u32 select_sort(ThreadData *td, u32 i, u32 evalIdx, Move *moveList, i32 *moveVals, u32 size, Move ttMove, u32 ply) {
    u32 maxIdx = i;
 
    if(moveList[i] == ttMove){

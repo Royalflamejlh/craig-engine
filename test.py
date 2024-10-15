@@ -16,6 +16,9 @@ def main():
     engine1_path = os.path.abspath(engine1)
     engine2_path = os.path.abspath(engine2)
 
+    engine1_name =  engine1.rsplit('.')[0].rsplit('/')[-1]
+    engine2_name =  engine2.rsplit('.')[0].rsplit('/')[-1]
+
     test_dir = 'test'
     if not os.path.exists(test_dir):
         os.makedirs(test_dir)
@@ -51,8 +54,8 @@ def main():
 
     command = [
         fastchess_exe,
-        '-engine', f'cmd={engine1_path}', 'name=engine_LMR',
-        '-engine', f'cmd={engine2_path}', 'name=engine_BASE',
+        '-engine', f'cmd={engine1_path}', f'name={engine1_name}',
+        '-engine', f'cmd={engine2_path}', f'name={engine2_name}',
         '-each', 'tc=8+0.08',
         '-rounds', '15000',
         '-repeat',

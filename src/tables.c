@@ -8,7 +8,7 @@
 */
 
 void storeKillerMove(KillerMoves* km, int ply, Move move){ 
-   if(GET_FLAGS(move) <= DOUBLE_PAWN_PUSH) return; // Killer moves arent quiet
+   if(GET_FLAGS(move) > DOUBLE_PAWN_PUSH) return; // Killer moves are quiet
    for(int i = 0; i < KMV_CNT; i++){
       if(km->table[ply][km->kmvIdx] == move) return;
    }

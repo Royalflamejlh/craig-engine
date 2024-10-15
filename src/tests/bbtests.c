@@ -24,6 +24,7 @@
 #include "../search.h"
 #include "../moveorder.h"
 
+#define SELECT_SORT_TEST
 #define MOVE_GEN_TEST
 #define MOVE_MAKE_TEST
 #define PERF_TEST
@@ -114,6 +115,40 @@ i32 testBB(void) {
 
     #endif
 
+    #ifdef SELECT_SORT_TEST
+    #include "../tables.h"
+    printf("\n------------------------------ SELECT SORT TESTING --------------------------------\n\n");
+    ThreadData ss_td = {0};
+    ss_td.pos = fen_to_position("r2qk2r/pbp2ppp/1pn1pn2/3p4/3P1B2/P1PBPN2/2P2PPP/R2QK2R w KQkq - 1 9");
+    u32 evalIdx = 0;
+    
+    Move ss_move_list[MAX_MOVES] = {0};
+    i32  ss_move_vals[MAX_MOVES] = {0};
+    u32 ss_list_size = generateLegalMoves(&ss_td.pos, ss_move_list);
+    
+    storeKillerMove(&ss_td.km, 0, ss_move_list[8]);
+    Move ss_tt_move = ss_move_list[9];
+
+    // Testing move vals
+    for (u32 i = 0; i < ss_list_size; i++)  {
+        printf("move_list[%d] val = %d ; ", i, eval_move(ss_move_list[i], &ss_td.pos));
+        printMove(ss_move_list[i]);
+        printf("\n");
+    }
+
+    for (u32 i = 0; i < ss_list_size; i++)  {
+        evalIdx = select_sort(&ss_td, i, evalIdx, ss_move_list, ss_move_vals, ss_list_size, ss_tt_move, 0);
+    }
+    printf("\n------------------------------------------------------------------------\n");
+
+    for (u32 i = 0; i < ss_list_size; i++)  {
+        printf("move_list[%d] val = %d ; ", i, ss_move_vals[i]);
+        printMove(ss_move_list[i]);
+        printf("\n");
+    }
+    return
+
+    #endif
 
     #ifdef PERF_TEST
     printf("\n---------------------------------- PERFT TESTING ----------------------------------\n\n");

@@ -15,7 +15,10 @@
     "unordered_map": "c",
     "ios": "c",
     "__bit_reference": "c",
-    "utility": "c"
+    "utility": "c",
+    "ranges": "c",
+    "span": "c",
+    "valarray": "c"
   },
   "makefile.launchConfigurations": [
     {
@@ -92,5 +95,6 @@
   "C_Cpp_Runner.useLinkTimeOptimization": false,
   "C_Cpp_Runner.msvcSecureNoWarnings": false,
   "makefile.buildLog": "./build",
-  "C_Cpp.default.compilerPath": "c:\\ProgramData\\mingw64\\mingw64\\bin\\x86_64-w64-mingw32-gcc.exe"
+  "C_Cpp.default.compilerPath": "c:\\ProgramData\\mingw64\\mingw64\\bin\\x86_64-w64-mingw32-gcc.exe",
+  "search.useIgnoreFiles": true
 }

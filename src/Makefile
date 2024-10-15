@@ -32,9 +32,9 @@ W_ROBJS = $(SRC:.c=.wr.o)
 WRN_FLAGS = -std=gnu11 -Wall -Wextra -Wshadow -Winline -Wno-format-security
 SAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined -fsanitize=nullability -fsanitize=integer
 
-DFLAGS = -O0 $(WRN_FLAGS) -g -gdwarf-2 -DVERBOSE -DDEBUG -DDEBUG_PRINT
+DFLAGS = -O0 $(WRN_FLAGS) -g -gdwarf-2 -DVERBOSE -DDEBUG -DDEBUG_PRINT -DRUN_TEST
 RFLAGS = -O3 $(WRN_FLAGS) -Ofast -funroll-loops -flto -finline-functions -fomit-frame-pointer -march=native
-PFLAGS = -O3 $(WRN_FLAGS) -pg -Ofast -funroll-loops -flto -finline-functions -march=native -D__PROFILE
+PFLAGS = -O3 $(WRN_FLAGS) -pg -Ofast -funroll-loops -flto -fno-inline -march=native -D__PROFILE
 
 
 ##

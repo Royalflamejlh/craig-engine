@@ -48,7 +48,7 @@
     },
     "config_name": "",
     "output": 0,
-    "seed": 12123258996198805271,
+    "seed": 7839174412841120266,
     "variant": 0,
     "ratinginterval": 10,
     "scoreinterval": 1,
@@ -71,9 +71,9 @@
     },
     "engines": [
         {
-            "name": "engine_LMR",
+            "name": "prev",
             "dir": "",
-            "cmd": "/home/john/Documents/Personal/godengine/src/craig.engine",
+            "cmd": "/home/john/Documents/Personal/godengine/versions/prev.engine",
             "args": "",
             "options": [],
             "limit": {
@@ -90,9 +90,9 @@
             "variant": 0
         },
         {
-            "name": "engine_BASE",
+            "name": "craig",
             "dir": "",
-            "cmd": "/home/john/Documents/Personal/godengine/versions/prev.engine",
+            "cmd": "/home/john/Documents/Personal/godengine/src/craig.engine",
             "args": "",
             "options": [],
             "limit": {
@@ -110,27 +110,27 @@
         }
     ],
     "stats": {
-        "engine_BASE vs engine_LMR": {
-            "wins": 113,
-            "losses": 5,
-            "draws": 0,
-            "penta_WW": 54,
-            "penta_WD": 0,
-            "penta_WL": 5,
+        "craig vs prev": {
+            "wins": 93,
+            "losses": 80,
+            "draws": 7,
+            "penta_WW": 20,
+            "penta_WD": 4,
+            "penta_WL": 49,
             "penta_DD": 0,
-            "penta_LD": 0,
-            "penta_LL": 0
+            "penta_LD": 3,
+            "penta_LL": 14
         },
-        "engine_LMR vs engine_BASE": {
-            "wins": 0,
-            "losses": 0,
-            "draws": 0,
-            "penta_WW": 0,
-            "penta_WD": 0,
-            "penta_WL": 0,
+        "prev vs craig": {
+            "wins": 65,
+            "losses": 62,
+            "draws": 5,
+            "penta_WW": 14,
+            "penta_WD": 3,
+            "penta_WL": 34,
             "penta_DD": 0,
-            "penta_LD": 0,
-            "penta_LL": 0
+            "penta_LD": 2,
+            "penta_LL": 13
         }
     }
 }
