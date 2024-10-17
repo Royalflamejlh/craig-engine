@@ -11,6 +11,9 @@ const i32 MoveRookValue   =   5000;
 const i32 MoveQueenValue  =  10000;
 const i32 MoveKingValue   = 100000;
 
+/* Sorting bonus for castling moves */
+const i32 MoveCastleBonus = 30;
+
 static const i32 SEEPieceValues[] = {
     [WHITE_PAWN  ] = MovePawnValue,
     [BLACK_PAWN  ] = MovePawnValue,
@@ -25,10 +28,6 @@ static const i32 SEEPieceValues[] = {
     [WHITE_KING  ] = MoveKingValue,
     [BLACK_KING  ] = MoveKingValue
 };
-
-
-/* Sorting bonus for castling moves */
-const i32 MoveCastleBonus = 30;
 
 
 /*

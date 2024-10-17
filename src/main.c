@@ -37,6 +37,7 @@ i32 main(void) {
     printf("info string Finished start up!\n");
 
     #ifdef RUN_TEST
+    debug_print_search = 1;
     testBB();
     #endif
 

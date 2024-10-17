@@ -17,7 +17,6 @@
 #include "tables.h"
 #include "bitboard/bbutils.h"
 
-
 #define ID_STEP 1 //Changing this may break Aspiration windows (it will)
 
 #define PV_PRUNE_MOVE_IDX     5 // Move to start pruning on in pv
@@ -470,8 +469,8 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
 
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES];
-   i32 size = generateLegalMoves(pos, moveList);
-   for(i32 i = 0; i < size; i++){
+   u32 size = generateLegalMoves(pos, moveList);
+   for(u32 i = 0; i < size; i++){
       moveVals[i] = 0;
    }
 
@@ -568,7 +567,7 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
    #ifdef DEBUG
    Position prev_pos = td->pos;
    #endif
-   for (i32 i = 0; i < size; i++)  {
+   for (u32 i = 0; i < size; i++)  {
       #ifdef DEBUG
       assert(prev_pos.hash == pos->hash);
       #endif
@@ -600,11 +599,33 @@ i32 pv_search(ThreadData *td, i32 alpha, i32 beta, i8 depth, u8 ply) {
       i32 score;
       if ( i == 0 ) { // Only do full PV on the first move
          score = -pv_search(td, -beta, -alpha, depth - 1, ply + 1);
+         #ifdef DEBUG
+         if(debug_print_search && ply == 0){
+            printf("PV(%d, %d) Search on:  ", -beta, -alpha);
+            printMove(moveList[i]);
+            printf(" Score: %d\n", score);
+         }
+         #endif
          //printf("PV b search pv score = %d\n", score);
       } else {
+         
          score = -zw_search(td, -alpha, depth - 1, ply + 1, FALSE);
+         #ifdef DEBUG
+         if(debug_print_search && ply == 0){
+            printf("ZW Search (%d) on:  ", -alpha);
+            printMove(moveList[i]);
+            printf(" Score: %d\n", score);
+         }
+         #endif
          if ( score > alpha ){
             score = -pv_search(td, -beta, -alpha, depth - 1, ply + 1);
+               #ifdef DEBUG
+               if(debug_print_search && ply == 0){
+                  printf("New PV(%d, %d) Search on:  ", -beta, -alpha);
+                  printMove(moveList[i]);
+                  printf(" Score: %d\n", score);
+               }
+               #endif
          }
       }
 
@@ -938,6 +959,7 @@ i32 q_search(ThreadData *td, i32 alpha, i32 beta, u8 ply, u8 q_ply) {
    #endif
    // Check the bounds
    if(q_ply >= MAX_QUIESCE_PLY) return alpha;
+   
    // Handle Draw or Mate
    if(pos->halfmove_clock >= 100 || isInsufficient(pos) || isRepetition(td)) return 0;
 
@@ -1018,7 +1040,6 @@ i32 q_search(ThreadData *td, i32 alpha, i32 beta, u8 ply, u8 q_ply) {
       #endif
 
       if( score >= beta ){
-         // storeKillerMove(ply, moveList[i]);
          #ifdef DEBUG
          debug[QS][NODE_BETA_CUT]++;
          #endif

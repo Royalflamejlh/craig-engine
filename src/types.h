@@ -131,7 +131,7 @@ inline i32 IS_BISHOP_PROMO_CAPTURE(Move move) { return GET_FLAGS(move) == BISHOP
 inline i32 IS_ROOK_PROMO_CAPTURE(Move move) { return GET_FLAGS(move) == ROOK_PROMO_CAPTURE; }
 inline i32 IS_QUEEN_PROMO_CAPTURE(Move move) { return GET_FLAGS(move) == QUEEN_PROMO_CAPTURE; }
 
-static inline Move MAKE_MOVE(i32 from, i32 to, i32 flags) {
+static inline Move create_move(i32 from, i32 to, i32 flags) {
     Move move = 0;
     SET_FROM(move, from);
     SET_TO(move, to);

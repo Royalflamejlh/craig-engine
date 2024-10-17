@@ -172,10 +172,10 @@ static void update_search_time(ThreadData *td, u8 updated){
 
     // Update the search time.
     if(td->time_pref == REDUCE_TIME){
-        search_time = (u32)((double)search_time * SEARCH_REDUCTION_LEVEL);
+        search_time = (u32)((real64)search_time * SEARCH_REDUCTION_LEVEL);
     }
     if(td->time_pref == EXTEND_TIME){
-        search_time = (u32)((double)search_time * SEARCH_EXTENSION_LEVEL);
+        search_time = (u32)((real64)search_time * SEARCH_EXTENSION_LEVEL);
     }
 }
 

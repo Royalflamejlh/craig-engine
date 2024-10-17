@@ -148,14 +148,14 @@ static u64 getBishopMovesCheckAppend(u64 bishops, u64 ownPieces, u64 oppPieces, 
 
         while(nocap_moves){
             i32 move_sq = getlsb(nocap_moves);
-            moveList[*idx] = MAKE_MOVE(square, move_sq, QUIET);
+            moveList[*idx] = create_move(square, move_sq, QUIET);
             (*idx)++;
             nocap_moves &= nocap_moves - 1;
         }
 
         while(cap_moves){
             i32 move_sq = getlsb(cap_moves);
-            moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+            moveList[*idx] = create_move(square, move_sq, CAPTURE);
             (*idx)++;
             cap_moves &= cap_moves - 1;
         }
@@ -196,14 +196,14 @@ static u64 getRookMovesCheckAppend(u64 rooks, u64 ownPieces, u64 oppPieces, u64 
 
         while(nocap_moves){
             i32 move_sq = getlsb(nocap_moves);
-            moveList[*idx] = MAKE_MOVE(square, move_sq, QUIET);
+            moveList[*idx] = create_move(square, move_sq, QUIET);
             (*idx)++;
             nocap_moves &= nocap_moves - 1;
         }
 
         while(cap_moves){
             i32 move_sq = getlsb(cap_moves);
-            moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+            moveList[*idx] = create_move(square, move_sq, CAPTURE);
             (*idx)++;
             cap_moves &= cap_moves - 1;
         }
@@ -298,7 +298,7 @@ u64 getPawnMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces,  u64 enPassant, 
         while(q_moves){
             i32 move_sq = getlsb(q_moves);
             if (promotion) {
-                Move baseMove = MAKE_MOVE(square, move_sq, QUIET);
+                Move baseMove = create_move(square, move_sq, QUIET);
                 moveList[*idx] = SET_QUEEN_PROMOTION(baseMove);
                 (*idx)++;
                 moveList[*idx] = SET_ROOK_PROMOTION(baseMove);
@@ -308,7 +308,7 @@ u64 getPawnMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces,  u64 enPassant, 
                 moveList[*idx] = SET_KNIGHT_PROMOTION(baseMove);
                 (*idx)++;
             } else {
-                moveList[*idx] = MAKE_MOVE(square, move_sq, QUIET);
+                moveList[*idx] = create_move(square, move_sq, QUIET);
                 (*idx)++;
             }
             q_moves &= q_moves - 1;
@@ -317,7 +317,7 @@ u64 getPawnMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces,  u64 enPassant, 
         while(cap_moves){
             i32 move_sq = getlsb(cap_moves);
             if (promotion) {
-                Move baseMove = MAKE_MOVE(square, move_sq, CAPTURE);
+                Move baseMove = create_move(square, move_sq, CAPTURE);
                 moveList[*idx] = SET_QUEEN_PROMO_CAPTURE(baseMove);
                 (*idx)++;
                 moveList[*idx] = SET_ROOK_PROMO_CAPTURE(baseMove);
@@ -327,7 +327,7 @@ u64 getPawnMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces,  u64 enPassant, 
                 moveList[*idx] = SET_KNIGHT_PROMO_CAPTURE(baseMove);
                 (*idx)++;
             } else {
-                moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+                moveList[*idx] = create_move(square, move_sq, CAPTURE);
                 (*idx)++;
             }
             cap_moves &= cap_moves - 1;
@@ -335,14 +335,14 @@ u64 getPawnMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces,  u64 enPassant, 
 
         while(dp_moves){
             i32 move_sq = getlsb(dp_moves);
-            moveList[*idx] = MAKE_MOVE(square, move_sq, DOUBLE_PAWN_PUSH);
+            moveList[*idx] = create_move(square, move_sq, DOUBLE_PAWN_PUSH);
             (*idx)++;
             dp_moves &= dp_moves - 1;
         }
 
         while(ep_moves){
             i32 move_sq = getlsb(ep_moves);
-            moveList[*idx] = MAKE_MOVE(square, move_sq, EP_CAPTURE);
+            moveList[*idx] = create_move(square, move_sq, EP_CAPTURE);
             (*idx)++;
             ep_moves &= ep_moves - 1;
         }
@@ -402,7 +402,7 @@ u64 getPawnThreatMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces,  u64 enPas
         while(q_moves){
             i32 move_sq = getlsb(q_moves);
             if (promotion) {
-                Move baseMove = MAKE_MOVE(square, move_sq, QUIET);
+                Move baseMove = create_move(square, move_sq, QUIET);
                 moveList[*idx] = SET_QUEEN_PROMOTION(baseMove);
                 (*idx)++;
                 moveList[*idx] = SET_ROOK_PROMOTION(baseMove);
@@ -412,7 +412,7 @@ u64 getPawnThreatMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces,  u64 enPas
                 moveList[*idx] = SET_KNIGHT_PROMOTION(baseMove);
                 (*idx)++;
             } else {
-                moveList[*idx] = MAKE_MOVE(square, move_sq, QUIET);
+                moveList[*idx] = create_move(square, move_sq, QUIET);
                 (*idx)++;
             }
             q_moves &= q_moves - 1;
@@ -421,7 +421,7 @@ u64 getPawnThreatMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces,  u64 enPas
         while(cap_moves){
             i32 move_sq = getlsb(cap_moves);
             if (promotion) {
-                Move baseMove = MAKE_MOVE(square, move_sq, CAPTURE);
+                Move baseMove = create_move(square, move_sq, CAPTURE);
                 moveList[*idx] = SET_QUEEN_PROMO_CAPTURE(baseMove);
                 (*idx)++;
                 moveList[*idx] = SET_ROOK_PROMO_CAPTURE(baseMove);
@@ -431,7 +431,7 @@ u64 getPawnThreatMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces,  u64 enPas
                 moveList[*idx] = SET_KNIGHT_PROMO_CAPTURE(baseMove);
                 (*idx)++;
             } else {
-                moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+                moveList[*idx] = create_move(square, move_sq, CAPTURE);
                 (*idx)++;
             }
             cap_moves &= cap_moves - 1;
@@ -439,14 +439,14 @@ u64 getPawnThreatMovesAppend(u64 pawns, u64 ownPieces, u64 oppPieces,  u64 enPas
 
         while(dp_moves){
             i32 move_sq = getlsb(dp_moves);
-            moveList[*idx] = MAKE_MOVE(square, move_sq, DOUBLE_PAWN_PUSH);
+            moveList[*idx] = create_move(square, move_sq, DOUBLE_PAWN_PUSH);
             (*idx)++;
             dp_moves &= dp_moves - 1;
         }
 
         while(ep_moves){
             i32 move_sq = getlsb(ep_moves);
-            moveList[*idx] = MAKE_MOVE(square, move_sq, EP_CAPTURE);
+            moveList[*idx] = create_move(square, move_sq, EP_CAPTURE);
             (*idx)++;
             ep_moves &= ep_moves - 1;
         }
@@ -510,13 +510,13 @@ u64 getKnightMovesAppend(u64 knights, u64 ownPieces, u64 oppPieces, Move* moveLi
 
         while(nocap_moves){
             i32 move_sq = getlsb(nocap_moves);
-            moveList[*idx] = MAKE_MOVE(square, move_sq, QUIET);
+            moveList[*idx] = create_move(square, move_sq, QUIET);
             (*idx)++;
             nocap_moves &= nocap_moves - 1;
         }
         while(cap_moves){
             i32 move_sq = getlsb(cap_moves);
-            moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+            moveList[*idx] = create_move(square, move_sq, CAPTURE);
             (*idx)++;
             cap_moves &= cap_moves - 1;
         }
@@ -543,13 +543,13 @@ u64 getKnightThreatMovesAppend(u64 knights, u64 ownPieces, u64 oppPieces, i32 op
 
         while(check_moves){
             i32 move_sq = getlsb(check_moves);
-            moveList[*idx] = MAKE_MOVE(square, move_sq, QUIET);
+            moveList[*idx] = create_move(square, move_sq, QUIET);
             (*idx)++;
             check_moves &= check_moves - 1;
         }
         while(cap_moves){
             i32 move_sq = getlsb(cap_moves);
-            moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+            moveList[*idx] = create_move(square, move_sq, CAPTURE);
             (*idx)++;
             cap_moves &= cap_moves - 1;
         }
@@ -601,13 +601,13 @@ u64 getKingMovesAppend(u64 kings, u64 ownPieces, u64 oppPieces, u64 oppAttackMas
 
     while(nocap_moves){
         i32 move_sq = getlsb(nocap_moves);
-        moveList[*idx] = MAKE_MOVE(square, move_sq, QUIET);
+        moveList[*idx] = create_move(square, move_sq, QUIET);
         (*idx)++;
         nocap_moves &= nocap_moves - 1;
     }
     while(cap_moves){
         i32 move_sq = getlsb(cap_moves);
-        moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+        moveList[*idx] = create_move(square, move_sq, CAPTURE);
         (*idx)++;
         cap_moves &= cap_moves - 1;
     }
@@ -620,7 +620,7 @@ u64 getKingThreatMovesAppend(u64 kings, u64 ownPieces, u64 oppPieces, u64 oppAtt
     u64 cap_moves = all_moves & oppPieces;
     while(cap_moves){
         i32 move_sq = getlsb(cap_moves);
-        moveList[*idx] = MAKE_MOVE(square, move_sq, CAPTURE);
+        moveList[*idx] = create_move(square, move_sq, CAPTURE);
         (*idx)++;
         cap_moves &= cap_moves - 1;
     }
@@ -630,26 +630,26 @@ u64 getKingThreatMovesAppend(u64 kings, u64 ownPieces, u64 oppPieces, u64 oppAtt
 void getCastleMovesAppend(u64 pieces, u64 attack_mask, char flags, Move* moveList, i32* idx){
     if(flags & WHITE_TURN){
         if ((flags & W_SHORT_CASTLE) && !((pieces | attack_mask) & W_SHORT_CASTLE_MASK)) {
-            Move move = MAKE_MOVE(4, 6, KING_CASTLE);
+            Move move = create_move(4, 6, KING_CASTLE);
             moveList[*idx] = move;
             (*idx)++;
         }
 
         if ((flags & W_LONG_CASTLE) && !((pieces | (attack_mask & ~B_FILE_MASK)) & W_LONG_CASTLE_MASK)) {
-            Move move = MAKE_MOVE(4, 2, QUEEN_CASTLE);
+            Move move = create_move(4, 2, QUEEN_CASTLE);
             moveList[*idx] = move;
             (*idx)++;
         }
     }
     else{
         if ((flags & B_SHORT_CASTLE) && !((pieces | attack_mask) & B_SHORT_CASTLE_MASK)) {
-            Move move = MAKE_MOVE(60, 62, KING_CASTLE);
+            Move move = create_move(60, 62, KING_CASTLE);
             moveList[*idx] = move;
             (*idx)++;
         }
 
         if ((flags & B_LONG_CASTLE) && !((pieces | (attack_mask & ~B_FILE_MASK)) & B_LONG_CASTLE_MASK)) {
-            Move move = MAKE_MOVE(60, 58, QUEEN_CASTLE);
+            Move move = create_move(60, 58, QUEEN_CASTLE);
             moveList[*idx] = move;
             (*idx)++;
         }
@@ -734,7 +734,7 @@ void getCheckMovesAppend(Position* pos, Move* moveList, i32* idx){
         }
         while(dp_moves){
             i32 move_sq = getlsb(dp_moves);
-            moveList[*idx] = MAKE_MOVE(square, move_sq, DOUBLE_PAWN_PUSH);
+            moveList[*idx] = create_move(square, move_sq, DOUBLE_PAWN_PUSH);
             (*idx)++;
             dp_moves &= dp_moves - 1;
         }

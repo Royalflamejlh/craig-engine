@@ -32,8 +32,10 @@ W_ROBJS = $(SRC:.c=.wr.o)
 WRN_FLAGS = -std=gnu11 -Wall -Wextra -Wshadow -Winline -Wno-format-security
 SAN_FLAGS = -fsanitize=address -fno-omit-frame-pointer -fsanitize=undefined -fsanitize=nullability -fsanitize=integer
 
+L_FLAGS = -march=native
+
 DFLAGS = -O0 $(WRN_FLAGS) -g -gdwarf-2 -DVERBOSE -DDEBUG -DDEBUG_PRINT -DRUN_TEST
-RFLAGS = -O3 $(WRN_FLAGS) -Ofast -funroll-loops -flto -finline-functions -fomit-frame-pointer -march=native
+RFLAGS = -O3 $(WRN_FLAGS) -Ofast -funroll-loops -flto -finline-functions -fomit-frame-pointer
 PFLAGS = -O3 $(WRN_FLAGS) -pg -Ofast -funroll-loops -flto -fno-inline -march=native -D__PROFILE
 
 
@@ -42,22 +44,22 @@ PFLAGS = -O3 $(WRN_FLAGS) -pg -Ofast -funroll-loops -flto -fno-inline -march=nat
 ##
 
 l_debug: $(L_DOBJS)
-	$(L_CC) $(L_DOBJS) $(L_LIBS) $(DFLAGS) $(SAN_FLAGS) -o $(EXE)-debug.engine
+	$(L_CC) $(L_DOBJS) $(L_LIBS) $(DFLAGS) $(L_FLAGS) $(SAN_FLAGS) -o $(EXE)-debug.engine
 
 l_release: $(L_ROBJS)
-	$(L_CC) $(L_ROBJS) $(L_LIBS) $(RFLAGS) -o $(EXE).engine
+	$(L_CC) $(L_ROBJS) $(L_LIBS) $(RFLAGS) $(L_FLAGS) -o $(EXE).engine
 
 l_profile: $(L_POBJS)
-	$(L_CC) $(L_POBJS) $(L_LIBS) $(PFLAGS) -o $(EXE)-prof.engine
+	$(L_CC) $(L_POBJS) $(L_LIBS) $(PFLAGS) $(L_FLAGS) -o $(EXE)-prof.engine
 
 %.ld.o: %.c
-	$(L_CC) $(DFLAGS) $(SAN_FLAGS) -c $< -o $@
+	$(L_CC) $(DFLAGS) $(L_FLAGS) $(SAN_FLAGS) -c $< -o $@
 
 %.lr.o: %.c
-	$(L_CC) $(RFLAGS) -c $< -o $@
+	$(L_CC) $(RFLAGS) $(L_FLAGS) -c $< -o $@
 
 %.lp.o: %.c
-	$(L_CC) $(PFLAGS) -c $< -o $@
+	$(L_CC) $(PFLAGS) $(L_FLAGS) -c $< -o $@
 ##
 # Build Targets for Windows
 ##

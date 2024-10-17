@@ -1,5 +1,4 @@
-#ifndef TABLES_H
-#define TABLES_H
+#pragma once
 #include "types.h"
 
 void storeKillerMove(KillerMoves* km, i32 ply, Move move);
@@ -9,4 +8,3 @@ void clearKillerMoves(KillerMoves* km);
 void storeHistoryMove(char pos_flags, Move move, char depth);
 u32 getHistoryScore(char pos_flags, Move move);
 
-#endif // TABLES_H

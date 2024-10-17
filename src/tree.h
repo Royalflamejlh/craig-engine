@@ -1,5 +1,4 @@
-#ifndef tree_h
-#define tree_h
+#pragma once
 #include "types.h"
 
 i32 search_tree(ThreadData *td);
@@ -15,6 +14,4 @@ i32 q_search(ThreadData *td,  i32 alpha, i32 beta, u8 ply, u8 q_ply);
 
 #ifdef DEBUG
 extern u8 debug_print_search;
-#endif
-
 #endif

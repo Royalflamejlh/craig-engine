@@ -1,5 +1,4 @@
-#ifndef UTIL_H
-#define UTIL_H
+#pragma once
 #include <stdlib.h>
 
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
@@ -102,6 +101,4 @@ static inline i32 isRepetition(ThreadData *td){
 
 #ifdef __PROFILE
 void play_self(void);
-#endif
-
 #endif

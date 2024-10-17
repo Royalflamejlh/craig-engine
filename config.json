@@ -111,26 +111,26 @@
     ],
     "stats": {
         "craig vs prev": {
-            "wins": 93,
-            "losses": 80,
-            "draws": 7,
-            "penta_WW": 20,
-            "penta_WD": 4,
-            "penta_WL": 49,
+            "wins": 399,
+            "losses": 377,
+            "draws": 14,
+            "penta_WW": 95,
+            "penta_WD": 7,
+            "penta_WL": 202,
             "penta_DD": 0,
-            "penta_LD": 3,
-            "penta_LL": 14
+            "penta_LD": 7,
+            "penta_LL": 84
         },
         "prev vs craig": {
-            "wins": 65,
-            "losses": 62,
-            "draws": 5,
-            "penta_WW": 14,
-            "penta_WD": 3,
-            "penta_WL": 34,
+            "wins": 222,
+            "losses": 269,
+            "draws": 15,
+            "penta_WW": 40,
+            "penta_WD": 8,
+            "penta_WL": 134,
             "penta_DD": 0,
-            "penta_LD": 2,
-            "penta_LL": 13
+            "penta_LD": 7,
+            "penta_LL": 64
         }
     }
 }

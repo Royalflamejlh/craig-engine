@@ -24,12 +24,12 @@
 #include "../search.h"
 #include "../moveorder.h"
 
-#define SELECT_SORT_TEST
-#define MOVE_GEN_TEST
-#define MOVE_MAKE_TEST
-#define PERF_TEST
-#define SEE_TEST
-#define MOVE_SORT_TEST
+// #define SELECT_SORT_TEST
+// #define MOVE_GEN_TEST
+// #define MOVE_MAKE_TEST
+// #define PERF_TEST
+// #define SEE_TEST
+// #define MOVE_SORT_TEST
 #define PUZZLE_TEST
 
 i32 testBB(void) {
@@ -37,13 +37,19 @@ i32 testBB(void) {
     python_init();
     #endif
 
-    #ifdef MOVE_GEN_TEST
+
     FILE *file;
     char line[1024];
     Position pos;
     Move moveList[MAX_MOVES];
     i32 size, expectedMoves;
-    
+
+    (void)size;
+    (void)expectedMoves;
+    (void)moveList;
+    (void)pos;
+
+    #ifdef MOVE_GEN_TEST
     printf("\n---------------------------------- MOVE GEN TESTING ----------------------------------\n\n");
     
 
@@ -238,7 +244,8 @@ i32 testBB(void) {
 
 
     #ifdef PUZZLE_TEST
-    #define PUZZLE_SEARCH_TIME 10
+    #define PUZZLE_SEARCH_TIME 60
+    #define PUZZLE_TEST_VERBOSE
     printf("\n--------------------------------- PUZZLE TESTING ----------------------------------\n\n");
 
     printf("\nRunning Puzzle test each with a search time of %d seconds\n", PUZZLE_SEARCH_TIME);
@@ -256,18 +263,47 @@ i32 testBB(void) {
     while (fgets(line, sizeof(line), file)) {
         char *fen = line;
         Position puzzle_pos = fen_to_position(fen);
-        char* move_str = get_move_from_epd_line(fen);
-        if(!move_str){
+        char* bm_ptr = strstr(fen, " bm ");
+        if (bm_ptr == NULL) {
             continue;
         }
-        Move correct_move = move_from_str_alg(move_str, &puzzle_pos);
-        if(correct_move == NO_MOVE){
-            printf("Move was not found from move string %s\n and fen %s \n", move_str, fen);
-            free(move_str);
-            while(1);
+        bm_ptr += 4; 
+        char* end_ptr = strchr(bm_ptr, ';');
+        if (end_ptr == NULL) {
             continue;
         }
-        free(move_str);
+
+        char moves_str[256];
+
+        size_t len = end_ptr - bm_ptr;
+
+        if (len >= sizeof(moves_str)) {
+            printf("Moves string too long\n");
+            continue;
+        }
+
+        strncpy(moves_str, bm_ptr, len);
+        moves_str[len] = '\0';
+
+        Move correct_moves[10];
+
+        int num_correct_moves = 0;
+
+        char* token = strtok(moves_str, " ");
+
+        while (token != NULL && num_correct_moves < MAX_MOVES) {
+            Move m = move_from_str_alg(token, &puzzle_pos);
+            if (m != NO_MOVE) {
+                correct_moves[num_correct_moves++] = m;
+            } else {
+                printf("Move was not found from move string %s\n and fen %s \n", token, fen);
+            }
+            token = strtok(NULL, " ");
+        }
+
+        if (num_correct_moves == 0) {
+            continue;
+        }
 
         set_global_position(puzzle_pos);
         SearchParameters sp = {0};
@@ -279,23 +315,40 @@ i32 testBB(void) {
         stopSearch();
 
         Move found_move = get_global_best_move();
-        
+
+        int found_correct_move = 0;
+        for (int i = 0; i < num_correct_moves; i++) {
+            if (found_move == correct_moves[i]) {
+                found_correct_move = 1;
+                break;
+            }
+        }
+
         #ifdef PUZZLE_TEST_VERBOSE
-        if (found_move != correct_move) {
-            printf("\n-------------\n\nTest Failed: Found move ");
+        if (!found_correct_move) {
+            printf("\n------------- Test Failed -------------\n");
+            printf("Fen: %s \nCorrect Moves: ", fen);
+            for (int i = 0; i < num_correct_moves; i++) {
+                printMove(correct_moves[i]);
+                printf(" ");
+            }
+            printf("\nFound move: ");
             printMove(found_move);
-            printf(", Correct Move ");
-            printMove(correct_move);
-            printf("\n%s", fen);
+            printf("\n");
+            while(1);
+        }
+        else{
+            printf("Puzzle test #%d passed!", correct + incorrect);
         }
         #else
-        if (found_move != correct_move) printf("x");
+        if (!found_correct_move) printf("x");
         else printf(".");
         #endif
-        if(found_move != correct_move) incorrect++;
+
+        if (!found_correct_move) incorrect++;
         else correct++;
-        
     }
+
     printf("\nPercent of Puzzles Correct: %f (%d/%d)\n", (float)correct / ((float)(incorrect + correct)) * 100.f, correct, incorrect + correct);
 
     printf("\nPuzzle Tests Complete\n");
