@@ -10,6 +10,7 @@
 #include "pthread.h"
 #include "types.h"
 #include "util.h"
+#include "params.h"
 
 #ifdef DEBUG
 #include <stdio.h>
@@ -33,10 +34,6 @@ _Atomic volatile u64 start_time;
 pthread_mutex_t helper_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t helper_cond = PTHREAD_COND_INITIALIZER;
 int do_helper_search = FALSE;
-
-#define SEARCH_REDUCTION_LEVEL 0.75    // How much time is reduced when search finds move to reduce time on
-#define SEARCH_EXTENSION_LEVEL 1.5     // How much time is expanded when search finds move to extend time on
-
 
 /*
 * Starts the search threads

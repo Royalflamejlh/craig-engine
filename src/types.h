@@ -41,8 +41,8 @@ typedef real64 d64;
 
 #define START_FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
-#define MAX_MOVES 256 // Most moves possible in a single position
-#define MAX_FEN_LEN 100 // Max length of a fen string
+#define MAX_MOVES    256 // Most moves possible in a single position
+#define MAX_FEN_LEN  100 // Max length of a fen string
 #define GAME_MOVES 12288 // Most moves possible in a game
 
 #define NO_MOVE 0
@@ -50,6 +50,9 @@ typedef real64 d64;
 #define MOVE_FROM_MASK        0x003F  // 0000 0000 0011 1111
 #define MOVE_TO_MASK          0x0FC0  // 0000 1111 1100 0000
 #define MOVE_FLAG_MASK        0xF000  // 1111 0000 0000 0000
+
+#define HASHSTACK_SIZE 100
+#define KMV_CNT 3
 
 /*  Flags
   prom cap  a   b  
@@ -176,16 +179,11 @@ static const i32 pieceToIndex[128] = {
     ['k'] = BLACK_KING
 };
 
-#define HASHSTACK_SIZE 100
-
 typedef struct {
     u64 hash[HASHSTACK_SIZE]; //A stack of hashes of player positions
     i32 cur_idx;
     i32 reset_idx; //An index to the last move which reset halfmove clock
 } HashStack;
-
-#define OPN_GAME_MOVES     8 //Moves that count as early game (fullmoves)
-#define END_GAME_PIECES   16 //Pieces left to count as late game
 
 typedef enum {
     OPN_GAME,
@@ -278,7 +276,6 @@ typedef struct{
     SearchStats stats;
 } SearchData;
 
-#define KMV_CNT 3
 typedef struct{
     Move table[MAX_DEPTH][KMV_CNT];
     u32 kmvIdx;

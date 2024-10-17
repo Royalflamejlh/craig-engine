@@ -16,32 +16,8 @@
 #include "globals.h"
 #include "tables.h"
 #include "bitboard/bbutils.h"
+#include "params.h"
 
-#define ID_STEP 1 //Changing this may break Aspiration windows (it will)
-
-#define PV_PRUNE_MOVE_IDX     5 // Move to start pruning on in pv
-#define PRUNE_MOVE_IDX        2 // Move to start pruning on otherwise
-
-#define MAX_QUIESCE_PLY 5 //How far q search can go 
-
-#define LMR_DEPTH 3       // LMR not performed if depth < LMR_DEPTH
-
-#define ASP_EDGE         250  // Buffer size of aspiration window
-#define HELPER_ASP_EDGE  500  // Buffer size of aspiration window in helper search
-
-#define PV_FUTIL_MARGIN 300 // Score difference for a node to be futility pruned
-#define ZW_FUTIL_MARGIN 200
-
-#define NULL_PRUNE_R 3  // How much Null prunin' takes off
-#define NMR_MARGIN 2000 // The higher this is, the more likely a null move search is to be taken
-
-#define HELPER_MOVE_DISORDER 3 // Increasing this changes how out of order helper searches look at moves
-#define HELPER_THREAD_DISORDER 3 // How different each helper thread searches from one another
-
-/* Delta Pruning Rules */
-const int DeltaValue      =  750;
-const int EarlyDeltaValue = 9000;
-const int PromotionBuffer = 9000;
 
 typedef enum searchs{
    PVS,
@@ -805,7 +781,7 @@ i32 zw_search( ThreadData* td, i32 beta, i8 depth, u8 ply, u8 isNull) {
 
    Move moveList[MAX_MOVES];
    i32 moveVals[MAX_MOVES];
-   i32 size = generateLegalMoves(pos, moveList);
+   u32 size = generateLegalMoves(pos, moveList);
    //Handle Draw or Mate
    if(size == 0){
       if(pos->flags & IN_CHECK) return -(CHECKMATE_VALUE - ply);
@@ -879,7 +855,7 @@ i32 zw_search( ThreadData* td, i32 beta, i8 depth, u8 ply, u8 isNull) {
    #endif
 
    u32 evalIdx = 0;
-   for (i32 i = 0; i < size; i++)  {
+   for (u32 i = 0; i < size; i++)  {
       #ifdef DEBUG
       assert(prev_pos.hash == pos->hash);
       #endif

@@ -41,7 +41,7 @@ static inline u8 is_square_light(Square sq){
     return ((sq / 8) + (sq % 8)) % 2 == 0;
 }
 
-static inline i32 count_bits(u64 v){
+static inline u32 count_bits(u64 v){
     u32 c;
     for (c = 0; v; c++){
         v &= v - 1;

@@ -2,17 +2,7 @@
 #include "evaluator.h"
 #include "bitboard/bitboard.h"
 #include "types.h"
-
-/* Material Values for move ordering */
-const i32 MovePawnValue   =   1000;
-const i32 MoveKnightValue =   3500;
-const i32 MoveBishopValue =   3600;
-const i32 MoveRookValue   =   5000;
-const i32 MoveQueenValue  =  10000;
-const i32 MoveKingValue   = 100000;
-
-/* Sorting bonus for castling moves */
-const i32 MoveCastleBonus = 30;
+#include "params.h"
 
 static const i32 SEEPieceValues[] = {
     [WHITE_PAWN  ] = MovePawnValue,
