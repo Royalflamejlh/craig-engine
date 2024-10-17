@@ -3,6 +3,16 @@
 
 #define TRACE 0
 
+enum Phase{
+    PHASE_MG = 0,
+    PHASE_EG = 1,
+
+    MINOR_PHASE = 1,
+    ROOK_PHASE  = 2,
+    QUEEN_PHASE = 4,
+    TOTAL_PHASE_VALUE = 24
+};
+
 struct EvalData{
     i32 eval[2][2];
 
