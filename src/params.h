@@ -22,6 +22,7 @@ static const i32 EarlyDeltaValue        = 9000; // Difference for delta pruning 
 static const i32 PromotionBuffer        = 9000; // What to add to delta pruning in case move is a promotion move
 static const i32 OPN_GAME_MOVES         = 8;    // Moves that count as early game (fullmoves)
 static const u32 END_GAME_PIECES        = 16;   // Pieces left to count as late game
+
 /**
  * Search Parameters
  */
