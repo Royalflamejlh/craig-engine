@@ -39,9 +39,4 @@ i32 eval_position(Position* pos);
 // Quickly evaluate a position based on the material
 i32 eval_material(Position* pos);
 
-void init_pst();
-
-// Global data
-extern i32 PST[2][12][64];
-
 

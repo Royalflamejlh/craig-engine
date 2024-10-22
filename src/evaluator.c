@@ -8,33 +8,6 @@
 #include "bitboard/bitboard.h"
 #include "params.h"
 
-i32 PST[2][12][64];
-
-void init_pst(){
-    for (int i = 0; i < 64; i++) {
-        for(int phase = 0; phase < 2; phase++){
-            // Pawn
-            PST[phase][WHITE_PAWN][i]        = PSTPawn[phase][i];
-            PST[phase][BLACK_PAWN][63 - i]   = PSTPawn[phase][i];
-            // Knight
-            PST[phase][WHITE_KNIGHT][i]      = PSTKnight[phase][i];
-            PST[phase][BLACK_KNIGHT][63 - i] = PSTKnight[phase][i];
-            // Bishop
-            PST[phase][WHITE_BISHOP][i]      = PSTBishop[phase][i];
-            PST[phase][BLACK_BISHOP][63 - i] = PSTBishop[phase][i];
-            // Rook
-            PST[phase][WHITE_ROOK][i]        = PSTRook[phase][i];
-            PST[phase][BLACK_ROOK][63 - i]   = PSTRook[phase][i];
-            // Queen
-            PST[phase][WHITE_QUEEN][i]       = PSTQueen[phase][i];
-            PST[phase][BLACK_QUEEN][63 - i]  = PSTQueen[phase][i];
-            // King
-            PST[phase][WHITE_KING][i]        = PSTKing[phase][i];
-            PST[phase][BLACK_KING][63 - i]   = PSTKing[phase][i];
-        }
-    }
-}
-
 /* Returns a material-only based evaluation */
 i32 eval_material(Position* pos){
     i32 eval = 0;

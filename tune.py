@@ -74,9 +74,13 @@ def main():
     # Load parameters from JSON
     with open('params.json', 'r') as f:
         params = json.load(f)
+        
+    
 
     # Generate params.h
     write_params_header(params)
+    
+    
 
 if __name__ == '__main__':
     main()
