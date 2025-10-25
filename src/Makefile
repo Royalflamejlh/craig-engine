@@ -7,6 +7,8 @@ W_CC = x86_64-w64-mingw32-gcc
 SRC  = $(wildcard *.c bitboard/*.c tests/*.c)
 EXE  = craig
 
+CLANG_TIDY ?= C:/msys64/mingw64/bin/clang-tidy.exe
+
 ##
 # Libraries
 ##
@@ -94,7 +96,7 @@ compile_commands.json:
 	compiledb make w_debug
 
 tidy: compile_commands.json
-	clang-tidy -p=compile_commands.json $(SRC)
+	"$(CLANG_TIDY)" -p=compile_commands.json $(SRC) -- -fdiagnostics-absolute-paths
 
 ##
 # General
