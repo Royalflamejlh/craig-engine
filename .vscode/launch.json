@@ -1,35 +1,17 @@
 {
+  "version": "0.2.0",
   "configurations": [
     {
-      "name": "(lldb) Launch",
+      "name": "Debug craig-debug.exe (gdb)",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/bin/chess_db",
-      "args": [],
-      "stopAtEntry": false,
-      "cwd": "${fileDirname}",
-      "environment": [],
-      "externalConsole": true,
-      "MIMode": "lldb"
-    },
-    {
-      "name": "C/C++ Runner: Debug Session",
-      "type": "cppdbg",
-      "request": "launch",
-      "args": [],
-      "stopAtEntry": false,
-      "externalConsole": false,
-      "cwd": "/config/workspace/godengine/src",
-      "program": "/config/workspace/godengine/src/build/Debug/outDebug",
+      "program": "${workspaceFolder}/src/craig-debug.exe",
+      "cwd": "${workspaceFolder}/src",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
-      "setupCommands": [
-        {
-          "description": "Enable pretty-printing for gdb",
-          "text": "-enable-pretty-printing",
-          "ignoreFailures": true
-        }
-      ]
+      "externalConsole": true,
+      "stopAtEntry": false,
+      "preLaunchTask": "Build (Win Debug)"
     }
   ]
 }

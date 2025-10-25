@@ -76,6 +76,26 @@ w_release: $(W_ROBJS)
 %.wr.o: %.c
 	$(W_CC) $(RFLAGS) -c $< -o $@
 
+# --- Static analysis helpers (Windows) ---
+
+# 1) GCC built-in static analyzer:
+W_AFLAGS = $(DFLAGS) -fanalyzer
+W_AOBJS  = $(SRC:.c=.wa.o)
+
+w_analyze_gcc: $(W_AOBJS)
+	@echo "GCC analyzer compile complete."
+
+%.wa.o: %.c
+	$(W_CC) $(W_AFLAGS) -c $< -o $@
+
+# 2) clang-tidy (optional) — needs compile_commands.json
+#    We'll generate it with 'compiledb'.
+compile_commands.json:
+	compiledb make w_debug
+
+tidy: compile_commands.json
+	clang-tidy -p=compile_commands.json $(SRC)
+
 ##
 # General
 ##

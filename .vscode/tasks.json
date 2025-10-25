@@ -1,0 +1,61 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build (Win Debug)",
+      "type": "shell",
+      "command": "make",
+      "args": ["w_debug"],
+      "options": { "cwd": "${workspaceFolder}/src" },
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "Build (Win Release)",
+      "type": "shell",
+      "command": "make",
+      "args": ["w_release"],
+      "options": { "cwd": "${workspaceFolder}/src" },
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "Clean",
+      "type": "shell",
+      "command": "make",
+      "args": ["clean"],
+      "options": { "cwd": "${workspaceFolder}/src" }
+    },
+    {
+      "label": "Analyze (GCC -fanalyzer)",
+      "type": "shell",
+      "command": "make",
+      "args": ["clean", "w_analyze_gcc"],
+      "options": { "cwd": "${workspaceFolder}/src" },
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "Gen compile_commands.json",
+      "type": "shell",
+      "command": "python",
+      "args": ["-m", "compiledb", "make", "w_debug"],
+      "options": { "cwd": "${workspaceFolder}/src" }
+    },
+    {
+      "label": "Analyze (clang-tidy, whole project)",
+      "type": "shell",
+      "command": "make",
+      "args": ["tidy"],
+      "options": { "cwd": "${workspaceFolder}/src" },
+      "problemMatcher": ["$gcc"],
+      "dependsOn": ["Gen compile_commands.json"]
+    },
+
+    {
+      "label": "Run Tests",
+      "type": "shell",
+      "command": ".\\craig-debug.exe",
+      "options": { "cwd": "${workspaceFolder}/src" },
+      "dependsOn": ["Build (Win Debug)"]
+    }
+  ]
+}
