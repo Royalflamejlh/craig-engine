@@ -23,7 +23,7 @@ i32 eval_material(Position* pos){
 
 
 void init_eval_data(Position * pos, EvalData* eval_data, Turn turn){
-    // Get the saftey region for the king
+    // Get the safety region for the king
     eval_data->king_area[turn] = KingAreaMask[getlsb(pos->king[turn])];
 }
 
@@ -69,7 +69,7 @@ void eval_pawns(Position * pos, EvalData* eval_data, Turn turn){
             eval_data->eval[PHASE_EG][turn] += IsolatedPawnPenalty[PHASE_EG];
         }
 
-        // Update King saftey data
+        // Update King safety data
         eval_data->attack_units[turn] += count_bits(eval_data->king_area[!turn] & attacks) * ATTACK_UNIT_PAWN;
 
         // Update evaluation data
@@ -134,7 +134,7 @@ void eval_knights(Position * pos, EvalData* eval_data, Turn turn){
         eval_data->eval[PHASE_MG][turn] += KnightMobility[PHASE_MG][mobility];
         eval_data->eval[PHASE_EG][turn] += KnightMobility[PHASE_EG][mobility];
 
-        // Update King saftey data
+        // Update King safety data
         eval_data->attack_units[turn] += count_bits(eval_data->king_area[!turn] & knight_moves) * ATTACK_UNIT_KNIGHT;
 
         // Update the phase
@@ -147,8 +147,8 @@ void eval_knights(Position * pos, EvalData* eval_data, Turn turn){
     // it an outpost if not attacked by enemy pawns
     // and is in an outpost square, bonus for knights protected by pawn
     u64 outpost_knights = pos->knight[turn] & ~eval_data->pawn_attacks[!turn] & KnightOutpostMask[turn];
-    i32 outpost_count = count_bits(outpost_knights);
-    i32 extra_outpost_count = count_bits(outpost_knights & eval_data->pawn_attacks[turn]);
+    u32 outpost_count = count_bits(outpost_knights);
+    u32 extra_outpost_count = count_bits(outpost_knights & eval_data->pawn_attacks[turn]);
 
     eval_data->eval[PHASE_MG][turn] += OutpostKnightBonus[PHASE_MG] * outpost_count;
     eval_data->eval[PHASE_EG][turn] += OutpostKnightBonus[PHASE_EG] * outpost_count;
@@ -210,7 +210,7 @@ void eval_bishops(Position * pos, EvalData* eval_data, Turn turn){
             }
         }
 
-        // Update King saftey data
+        // Update King safety data
         eval_data->attack_units[turn] += count_bits(eval_data->king_area[!turn] & bishop_moves) * ATTACK_UNIT_BISHOP;
 
         // Update the phase
@@ -271,7 +271,7 @@ void eval_rooks(Position * pos, EvalData* eval_data, Turn turn){
         eval_data->eval[PHASE_MG][turn] += RookMobility[PHASE_MG][mobility];
         eval_data->eval[PHASE_EG][turn] += RookMobility[PHASE_EG][mobility];
 
-        // Update King saftey data
+        // Update King safety data
         eval_data->attack_units[turn] += count_bits(eval_data->king_area[!turn] & rook_moves) * ATTACK_UNIT_ROOK;
 
         // Update the phase
@@ -324,7 +324,7 @@ void eval_queens(Position * pos, EvalData* eval_data, Turn turn){
         eval_data->eval[PHASE_MG][turn] += QueenMobility[PHASE_MG][count_bits(queen_moves & ~pos->attack_mask[!turn])];
         eval_data->eval[PHASE_EG][turn] += QueenMobility[PHASE_EG][count_bits(queen_moves & ~pos->attack_mask[!turn])];
 
-        // Update King saftey data
+        // Update King safety data
         eval_data->attack_units[turn] += count_bits(eval_data->king_area[!turn] & queen_moves) * ATTACK_UNIT_QUEEN;
 
         // Update the phase
@@ -378,7 +378,7 @@ void eval_kings(Position * pos, EvalData* eval_data, Turn turn){
     eval_data->eval[PHASE_MG][turn] += VirtualMobility[PHASE_MG][count_bits(virt_moves)];
     eval_data->eval[PHASE_EG][turn] += VirtualMobility[PHASE_EG][count_bits(virt_moves)];
 
-    // Saftey information from enemy pieces attacking the kings area
+    // Safety information from enemy pieces attacking the kings area
     eval_data->eval[PHASE_MG][turn] -= SafetyTable[PHASE_MG][eval_data->attack_units[!turn]];
     eval_data->eval[PHASE_EG][turn] -= SafetyTable[PHASE_EG][eval_data->attack_units[!turn]];
 
@@ -447,7 +447,7 @@ i32 eval_position(Position* pos){
     i32 eg_weight = TOTAL_PHASE_VALUE - mg_weight;
     eval += ((mg_score * mg_weight) + (eg_score * eg_weight)) / TOTAL_PHASE_VALUE;
 
-    //printf("at the end: mg_score %d mg_wieght %d eg_score %d eg_weight %d\n", mg_score, mg_weight, eg_score, eg_weight);
+    //printf("at the end: mg_score %d mg_weight %d eg_score %d eg_weight %d\n", mg_score, mg_weight, eg_score, eg_weight);
     
     return turn ? eval : -eval;
 }

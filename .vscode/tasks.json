@@ -1,5 +1,21 @@
 {
   "version": "2.0.0",
+  "problemMatchers": [
+    {
+      "name": "clang-tidy-matcher",
+      "owner": "c",
+      "fileLocation": ["absolute"],
+      "pattern": {
+        "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error|note):\\s+(.*)\\s*\\[(.*)\\]$",
+        "file": 1,
+        "line": 2,
+        "column": 3,
+        "severity": 4,
+        "message": 5,
+        "code": 6
+      }
+    }
+  ],
   "tasks": [
     {
       "label": "Build (Win Debug)",
@@ -46,10 +62,9 @@
       "command": "make",
       "args": ["tidy"],
       "options": { "cwd": "${workspaceFolder}/src" },
-      "problemMatcher": ["$gcc"],
+      "problemMatcher": ["$gcc", "clang-tidy-matcher"],
       "dependsOn": ["Gen compile_commands.json"]
     },
-
     {
       "label": "Run Tests",
       "type": "shell",

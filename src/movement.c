@@ -704,7 +704,7 @@ static u64 generatePinnedPiecesColor(Position* pos, i32 turn){
     //Contains all the initial pieces
     u64 all_pieces = pos->color[0] | pos->color[1];  
 
-    // The peices belonging to white which become pinned
+    // The pieces belonging to white which become pinned
     u64 pinned = pos->color[turn];  
 
     // A attack masks

@@ -107,7 +107,7 @@ void exit_search(){
 }
 
 /*
- * Resumes the helpers at the current depth and ecal
+ * Resumes the helpers at the current depth and eval
  */
 static inline void resume_helpers(i32 depth, i32 eval){
     pthread_mutex_lock(&helper_lock);
