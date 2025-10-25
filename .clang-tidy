@@ -1,0 +1,5 @@
+Checks: >
+  clang-analyzer-*,
+  performance-*,
+  portability-*,
+  -clang-analyzer-security.insecureAPI.*
