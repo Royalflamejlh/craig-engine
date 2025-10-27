@@ -40,14 +40,5 @@
   "C_Cpp.codeAnalysis.clangTidy.buildPath": "${workspaceFolder}/src",
   "C_Cpp.errorSquiggles": "enabled",
 
-  "cSpell.ignorePaths": [
-    "package-lock.json",
-    "node_modules",
-    "vscode-extension",
-    ".git/{info,lfs,logs,refs,objects}/**",
-    ".git/{index,*refs,*HEAD}",
-    ".vscode",
-    ".vscode-insiders",
-    "src/Makefile"
-  ]
+  "cSpell.enabled": false
 }

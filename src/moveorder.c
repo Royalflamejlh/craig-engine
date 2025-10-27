@@ -40,6 +40,8 @@ i32 eval_move(Move move, Position* pos){
         printPosition(*pos, TRUE);
         printf("from piece: %d", pos->charBoard[fr_sq]);
         printf(" to piece: %d", pos->charBoard[to_sq]);
+        while(1){};
+        return 0;
     }
     #endif
 

@@ -193,7 +193,7 @@ u32 select_sort(ThreadData *td, u32 i, u32 evalIdx, Move *moveList, i32 *moveVal
    }
 
    for (u32 j = i + 1; j < size; j++) {
-      if(moveList[j] == ttMove){ // If the move is in the TT sort immediatly
+      if(moveList[j] == ttMove){ // If the move is in the TT sort immediately
          maxIdx = j;
          moveVals[j] = TT_MOVE_BONUS;
          break;
@@ -251,7 +251,7 @@ static inline void q_select_sort(i32 i, Move *moveList, i32 *moveVals, i32 size)
 }
 
 /*
- * Select sort for the helper search with slighly different ordering
+ * Select sort for the helper search with slightly different ordering
  */
 static inline u32 helper_select_sort(ThreadData *td, u32 i, u32 evalIdx, Move *moveList, i32 *moveVals, u32 size, Move ttMove, u32 ply) {
    i32 thread_dif = (td->thread_num % 2) ? -1 : 1;
@@ -360,7 +360,7 @@ i32 search_tree(ThreadData *td){
 }
 
 /*
- * Search tree function called from a helper thread with slighly different bounds and move sorting
+ * Search tree function called from a helper thread with slightly different bounds and move sorting
  */
 i32 helper_search_tree(ThreadData *td, u32 depth, i32 eval){
    i32 asp_lower, asp_upper;
@@ -925,7 +925,7 @@ i32 zw_search( ThreadData* td, i32 beta, i8 depth, u8 ply, u8 isNull) {
    return beta-1; // fail-hard, return alpha
 }
 
-//quisce search
+//quiescence search
 i32 q_search(ThreadData *td, i32 alpha, i32 beta, u8 ply, u8 q_ply) {
    Position *pos = &td->pos;
    if(!run_get_best_move) exit_search();

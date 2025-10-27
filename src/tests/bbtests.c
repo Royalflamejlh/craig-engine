@@ -207,7 +207,7 @@ i32 testBB(void) {
         eval_movelist(&ms_pos, ms_move_list, ms_move_vals, ms_moves);
 
         i32 max = INT32_MIN;
-        i32 max_idx = -1;
+        i32 max_idx = 0;
         for(i32 j = 0; j < ms_moves; j++){
             if(ms_move_vals[j] > max){
                 max = ms_move_vals[j];
