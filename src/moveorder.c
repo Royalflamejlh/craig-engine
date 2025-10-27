@@ -209,7 +209,7 @@ i32 see(Position* pos, u32 toSq, PieceIndex target, u32 frSq, PieceIndex aPiece)
         }
         fromSet  = least_valuable_attacker(pos, attadef, (turn + d) & 1, &aPiece);
     }
-    while (--d){
+    while (--d && d >= 1){
         if(gain[d] >= -gain[d-1]) gain[d-1] = -gain[d];
     }
     return gain[0];
