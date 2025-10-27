@@ -9,7 +9,10 @@ void initializeNodePool(void) {
     nodePool.nextAvailable = 0;
     nodePool.nodes = (Node*)malloc(nodePool.size * sizeof(Node));
     nodePool.used = (i32*)malloc(nodePool.size * sizeof(i32));
-    
+    if(!nodePool.used || !nodePool.nodes) {
+        perror("Failed to initialize node pool");
+        nodePool.size = 0;
+    }
     for (size_t i = 0; i < nodePool.size; i++) {
         nodePool.used[i] = 0;
     }

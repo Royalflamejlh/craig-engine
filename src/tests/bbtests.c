@@ -27,10 +27,10 @@
 // #define SELECT_SORT_TEST
 // #define MOVE_GEN_TEST
 // #define MOVE_MAKE_TEST
-// #define PERF_TEST
-// #define SEE_TEST
-// #define MOVE_SORT_TEST
-#define PUZZLE_TEST
+#define PERF_TEST
+#define SEE_TEST
+#define MOVE_SORT_TEST
+// #define PUZZLE_TEST
 
 i32 testBB(void) {
     #ifdef PYTHON

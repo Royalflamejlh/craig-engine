@@ -154,7 +154,8 @@ void printTreeDebug(void){
    debug_node_counts[debug_current_depth] = total_count;
    double ebf = calculateEBF();
    printf("EBF found to be: %f\n", ebf);
-   debug_current_depth++;
+
+   if(debug_current_depth < MAX_DEPTH - 1) debug_current_depth++;
 }
 
 static double calculateEBF(){

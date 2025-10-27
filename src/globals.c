@@ -169,7 +169,9 @@ SearchData get_global_pv_data(){
     data.stats = global_sd.stats;
     data.best_move = global_sd.best_move;
     data.pv_array = malloc(MAX_DEPTH*sizeof(Move));
-    memcpy(data.pv_array, global_sd.pv_array, (MAX_DEPTH)*sizeof(Move));
+    if(data.pv_array){
+        memcpy(data.pv_array, global_sd.pv_array, (MAX_DEPTH)*sizeof(Move));
+    }
 
     pthread_mutex_unlock(&mutex_global_PV);
 
